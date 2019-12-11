@@ -1,0 +1,8 @@
+Metrics/LineLength:
+  Max: 120
+
+Style/AccessModifierDeclarations:
+  EnforcedStyle: inline
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
