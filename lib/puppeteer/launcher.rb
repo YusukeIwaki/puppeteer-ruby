@@ -1,115 +1,126 @@
-require 'fileutils'
-
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
-class Puppeteer::BrowserRunner
-  # @param {string} executablePath
-  # @param {!Array<string>} processArguments
-  # @param {string=} tempDirectory
-  def initialize(executable_path, process_arguments, temp_directory)
-    @executable_path = executable_path
-    @process_arguments = process_arguments
-    @temp_directory = temp_directory
-    @proc = nil
-    @connection = nil
-    @closed = true
-    @listeners = []
-  end
-
-  # @param {!(Launcher.LaunchOptions)=} options
-  def start(options = {}) # TODO: あとでキーワード引数にする
-    env = options[:env] || {}
-    @proc = spawn(env, "#{@executable_path} #{@process_arguments.join(" ")}")
-    @closed = false
-    @process_closing = -> {
-      Process.waitpid(@proc)
-      @closed = true
-      if @temp_directory
-        FileUtils.rm_rf(@temp_directory)
-      end
-    }
-    trap(:INT) do
-      kill
-      exit 130
-    end
-    trap(:TERM) do
-      close
-    end
-    trap(:HUP) do
-      close
-    end
-  end
-
-  # @return {Promise}
-  def close
-    return if @closed
-
-    if @temp_directory
-      kill
-    elsif @connection
-      @connection.sendCommand("Browser.close")
-    end
-  end
-
-  # @return {Promise}
-  def kill
-  end
-
-
-  # @param {!({usePipe?: boolean, timeout: number, slowMo: number, preferredRevision: string})} options
-  # @return {!Promise<!Connection>}
-  def setup_connection(options = {})
-
-  end
-end
-
-class Puppeteer::ChromeLauncher
-  # @param {string} projectRoot
-  # @param {string} preferredRevision
-  def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
-    @project_root = project_root
-    @preferred_revision = preferred_revision
-    @is_puppeteer_core = is_puppeteer_core
-  end
-
-
-  # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions)=} options
-  # @return {!Promise<!Browser>}
-  def launch(options = {}) # TODO: あとでキーワード引数にする
-  end
-
-  # @param {!Launcher.ChromeArgOptions=} options
-  # @return {!Array<string>}
-  def default_args(options = {}) # TODO: あとでキーワード引数にする
-  end
-
-  # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
-  # @return {!Promise<!Browser>}
-  def connect(options)
-  end
-
-  def executable_path
-  end
-
-  # @return [String]
-  private def executable_path
-    ENV["PUPPETEER_EXECUTABLE_PATH"]
-  end
-
-  private def product
-    'chrome'
-  end
-end
-
-class FirefoxLauncher
-end
-
-class Launcher
+class Puppeteer::Launcher
   # @param {string} projectRoot
   # @param {string} preferredRevision
   # @param {boolean} isPuppeteerCore
   # @param {string=} product
   # @return {!Puppeteer.ProductLauncher}
-  def self.new()
+  def self.new(project_root:, preferred_revision:, is_puppeteer_core:, product:)
+    if product == 'firefox'
+      raise NotImplementedError.new("FirefoxLauncher is not implemented yet.")
+    end
 
+    Puppeteer::ChromeLauncher.new(
+      project_root: project_root,
+      preferred_revision: preferred_revision,
+      is_puppeteer_core: is_puppeteer_core
+    )
+  end
+
+  # const {
+  #   ignoreDefaultArgs = false,
+  #   args = [],
+  #   dumpio = false,
+  #   executablePath = null,
+  #   pipe = false,
+  #   env = process.env,
+  #   handleSIGINT = true,
+  #   handleSIGTERM = true,
+  #   handleSIGHUP = true,
+  #   ignoreHTTPSErrors = false,
+  #   defaultViewport = {width: 800, height: 600},
+  #   slowMo = 0,
+  #   timeout = 30000
+  # } = options;
+  # const {
+  #   devtools = false,
+  #   headless = !devtools,
+  #   args = [],
+  #   userDataDir = null
+  # } = options;
+
+  class ChromeArgOptions
+    # * @property {boolean=} headless
+    # * @property {Array<string>=} args
+    # * @property {string=} userDataDir
+    # * @property {boolean=} devtools
+    def initialize(options)
+      @args = options[:args] || []
+      @user_data_dir = options[:user_data_dir]
+      @devtools = options[:devtools] || false
+      @headless = options[:headless] || !@devtools
+    end
+
+    attr_reader :args, :user_data_dir
+
+    def headless?
+      @headless
+    end
+
+    def devtools?
+      @devtools
+    end
+  end
+
+  class LaunchOptions
+    # @property {string=} executablePath
+    # @property {boolean|Array<string>=} ignoreDefaultArgs
+    # @property {boolean=} handleSIGINT
+    # @property {boolean=} handleSIGTERM
+    # @property {boolean=} handleSIGHUP
+    # @property {number=} timeout
+    # @property {boolean=} dumpio
+    # @property {!Object<string, string | undefined>=} env
+    # @property {boolean=} pipe
+    def initialize(options)
+      @executable_path = options[:executable_path]
+      @ignore_default_args = options[:ignore_default_args] || false
+      @handle_SIGINT = options[:handle_SIGINT] || true
+      @handle_SIGTERM = options[:handle_SIGTERM] || true
+      @handle_SIGHUP = options[:handle_SIGHUP] || true
+      @timeout = options[:timeout] || 30000
+      @dumpio = options[:dumpio] || false
+      @env = options[:env] || ENV
+      @pipe = options[:pipe] || false
+    end
+
+    attr_reader :executable_path, :ignore_default_args, :timeout, :env
+
+    def handle_SIGINT?
+      @handle_SIGINT
+    end
+
+    def handle_SIGTERM?
+      @handle_SIGTERM
+    end
+
+    def handle_SIGHUP?
+      @handle_SIGHUP
+    end
+
+    def dumpio?
+      @dumpio
+    end
+
+    def pipe?
+      @pipe
+    end
+  end
+
+  class BrowserOptions
+    # @property {boolean=} ignoreHTTPSErrors
+    # @property {(?Puppeteer.Viewport)=} defaultViewport
+    # @property {number=} slowMo
+    def initialize(options)
+      @ignore_https_errors = options[:ignore_https_errors] || false
+      @default_viewport = options[:default_viewport] || Puppeteer::Viewport.new(width: 800, height: 600)
+      @slow_mo = options[:slow_mo] || 0
+    end
+
+    attr_reader :default_viewport, :slow_mo
+
+    def ignore_https_errors?
+      @ignore_https_errors
+    end
   end
 end

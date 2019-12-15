@@ -1,10 +1,28 @@
+require 'puppeteer/viewport'
+require 'puppeteer/device'
 require 'puppeteer/devices'
 require 'puppeteer/launcher'
+require 'puppeteer/browser_runner'
+require 'puppeteer/chrome_launcher'
 require 'puppeteer/errors'
 require 'puppeteer/version'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 class Puppeteer
+  class << self
+    def method_missing(method, *args, **kwargs)
+      instance.send(method, *args, **kwargs)
+    end
+
+    def instance
+      @instance ||= Puppeteer.new(
+                      project_root: __dir__,
+                      preferred_revision: "706915",
+                      is_puppeteer_core: true
+                    )
+    end
+  end
+
   # @param {string} projectRoot
   # @param {string} preferredRevision
   # @param {boolean} isPuppeteerCore
@@ -33,11 +51,11 @@ class Puppeteer
   end
 
   private def launcher
-    @launcher ||= Launcher.new(
-                    @project_root,
-                    @preferred_revision,
-                    @is_puppeteer_core,
-                    @product_name)
+    @launcher ||= Puppeteer::Launcher.new(
+                    project_root: @project_root,
+                    preferred_revision: @preferred_revision,
+                    is_puppeteer_core: @is_puppeteer_core,
+                    product: @product_name)
   end
 
   # @return {string}

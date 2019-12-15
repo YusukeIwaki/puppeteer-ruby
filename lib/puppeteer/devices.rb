@@ -1,5 +1,3 @@
-require 'puppeteer/device'
-
 Puppeteer::DEVICES = Hash[
   [
     {
@@ -860,7 +858,7 @@ Puppeteer::DEVICES = Hash[
       Puppeteer::Device.new(
         name: json[:name],
         user_agent: json[:userAgent],
-        viewport: Puppeteer::Device::Viewport.new(
+        viewport: Puppeteer::Viewport.new(
           width: json[:viewport][:width],
           height: json[:viewport][:height],
           device_scale_factor: json[:viewport][:deviceScaleFactor],
