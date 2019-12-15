@@ -1,14 +1,7 @@
+require 'tmpdir'
+
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
-class Puppeteer::ChromeLauncher
-  # @param {string} projectRoot
-  # @param {string} preferredRevision
-  def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
-    @project_root = project_root
-    @preferred_revision = preferred_revision
-    @is_puppeteer_core = is_puppeteer_core
-  end
-
-
+class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
   # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions)=} options
   # @return {!Promise<!Browser>}
   def launch(options = {})
@@ -24,40 +17,63 @@ class Puppeteer::ChromeLauncher
           @launch_options.ignore_default_args.include?(arg)
         end.to_a
       else
-        @chrome_arg_options.args
+        @chrome_arg_options.args.dup
       end
 
     #
     # let temporaryUserDataDir = null;
 
-    # if (!chromeArguments.some(argument => argument.startsWith('--remote-debugging-')))
-    #   chromeArguments.push(pipe ? '--remote-debugging-pipe' : '--remote-debugging-port=0');
-    # if (!chromeArguments.some(arg => arg.startsWith('--user-data-dir'))) {
-    #   temporaryUserDataDir = await mkdtempAsync(profilePath);
-    #   chromeArguments.push(`--user-data-dir=${temporaryUserDataDir}`);
-    # }
+    if chrome_arguments.any?{ |arg| arg.start_with?('--remote-debugging-') }
+      if @launch_options.pipe?
+        chrome_arguments << '--remote-debugging-pipe'
+      else
+        chrome_arguments << '--remote-debugging-port=0'
+      end
+    end
 
-    # let chromeExecutable = executablePath;
-    # if (!executablePath) {
-    #   const {missingText, executablePath} = resolveExecutablePath(this);
-    #   if (missingText)
-    #     throw new Error(missingText);
-    #   chromeExecutable = executablePath;
-    # }
+    temporary_user_data_dir = nil
+    if chrome_arguments.none?{ |arg| arg.start_with?('--user-data-dir') }
+      temporary_user_data_dir = Dir.mktmpdir('puppeteer_dev_profile-')
+      chrome_arguments << "--user-data-dir=#{temporary_user_data_dir}"
+    end
 
-    # const usePipe = chromeArguments.includes('--remote-debugging-pipe');
-    # const runner = new BrowserRunner(chromeExecutable, chromeArguments, temporaryUserDataDir);
-    # runner.start({handleSIGHUP, handleSIGTERM, handleSIGINT, dumpio, env, pipe: usePipe});
+    chrome_executable = @launch_options.executable_path || resolve_executable_path
+    user_pipe = chrome_arguments.include?('--remote-debugging-pipe')
+    runner = BrowserRunner.new(chrome_executable, chrome_arguments, temporary_user_data_dir)
+    runner.start(
+      handle_SIGHUP: @launch_options.handleSIGHUP?,
+      handle_SIGTERM: @launch_options.handle_SIGTERM?,
+      handle_SIGINT: @launch_options.handle_SIGINT?,
+      dumpio: @launch_options.dumpio?,
+      env: @launch_options.env,
+      pipe: use_pipe
+    );
 
-    # try {
-    #   const connection = await runner.setupConnection({usePipe, timeout, slowMo, preferredRevision: this._preferredRevision});
-    #   const browser = await Browser.create(connection, [], ignoreHTTPSErrors, defaultViewport, runner.proc, runner.close.bind(runner));
-    #   await browser.waitForTarget(t => t.type() === 'page');
-    #   return browser;
-    # } catch (error) {
-    #   runner.kill();
-    #   throw error;
-    # }
+    begin
+      connection = runner.setup_connection(
+        use_pipe: use_pipe,
+        timeout: @launch_options.timeout,
+        slow_mo: @browser_options.slow_mo,
+        preferred_revision: @preferred_revision
+      )
+
+      browser = Browser.create(
+        connection,
+        [],
+        @browser_options.ignore_https_errors?,
+        runner.proc,
+        runner.close
+      )
+
+      browser.wait_for_target do |target|
+        target.type == 'page'
+      end
+
+      browser
+    rescue
+      runner.kill
+      raise
+    end
   end
 
   class DefaultArgs
