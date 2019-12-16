@@ -57,7 +57,7 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
         preferred_revision: @preferred_revision
       )
 
-      browser = Browser.create(
+      browser = Puppeteer::Browser.create(
         connection,
         [],
         @browser_options.ignore_https_errors?,
