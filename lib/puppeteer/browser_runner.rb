@@ -19,7 +19,7 @@ class Puppeteer::BrowserRunner
   def start(options = {}) # TODO: あとでキーワード引数にする
     @launch_options = Puppeteer::Launcher::LaunchOptions.new(options)
     @proc = spawn(
-      launch_options.env,
+      @launch_options.env,
       "#{@executable_path} #{@process_arguments.join(" ")}",
       out: :out,
       err: :err)
@@ -85,5 +85,9 @@ class Puppeteer::BrowserRunner
     end
 
     @connection
+  end
+
+  private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
+
   end
 end

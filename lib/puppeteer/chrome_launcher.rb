@@ -5,9 +5,9 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
   # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions)=} options
   # @return {!Promise<!Browser>}
   def launch(options = {})
-    @chrome_arg_options = Launcher::ChromeArgOptions.new(options)
-    @launch_options = Launcher::LaunchOptions.new(options)
-    @browser_options = Launcher::BrowserOptions.new(options)
+    @chrome_arg_options = Puppeteer::Launcher::ChromeArgOptions.new(options)
+    @launch_options = Puppeteer::Launcher::LaunchOptions.new(options)
+    @browser_options = Puppeteer::Launcher::BrowserOptions.new(options)
 
     chrome_arguments =
       if !@launch_options.ignore_default_args
@@ -38,10 +38,10 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
     end
 
     chrome_executable = @launch_options.executable_path || resolve_executable_path
-    user_pipe = chrome_arguments.include?('--remote-debugging-pipe')
-    runner = BrowserRunner.new(chrome_executable, chrome_arguments, temporary_user_data_dir)
+    use_pipe = chrome_arguments.include?('--remote-debugging-pipe')
+    runner = Puppeteer::BrowserRunner.new(chrome_executable, chrome_arguments, temporary_user_data_dir)
     runner.start(
-      handle_SIGHUP: @launch_options.handleSIGHUP?,
+      handle_SIGHUP: @launch_options.handle_SIGHUP?,
       handle_SIGTERM: @launch_options.handle_SIGTERM?,
       handle_SIGINT: @launch_options.handle_SIGINT?,
       dumpio: @launch_options.dumpio?,
@@ -115,7 +115,7 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
         chrome_arguments << '--auto-open-devtools-for-tabs'
       end
 
-      if (chrome_arg_options.headless?) {
+      if (chrome_arg_options.headless?)
         chrome_arguments.concat([
           '--headless',
           '--hide-scrollbars',
