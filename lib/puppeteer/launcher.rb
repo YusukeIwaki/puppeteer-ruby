@@ -24,6 +24,14 @@ class Puppeteer::Launcher
           "Tried to use PUPPETEER_EXECUTABLE_PATH env variable to launch browser but did not find any executable at: #{executablePath}"
         )
       end
+
+      # temporal logic.
+      if RUBY_PLATFORM.include?("darwin") # MacOS
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+      else
+        '/usr/bin/google-chrome'
+      end
+
       # const browserFetcher = new BrowserFetcher(launcher._projectRoot);
       # if (!launcher._isPuppeteerCore) {
       #   const revision = process.env['PUPPETEER_CHROMIUM_REVISION'];

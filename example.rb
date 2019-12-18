@@ -1,4 +1,4 @@
-require('puppeteer');
+require 'puppeteer';
 
 Puppeteer.launch(headless: false) do |browser|
   page = browser.new_pages.first || browser.new_page

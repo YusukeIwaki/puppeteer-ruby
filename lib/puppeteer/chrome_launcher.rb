@@ -23,7 +23,7 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
     #
     # let temporaryUserDataDir = null;
 
-    if chrome_arguments.any?{ |arg| arg.start_with?('--remote-debugging-') }
+    if chrome_arguments.none?{ |arg| arg.start_with?('--remote-debugging-') }
       if @launch_options.pipe?
         chrome_arguments << '--remote-debugging-pipe'
       else
@@ -148,12 +148,9 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
   def connect(options)
   end
 
+  # @return {string}
   def executable_path
-  end
-
-  # @return [String]
-  private def executable_path
-    ENV["PUPPETEER_EXECUTABLE_PATH"]
+    resolve_executable_path
   end
 
   private def product

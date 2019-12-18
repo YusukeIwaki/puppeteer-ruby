@@ -18,9 +18,11 @@ class Puppeteer::BrowserRunner
   # @param {!(Launcher.LaunchOptions)=} options
   def start(options = {}) # TODO: あとでキーワード引数にする
     @launch_options = Puppeteer::Launcher::LaunchOptions.new(options)
+    puts "#{@executable_path} [#{@process_arguments.join("\n")}]"
     @proc = spawn(
       @launch_options.env,
-      "#{@executable_path} #{@process_arguments.join(" ")}",
+      @executable_path,
+      *@process_arguments,
       out: :out,
       err: :err)
     @closed = false
@@ -74,7 +76,7 @@ class Puppeteer::BrowserRunner
   # @param {!({usePipe?: boolean, timeout: number, slowMo: number, preferredRevision: string})} options
   # @return {!Promise<!Connection>}
   def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:)
-    if !user_pipe
+    if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
       transport = WebSocketTransport.create(browser_ws_endpoint)
       @connection = Connection.new(browser_ws_endpoint, transport, slow_mo)
