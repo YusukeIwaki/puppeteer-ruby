@@ -1,4 +1,6 @@
 require 'fileutils'
+require 'open3'
+require 'timeout'
 
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
 class Puppeteer::BrowserRunner
@@ -15,19 +17,35 @@ class Puppeteer::BrowserRunner
     @listeners = []
   end
 
+  class BrowserProcess
+    def initialize(env, executable_path, args)
+      stdin, @stdout, @stderr, @thread = Open3.popen3(env, executable_path, *args)
+      stdin.close
+    end
+
+    def dispose
+      [@stdout, @stderr].each{ |io| io.close unless io.closed? }
+      @thread.join
+    end
+
+    attr_reader :stdout, :stderr
+  end
+
   # @param {!(Launcher.LaunchOptions)=} options
   def start(options = {}) # TODO: あとでキーワード引数にする
     @launch_options = Puppeteer::Launcher::LaunchOptions.new(options)
-    puts "#{@executable_path} [#{@process_arguments.join("\n")}]"
-    @proc = spawn(
+    @proc = BrowserProcess.new(
       @launch_options.env,
       @executable_path,
-      *@process_arguments,
-      out: :out,
-      err: :err)
+      @process_arguments
+    )
+    # if (dumpio) {
+    #   this.proc.stderr.pipe(process.stderr);
+    #   this.proc.stdout.pipe(process.stdout);
+    # }
     @closed = false
     @process_closing = -> {
-      Process.waitpid(@proc)
+      @proc.dispose
       @closed = true
       if @temp_directory
         FileUtils.rm_rf(@temp_directory)
@@ -78,6 +96,7 @@ class Puppeteer::BrowserRunner
   def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:)
     if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
+      puts browser_ws_endpoint
       transport = WebSocketTransport.create(browser_ws_endpoint)
       @connection = Connection.new(browser_ws_endpoint, transport, slow_mo)
     else
@@ -90,6 +109,15 @@ class Puppeteer::BrowserRunner
   end
 
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
-
+    Timeout.timeout(timeout / 1000) do
+      loop do
+        line = browser_process.stderr.readline
+        /^DevTools listening on (ws:\/\/.*)$/.match(line) do |m|
+          return m[1]
+        end
+      end
+    end
+  rescue Timeout::Error
+    raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferredRevision} is guaranteed to work.")
   end
 end
