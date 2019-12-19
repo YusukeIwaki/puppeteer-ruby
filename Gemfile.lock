@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     puppeteer-ruby (0.1.0)
+      websocket-driver (>= 0.6.0)
 
 GEM
   remote: https://rubygems.org/
@@ -36,6 +37,9 @@ GEM
       unicode-display_width (>= 1.4.0, < 1.7)
     ruby-progressbar (1.10.1)
     unicode-display_width (1.6.0)
+    websocket-driver (0.7.1)
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.4)
 
 PLATFORMS
   ruby

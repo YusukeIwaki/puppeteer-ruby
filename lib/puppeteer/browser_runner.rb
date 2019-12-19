@@ -96,8 +96,7 @@ class Puppeteer::BrowserRunner
   def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:)
     if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
-      puts browser_ws_endpoint
-      transport = WebSocketTransport.create(browser_ws_endpoint)
+      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
       @connection = Connection.new(browser_ws_endpoint, transport, slow_mo)
     else
       #   const transport = new PipeTransport(/** @type {!NodeJS.WritableStream} */(this.proc.stdio[3]), /** @type {!NodeJS.ReadableStream} */ (this.proc.stdio[4]));

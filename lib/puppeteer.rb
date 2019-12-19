@@ -1,11 +1,15 @@
-require 'puppeteer/viewport'
+# Custome data types.
 require 'puppeteer/device'
-require 'puppeteer/devices'
-require 'puppeteer/launcher'
+require 'puppeteer/errors'
+require 'puppeteer/viewport'
+
+# Classes & values.
 require 'puppeteer/browser_runner'
 require 'puppeteer/chrome_launcher'
-require 'puppeteer/errors'
+require 'puppeteer/devices'
+require 'puppeteer/launcher'
 require 'puppeteer/version'
+require 'puppeteer/web_socket_transport'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 class Puppeteer
