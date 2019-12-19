@@ -5,9 +5,9 @@ require 'puppeteer/viewport'
 
 # Classes & values.
 require 'puppeteer/browser_runner'
-require 'puppeteer/chrome_launcher'
 require 'puppeteer/devices'
 require 'puppeteer/launcher'
+require 'puppeteer/chrome_launcher'
 require 'puppeteer/version'
 require 'puppeteer/web_socket_transport'
 
