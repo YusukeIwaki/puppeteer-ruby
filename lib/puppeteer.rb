@@ -9,6 +9,7 @@ require 'puppeteer/devices'
 require 'puppeteer/launcher'
 require 'puppeteer/chrome_launcher'
 require 'puppeteer/version'
+require 'puppeteer/web_socket'
 require 'puppeteer/web_socket_transport'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
