@@ -4,7 +4,10 @@ require 'puppeteer/errors'
 require 'puppeteer/viewport'
 
 # Classes & values.
+require 'puppeteer/browser'
+require 'puppeteer/browser_context'
 require 'puppeteer/browser_runner'
+require 'puppeteer/connection'
 require 'puppeteer/devices'
 require 'puppeteer/launcher'
 require 'puppeteer/chrome_launcher'

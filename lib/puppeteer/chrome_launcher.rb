@@ -58,11 +58,12 @@ class Puppeteer::ChromeLauncher < Puppeteer::Launcher::Base
       )
 
       browser = Puppeteer::Browser.create(
-        connection,
-        [],
-        @browser_options.ignore_https_errors?,
-        runner.proc,
-        runner.close
+        connection: connection,
+        context_ids: [],
+        ignore_https_errors: @browser_options.ignore_https_errors?,
+        default_viewport: @browser_options.default_viewport,
+        process: runner.proc,
+        close_callback: ->{ runner.close }
       )
 
       browser.wait_for_target do |target|

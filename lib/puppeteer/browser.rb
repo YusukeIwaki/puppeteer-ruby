@@ -3,10 +3,10 @@ class Puppeteer::Browser
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
-  # @param {?Puppeteer.ChildProcess} process
+  # @param process [Puppeteer::BrowserRunner::BrowserProcess|NilClass]
   # @param {function()=} closeCallback
   def self.create(connection:, context_ids:, ignore_https_errors:, default_viewport:, process:, close_callback:)
-    browser = Browser.new(
+    browser = Puppeteer::Browser.new(
       connection: connection,
       context_ids: context_ids,
       ignore_https_errors: ignore_https_errors,
@@ -14,7 +14,7 @@ class Puppeteer::Browser
       process: process,
       close_callback: close_callback
     )
-    connection.sendCommand('Target.setDisvocerTargets', discover: true)
+    connection.send_message('Target.setDisvocerTargets', discover: true)
 
     browser
   end
@@ -33,15 +33,12 @@ class Puppeteer::Browser
     @connection = connection
     @close_callback = close_callback
 
-    @default_context = BrowserContext.new(@connection, self, nil)
-    #   this._defaultContext = new BrowserContext(this._connection, this, null);
-  #   /** @type {Map<string, BrowserContext>} */
-  #   this._contexts = new Map();
-  #   for (const contextId of contextIds)
-  #     this._contexts.set(contextId, new BrowserContext(this._connection, this, contextId));
-
-  #   /** @type {Map<string, Target>} */
-  #   this._targets = new Map();
+    @default_context = Puppeteer::BrowserContext.new(@connection, self, nil)
+    @contexts = {}
+    context_ids.each do |context_id|
+      @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self. context_id)
+    end
+    @targets = {}
   #   this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
   #   this._connection.on('Target.targetCreated', this._targetCreated.bind(this));
   #   this._connection.on('Target.targetDestroyed', this._targetDestroyed.bind(this));
@@ -49,44 +46,31 @@ class Puppeteer::Browser
   # }
   end
 
-  # /**
-  #  * @return {?Puppeteer.ChildProcess}
-  #  */
-  # process() {
-  #   return this._process;
-  # }
+  # @return [Puppeteer::BrowserRunner::BrowserProcess]
+  def process
+    @process
+  end
 
-  # /**
-  #  * @return {!Promise<!BrowserContext>}
-  #  */
-  # async createIncognitoBrowserContext() {
-  #   const {browserContextId} = await this._connection.send('Target.createBrowserContext');
-  #   const context = new BrowserContext(this._connection, this, browserContextId);
-  #   this._contexts.set(browserContextId, context);
-  #   return context;
-  # }
+  # @return [Puppeteer::BrowserContext]
+  def create_incognito_browser_context
+    browser_context_id = @connection.send_message('Target.createBrowserContext')
+    @contexts[browser_context_id] = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
+  end
 
-  # /**
-  #  * @return {!Array<!BrowserContext>}
-  #  */
-  # browserContexts() {
-  #   return [this._defaultContext, ...Array.from(this._contexts.values())];
-  # }
+  def browser_contexts
+    [@default_context].concat(@contexts.values)
+  end
 
-  # /**
-  #  * @return {!BrowserContext}
-  #  */
-  # defaultBrowserContext() {
-  #   return this._defaultContext;
-  # }
+  # @return [Puppeteer::BrowserContext]
+  def default_browser_context
+    @default_context
+  end
 
-  # /**
-  #  * @param {?string} contextId
-  #  */
-  # async _disposeContext(contextId) {
-  #   await this._connection.send('Target.disposeBrowserContext', {browserContextId: contextId || undefined});
-  #   this._contexts.delete(contextId);
-  # }
+  # @param context_id [String]
+  def dispose_context(context_id)
+    @connection.send_message('Target.disposeBrowserContext', browser_context_id: context_id)
+    @contexts.remove(context_id)
+  end
 
   # /**
   #  * @param {!Protocol.Target.targetCreatedPayload} event
@@ -135,19 +119,14 @@ class Puppeteer::Browser
   #   }
   # }
 
-  # /**
-  #  * @return {string}
-  #  */
-  # wsEndpoint() {
-  #   return this._connection.url();
-  # }
+  # @return [String]
+  def websocket_endpoint
+    @connection.url
+  end
 
-  # /**
-  #  * @return {!Promise<!Puppeteer.Page>}
-  #  */
-  # async newPage() {
-  #   return this._defaultContext.newPage();
-  # }
+  def new_page
+    @default_context.new_page
+  end
 
   # /**
   #  * @param {?string} contextId
@@ -218,42 +197,30 @@ class Puppeteer::Browser
   #   return contextPages.reduce((acc, x) => acc.concat(x), []);
   # }
 
-  # /**
-  #  * @return {!Promise<string>}
-  #  */
-  # async version() {
-  #   const version = await this._getVersion();
-  #   return version.product;
-  # }
+  # @return [String]
+  def version
+    get_version.product
+  end
 
-  # /**
-  #  * @return {!Promise<string>}
-  #  */
-  # async userAgent() {
-  #   const version = await this._getVersion();
-  #   return version.userAgent;
-  # }
+  # @return [String]
+  def user_agent
+    get_version.user_agent
+  end
 
-  # async close() {
-  #   await this._closeCallback.call(null);
-  #   this.disconnect();
-  # }
+  def close
+    @close_callback.call
+    disconnect
+  end
 
-  # disconnect() {
-  #   this._connection.dispose();
-  # }
+  def disconnect
+    @connection.dispose
+  end
 
-  # /**
-  #  * @return {boolean}
-  #  */
-  # isConnected() {
-  #   return !this._connection._closed;
-  # }
+  def connected?
+    !@connection.closed?
+  end
 
-  # /**
-  #  * @return {!Promise<!Object>}
-  #  */
-  # _getVersion() {
-  #   return this._connection.send('Browser.getVersion');
-  # }
+  private def get_version
+    @connection.send_message('Browser.getVersion')
+  end
 end
