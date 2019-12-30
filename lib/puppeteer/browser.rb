@@ -86,8 +86,8 @@ class Puppeteer::Browser
 
   # @param {!Protocol.Target.targetCreatedPayload} event
   def handle_target_created(event)
-    target_info = event['targetInfo']
-    browser_context_id = target_info['browserContextId']
+    target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
+    browser_context_id = target_info.browser_context_id
     context =
       if browser_context_id && @contexts.has_key?(browser_context_id)
         @contexts[browser_context_id]
@@ -95,11 +95,18 @@ class Puppeteer::Browser
         @default_context
       end
 
-    target = Target.new(target_info, context, ->{ @connection.create_session(target_info) }, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
+    target = Puppeteer::Target.new(
+      target_info: target_info,
+      browser_context: context,
+      session_factory: ->{ @connection.create_session(target_info) },
+      ignore_https_errors: @ignore_https_errors,
+      default_viewport: @default_viewport,
+      screenshot_task_queue: @screenshot_task_queue
+    )
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
-    @targets[target_info['targetId']] = target
+    @targets[target_info.target_id] = target
 
-    if target.initialized_promise
+    target.on_initialize_completed do
       @on_browser_target_created&.call(target)
       context.handle_browser_context_target_created(target)
     end
@@ -113,7 +120,7 @@ class Puppeteer::Browser
     target.initialized_callback(false)
     @targets.delete(target_id)
     target.closed_callback
-    if target.initialized_promise
+    target.on_initialize_completed do
       @on_browser_target_destroyed&.call(target)
       target.browser_context.handle_browser_context_target_destroyed(target)
     end
@@ -121,14 +128,14 @@ class Puppeteer::Browser
 
   # @param {!Protocol.Target.targetInfoChangedPayload} event
   def handle_target_info_changed(event)
-    target_id = event['targetInfo']['targetId']
-    target = @targets[target_id]
+    target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
+    target = @targets[target_info.target_id]
     if !target
       throw StandardError.new('target should exist before targetInfoChanged')
     end
     previous_url = target.url
     was_initialized = target.initialized?
-    target.call_target_info_changed(event['targetInfo'])
+    target.handle_target_info_changed(target_info)
     if was_initialized && previous_url != target.url
       @browser_target_changed&.call(target)
       @browser_context.handle_browser_context_target_changed(target)

@@ -1,4 +1,4 @@
-# Custome data types.
+# Custom data types.
 require 'puppeteer/device'
 require 'puppeteer/errors'
 require 'puppeteer/viewport'
@@ -10,7 +10,7 @@ require 'puppeteer/browser_runner'
 require 'puppeteer/connection'
 require 'puppeteer/devices'
 require 'puppeteer/launcher'
-require 'puppeteer/chrome_launcher'
+require 'puppeteer/target'
 require 'puppeteer/version'
 require 'puppeteer/web_socket'
 require 'puppeteer/web_socket_transport'
