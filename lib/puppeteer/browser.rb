@@ -14,7 +14,7 @@ class Puppeteer::Browser
       process: process,
       close_callback: close_callback
     )
-    connection.send_message('Target.setDisvocerTargets', discover: true)
+    connection.send_message('Target.setDiscoverTargets', discover: true)
 
     browser
   end
@@ -39,11 +39,20 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self. context_id)
     end
     @targets = {}
-  #   this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
-  #   this._connection.on('Target.targetCreated', this._targetCreated.bind(this));
-  #   this._connection.on('Target.targetDestroyed', this._targetDestroyed.bind(this));
-  #   this._connection.on('Target.targetInfoChanged', this._targetInfoChanged.bind(this));
-  # }
+    @connection.on_connection_disconnected do
+      @on_browser_disconnected&.call
+    end
+    @connection.on_message do |message|
+      puts "Browser#on_message #{message}"
+      case message['method']
+      when 'Target.targetCreated'
+        handle_target_created(message['params'])
+      when 'Target.targetDestroyed'
+        handle_target_destroyed(message['params'])
+      when 'Target.targetInfoChanged'
+        handle_target_info_changed(message['params'])
+      end
+    end
   end
 
   # @return [Puppeteer::BrowserRunner::BrowserProcess]
@@ -72,52 +81,55 @@ class Puppeteer::Browser
     @contexts.remove(context_id)
   end
 
-  # /**
-  #  * @param {!Protocol.Target.targetCreatedPayload} event
-  #  */
-  # async _targetCreated(event) {
-  #   const targetInfo = event.targetInfo;
-  #   const {browserContextId} = targetInfo;
-  #   const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
+  # @param {!Protocol.Target.targetCreatedPayload} event
+  def handle_target_created(event)
+    target_info = event['targetInfo']
+    browser_context_id = target_info['browserContextId']
+    context =
+      if browser_context_id && @contexts.has_key?(browser_context_id)
+        @contexts[browser_context_id]
+      else
+        @default_context
+      end
+    #   const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
+    #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
+    #   this._targets.set(event.targetInfo.targetId, target);
 
-  #   const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
-  #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
-  #   this._targets.set(event.targetInfo.targetId, target);
+    if target.initialized_promise
+      @on_browser_target_created&.call(target)
+      context.emit_browser_context_target_created(target)
+    end
+  end
 
-  #   if (await target._initializedPromise) {
-  #     this.emit(Events.Browser.TargetCreated, target);
-  #     context.emit(Events.BrowserContext.TargetCreated, target);
-  #   }
-  # }
 
-  # /**
-  #  * @param {{targetId: string}} event
-  #  */
-  # async _targetDestroyed(event) {
-  #   const target = this._targets.get(event.targetId);
-  #   target._initializedCallback(false);
-  #   this._targets.delete(event.targetId);
-  #   target._closedCallback();
-  #   if (await target._initializedPromise) {
-  #     this.emit(Events.Browser.TargetDestroyed, target);
-  #     target.browserContext().emit(Events.BrowserContext.TargetDestroyed, target);
-  #   }
-  # }
+  # @param {{targetId: string}} event
+  def handle_target_destroyed(event)
+    target_id = event['targetId']
+    target = @targets[target_id]
+    target.initialized_callback(false)
+    @targets.delete(target_id)
+    target.closed_callback
+    if target.initialized_promise
+      @on_browser_target_destroyed&.call(target)
+      target.browser_context.emit_browser_context_target_destroyed(target)
+    end
+  end
 
-  # /**
-  #  * @param {!Protocol.Target.targetInfoChangedPayload} event
-  #  */
-  # _targetInfoChanged(event) {
-  #   const target = this._targets.get(event.targetInfo.targetId);
-  #   assert(target, 'target should exist before targetInfoChanged');
-  #   const previousURL = target.url();
-  #   const wasInitialized = target._isInitialized;
-  #   target._targetInfoChanged(event.targetInfo);
-  #   if (wasInitialized && previousURL !== target.url()) {
-  #     this.emit(Events.Browser.TargetChanged, target);
-  #     target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
-  #   }
-  # }
+  # @param {!Protocol.Target.targetInfoChangedPayload} event
+  def handle_target_info_changed(event)
+    target_id = event['targetInfo']['targetId']
+    target = @targets[target_id]
+    if !target
+      throw StandardError.new('target should exist before targetInfoChanged')
+    end
+    previous_url = target.url
+    was_initialized = target.intialized?
+    target.call_target_info_changed(event['targetInfo'])
+    if was_initialized && previous_url != target.url
+      @browser_target_changed&.call(target)
+      @browser_context.emit_browser_context_target_changed(target)
+    end
+  end
 
   # @return [String]
   def websocket_endpoint

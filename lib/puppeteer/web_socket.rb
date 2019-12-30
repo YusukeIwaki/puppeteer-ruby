@@ -53,6 +53,7 @@ class Puppeteer::WebSocket
       end
     end
     @driver.on(:message) do |event|
+      handle_on_message(event.data)
       @message_buffer << event.data
     end
   end
@@ -92,6 +93,10 @@ class Puppeteer::WebSocket
     @on_error = block
   end
 
+  def on_message(&block)
+    @on_message = block
+  end
+
   private def handle_on_close(reason:, code:)
     @on_close&.call(reason, code)
   end
@@ -101,5 +106,11 @@ class Puppeteer::WebSocket
 
     @on_error.call(error_message)
     true
+  end
+
+  private def handle_on_message(data)
+    return if @ready_state != STATE_OPENED
+
+    @on_message&.call(data)
   end
 end

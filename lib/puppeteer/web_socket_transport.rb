@@ -11,8 +11,11 @@ class Puppeteer::WebSocketTransport
   # @param {!WebSocket::Driver} web_socket
   def initialize(web_socket)
     @ws = web_socket
+    @ws.on_message do |data|
+      @on_message&.call(data)
+    end
     @ws.on_close do |reason, code|
-      @on_close&.call
+      @on_close&.call(reason, code)
     end
     @ws.on_error do |error|
       # Silently ignore all errors - we don't know what to do with them.
@@ -26,5 +29,13 @@ class Puppeteer::WebSocketTransport
 
   def close
     @ws.close
+  end
+
+  def on_close(&block)
+    @on_close = block
+  end
+
+  def on_message(&block)
+    @on_message = block
   end
 end

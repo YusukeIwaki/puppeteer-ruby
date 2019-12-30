@@ -7,6 +7,14 @@ class Puppeteer::Connection
     @delay = delay
 
     @transport = transport
+    @transport.on_message do |data|
+      message = JSON.parse(data)
+      puts "RECV << #{message}"
+      @on_message&.call(message)
+    end
+    @transport.on_close do |reason, code|
+      @on_close&.call(reason, code)
+    end
 
     @closed = false
   end
@@ -50,9 +58,7 @@ class Puppeteer::Connection
   end
 
   private def raw_read
-    message = JSON.parse(@transport.read)
-    puts "RECV << #{message}"
-    message
+    JSON.parse(@transport.read)
   end
 
   private def read_until(&predicate)
@@ -65,7 +71,29 @@ class Puppeteer::Connection
   end
 
   private def handle_on_close
+    return if @closed
+    @closed = true
+    @transport.on_message
+    @transport.on_close
+    # for (const callback of this._callbacks.values())
+    #   callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
+    # this._callbacks.clear();
+    # for (const session of this._sessions.values())
+    #   session._onClosed();
+    # this._sessions.clear();
+    @on_connection_disconnected&.call
+  end
 
+  def on_close(&block)
+    @on_close = block
+  end
+
+  def on_message(&block)
+    @on_message = block
+  end
+
+  def on_connection_disconnected(&block)
+    @on_connection_disconnected = block
   end
 
   def dispose
