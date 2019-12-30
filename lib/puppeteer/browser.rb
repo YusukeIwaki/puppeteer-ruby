@@ -1,3 +1,6 @@
+require 'timeout'
+require 'thread'
+
 class Puppeteer::Browser
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
@@ -91,13 +94,14 @@ class Puppeteer::Browser
       else
         @default_context
       end
-    #   const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
+
+    target = Target.new(target_info, context, ->{ @connection.create_session(target_info) }, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
-    #   this._targets.set(event.targetInfo.targetId, target);
+    @targets[target_info['targetId']] = target
 
     if target.initialized_promise
       @on_browser_target_created&.call(target)
-      context.emit_browser_context_target_created(target)
+      context.handle_browser_context_target_created(target)
     end
   end
 
@@ -111,7 +115,7 @@ class Puppeteer::Browser
     target.closed_callback
     if target.initialized_promise
       @on_browser_target_destroyed&.call(target)
-      target.browser_context.emit_browser_context_target_destroyed(target)
+      target.browser_context.handle_browser_context_target_destroyed(target)
     end
   end
 
@@ -123,11 +127,11 @@ class Puppeteer::Browser
       throw StandardError.new('target should exist before targetInfoChanged')
     end
     previous_url = target.url
-    was_initialized = target.intialized?
+    was_initialized = target.initialized?
     target.call_target_info_changed(event['targetInfo'])
     if was_initialized && previous_url != target.url
       @browser_target_changed&.call(target)
-      @browser_context.emit_browser_context_target_changed(target)
+      @browser_context.handle_browser_context_target_changed(target)
     end
   end
 
@@ -152,62 +156,51 @@ class Puppeteer::Browser
   #   return page;
   # }
 
-  # /**
-  #  * @return {!Array<!Target>}
-  #  */
-  # targets() {
-  #   return Array.from(this._targets.values()).filter(target => target._isInitialized);
-  # }
+  # @return {!Array<!Target>}
+  def targets
+    @targets.values.select{ |target| target.initialized? }
+  end
 
-  # /**
-  #  * @return {!Target}
-  #  */
-  # target() {
-  #   return this.targets().find(target => target.type() === 'browser');
-  # }
 
-  # /**
-  #  * @param {function(!Target):boolean} predicate
-  #  * @param {{timeout?: number}=} options
-  #  * @return {!Promise<!Target>}
-  #  */
-  # async waitForTarget(predicate, options = {}) {
-  #   const {
-  #     timeout = 30000
-  #   } = options;
-  #   const existingTarget = this.targets().find(predicate);
-  #   if (existingTarget)
-  #     return existingTarget;
-  #   let resolve;
-  #   const targetPromise = new Promise(x => resolve = x);
-  #   this.on(Events.Browser.TargetCreated, check);
-  #   this.on(Events.Browser.TargetChanged, check);
-  #   try {
-  #     if (!timeout)
-  #       return await targetPromise;
-  #     return await helper.waitWithTimeout(targetPromise, 'target', timeout);
-  #   } finally {
-  #     this.removeListener(Events.Browser.TargetCreated, check);
-  #     this.removeListener(Events.Browser.TargetChanged, check);
-  #   }
+  # @return {!Target}
+  def target
+    targets.first{ |target| target.type == 'browser' }
+  end
 
-  #   /**
-  #    * @param {!Target} target
-  #    */
-  #   function check(target) {
-  #     if (predicate(target))
-  #       resolve(target);
-  #   }
-  # }
+  # @param {function(!Target):boolean} predicate
+  # @param {{timeout?: number}=} options
+  # @return {!Promise<!Target>}
+  def wait_for_target(predicate:, timeout: nil)
+    timeout_in_sec = timeout || 30
+    existing_target = targets.first{ |target| predicate.call(target) }
+    return existing_target if existing_target
 
-  # /**
-  #  * @return {!Promise<!Array<!Puppeteer.Page>>}
-  #  */
-  # async pages() {
-  #   const contextPages = await Promise.all(this.browserContexts().map(context => context.pages()));
-  #   // Flatten array.
-  #   return contextPages.reduce((acc, x) => acc.concat(x), []);
-  # }
+    queue = Queue.new
+    begin
+      Timeout.timeout(timeout_in_sec) do
+        @on_browser_target_created = -> (target){
+          if predicate.call(target)
+            queue.push(1)
+          end
+        }
+        @on_browser_target_changed = -> (target){
+          if predicate.call(target)
+            queue.push(1)
+          end
+        }
+        queue.pop
+      end
+    ensure
+      @on_browser_target_created = nil
+      @on_browser_target_changed = nil
+      queue.close
+    end
+  end
+
+  # @return {!Promise<!Array<!Puppeteer.Page>>}
+  def pages
+    @browser_contexts.flat_map(&:pages)
+  end
 
   # @return [String]
   def version

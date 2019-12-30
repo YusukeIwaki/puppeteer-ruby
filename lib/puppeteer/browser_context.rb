@@ -8,33 +8,25 @@ class Puppeteer::BrowserContext
     @id = context_id
   end
 
-  # /**
-  #  * @return {!Array<!Target>} target
-  #  */
-  # targets() {
-  #   return this._browser.targets().filter(target => target.browserContext() === this);
-  # }
+  # @return {!Array<!Target>} target
+  def targets
+    @browser.targets.select{ |target| target.browser_context == self }
+  end
 
-  # /**
-  #  * @param {function(!Target):boolean} predicate
-  #  * @param {{timeout?: number}=} options
-  #  * @return {!Promise<!Target>}
-  #  */
-  # waitForTarget(predicate, options) {
-  #   return this._browser.waitForTarget(target => target.browserContext() === this && predicate(target), options);
-  # }
+  # @param {function(!Target):boolean} predicate
+  # @param {{timeout?: number}=} options
+  # @return {!Promise<!Target>}
+  def wait_for_target(predicate:, timeout: nil)
+    @browser.wait_for_target(
+      predicate: ->(target) { target.browser_context == self && predicate.call(target) },
+      timeout: timeout
+    )
+  end
 
-  # /**
-  #  * @return {!Promise<!Array<!Puppeteer.Page>>}
-  #  */
-  # async pages() {
-  #   const pages = await Promise.all(
-  #       this.targets()
-  #           .filter(target => target.type() === 'page')
-  #           .map(target => target.page())
-  #   );
-  #   return pages.filter(page => !!page);
-  # }
+  # @return {!Promise<!Array<!Puppeteer.Page>>}
+  def pages
+    @targets.select{ |target| target.type == 'page' }.map(&:page).reject{ |page| !page }
+  end
 
   def incognito?
     !@id
@@ -92,5 +84,14 @@ class Puppeteer::BrowserContext
       raise 'Non-incognito profiles cannot be closed!'
     end
     @browser.dispose_context(@id)
+  end
+
+  def handle_browser_context_target_created(target)
+  end
+
+  def handle_browser_context_target_destroyed(target)
+  end
+
+  def handle_browser_context_target_changed(target)
   end
 end
