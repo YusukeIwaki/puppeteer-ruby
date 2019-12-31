@@ -23,6 +23,7 @@ class Puppeteer::Target
     @target_info = target_info
     @browser_context = browser_context
     @target_id = target_info.target_id
+    @session_factory = session_factory
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
     @screenshot_task_queue = screenshot_task_queue
@@ -127,7 +128,7 @@ class Puppeteer::Target
   end
 
   # @param {!Protocol.Target.TargetInfo} targetInfo
-  private def handle_target_info_changed(target_info)
+  def handle_target_info_changed(target_info)
     @target_info = target_info
 
     if !@is_initialized && (@target_info.type != 'page' || !target_info.url.empty?)

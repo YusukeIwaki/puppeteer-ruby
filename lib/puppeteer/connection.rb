@@ -10,14 +10,13 @@ class Puppeteer::Connection
 
     @transport = transport
     @transport.on_message do |data|
-      message = JSON.parse(data)
-      debug_print "RECV << #{message}"
-      @on_message&.call(message)
+      handle_message(JSON.parse(data))
     end
     @transport.on_close do |reason, code|
       @on_close&.call(reason, code)
     end
 
+    @sessions = {}
     @closed = false
   end
 
@@ -29,13 +28,11 @@ class Puppeteer::Connection
   #    return session._connection;
   #  }
 
-  #  /**
-  #   * @param {string} sessionId
-  #   * @return {?CDPSession}
-  #   */
-  #  session(sessionId) {
-  #    return this._sessions.get(sessionId) || null;
-  #  }
+  # @param {string} sessionId
+  # @return {?CDPSession}
+  def session(session_id)
+    @sessions[session_id]
+  end
 
   def url
     @url
@@ -72,6 +69,36 @@ class Puppeteer::Connection
     end
   end
 
+  private def handle_message(message)
+    if @delay > 0
+      sleep(@delay / 1000)
+    end
+    debug_print "RECV << #{message}"
+
+    case message['method']
+    when 'Target.attachedToTarget'
+      session_id = message['params']['sessionId']
+      session = CDPSession.new(self, message['params']['targetInfo']['type'], session_id)
+      @sessions[session_id] = session
+    when 'Target.detachedFromTarget'
+      session_id = message['params']['sessionId']
+      session = @sessions[session_id]
+      if session
+        session._onClosed
+        @sessions.delete(session_id)
+      end
+    end
+
+    if message['sessionId']
+      session_id = message['sessionId']
+      @sessions[session_id]&._onMessage(message)
+    elsif message['id']
+      # handled in read_until
+    else
+      @on_message&.call(message)
+    end
+  end
+
   private def handle_on_close
     return if @closed
     @closed = true
@@ -101,5 +128,13 @@ class Puppeteer::Connection
   def dispose
     handle_on_close
     @transport.close
+  end
+
+  # @param {Protocol.Target.TargetInfo} targetInfo
+  # @return {!Promise<!CDPSession>}
+  def create_session(target_info)
+    result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
+    session_id = result['sessionId']
+    @sessions[session_id]
   end
 end
