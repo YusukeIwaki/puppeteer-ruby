@@ -30,7 +30,10 @@ module Puppeteer::Launcher
       @args = options[:args] || []
       @user_data_dir = options[:user_data_dir]
       @devtools = options[:devtools] || false
-      @headless = options[:headless] || !@devtools
+      @headless = options[:headless]
+      if @headless.nil?
+        @headless = !@devtools
+      end
     end
 
     attr_reader :args, :user_data_dir
