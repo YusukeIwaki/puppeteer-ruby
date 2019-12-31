@@ -67,9 +67,7 @@ module Puppeteer::Launcher
           close_callback: ->{ runner.close }
         )
 
-        browser.wait_for_target do |target|
-          target.type == 'page'
-        end
+        browser.wait_for_target(predicate: ->(target) { target.type == 'page' })
 
         browser
       rescue

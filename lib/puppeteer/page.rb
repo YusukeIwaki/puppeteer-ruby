@@ -1,4 +1,19 @@
-class Page
+class Puppeteer::Page
+  # @param {!Puppeteer.CDPSession} client
+  # @param {!Puppeteer.Target} target
+  # @param {boolean} ignoreHTTPSErrors
+  # @param {?Puppeteer.Viewport} defaultViewport
+  # @param {!Puppeteer.TaskQueue} screenshotTaskQueue
+  # @return {!Promise<!Page>}
+  def self.create(client, target, ignore_https_errors, default_viewport, screenshot_task_queue)
+    page = Puppeteer::Page.new(client, target, ignore_https_errors, screenshot_task_queue)
+    page.init
+    if default_viewport
+      page.viewport = default_viewport
+    end
+    page
+  end
+
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Target} target
   # @param {boolean} ignoreHTTPSErrors
@@ -22,6 +37,18 @@ class Page
     @screenshot_task_queue = screenshot_task_queue
     @workers = {}
 
+  end
+
+  def init
+    @frame_manager.init
+    @client.send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true)
+    @client.send_message('Performance.enable')
+    @client.send_message('Log.enable')
+    begin
+      @client.send_message('Page.setInterceptFileChooserDialog', enabled: true)
+    rescue => err
+      @file_chooser_interception_is_disabled = true
+    end
   end
 
   def target
@@ -245,7 +272,7 @@ class Page
     go(+1, timeout: timeout, wait_until: wait_until)
   end
 
-  private go(delta, timeout: nil, wait_until: nil)
+  private def go(delta, timeout: nil, wait_until: nil)
     # const history = await this._client.send('Page.getNavigationHistory');
     # const entry = history.entries[history.currentIndex + delta];
     # if (!entry)
@@ -358,14 +385,14 @@ class Page
   # @param {string} selector
   # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def wait_for_selector(selector, options = {}) { # TODO: あとでキーワード引数にする
+  def wait_for_selector(selector, options = {}) # TODO: あとでキーワード引数にする
     main_frame.wait_for_selector(selector, options)
   end
 
   # @param {string} xpath
   # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def wait_for_xpath(xpath, options = {}) { # TODO: あとでキーワード引数にする
+  def wait_for_xpath(xpath, options = {}) # TODO: あとでキーワード引数にする
     main_frame.wait_for_xpath(xpath, options)
   end
 

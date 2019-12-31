@@ -65,7 +65,8 @@ class Puppeteer::Browser
 
   # @return [Puppeteer::BrowserContext]
   def create_incognito_browser_context
-    browser_context_id = @connection.send_message('Target.createBrowserContext')
+    result = @connection.send_message('Target.createBrowserContext')
+    browser_context_id = result['browserContextId']
     @contexts[browser_context_id] = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
   end
 
@@ -117,9 +118,9 @@ class Puppeteer::Browser
   def handle_target_destroyed(event)
     target_id = event['targetId']
     target = @targets[target_id]
-    target.initialized_callback(false)
+    target.handle_initialized(false)
     @targets.delete(target_id)
-    target.closed_callback
+    target.handle_closed
     target.on_initialize_completed do
       @on_browser_target_destroyed&.call(target)
       target.browser_context.handle_browser_context_target_destroyed(target)
@@ -151,17 +152,17 @@ class Puppeteer::Browser
     @default_context.new_page
   end
 
-  # /**
-  #  * @param {?string} contextId
-  #  * @return {!Promise<!Puppeteer.Page>}
-  #  */
-  # async _createPageInContext(contextId) {
-  #   const {targetId} = await this._connection.send('Target.createTarget', {url: 'about:blank', browserContextId: contextId || undefined});
-  #   const target = await this._targets.get(targetId);
+  # @param {?string} contextId
+  # @return {!Promise<!Puppeteer.Page>}
+  def create_page_in_context(context_id)
+    result = @connection.send_message('Target.createTarget',
+                url: 'about:blank',
+                browserContextId: context_id)
+    target_id = result['targetId']
+    target = @targets[target_id]
   #   assert(await target._initializedPromise, 'Failed to create target for page');
-  #   const page = await target.page();
-  #   return page;
-  # }
+    target.page;
+  end
 
   # @return {!Array<!Target>}
   def targets
@@ -186,12 +187,12 @@ class Puppeteer::Browser
     begin
       Timeout.timeout(timeout_in_sec) do
         @on_browser_target_created = -> (target){
-          if predicate.call(target)
+          if predicate.call(target) && !queue.closed?
             queue.push(1)
           end
         }
         @on_browser_target_changed = -> (target){
-          if predicate.call(target)
+          if predicate.call(target) && !queue.closed?
             queue.push(1)
           end
         }

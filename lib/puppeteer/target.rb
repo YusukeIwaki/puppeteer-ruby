@@ -33,25 +33,35 @@ class Puppeteer::Target
     #    /** @type {?Promise<!Worker>} */
     #    this._workerPromise = null;
     #    this._initializedPromise = new Promise(fulfill => this._initializedCallback = fulfill).then(async success => {
-    #      if (!success)
-    #        return false;
-    #      const opener = this.opener();
-    #      if (!opener || !opener._pagePromise || this.type() !== 'page')
-    #        return true;
-    #      const openerPage = await opener._pagePromise;
-    #      if (!openerPage.listenerCount(Events.Page.Popup))
-    #        return true;
-    #      const popupPage = await this.page();
-    #      openerPage.emit(Events.Page.Popup, popupPage);
-    #      return true;
-    #    });
     #    this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
 
     @is_initialized = @target_info.type != 'page' || !@target_info.url.empty?
 
     if @is_initialized
-      @initial_callback.call(true)
+      handle_initialized(true)
     end
+  end
+
+  def handle_initialized(success)
+    @initialized_promise = success
+    return unless success
+    @on_initialize_succeeded&.call
+    opener_page = opener&.page
+    if opener_page.nil? || type != 'page'
+      return
+    end
+    #      if (!openerPage.listenerCount(Events.Page.Popup))
+    #        return true;
+    popup_page = page
+    opener_page.handle_page_popup(popup_page)
+  end
+
+  def on_initialize_completed(&block)
+    @on_initialize_succeeded = block
+  end
+
+  def handle_closed
+    @closed = true
   end
 
   def initialized?
@@ -62,16 +72,13 @@ class Puppeteer::Target
     @session_factory.call
   end
 
-  #  /**
-  #   * @return {!Promise<?Page>}
-  #   */
-  #  async page() {
-  #    if ((this._targetInfo.type === 'page' || this._targetInfo.type === 'background_page') && !this._pagePromise) {
-  #      this._pagePromise = this._sessionFactory()
-  #          .then(client => Page.create(client, this, this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue));
-  #    }
-  #    return this._pagePromise;
-  #  }
+  def page
+    if ['page', 'background_page'].include?(@target_info.type) && @page.nil?
+      client = @session_factory.call
+      @page = Page.create(client, self, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
+    end
+    @page
+  end
 
   #  /**
   #   * @return {!Promise<?Worker>}
@@ -114,7 +121,7 @@ class Puppeteer::Target
 
   # @return {?Puppeteer.Target}
   def opener
-    opener_id = this.target_info.opener_id
+    opener_id = @target_info.opener_id
     return nil if opener_id.nil?
     browser.targets[opener_id]
   end
@@ -123,10 +130,9 @@ class Puppeteer::Target
   private def handle_target_info_changed(target_info)
     @target_info = target_info
 
-    #    if (!this._isInitialized && (this._targetInfo.type !== 'page' || this._targetInfo.url !== '')) {
-    #      this._isInitialized = true;
-    #      this._initializedCallback(true);
-    #      return;
-    #    }
+    if !@is_initialized && (@target_info.type != 'page' || !target_info.url.empty?)
+      @is_initialized = true
+      handle_initialized(true)
+    end
   end
 end
