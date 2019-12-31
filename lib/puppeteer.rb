@@ -19,8 +19,8 @@ require 'puppeteer/web_socket_transport'
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 class Puppeteer
   class << self
-    def method_missing(method, *args, **kwargs)
-      instance.send(method, *args, **kwargs)
+    def method_missing(method, *args, **kwargs, &block)
+      instance.send(method, *args, **kwargs, &block)
     end
 
     def instance
@@ -45,7 +45,12 @@ class Puppeteer
   # @return {!Promise<!Puppeteer.Browser>}
   def launch(options = {}) # TODO: あとでキーワード引数にする
     @product_name ||= options[:product]
-    launcher.launch(options)
+    browser = launcher.launch(options)
+    if block_given?
+      yield(browser)
+    else
+      browser
+    end
   end
 
   # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
