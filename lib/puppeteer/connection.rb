@@ -48,7 +48,7 @@ class Puppeteer::Connection
     @last_id += 1
   end
 
-  private def raw_send(message:)
+  def raw_send(message:)
     id = generate_id
     payload = JSON.fast_generate(message.merge(id: id))
     @transport.send_text(payload)
@@ -78,7 +78,7 @@ class Puppeteer::Connection
     case message['method']
     when 'Target.attachedToTarget'
       session_id = message['params']['sessionId']
-      session = CDPSession.new(self, message['params']['targetInfo']['type'], session_id)
+      session = Puppeteer::CDPSession.new(self, message['params']['targetInfo']['type'], session_id)
       @sessions[session_id] = session
     when 'Target.detachedFromTarget'
       session_id = message['params']['sessionId']
@@ -91,7 +91,7 @@ class Puppeteer::Connection
 
     if message['sessionId']
       session_id = message['sessionId']
-      @sessions[session_id]&._onMessage(message)
+      @sessions[session_id]&.handle_message(message)
     elsif message['id']
       # handled in read_until
     else

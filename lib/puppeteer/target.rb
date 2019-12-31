@@ -76,7 +76,7 @@ class Puppeteer::Target
   def page
     if ['page', 'background_page'].include?(@target_info.type) && @page.nil?
       client = @session_factory.call
-      @page = Page.create(client, self, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
+      @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
     end
     @page
   end
