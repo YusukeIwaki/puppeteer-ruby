@@ -3,6 +3,8 @@ require 'puppeteer/device'
 require 'puppeteer/errors'
 require 'puppeteer/viewport'
 
+require 'puppeteer/debug_print'
+
 # Classes & values.
 require 'puppeteer/browser'
 require 'puppeteer/browser_context'

@@ -1,7 +1,8 @@
-require 'timeout'
 require 'thread'
+require 'timeout'
 
 class Puppeteer::Browser
+  include Puppeteer::DebugPrint
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
@@ -46,7 +47,7 @@ class Puppeteer::Browser
       @on_browser_disconnected&.call
     end
     @connection.on_message do |message|
-      puts "Browser#on_message #{message}"
+      debug_print "Browser#on_message #{message}"
       case message['method']
       when 'Target.targetCreated'
         handle_target_created(message['params'])
@@ -207,7 +208,7 @@ class Puppeteer::Browser
 
   # @return {!Promise<!Array<!Puppeteer.Page>>}
   def pages
-    @browser_contexts.flat_map(&:pages)
+    browser_contexts.flat_map(&:pages)
   end
 
   # @return [String]

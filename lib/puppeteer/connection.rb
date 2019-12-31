@@ -1,6 +1,8 @@
 require 'json'
 
 class Puppeteer::Connection
+  include Puppeteer::DebugPrint
+
   def initialize(url, transport, delay = 0)
     @url = url
     @last_id = 0
@@ -9,7 +11,7 @@ class Puppeteer::Connection
     @transport = transport
     @transport.on_message do |data|
       message = JSON.parse(data)
-      puts "RECV << #{message}"
+      debug_print "RECV << #{message}"
       @on_message&.call(message)
     end
     @transport.on_close do |reason, code|
@@ -53,7 +55,7 @@ class Puppeteer::Connection
     id = generate_id
     payload = JSON.fast_generate(message.merge(id: id))
     @transport.send_text(payload)
-    puts "SEND >> #{payload}"
+    debug_print "SEND >> #{payload}"
     read_until{ |message| message["id"] == id }["result"]
   end
 
