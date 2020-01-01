@@ -22,10 +22,10 @@ class Puppeteer::Page
     @closed = false
     @client = client
     @target = target
-    @keyboard = Keyboard.new(client)
-    @mouse = Mouse.new(client, @keyboard)
+    @keyboard = Puppeteer::Keyboard.new(client)
+    @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = TimeoutSettings.new
-    @touchscreen = TouchScreen.new(client, @keyboard)
+    @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
     @accessibility = Accessibility.new(client)
     @frame_manager = FrameManager.new(client, self, ignore_https_errors, @timeout_settings)
     @emulation_manager = EmulationManager.new(client)

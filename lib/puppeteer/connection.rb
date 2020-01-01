@@ -85,7 +85,7 @@ class Puppeteer::Connection
 
   private def handle_message(message)
     if @delay > 0
-      sleep(@delay / 1000)
+      sleep(@delay / 1000.0)
     end
     debug_print "RECV << #{message}"
 
