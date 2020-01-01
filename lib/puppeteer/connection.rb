@@ -3,6 +3,17 @@ require 'json'
 class Puppeteer::Connection
   include Puppeteer::DebugPrint
 
+  class ProtocolError < StandardError
+    def initialize(method:, error_message:, error_data:)
+      msg = "Protocol error (#{method}): #{error_message}"
+      if error_data
+        super("#{msg} #{error_data}")
+      else
+        super(msg)
+      end
+    end
+  end
+
   def initialize(url, transport, delay = 0)
     @url = url
     @last_id = 0
@@ -20,13 +31,9 @@ class Puppeteer::Connection
     @closed = false
   end
 
-  #  /**
-  #   * @param {!CDPSession} session
-  #   * @return {!Connection}
-  #   */
-  #  static fromSession(session) {
-  #    return session._connection;
-  #  }
+  def self.from_session(session)
+    session.connection
+  end
 
   # @param {string} sessionId
   # @return {?CDPSession}
@@ -53,7 +60,14 @@ class Puppeteer::Connection
     payload = JSON.fast_generate(message.merge(id: id))
     @transport.send_text(payload)
     debug_print "SEND >> #{payload}"
-    read_until{ |message| message["id"] == id }["result"]
+    response = read_until{ |message| message["id"] == id }
+    if response['error']
+      raise ProtocolError.new(
+              method: message[:method],
+              error_message: response['error']['message'],
+              error_data: response['error']['data'])
+    end
+    response["result"]
   end
 
   private def raw_read
@@ -107,9 +121,10 @@ class Puppeteer::Connection
     # for (const callback of this._callbacks.values())
     #   callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
     # this._callbacks.clear();
-    # for (const session of this._sessions.values())
-    #   session._onClosed();
-    # this._sessions.clear();
+    @sessions.values.each do |session|
+      session.handle_closed
+    end
+    @sessions.clear
     @on_connection_disconnected&.call
   end
 
