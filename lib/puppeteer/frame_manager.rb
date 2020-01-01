@@ -1,4 +1,6 @@
 class Puppeteer::FrameManager
+  include Puppeteer::DebugPrint
+
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
 
   # @param {!Puppeteer.CDPSession} client
@@ -141,16 +143,15 @@ class Puppeteer::FrameManager
   #    this.emit(Events.FrameManager.LifecycleEvent, frame);
   #  }
 
-  # @param {!Protocol.Page.FrameTree} frameTree
+  # @param frame_tree [Hash]
   def handle_frame_tree(frame_tree)
-    puts frame_tree
-    if frame_tree.frame.parent_id
-      handle_frame_attached(frame_tree.frame.id, frame_tree.frame.parent_id)
+    if frame_tree['frame']['parentId']
+      handle_frame_attached(frame_tree['frame']['id'], frame_tree['frame']['parentId'])
     end
-    handle_frame_navigated(frame_tree.frame)
-    return if frame_tree.child_frames.empty?
+    handle_frame_navigated(frame_tree['frame'])
+    return if !frame_tree['childFrames']
 
-    frame_tree.child_frames.each do |child|
+    frame_tree['childFrames'].each do |child|
       handle_frame_tree(child)
     end
   end
@@ -177,22 +178,84 @@ class Puppeteer::FrameManager
   end
 
   # /**
-  #  * @param {string} name
+  #  * @param {string} frameId
+  #  * @param {?string} parentFrameId
   #  */
-  # async _ensureIsolatedWorld(name) {
-  #   if (this._isolatedWorlds.has(name))
+  # _onFrameAttached(frameId, parentFrameId) {
+  #   if (this._frames.has(frameId))
   #     return;
-  #   this._isolatedWorlds.add(name);
-  #   await this._client.send('Page.addScriptToEvaluateOnNewDocument', {
-  #     source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
-  #     worldName: name,
-  #   }),
-  #   await Promise.all(this.frames().map(frame => this._client.send('Page.createIsolatedWorld', {
-  #     frameId: frame._id,
-  #     grantUniveralAccess: true,
-  #     worldName: name,
-  #   }).catch(debugError))); // frames might be removed before we send this
+  #   assert(parentFrameId);
+  #   const parentFrame = this._frames.get(parentFrameId);
+  #   const frame = new Frame(this, this._client, parentFrame, frameId);
+  #   this._frames.set(frame._id, frame);
+  #   this.emit(Events.FrameManager.FrameAttached, frame);
   # }
+
+  # @param frame_payload [Hash]
+  def handle_frame_navigated(frame_payload)
+    is_main_frame = !frame_payload['parent_id']
+    frame =
+      if is_main_frame
+        @main_frame
+      else
+        @frames[frame_payload['id']]
+      end
+
+    if !is_main_frame && !frame
+      raise ArgumentError.new('We either navigate top level or have old version of the navigated frame')
+    end
+
+    # Detach all child frames first.
+    if frame
+      frame.child_frames.each do |child|
+        remove_frame_recursively(child)
+      end
+    end
+
+    # Update or create main frame.
+    if is_main_frame
+      if frame
+        # Update frame id to retain frame identity on cross-process navigation.
+        @frames.delete(frame.id)
+        frame.id = frame_payload['id']
+      else
+        # Initial main frame navigation.
+        frame = Puppeteer::Frame.new(self, @client, nil, frame_payload['id'])
+      end
+      @frames[frame_payload['id']] = frame
+      @main_frame = frame
+    end
+
+    # Update frame payload.
+    frame.navigated(frame_payload);
+
+    handle_frame_manager_frame_navigated(frame)
+  end
+
+  private def handle_frame_manager_frame_navigated(frame)
+  end
+
+  # @param name [String]
+  def ensure_isolated_world(name)
+    return if @isolated_worlds.include?(name)
+    @isolated_worlds << name
+
+    @client.send_message('Page.addScriptToEvaluateOnNewDocument',
+      source: '//# sourceURL=__puppeteer_evaluation_script__',
+      worldName: name,
+    )
+    frames.each do |frame|
+      begin
+        @client.send_message('Page.createIsolatedWorld',
+          frameId: frame.id,
+          grantUniveralAccess: true,
+          worldName: name,
+        )
+      rescue => err
+        debug_print(err)
+      end
+    end
+  end
 
   # @param frame_id [String]
   # @param url [String]
