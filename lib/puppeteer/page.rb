@@ -26,12 +26,12 @@ class Puppeteer::Page
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
-    @accessibility = Accessibility.new(client)
-    @frame_manager = FrameManager.new(client, self, ignore_https_errors, @timeout_settings)
-    @emulation_manager = EmulationManager.new(client)
-    @tracing = Tracing.new(client)
+    #@accessibility = Accessibility.new(client)
+    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings)
+    @emulation_manager = Puppeteer::EmulationManager.new(client)
+    #@tracing = Tracing.new(client)
     @page_bindings = {}
-    @coverage = Coverage.new(client)
+    #@coverage = Coverage.new(client)
     @javascript_enabled = true
     @viewport = nil
     @screenshot_task_queue = screenshot_task_queue
@@ -192,18 +192,10 @@ class Puppeteer::Page
     main_frame.add_style_tag(style_tag)
   end
 
-  class AuthCredential
-    # @param {?{username: string, password: string}} credentials
-    def initialize(username: nil, password: nil)
-      @username = username
-      @password = password
-    end
-    attr_reader :username, :password
-  end
-
-  # @param credential [AuthCredential]
-  def authenticate(credential)
-    @frame_manager.network_manager.authenticate(credential)
+  # @param username [String?]
+  # @param password [String?]
+  def authenticate(username: nil, password: nil)
+    @frame_manager.network_manager.authenticate(username: username, password: password)
   end
 
   # @param headers [Hash]
