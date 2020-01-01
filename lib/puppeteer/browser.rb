@@ -180,7 +180,7 @@ class Puppeteer::Browser
   # @param {{timeout?: number}=} options
   # @return {!Promise<!Target>}
   def wait_for_target(predicate:, timeout: nil)
-    timeout_in_sec = timeout || 30
+    timeout_in_sec = (timeout || 30000).to_i / 1000.0
     existing_target = targets.first{ |target| predicate.call(target) }
     return existing_target if existing_target
 
