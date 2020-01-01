@@ -143,6 +143,7 @@ class Puppeteer::FrameManager
 
   # @param {!Protocol.Page.FrameTree} frameTree
   def handle_frame_tree(frame_tree)
+    puts frame_tree
     if frame_tree.frame.parent_id
       handle_frame_attached(frame_tree.frame.id, frame_tree.frame.parent_id)
     end
