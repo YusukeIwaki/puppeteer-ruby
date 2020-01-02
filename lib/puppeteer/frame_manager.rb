@@ -24,15 +24,33 @@ class Puppeteer::FrameManager
     # @type {!Set<string>}
     @isolated_worlds = Set.new
 
-    # this._client.on('Page.frameAttached', event => this._onFrameAttached(event.frameId, event.parentFrameId));
-    # this._client.on('Page.frameNavigated', event => this._onFrameNavigated(event.frame));
-    # this._client.on('Page.navigatedWithinDocument', event => this._onFrameNavigatedWithinDocument(event.frameId, event.url));
-    # this._client.on('Page.frameDetached', event => this._onFrameDetached(event.frameId));
-    # this._client.on('Page.frameStoppedLoading', event => this._onFrameStoppedLoading(event.frameId));
-    # this._client.on('Runtime.executionContextCreated', event => this._onExecutionContextCreated(event.context));
-    # this._client.on('Runtime.executionContextDestroyed', event => this._onExecutionContextDestroyed(event.executionContextId));
-    # this._client.on('Runtime.executionContextsCleared', event => this._onExecutionContextsCleared());
-    # this._client.on('Page.lifecycleEvent', event => this._onLifecycleEvent(event));
+    @client.on_event 'Page.frameAttached' do |event|
+      handle_frame_attached(event['frameId'], event['parentFrameId'])
+    end
+    @client.on_event 'Page.frameNavigated' do |event|
+      handle_frame_navigated(event['frame'])
+    end
+    @client.on_event 'Page.navigatedWithinDocument' do |event|
+      handle_frame_navigated_within_document(event['frameId'], event['url'])
+    end
+    @client.on_event 'Page.frameDetached' do |event|
+      handle_frame_detached(event['frameId'])
+    end
+    @client.on_event 'Page.frameStoppedLoading' do |event|
+      handle_frame_stopped_loading(event['frameId'])
+    end
+    @client.on_event 'Runtime.executionContextCreated' do |event|
+      handle_execution_context_created(event['context'])
+    end
+    @client.on_event 'Runtime.executionContextDestroyed' do |event|
+      handle_execution_context_destroyed(event['executionContextId'])
+    end
+    @client.on_event 'Runtime.executionContextsCleared' do |event|
+      handle_execution_contexts_cleared
+    end
+    @client.on_event 'Page.lifecycleEvent' do |event|
+      handle_lifecycle_event(event)
+    end
   end
 
   def init
@@ -129,27 +147,21 @@ class Puppeteer::FrameManager
   #    return watcher.navigationResponse();
   #  }
 
-  #  /**
-  #   * @param {!Protocol.Page.lifecycleEventPayload} event
-  #   */
-  #  _onLifecycleEvent(event) {
-  #    const frame = this._frames.get(event.frameId);
-  #    if (!frame)
-  #      return;
-  #    frame._onLifecycleEvent(event.loaderId, event.name);
-  #    this.emit(Events.FrameManager.LifecycleEvent, frame);
-  #  }
+  # @param event [Hash]
+  def handle_lifecycle_event(event)
+    frame = @frames[event['frameId']]
+    return if !frame
+    frame.handle_lifecycle_event(event['loaderId'], event['name'])
+    emit_event 'Events.FrameManager.LifecycleEvent', frame
+  end
 
-  #  /**
-  #   * @param {string} frameId
-  #   */
-  #  _onFrameStoppedLoading(frameId) {
-  #    const frame = this._frames.get(frameId);
-  #    if (!frame)
-  #      return;
-  #    frame._onLoadingStopped();
-  #    this.emit(Events.FrameManager.LifecycleEvent, frame);
-  #  }
+  # @param {string} frameId
+  def handle_frame_stopped_loading(frame_id)
+    frame = @frames[frame_id]
+    return if !frame
+    frame.handle_loading_stopped
+    emit_event 'Events.FrameManager.LifecycleEvent', frame
+  end
 
   # @param frame_tree [Hash]
   def handle_frame_tree(frame_tree)
@@ -185,19 +197,19 @@ class Puppeteer::FrameManager
     @frames[frame_id]
   end
 
-  # /**
-  #  * @param {string} frameId
-  #  * @param {?string} parentFrameId
-  #  */
-  # _onFrameAttached(frameId, parentFrameId) {
-  #   if (this._frames.has(frameId))
-  #     return;
-  #   assert(parentFrameId);
-  #   const parentFrame = this._frames.get(parentFrameId);
-  #   const frame = new Frame(this, this._client, parentFrame, frameId);
-  #   this._frames.set(frame._id, frame);
-  #   this.emit(Events.FrameManager.FrameAttached, frame);
-  # }
+  # @param {string} frameId
+  # @param {?string} parentFrameId
+  def handle_frame_attached(frame_id, parent_frame_id)
+    return if @frames.has_key?[frame_id]
+    if !parent_frame_id
+      raise ArgymentError.new('parent_frame_id must not be nil')
+    end
+    parent_frame = @frames[parent_frame_id]
+    frame = Frame.new(self, @client, parent_frame, frame_id)
+    @frames[frame_id] = frame
+
+    emit_event 'Events.FrameManager.FrameAttached', frame
+  end
 
   # @param frame_payload [Hash]
   def handle_frame_navigated(frame_payload)
@@ -237,10 +249,7 @@ class Puppeteer::FrameManager
     # Update frame payload.
     frame.navigated(frame_payload);
 
-    handle_frame_manager_frame_navigated(frame)
-  end
-
-  private def handle_frame_manager_frame_navigated(frame)
+    emit_event 'Events.FrameManager.FrameNavigated', frame
   end
 
   # @param name [String]
@@ -271,14 +280,10 @@ class Puppeteer::FrameManager
     frame = @frames[frame_id]
     return if !frame
     frame.navigated_within_document(url)
+    emit_event 'Events.FrameManager.FrameNavigatedWithinDocument', frame
+    emit_event 'Events.FrameManager.FrameNavigated', frame
     handle_frame_manager_frame_navigated_within_document(frame)
     handle_frame_manager_frame_navigated(frame)
-  end
-
-  private def handle_frame_manager_frame_navigated_within_document(frame)
-  end
-
-  private def handle_frame_manager_frame_navigated(frame)
   end
 
   # @param frame_id [String]
@@ -346,10 +351,7 @@ class Puppeteer::FrameManager
     end
     frame.detach
     @frames.delete(frame.id)
-    handle_frame_manager_frame_detached(frame)
-  end
-
-  private def handle_frame_manager_frame_detached(frame)
+    emit_event 'Events.FrameManager.FrameDetached', frame
   end
 
   private def assert_no_legacy_navigation_options(wait_until:)

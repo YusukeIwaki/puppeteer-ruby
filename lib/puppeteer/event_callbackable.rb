@@ -13,7 +13,7 @@ module Puppeteer::EventCallbackable
     @event_callbackable_handlers ||= {}
 
     if kwargs.empty?
-      # In Ruby's specification,
+      # In Ruby's specification (version < 2.7),
       # `method(:x).call(*args, **kwargs)` is equivalent to `x(*args, {})`
       # It often causes unexpected ArgumentError.
       #
