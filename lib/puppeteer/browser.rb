@@ -46,17 +46,9 @@ class Puppeteer::Browser
     @connection.on_event 'Events.CDPSession.Disconnected' do
       emit_event 'Events.Browser.Disconnected'
     end
-    @connection.on_message do |message|
-      debug_print "Browser#on_message #{message}"
-      case message['method']
-      when 'Target.targetCreated'
-        handle_target_created(message['params'])
-      when 'Target.targetDestroyed'
-        handle_target_destroyed(message['params'])
-      when 'Target.targetInfoChanged'
-        handle_target_info_changed(message['params'])
-      end
-    end
+    @connection.on_event 'Target.targetCreated', &method(:handle_target_created)
+    @connection.on_event 'Target.targetDestroyed', &method(:handle_target_destroyed)
+    @connection.on_event 'Target.targetInfoChanged', &method(:handle_target_info_changed)
   end
 
   # @return [Puppeteer::BrowserRunner::BrowserProcess]

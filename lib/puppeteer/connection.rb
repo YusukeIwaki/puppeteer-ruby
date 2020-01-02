@@ -25,7 +25,7 @@ class Puppeteer::Connection
       handle_message(JSON.parse(data))
     end
     @transport.on_close do |reason, code|
-      @on_close&.call(reason, code)
+      handle_close(reason, code)
     end
 
     @sessions = {}
@@ -110,11 +110,11 @@ class Puppeteer::Connection
     elsif message['id']
       # handled in read_until
     else
-      @on_message&.call(message)
+      emit_event message['method'], message['params']
     end
   end
 
-  private def handle_on_close
+  private def handle_close
     return if @closed
     @closed = true
     @transport.on_message
@@ -138,7 +138,7 @@ class Puppeteer::Connection
   end
 
   def dispose
-    handle_on_close
+    handle_close
     @transport.close
   end
 

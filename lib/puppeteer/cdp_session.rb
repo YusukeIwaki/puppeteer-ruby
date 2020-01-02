@@ -29,7 +29,7 @@ class Puppeteer::CDPSession
     if message['id']
       # handled in raw_read
     else
-      @on_message&.call(message)
+      emit_event message['method'], message['params']
     end
   end
 
