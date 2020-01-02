@@ -106,7 +106,22 @@ class Puppeteer
 
   # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
   # @return {!Promise<!Puppeteer.Browser>}
-  def connect(options = {}) # TODO: あとでキーワード引数にする
+  def connect(
+    browser_ws_endpoint: nil,
+    browser_url: nil,
+    transport: nil,
+    ignore_https_errors: nil,
+    default_viewport: nil,
+    slow_mo: nil
+  )
+    options = {
+      browser_ws_endpoint: browser_ws_endpoint,
+      browser_url: browser_url,
+      transport: transport,
+      ignore_https_errors: ignore_https_errors,
+      default_viewport: default_viewport,
+      slow_mo: slow_mo
+    }.compact
     launcher.connect(options)
   end
 

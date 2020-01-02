@@ -146,6 +146,7 @@ module Puppeteer::Launcher
     # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
     # @return {!Promise<!Browser>}
     def connect(options)
+      raise NotImplementedError.new('Puppeteer.connect is not implemented yet')
     end
 
     # @return {string}
