@@ -26,14 +26,12 @@ class Puppeteer::Frame
 
   attr_accessor :id
 
-  # /**
-  #  * @param {string} url
-  #  * @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
-  #  * @return {!Promise<?Puppeteer.Response>}
-  #  */
-  # async goto(url, options) {
-  #   return await this._frameManager.navigateFrame(this, url, options);
-  # }
+  # @param url [String]
+  # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @return [Puppeteer::Response]
+  def goto(url, referer: nil, timeout: nil, wait_until: nil)
+    @frame_manager.navigate_frame(self, url, referer: referer, timeout: timeout, wait_until: wait_until)
+  end
 
   # /**
   #  * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options

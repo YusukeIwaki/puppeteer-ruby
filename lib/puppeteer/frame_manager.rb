@@ -1,3 +1,5 @@
+require 'timeout'
+
 class Puppeteer::FrameManager
   include Puppeteer::DebugPrint
 
@@ -49,54 +51,60 @@ class Puppeteer::FrameManager
     @network_manager
   end
 
-  #   /**
-  #   * @param {!Puppeteer.Frame} frame
-  #   * @param {string} url
-  #   * @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
-  #   * @return {!Promise<?Puppeteer.Response>}
-  #   */
-  #  async navigateFrame(frame, url, options = {}) {
-  #    assertNoLegacyNavigationOptions(options);
-  #    const {
-  #      referer = this._networkManager.extraHTTPHeaders()['referer'],
-  #      waitUntil = ['load'],
-  #      timeout = this._timeoutSettings.navigationTimeout(),
-  #    } = options;
+  class NavigationError < StandardError ; end
 
-  #    const watcher = new LifecycleWatcher(this, frame, waitUntil, timeout);
-  #    let ensureNewDocumentNavigation = false;
-  #    let error = await Promise.race([
-  #      navigate(this._client, url, referer, frame._id),
-  #      watcher.timeoutOrTerminationPromise(),
-  #    ]);
-  #    if (!error) {
-  #      error = await Promise.race([
-  #        watcher.timeoutOrTerminationPromise(),
-  #        ensureNewDocumentNavigation ? watcher.newDocumentNavigationPromise() : watcher.sameDocumentNavigationPromise(),
-  #      ]);
-  #    }
-  #    watcher.dispose();
-  #    if (error)
-  #      throw error;
-  #    return watcher.navigationResponse();
+  # Temporary implementation instead of LifecycleWatcher#timeoutOrTerminationPromise
+  private def with_navigation_timeout(timeout_ms, &block)
+    raise ArgymentError.new('block must be provided') if block.nil?
 
-  #    /**
-  #     * @param {!Puppeteer.CDPSession} client
-  #     * @param {string} url
-  #     * @param {string} referrer
-  #     * @param {string} frameId
-  #     * @return {!Promise<?Error>}
-  #     */
-  #    async function navigate(client, url, referrer, frameId) {
-  #      try {
-  #        const response = await client.send('Page.navigate', {url, referrer, frameId});
-  #        ensureNewDocumentNavigation = !!response.loaderId;
-  #        return response.errorText ? new Error(`${response.errorText} at ${url}`) : null;
-  #      } catch (error) {
-  #        return error;
-  #      }
-  #    }
-  #  }
+    Timeout.timeout(timeout_ms / 1000.0) do
+      block.call
+    end
+  rescue Timeout::Error
+    raise NavigationError("Navigation timeout of #{timeout_ms}ms exceeded")
+  end
+
+  # @param frame [Puppeteer::Frame]
+  # @param url [String]
+  # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @return [Puppeteer::Response]
+  def navigate_frame(frame, url, referer: nil, timeout: nil, wait_until: nil)
+    assert_no_legacy_navigation_options(wait_until: wait_until)
+
+    navigate_params = {
+      url: url,
+      referer: referer || @network_manager.extra_http_headers['referer'],
+      frameId: frame.id
+    }.compact
+    option_wait_until = wait_until || ['load']
+    option_timeout = timeout || @timeout_settings.navigation_timeout
+
+    #    const watcher = new LifecycleWatcher(this, frame, waitUntil, timeout);
+    ensure_new_document_navigation = false
+    with_navigation_timeout(option_timeout) do
+      result = @client.send_message('Page.navigate', navigate_params)
+      loader_id = result['loaderId']
+      ensure_new_document_navigation = !!loader_id
+      if result['errorText']
+        raise NavigationError.new("#{result['errorText']} at #{url}")
+      end
+    end
+
+    #    let error = await Promise.race([
+    #      navigate(this._client, url, referer, frame._id),
+    #      watcher.timeoutOrTerminationPromise(),
+    #    ]);
+    #    if (!error) {
+    #      error = await Promise.race([
+    #        watcher.timeoutOrTerminationPromise(),
+    #        ensureNewDocumentNavigation ? watcher.newDocumentNavigationPromise() : watcher.sameDocumentNavigationPromise(),
+    #      ]);
+    #    }
+    #    watcher.dispose();
+    #    if (error)
+    #      throw error;
+    #    return watcher.navigationResponse();
+  end
 
   #  /**
   #   * @param {!Puppeteer.Frame} frame
@@ -342,5 +350,11 @@ class Puppeteer::FrameManager
   end
 
   private def handle_frame_manager_frame_detached(frame)
+  end
+
+  private def assert_no_legacy_navigation_options(wait_until:)
+    if wait_until == 'networkidle'
+      raise ArgumentError.new('ERROR: "networkidle" option is no longer supported. Use "networkidle2" instead')
+    end
   end
 end

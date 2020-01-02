@@ -38,8 +38,7 @@ class Puppeteer
       @instance ||= Puppeteer.new(
                       project_root: __dir__,
                       preferred_revision: "706915",
-                      is_puppeteer_core: true
-                    )
+                      is_puppeteer_core: true)
     end
   end
 
@@ -54,11 +53,52 @@ class Puppeteer
 
   # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions & {product?: string, extraPrefsFirefox?: !object})=} options
   # @return {!Promise<!Puppeteer.Browser>}
-  def launch(options = {}) # TODO: あとでキーワード引数にする
-    @product_name ||= options[:product]
+  def launch(
+    product: nil,
+    executable_path: nil,
+    ignore_default_args: nil,
+    handle_SIGINT: nil,
+    handle_SIGTERM: nil,
+    handle_SIGHUP: nil,
+    timeout: nil,
+    dumpio: nil,
+    env: nil,
+    pipe: nil,
+    args: nil,
+    user_data_dir: nil,
+    devtools: nil,
+    headless: nil,
+    ignore_https_errors: nil,
+    default_viewport: nil,
+    slow_mo: nil
+  )
+    options = {
+      executable_path: executable_path,
+      ignore_default_args: ignore_default_args,
+      handle_SIGINT: handle_SIGINT,
+      handle_SIGTERM: handle_SIGTERM,
+      handle_SIGHUP: handle_SIGHUP,
+      timeout: timeout,
+      dumpio: dumpio,
+      env: env,
+      pipe: pipe,
+      args: args,
+      user_data_dir: user_data_dir,
+      devtools: devtools,
+      headless: headless,
+      ignore_https_errors: ignore_https_errors,
+      default_viewport: default_viewport,
+      slow_mo: slow_mo,
+    }.compact
+
+    @product_name ||= product
     browser = launcher.launch(options)
     if block_given?
-      yield(browser)
+      begin
+        yield(browser)
+      ensure
+        browser.close
+      end
     else
       browser
     end

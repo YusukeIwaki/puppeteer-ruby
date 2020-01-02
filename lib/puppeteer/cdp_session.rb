@@ -39,7 +39,7 @@ class Puppeteer::CDPSession
   end
 
   def handle_closed
-    @connection = null
+    @connection = nil
     handle_cdp_session_disconnected
   end
 
