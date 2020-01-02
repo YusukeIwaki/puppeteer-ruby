@@ -3,7 +3,9 @@ require 'puppeteer/device'
 require 'puppeteer/errors'
 require 'puppeteer/viewport'
 
+# Modules
 require 'puppeteer/debug_print'
+require 'puppeteer/event_callbackable'
 
 # Classes & values.
 require 'puppeteer/browser'

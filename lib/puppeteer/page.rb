@@ -1,4 +1,6 @@
 class Puppeteer::Page
+  include Puppeteer::EventCallbackable
+
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Target} target
   # @param {boolean} ignoreHTTPSErrors

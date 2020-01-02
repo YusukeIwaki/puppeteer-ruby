@@ -43,8 +43,8 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self. context_id)
     end
     @targets = {}
-    @connection.on_connection_disconnected do
-      @on_browser_disconnected&.call
+    @connection.on_event 'Events.CDPSession.Disconnected' do
+      emit_event 'Events.Browser.Disconnected'
     end
     @connection.on_message do |message|
       debug_print "Browser#on_message #{message}"
@@ -109,8 +109,8 @@ class Puppeteer::Browser
     @targets[target_info.target_id] = target
 
     target.on_initialize_completed do
-      @on_browser_target_created&.call(target)
-      context.handle_browser_context_target_created(target)
+      emit_event 'Events.Browser.TargetCreated', target
+      context.emit_event 'Events.BrowserContext.TargetCreated', target
     end
   end
 
@@ -123,8 +123,8 @@ class Puppeteer::Browser
     @targets.delete(target_id)
     target.handle_closed
     target.on_initialize_completed do
-      @on_browser_target_destroyed&.call(target)
-      target.browser_context.handle_browser_context_target_destroyed(target)
+      emit_event 'Events.Browser.TargetDestroyed', target
+      target.browser_context.emit_event 'Events.BrowserContext.TargetDestroyed', target
     end
   end
 
@@ -139,8 +139,8 @@ class Puppeteer::Browser
     was_initialized = target.initialized?
     target.handle_target_info_changed(target_info)
     if was_initialized && previous_url != target.url
-      @browser_target_changed&.call(target)
-      @browser_context.handle_browser_context_target_changed(target)
+      emit_event 'Events.Browser.TargetChanged', target
+      @browser_context.emit_event 'Events.BrowserContext.TargetChanged', target
     end
   end
 
@@ -187,21 +187,21 @@ class Puppeteer::Browser
     queue = Queue.new
     begin
       Timeout.timeout(timeout_in_sec) do
-        @on_browser_target_created = -> (target){
+        on_event 'Events.Browser.TargetCreated' do |target|
           if predicate.call(target) && !queue.closed?
             queue.push(1)
           end
-        }
-        @on_browser_target_changed = -> (target){
+        end
+        on_event 'Events.Browser.TargetChanged' do |target|
           if predicate.call(target) && !queue.closed?
             queue.push(1)
           end
-        }
+        end
         queue.pop
       end
     ensure
-      @on_browser_target_created = nil
-      @on_browser_target_changed = nil
+      ignore_event 'Events.Browser.TargetCreated'
+      ignore_event 'Events.Browser.TargetChanged'
       queue.close
     end
   end

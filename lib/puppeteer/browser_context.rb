@@ -1,4 +1,6 @@
 class Puppeteer::BrowserContext
+  include Puppeteer::EventCallbackable
+
   # @param {!Puppeteer.Connection} connection
   # @param {!Browser} browser
   # @param {?string} contextId
@@ -84,14 +86,5 @@ class Puppeteer::BrowserContext
       raise 'Non-incognito profiles cannot be closed!'
     end
     @browser.dispose_context(@id)
-  end
-
-  def handle_browser_context_target_created(target)
-  end
-
-  def handle_browser_context_target_destroyed(target)
-  end
-
-  def handle_browser_context_target_changed(target)
   end
 end

@@ -2,6 +2,7 @@ require 'json'
 
 class Puppeteer::Connection
   include Puppeteer::DebugPrint
+  include Puppeteer::EventCallbackable
 
   class ProtocolError < StandardError
     def initialize(method:, error_message:, error_data:)
@@ -125,7 +126,7 @@ class Puppeteer::Connection
       session.handle_closed
     end
     @sessions.clear
-    @on_connection_disconnected&.call
+    emit_event 'Events.Connection.Disconnected'
   end
 
   def on_close(&block)
@@ -134,10 +135,6 @@ class Puppeteer::Connection
 
   def on_message(&block)
     @on_message = block
-  end
-
-  def on_connection_disconnected(&block)
-    @on_connection_disconnected = block
   end
 
   def dispose

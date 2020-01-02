@@ -1,4 +1,6 @@
 class Puppeteer::CDPSession
+  include Puppeteer::EventCallbackable
+
   class Error < StandardError ; end
 
   # @param {!Connection} connection
@@ -40,10 +42,6 @@ class Puppeteer::CDPSession
 
   def handle_closed
     @connection = nil
-    handle_cdp_session_disconnected
-  end
-
-  private def handle_cdp_session_disconnected
-    @on_cdp_session_disconnected&.call
+    emit_event 'Events.CDPSession.Disconnected'
   end
 end

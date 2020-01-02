@@ -54,7 +54,7 @@ class Puppeteer::Target
     #      if (!openerPage.listenerCount(Events.Page.Popup))
     #        return true;
     popup_page = page
-    opener_page.handle_page_popup(popup_page)
+    opener_page.emit_event('Events.Page.Popup', popup_page)
   end
 
   def on_initialize_completed(&block)
