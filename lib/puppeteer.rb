@@ -155,7 +155,13 @@ class Puppeteer
 
   # @param {!Launcher.ChromeArgOptions=} options
   # @return {!Array<string>}
-  def default_args(options = {}) # TODO: あとでキーワード引数にする
+  def default_args(args: nil, user_data_dir: nil, devtools: nil, headless: nil)
+    options = {
+      args: args,
+      user_data_dir: user_data_dir,
+      devtools: devtools,
+      headless: headless,
+    }.compact
     launcher.default_args(options)
   end
 

@@ -139,8 +139,12 @@ module Puppeteer::Launcher
       end
     end
 
-    def default_args
-      @default_args ||= DefaultArgs.new(@chrome_arg_options)
+    def default_args(options = nil)
+      if options.nil?
+        @default_args ||= DefaultArgs.new(@chrome_arg_options)
+      else
+        DefaultArgs.new(ChromeArgOptions.new(options))
+      end
     end
 
     # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
