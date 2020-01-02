@@ -63,6 +63,79 @@ RSpec.describe Puppeteer::EventCallbackable do
     end
   end
 
+  describe 'Subscription with method reference' do
+    class Pub
+      include Puppeteer::EventCallbackable
+    end
+
+    let!(:pub) { Pub.new }
+
+    context 'with no parameters' do
+      class Sub0
+        def initialize(pub)
+          pub.on_event 'Pub.Event.awesome', &method(:handle_awesome)
+        end
+
+        def handle_awesome
+          ok
+        end
+
+        def ok ; end
+      end
+
+      let!(:sub) { Sub0.new(pub) }
+
+      it 'receive callback with no arguments' do
+        expect(sub).to receive(:ok)
+        pub.emit_event 'Pub.Event.awesome'
+      end
+    end
+
+    context 'with parameters' do
+      class Sub1
+        def initialize(pub)
+          pub.on_event 'Pub.Event.awesome', &method(:handle_awesome)
+        end
+
+        def handle_awesome(arg1, arg2)
+          ok(arg1, arg2)
+        end
+
+        def ok(arg1, arg2) ; end
+      end
+
+      let!(:sub) { Sub1.new(pub) }
+
+      it 'receive callback with arguments' do
+        expect(sub).to receive(:ok).with(:error, "none")
+        pub.emit_event 'Pub.Event.awesome', :error, "none"
+      end
+    end
+
+    context 'with keyword parameters' do
+      class Sub2
+        def initialize(pub)
+          pub.on_event 'Pub.Event.awesome', &method(:handle_awesome)
+        end
+
+        def handle_awesome(error: nil, reason: nil)
+          if error && reason
+            ok(error, reason)
+          end
+        end
+
+        def ok(arg1, arg2) ; end
+      end
+
+      let!(:sub) { Sub2.new(pub) }
+
+      it 'receive callback with keyword arguments' do
+        expect(sub).to receive(:ok).with(404, "Not Found")
+        pub.emit_event 'Pub.Event.awesome', error: 404, reason: "Not Found"
+      end
+    end
+  end
+
   describe 'Nested pub/sub' do
     class ParentPub
       include Puppeteer::EventCallbackable
