@@ -34,8 +34,28 @@ class Puppeteer::BrowserRunner
   end
 
   # @param {!(Launcher.LaunchOptions)=} options
-  def start(options = {}) # TODO: あとでキーワード引数にする
-    @launch_options = Puppeteer::Launcher::LaunchOptions.new(options)
+  def start(
+    executable_path: nil,
+    ignore_default_args: nil,
+    handle_SIGINT: nil,
+    handle_SIGTERM: nil,
+    handle_SIGHUP: nil,
+    timeout: nil,
+    dumpio: nil,
+    env: nil,
+    pipe: nil
+  )
+    @launch_options = Puppeteer::Launcher::LaunchOptions.new({
+      executable_path: executable_path,
+      ignore_default_args: ignore_default_args,
+      handle_SIGINT: handle_SIGINT,
+      handle_SIGTERM: handle_SIGTERM,
+      handle_SIGHUP: handle_SIGHUP,
+      timeout: timeout,
+      dumpio: dumpio,
+      env: env,
+      pipe: pipe
+    }.compact)
     @proc = BrowserProcess.new(
       @launch_options.env,
       @executable_path,
