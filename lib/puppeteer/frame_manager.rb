@@ -2,6 +2,8 @@ require 'timeout'
 
 class Puppeteer::FrameManager
   include Puppeteer::DebugPrint
+  include Puppeteer::IfPresent
+  include Puppeteer::EventCallbackable
 
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
 
@@ -52,6 +54,8 @@ class Puppeteer::FrameManager
       handle_lifecycle_event(event)
     end
   end
+
+  attr_reader :timeout_settings
 
   def init
     @client.send_message('Page.enable')
@@ -258,7 +262,7 @@ class Puppeteer::FrameManager
     @isolated_worlds << name
 
     @client.send_message('Page.addScriptToEvaluateOnNewDocument',
-      source: '//# sourceURL=__puppeteer_evaluation_script__',
+      source: "//# sourceURL=#{Puppeteer::ExecutionContext::EVALUATION_SCRIPT_URL}",
       worldName: name,
     )
     frames.each do |frame|
@@ -294,28 +298,32 @@ class Puppeteer::FrameManager
     end
   end
 
-  # _onExecutionContextCreated(contextPayload) {
-  #   const frameId = contextPayload.auxData ? contextPayload.auxData.frameId : null;
-  #   const frame = this._frames.get(frameId) || null;
-  #   let world = null;
-  #   if (frame) {
-  #     if (contextPayload.auxData && !!contextPayload.auxData['isDefault']) {
-  #       world = frame._mainWorld;
-  #     } else if (contextPayload.name === UTILITY_WORLD_NAME && !frame._secondaryWorld._hasContext()) {
-  #       // In case of multiple sessions to the same target, there's a race between
-  #       // connections so we might end up creating multiple isolated worlds.
-  #       // We can use either.
-  #       world = frame._secondaryWorld;
-  #     }
-  #   }
-  #   if (contextPayload.auxData && contextPayload.auxData['type'] === 'isolated')
-  #     this._isolatedWorlds.add(contextPayload.name);
-  #   /** @type {!ExecutionContext} */
-  #   const context = new ExecutionContext(this._client, contextPayload, world);
-  #   if (world)
-  #     world._setContext(context);
-  #   this._contextIdToContext.set(contextPayload.id, context);
-  # }
+  # @param context_payload [Hash]
+  def handle_execution_context_created(context_payload)
+    frame = if_present(context_payload.dig('auxData', 'frameId')) { |frame_id| @frames[frame_id] }
+
+    world = nil
+    if frame
+      if context_payload.dig('auxData', 'isDefault')
+        world = frame.main_world
+      elsif context_payload['name'] == UTILITY_WORLD_NAME && !frame.secondary_world.has_context?
+        # In case of multiple sessions to the same target, there's a race between
+        # connections so we might end up creating multiple isolated worlds.
+        # We can use either.
+        world = frame.secondary_world
+      end
+    end
+
+    if context_payload.dig('auxData', 'type') == 'isolated'
+      @isolated_worlds << context_payload['name']
+    end
+
+    context = Puppeteer::ExecutionContext.new(@client, context_payload, world)
+    if world
+      world.context = context
+    end
+    @context_id_to_context[context_payload['id']] = context
+  end
 
   # @param {number} executionContextId
   def handle_execution_context_destroyed(execution_context_id)

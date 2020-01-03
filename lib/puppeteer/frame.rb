@@ -10,21 +10,17 @@ class Puppeteer::Frame
     @id = frame_id
     @detached = false
 
-    # this._loaderId = '';
-    # /** @type {!Set<string>} */
-    # this._lifecycleEvents = new Set();
-    # /** @type {!DOMWorld} */
-    # this._mainWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
-    # /** @type {!DOMWorld} */
-    # this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
-
+    @loader_id = ''
+    @lifecycle_events = Set.new
+    @main_world = Puppeteer::DOMWorld.new(frame_manager, self, frame_manager.timeout_settings)
+    @secondary_world = Puppeteer::DOMWorld.new(frame_manager, self, frame_manager.timeout_settings)
     @child_frames = Set.new
     if parent_frame
       parent_frame._child_frames << self
     end
   end
 
-  attr_accessor :id
+  attr_accessor :id, :main_world, :secondary_world
 
   # @param url [String]
   # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -296,22 +292,18 @@ class Puppeteer::Frame
     @url = url
   end
 
-  # /**
-  #  * @param {string} loaderId
-  #  * @param {string} name
-  #  */
-  # _onLifecycleEvent(loaderId, name) {
-  #   if (name === 'init') {
-  #     this._loaderId = loaderId;
-  #     this._lifecycleEvents.clear();
-  #   }
-  #   this._lifecycleEvents.add(name);
-  # }
+  def handle_lifecycle_event(loader_id, name)
+    if name == 'init'
+      @loader_id = loader_id
+      @lifecycle_events.clear
+    end
+    @lifecycle_events << name
+  end
 
-  # _onLoadingStopped() {
-  #   this._lifecycleEvents.add('DOMContentLoaded');
-  #   this._lifecycleEvents.add('load');
-  # }
+  def handle_loading_stopped
+    @lifecycle_events << 'DOMContentLoaded'
+    @lifecycle_events << 'load'
+  end
 
   def detach
     @detached = true
