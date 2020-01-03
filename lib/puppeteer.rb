@@ -6,6 +6,7 @@ require 'puppeteer/viewport'
 # Modules
 require 'puppeteer/debug_print'
 require 'puppeteer/event_callbackable'
+require 'puppeteer/if_present'
 
 # Classes & values.
 require 'puppeteer/browser'
