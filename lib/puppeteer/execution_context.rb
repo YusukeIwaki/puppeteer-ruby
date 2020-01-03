@@ -10,6 +10,8 @@ class Puppeteer::ExecutionContext
     @context_id = context_payload['id']
   end
 
+  attr_reader :world
+
   # /**
   #  * @return {?Puppeteer.Frame}
   #  */

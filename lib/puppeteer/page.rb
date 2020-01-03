@@ -1,5 +1,10 @@
+require 'base64'
+
+require_relative './page/screenshot_options'
+
 class Puppeteer::Page
   include Puppeteer::EventCallbackable
+  include Puppeteer::IfPresent
 
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Target} target
@@ -743,91 +748,78 @@ class Puppeteer::Page
   #  * @param {!ScreenshotOptions=} options
   #  * @return {!Promise<!Buffer|!String>}
   #  */
-  # async screenshot(options = {}) {
-  #   let screenshotType = null;
-  #   // options.type takes precedence over inferring the type from options.path
-  #   // because it may be a 0-length file with no extension created beforehand (i.e. as a temp file).
-  #   if (options.type) {
-  #     assert(options.type === 'png' || options.type === 'jpeg', 'Unknown options.type value: ' + options.type);
-  #     screenshotType = options.type;
-  #   } else if (options.path) {
-  #     const mimeType = mime.getType(options.path);
-  #     if (mimeType === 'image/png')
-  #       screenshotType = 'png';
-  #     else if (mimeType === 'image/jpeg')
-  #       screenshotType = 'jpeg';
-  #     assert(screenshotType, 'Unsupported screenshot mime type: ' + mimeType);
-  #   }
+  def screenshot(options = {})
+    screenshot_options = ScreenshotOptions.new(options)
 
-  #   if (!screenshotType)
-  #     screenshotType = 'png';
+    #@screenshot_task_queue.post_task(-> { screenshot_task(screenshot_options.type, screenshot_options) })
+    screenshot_task(screenshot_options.type, screenshot_options)
+  end
 
-  #   if (options.quality) {
-  #     assert(screenshotType === 'jpeg', 'options.quality is unsupported for the ' + screenshotType + ' screenshots');
-  #     assert(typeof options.quality === 'number', 'Expected options.quality to be a number but found ' + (typeof options.quality));
-  #     assert(Number.isInteger(options.quality), 'Expected options.quality to be an integer');
-  #     assert(options.quality >= 0 && options.quality <= 100, 'Expected options.quality to be between 0 and 100 (inclusive), got ' + options.quality);
-  #   }
-  #   assert(!options.clip || !options.fullPage, 'options.clip and options.fullPage are exclusive');
-  #   if (options.clip) {
-  #     assert(typeof options.clip.x === 'number', 'Expected options.clip.x to be a number but found ' + (typeof options.clip.x));
-  #     assert(typeof options.clip.y === 'number', 'Expected options.clip.y to be a number but found ' + (typeof options.clip.y));
-  #     assert(typeof options.clip.width === 'number', 'Expected options.clip.width to be a number but found ' + (typeof options.clip.width));
-  #     assert(typeof options.clip.height === 'number', 'Expected options.clip.height to be a number but found ' + (typeof options.clip.height));
-  #     assert(options.clip.width !== 0, 'Expected options.clip.width not to be 0.');
-  #     assert(options.clip.height !== 0, 'Expected options.clip.height not to be 0.');
-  #   }
-  #   return this._screenshotTaskQueue.postTask(this._screenshotTask.bind(this, screenshotType, options));
-  # }
+  # @param {"png"|"jpeg"} format
+  # @param {!ScreenshotOptions=} options
+  # @return {!Promise<!Buffer|!String>}
+  private def screenshot_task(format, screenshot_options)
+    @client.send_message('Target.activateTarget', targetId: @target.target_id);
 
-  # /**
-  #  * @param {"png"|"jpeg"} format
-  #  * @param {!ScreenshotOptions=} options
-  #  * @return {!Promise<!Buffer|!String>}
-  #  */
-  # async _screenshotTask(format, options) {
-  #   await this._client.send('Target.activateTarget', {targetId: this._target._targetId});
-  #   let clip = options.clip ? processClip(options.clip) : undefined;
+    clip = if_present(screenshot_options.clip) do |rect|
+      x = rect[:x].round
+      y = rect[:y].round
+      { x: x, y: y, width: rect[:width] + rect[:x] - x, height: rect[:height] + rect[:y] - y, scale: 1 }
+    end
 
-  #   if (options.fullPage) {
-  #     const metrics = await this._client.send('Page.getLayoutMetrics');
-  #     const width = Math.ceil(metrics.contentSize.width);
-  #     const height = Math.ceil(metrics.contentSize.height);
+    if screenshot_options.full_page?
+      metrics = @client.send_message('Page.getLayoutMetrics')
+      width = metrics['contentSize']['width'].ceil
+      height = metrics['contentSize']['height'].ceil
 
-  #     // Overwrite clip for full page at all times.
-  #     clip = { x: 0, y: 0, width, height, scale: 1 };
-  #     const {
-  #       isMobile = false,
-  #       deviceScaleFactor = 1,
-  #       isLandscape = false
-  #     } = this._viewport || {};
-  #     /** @type {!Protocol.Emulation.ScreenOrientation} */
-  #     const screenOrientation = isLandscape ? { angle: 90, type: 'landscapePrimary' } : { angle: 0, type: 'portraitPrimary' };
-  #     await this._client.send('Emulation.setDeviceMetricsOverride', { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
-  #   }
-  #   const shouldSetDefaultBackground = options.omitBackground && format === 'png';
-  #   if (shouldSetDefaultBackground)
-  #     await this._client.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
-  #   const result = await this._client.send('Page.captureScreenshot', { format, quality: options.quality, clip });
-  #   if (shouldSetDefaultBackground)
-  #     await this._client.send('Emulation.setDefaultBackgroundColorOverride');
+      # Overwrite clip for full page at all times.
+      clip = { x: 0, y: 0, width: width, height: height, scale: 1 }
 
-  #   if (options.fullPage && this._viewport)
-  #     await this.setViewport(this._viewport);
+      screen_orientation =
+        if @viewport.landscape?
+          { angle: 90, type: 'landscapePrimary' }
+        else
+          { angle: 0, type: 'portraitPrimary' }
+        end
+      @client.send_message('Emulation.setDeviceMetricsOverride',
+        mobile: @viewport.mobile?,
+        width: width,
+        height: height,
+        deviceScaleFactor: @viewport.device_scale_factor,
+        screenOrientation: screen_orientation)
+    end
 
-  #   const buffer = options.encoding === 'base64' ? result.data : Buffer.from(result.data, 'base64');
-  #   if (options.path)
-  #     await writeFileAsync(options.path, buffer);
-  #   return buffer;
+    should_set_default_background = screenshot_options.omit_background? && format == 'png'
+    if should_set_default_background
+      @client.send_message('Emulation.setDefaultBackgroundColorOverride', color: { r: 0, g: 0, b: 0, a: 0 })
+    end
+    screenshot_params = {
+      format: format,
+      quality: screenshot_options.quality,
+      clip: clip
+    }.compact
+    result = @client.send_message('Page.captureScreenshot', screenshot_params)
+    if should_set_default_background
+      @client.send_message('Emulation.setDefaultBackgroundColorOverride')
+    end
 
-  #   function processClip(clip) {
-  #     const x = Math.round(clip.x);
-  #     const y = Math.round(clip.y);
-  #     const width = Math.round(clip.width + clip.x - x);
-  #     const height = Math.round(clip.height + clip.y - y);
-  #     return {x, y, width, height, scale: 1};
-  #   }
-  # }
+    if screenshot_options.full_page? && @viewport
+      self.viewport = @viewport
+    end
+
+    buffer =
+      if screenshot_options.encoding == 'base64'
+        result['data']
+      else
+        Base64.decode64(result['data'])
+      end
+
+    if screenshot_options.path
+      File.binwrite(screenshot_options.path, buffer)
+    end
+
+    buffer
+  end
 
   # /**
   #  * @param {!PDFOptions=} options

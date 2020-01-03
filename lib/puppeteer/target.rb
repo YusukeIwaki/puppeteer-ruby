@@ -43,6 +43,8 @@ class Puppeteer::Target
     end
   end
 
+  attr_reader :target_id
+
   def handle_initialized(success)
     @initialized_promise = success
     return unless success

@@ -3,6 +3,8 @@ require 'timeout'
 
 class Puppeteer::Browser
   include Puppeteer::DebugPrint
+  include Puppeteer::EventCallbackable
+
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
@@ -132,7 +134,7 @@ class Puppeteer::Browser
     target.handle_target_info_changed(target_info)
     if was_initialized && previous_url != target.url
       emit_event 'Events.Browser.TargetChanged', target
-      @browser_context.emit_event 'Events.BrowserContext.TargetChanged', target
+      target.browser_context.emit_event 'Events.BrowserContext.TargetChanged', target
     end
   end
 
