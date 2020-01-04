@@ -386,9 +386,7 @@ class Puppeteer::Page
 
   # @param user_agent [String]
   def user_agent=(user_agent)
-    puts ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #{user_agent}"
     @frame_manager.network_manager.user_agent = user_agent
-    puts "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
   end
 
   # /**
@@ -944,31 +942,21 @@ class Puppeteer::Page
   # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
   # @return {!Promise<?Puppeteer.ElementHandle>}
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    options = {
-      visible: visible,
-      hidden: hidden,
-      timeout: timeout
-    }.compact
-    main_frame.wait_for_selector(selector, options)
+    main_frame.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
   end
 
   # @param {string} xpath
   # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil) # TODO: あとでキーワード引数にする
-    options = {
-      visible: visible,
-      hidden: hidden,
-      timeout: timeout
-    }.compact
-    main_frame.wait_for_xpath(xpath, options)
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+    main_frame.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
   end
 
-  # @param {Function} pageFunction
+  # @param {Function|string} pageFunction
   # @param {!{polling?: string|number, timeout?: number}=} options
   # @param {!Array<*>} args
   # @return {!Promise<!Puppeteer.JSHandle>}
-  # def waitForFunction(page_function, options = {}, ...args) {
-  #   return this.mainFrame().waitForFunction(pageFunction, options, ...args);
-  # }
+  def wait_for_function(page_function, options = {}, *args)
+    main_frame.wait_for_function(page_function, options, *args)
+  end
 end

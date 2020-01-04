@@ -141,52 +141,40 @@ class Puppeteer::Frame
     @main_world.add_style_tag(style_tag)
   end
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-  #  */
-  # async click(selector, options) {
-  #   return this._secondaryWorld.click(selector, options);
-  # }
+  # @param {string} selector
+  # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
+  def click(selector, delay: nil, button: nil, click_count: nil)
+    @secondary_world.click(selector, delay: delay, button: button, click_count: click_count)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  */
-  # async focus(selector) {
-  #   return this._secondaryWorld.focus(selector);
-  # }
+  # @param {string} selector
+  def focus(selector)
+    @secondary_world.focus(selector)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  */
-  # async hover(selector) {
-  #   return this._secondaryWorld.hover(selector);
-  # }
+  # @param {string} selector
+  def hover(selector)
+    @secondary_world.hover(selector)
+  end
 
-  # /**
-  # * @param {string} selector
-  # * @param {!Array<string>} values
-  # * @return {!Promise<!Array<string>>}
-  # */
-  # select(selector, ...values){
-  #   return this._secondaryWorld.select(selector, ...values);
-  # }
+  # @param {string} selector
+  # @param {!Array<string>} values
+  # @return {!Promise<!Array<string>>}
+  def select(selector, *values)
+    @secondary_world.select(selector, *values)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  */
-  # async tap(selector) {
-  #   return this._secondaryWorld.tap(selector);
-  # }
+  # @param {string} selector
+  def tap(selector)
+    @secondary_world.tap(selector)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {string} text
-  #  * @param {{delay: (number|undefined)}=} options
-  #  */
-  # async type(selector, text, options) {
-  #   return this._mainWorld.type(selector, text, options);
-  # }
+  # @param {string} selector
+  # @param {string} text
+  # @param {{delay: (number|undefined)}=} options
+  def type(selector, text, delay: nil)
+    @main_world.type(selector, text, delay: delay)
+  end
 
   # /**
   #  * @param {(string|number|Function)} selectorOrFunctionOrTimeout
@@ -210,51 +198,45 @@ class Puppeteer::Frame
   #   return Promise.reject(new Error('Unsupported target type: ' + (typeof selectorOrFunctionOrTimeout)));
   # }
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # async waitForSelector(selector, options) {
-  #   const handle = await this._secondaryWorld.waitForSelector(selector, options);
-  #   if (!handle)
-  #     return null;
-  #   const mainExecutionContext = await this._mainWorld.executionContext();
-  #   const result = await mainExecutionContext._adoptElementHandle(handle);
-  #   await handle.dispose();
-  #   return result;
-  # }
+  # @param {string} selector
+  # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
+  # @return {!Promise<?Puppeteer.ElementHandle>}
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
+    handle = @secondary_world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
+    if !handle
+      return nil
+    end
+    main_execution_context = @main_world.execution_context
+    result = main_execution_context.adopt_element_handle(handle)
+    handle.dispose
+    return result
+  end
 
-  # /**
-  #  * @param {string} xpath
-  #  * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # async waitForXPath(xpath, options) {
-  #   const handle = await this._secondaryWorld.waitForXPath(xpath, options);
-  #   if (!handle)
-  #     return null;
-  #   const mainExecutionContext = await this._mainWorld.executionContext();
-  #   const result = await mainExecutionContext._adoptElementHandle(handle);
-  #   await handle.dispose();
-  #   return result;
-  # }
+  # @param {string} xpath
+  # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
+  # @return {!Promise<?Puppeteer.ElementHandle>}
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+    handle = @secondary_world.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
+    if !handle
+      return nil
+    end
+    main_execution_context = @main_world.execution_context
+    result = main_execution_context.adopt_element_handle(handle)
+    handle.dispose
+    return result
+  end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!{polling?: string|number, timeout?: number}=} options
-  #  * @return {!Promise<!Puppeteer.JSHandle>}
-  #  */
-  # waitForFunction(pageFunction, options = {}, ...args) {
-  #   return this._mainWorld.waitForFunction(pageFunction, options, ...args);
-  # }
+  # @param {Function|string} pageFunction
+  # @param {!{polling?: string|number, timeout?: number}=} options
+  # @param {!Array<*>} args
+  # @return {!Promise<!Puppeteer.JSHandle>}
+  def wait_for_function(page_function, options = {}, *args)
+    @main_world.wait_for_function(page_function, options, *args)
+  end
 
-  # /**
-  #  * @return {!Promise<string>}
-  #  */
-  # async title() {
-  #   return this._secondaryWorld.title();
-  # }
+  def title
+    @secondary_world.title
+  end
 
   # @param frame_payload [Hash]
   def navigated(frame_payload)
