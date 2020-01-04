@@ -29,97 +29,78 @@ class Puppeteer::Frame
     @frame_manager.navigate_frame(self, url, referer: referer, timeout: timeout, wait_until: wait_until)
   end
 
-  # /**
-  #  * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  #  * @return {!Promise<?Puppeteer.Response>}
-  #  */
-  # async waitForNavigation(options) {
-  #   return await this._frameManager.waitForFrameNavigation(this, options);
-  # }
+  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @return {!Promise<?Puppeteer.Response>}
+  def wait_for_navigation(timeout: nil, wait_until: nil)
+    @frame_manager.wait_for_navigation(self, timeout: timeout, wait_until: wait_until)
+  end
 
-  # /**
-  #  * @return {!Promise<!ExecutionContext>}
-  #  */
-  # executionContext() {
-  #   return this._mainWorld.executionContext();
-  # }
+  def execution_context
+    @main_world.execution_context
+  end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<!Puppeteer.JSHandle>}
-  #  */
-  # async evaluateHandle(pageFunction, ...args) {
-  #   return this._mainWorld.evaluateHandle(pageFunction, ...args);
-  # }
+  # @param {Function|string} pageFunction
+  # @return {!Promise<!Puppeteer.JSHandle>}
+  def evaluate_handle(page_function, *args)
+    @main_world.evaluate_handle(page_function, *args)
+  end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<*>}
-  #  */
-  # async evaluate(pageFunction, ...args) {
-  #   return this._mainWorld.evaluate(pageFunction, ...args);
-  # }
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  def evaluate(page_function, *args)
+    @main_world.evaluate(page_function, *args)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # async $(selector) {
-  #   return this._mainWorld.$(selector);
-  # }
+  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @return {!Promise<?Puppeteer.ElementHandle>}
+  def S(selector)
+    @main_world.S(selector)
+  end
 
-  # /**
-  #  * @param {string} expression
-  #  * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  #  */
-  # async $x(expression) {
-  #   return this._mainWorld.$x(expression);
-  # }
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<(!Object|undefined)>}
-  #  */
-  # async $eval(selector, pageFunction, ...args) {
-  #   return this._mainWorld.$eval(selector, pageFunction, ...args);
-  # }
+  # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} expression
+  # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+  def Sx(expression)
+    @main_world.Sx(expression)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<(!Object|undefined)>}
-  #  */
-  # async $$eval(selector, pageFunction, ...args) {
-  #   return this._mainWorld.$$eval(selector, pageFunction, ...args);
-  # }
 
-  # /**
-  #  * @param {string} selector
-  #  * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  #  */
-  # async $$(selector) {
-  #   return this._mainWorld.$$(selector);
-  # }
+  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<(!Object|undefined)>}
+  def Seval(selector, page_function, *args)
+    @main_world.Seval(selector, page_function, *args)
+  end
 
-  # /**
-  #  * @return {!Promise<String>}
-  #  */
-  # async content() {
-  #   return this._secondaryWorld.content();
-  # }
+  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<(!Object|undefined)>}
+  def SSeval(selector, page_function, *args)
+    @main_world.SSeval(selector, page_function, *args)
+  end
 
-  # /**
-  #  * @param {string} html
-  #  * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  #  */
-  # async setContent(html, options = {}) {
-  #   return this._secondaryWorld.setContent(html, options);
-  # }
+  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+  def SS(selector)
+    @main_world.SS(selector)
+  end
+
+  def content
+    @secondary_world.content
+  end
+
+  # @param {string} html
+  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
+  def set_content(html, timeout: nil, wait_until: nil)
+    @secondary_world.set_content(html, timeout: timeout, wait_until: wait_until)
+  end
 
   # @return [String]
   def name
@@ -148,21 +129,17 @@ class Puppeteer::Frame
     @detached
   end
 
-  # /**
-  #  * @param {!{url?: string, path?: string, content?: string, type?: string}} options
-  #  * @return {!Promise<!Puppeteer.ElementHandle>}
-  #  */
-  # async addScriptTag(options) {
-  #   return this._mainWorld.addScriptTag(options);
-  # }
+  # @param style_tag [Puppeteer::Page::ScriptTag]
+  # @return {!Promise<!ElementHandle>}
+  def add_script_tag(script_tag)
+    @main_world.add_script_tag(script_tag)
+  end
 
-  # /**
-  #  * @param {!{url?: string, path?: string, content?: string}} options
-  #  * @return {!Promise<!Puppeteer.ElementHandle>}
-  #  */
-  # async addStyleTag(options) {
-  #   return this._mainWorld.addStyleTag(options);
-  # }
+  # @param style_tag [Puppeteer::Page::StyleTag]
+  # @return {!Promise<!ElementHandle>}
+  def add_style_tag(style_tag)
+    @main_world.add_style_tag(style_tag)
+  end
 
   # /**
   #  * @param {string} selector

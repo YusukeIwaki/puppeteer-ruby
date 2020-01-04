@@ -319,7 +319,7 @@ class Puppeteer::Page
     attr_reader :content, :path, :type, :url
   end
 
-  # @param style_tag [ScriptTag]
+  # @param style_tag [Puppeteer::Page::ScriptTag]
   # @return {!Promise<!ElementHandle>}
   def add_script_tag(script_tag)
     main_frame.add_script_tag(script_tag)
@@ -335,7 +335,7 @@ class Puppeteer::Page
     attr_reader :content, :path, :url
   end
 
-  # @param style_tag [StyleTag]
+  # @param style_tag [Puppeteer::Page::StyleTag]
   # @return {!Promise<!ElementHandle>}
   def add_style_tag(style_tag)
     main_frame.add_style_tag(style_tag)
