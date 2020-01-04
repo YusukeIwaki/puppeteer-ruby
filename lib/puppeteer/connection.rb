@@ -84,11 +84,26 @@ class Puppeteer::Connection
     end
   end
 
+  NON_DEBUG_PRINT_METHODS = [
+    'Network.dataReceived',
+    'Network.requestWillBeSent',
+    'Network.requestWillBeSentExtraInfo',
+    'Network.responseReceived',
+    'Network.responseReceivedExtraInfo'
+  ]
+
   private def handle_message(message)
     if @delay > 0
       sleep(@delay / 1000.0)
     end
-    debug_print "RECV << #{message}"
+    if message['method'] && NON_DEBUG_PRINT_METHODS.include?(message['method'])
+      print "."
+      @prev_log_skipped = true
+    else
+      print "\n" if @prev_log_skipped
+      @prev_log_skipped = nil
+      debug_print "RECV << #{message}"
+    end
 
     case message['method']
     when 'Target.attachedToTarget'
