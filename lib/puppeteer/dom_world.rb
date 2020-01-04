@@ -1,5 +1,34 @@
+require 'thread'
+
 # https://github.com/puppeteer/puppeteer/blob/master/lib/DOMWorld.js
 class Puppeteer::DOMWorld
+  # on state: initialized
+  #   context is nil.
+  #   available_context blocks until context is set.
+  # on state: resolved
+  #   context is set
+  #   available_context returns context immediately.
+  class ContextResolver
+    def initialize
+      @queue = Queue.new
+    end
+
+    def resolve(context)
+      if context.nil?
+        raise ArgumentError.new("context should not be nil")
+      end
+      @queue.push(context)
+    end
+
+    def resolved?
+      !!@context
+    end
+
+    def available_context
+      @context ||= @queue.pop
+    end
+  end
+
   # @param {!Puppeteer.FrameManager} frameManager
   # @param {!Puppeteer.Frame} frame
   # @param {!Puppeteer.TimeoutSettings} timeoutSettings
@@ -7,14 +36,7 @@ class Puppeteer::DOMWorld
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
-
-    # /** @type {?Promise<!Puppeteer.ElementHandle>} */
-    # this._documentPromise = null;
-    # /** @type {!Promise<!Puppeteer.ExecutionContext>} */
-    # this._contextPromise;
-    # this._contextResolveCallback = null;
-    # this._setContext(null);
-
+    @context_resolver = ContextResolver.new
     @wait_tasks = Set.new
     @detached = false
   end
@@ -23,10 +45,18 @@ class Puppeteer::DOMWorld
 
   # @param {?Puppeteer.ExecutionContext} context
   def context=(context)
+    if context
+      @context_resolver.resolve(context)
+    #   for (const waitTask of this._waitTasks)
+    #     waitTask.rerun();
+    else
+      @document = nil
+      @context_resolver = ContextResolver.new
+    end
   end
 
   def has_context?
-    # return !this._contextResolveCallback;
+    @context_resolver.resolved?
   end
 
   private def detach
@@ -36,100 +66,72 @@ class Puppeteer::DOMWorld
     end
   end
 
-  # /**
-  #  * @return {!Promise<!Puppeteer.ExecutionContext>}
-  #  */
-  # executionContext() {
-  #   if (this._detached)
-  #     throw new Error(`Execution Context is not available in detached frame "${this._frame.url()}" (are you trying to evaluate?)`);
-  #   return this._contextPromise;
-  # }
+  class DetachedError < StandardError ; end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<!Puppeteer.JSHandle>}
-  #  */
-  # async evaluateHandle(pageFunction, ...args) {
-  #   const context = await this.executionContext();
-  #   return context.evaluateHandle(pageFunction, ...args);
-  # }
+  # @return {!Promise<!Puppeteer.ExecutionContext>}
+  def execution_context
+    if @detached
+      raise DetachedError.new("Execution Context is not available in detached frame \"#{@frame.url}\" (are you trying to evaluate?)")
+    end
+    @context_resolver.available_context
+  end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<*>}
-  #  */
-  # async evaluate(pageFunction, ...args) {
-  #   const context = await this.executionContext();
-  #   return context.evaluate(pageFunction, ...args);
-  # }
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<!Puppeteer.JSHandle>}
+  def evaluate_handle(page_function, *args)
+    execution_context.evaluate_handle(page_function, *args)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # async $(selector) {
-  #   const document = await this._document();
-  #   const value = await document.$(selector);
-  #   return value;
-  # }
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<*>}
+  def evaluate(page_function, *args)
+    execution_context.evaluate(page_function, *args)
+  end
 
-  # /**
-  #  * @return {!Promise<!Puppeteer.ElementHandle>}
-  #  */
-  # async _document() {
-  #   if (this._documentPromise)
-  #     return this._documentPromise;
-  #   this._documentPromise = this.executionContext().then(async context => {
-  #     const document = await context.evaluateHandle('document');
-  #     return document.asElement();
-  #   });
-  #   return this._documentPromise;
-  # }
+  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @return {!Promise<?Puppeteer.ElementHandle>}
+  def S(selector)
+    document.S(selector)
+  end
 
-  # /**
-  #  * @param {string} expression
-  #  * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  #  */
-  # async $x(expression) {
-  #   const document = await this._document();
-  #   const value = await document.$x(expression);
-  #   return value;
-  # }
+  private def document
+    @document ||= execution_context.evaluate_handle('document').as_element
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<(!Object|undefined)>}
-  #  */
-  # async $eval(selector, pageFunction, ...args) {
-  #   const document = await this._document();
-  #   return document.$eval(selector, pageFunction, ...args);
-  # }
+  # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} expression
+  # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+  def Sx(expression)
+    document.Sx(expression)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<(!Object|undefined)>}
-  #  */
-  # async $$eval(selector, pageFunction, ...args) {
-  #   const document = await this._document();
-  #   const value = await document.$$eval(selector, pageFunction, ...args);
-  #   return value;
-  # }
+  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<(!Object|undefined)>}
+  def Seval(selector, page_function, *args)
+    document.Seval(selector, page_function, *args)
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  #  */
-  # async $$(selector) {
-  #   const document = await this._document();
-  #   const value = await document.$$(selector);
-  #   return value;
-  # }
+  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<(!Object|undefined)>}
+  def SSeval(selector, page_function, *args)
+    document.SSeval(selector, page_function, *args)
+  end
+
+  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param {string} selector
+  # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+  def SS(selector)
+    document.SS(selector)
+  end
 
   # /**
   #  * @return {!Promise<String>}

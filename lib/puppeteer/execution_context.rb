@@ -1,5 +1,8 @@
 class Puppeteer::ExecutionContext
+  include Puppeteer::IfPresent
+
   EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__'
+  SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m
 
   # @param client [Puppeteer::CDPSession]
   # @param context_payload [Hash]
@@ -12,39 +15,51 @@ class Puppeteer::ExecutionContext
 
   attr_reader :world
 
-  # /**
-  #  * @return {?Puppeteer.Frame}
-  #  */
-  # frame() {
-  #   return this._world ? this._world.frame() : null;
-  # }
+  # @return [Puppeteer::Frame]
+  def frame
+    if_present(@world) do |world|
+      world.frame
+    end
+  end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {...*} args
-  #  * @return {!Promise<*>}
-  #  */
-  # async evaluate(pageFunction, ...args) {
-  #   return await this._evaluateInternal(true /* returnByValue */, pageFunction, ...args);
-  # }
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<*>}
+  def evaluate(page_function, *args)
+    evaluate_internal(true, page_function, *args)
+  end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {...*} args
-  #  * @return {!Promise<!JSHandle>}
-  #  */
-  # async evaluateHandle(pageFunction, ...args) {
-  #   return this._evaluateInternal(false /* returnByValue */, pageFunction, ...args);
-  # }
 
-  # /**
-  #  * @param {boolean} returnByValue
-  #  * @param {Function|string} pageFunction
-  #  * @param {...*} args
-  #  * @return {!Promise<*>}
-  #  */
-  # async _evaluateInternal(returnByValue, pageFunction, ...args) {
-  #   const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<!Puppeteer.JSHandle>}
+  def evaluate_handle(page_function, *args)
+    evaluate_internal(false, page_function, *args)
+  end
+
+  # @param {boolean} returnByValue
+  # @param {Function|string} pageFunction
+  # @param {!Array<*>} args
+  # @return {!Promise<!Puppeteer.JSHandle>}
+  private def evaluate_internal(return_by_value, page_function, *args)
+    suffix = "//# sourceURL=#{EVALUATION_SCRIPT_URL}"
+    if page_function.is_a?(String)
+      context_id = @context_id
+      expression = page_function
+      expression_with_source_url =
+        if SOURCE_URL_REGEX.match?(expression)
+          expression
+        else
+          "#{expression}\n#{suffix}"
+        end
+      result = @client.send_message('Runtime.evaluate',
+                 expression: expression_with_source_url,
+                 contextId: context_id,
+                 returnByValue: return_by_value,
+                 awaitPromise: true,
+                 userGesture: true)
+      # }).catch(rewriteError);
+    end
 
   #   if (helper.isString(pageFunction)) {
   #     const contextId = this._contextId;
@@ -147,7 +162,7 @@ class Puppeteer::ExecutionContext
   #       throw new Error('Execution context was destroyed, most likely because of a navigation.');
   #     throw error;
   #   }
-  # }
+  end
 
   # /**
   #  * @param {!JSHandle} prototypeHandle
