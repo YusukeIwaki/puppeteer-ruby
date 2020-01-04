@@ -64,15 +64,29 @@ class Puppeteer::Page
     #   this._workers.delete(event.sessionId);
     # });
 
-    # this._frameManager.on(Events.FrameManager.FrameAttached, event => this.emit(Events.Page.FrameAttached, event));
-    # this._frameManager.on(Events.FrameManager.FrameDetached, event => this.emit(Events.Page.FrameDetached, event));
-    # this._frameManager.on(Events.FrameManager.FrameNavigated, event => this.emit(Events.Page.FrameNavigated, event));
+    @frame_manager.on_event 'Events.FrameManager.FrameAttached' do |event|
+      emit_event 'Events.Page.FrameAttached', event
+    end
+    @frame_manager.on_event 'Events.FrameManager.FrameDetached' do |event|
+      emit_event 'Events.Page.FrameDetached', event
+    end
+    @frame_manager.on_event 'Events.FrameManager.FrameNavigated' do |event|
+      emit_event 'Events.Page.FrameNavigated', event
+    end
 
-    # const networkManager = this._frameManager.networkManager();
-    # networkManager.on(Events.NetworkManager.Request, event => this.emit(Events.Page.Request, event));
-    # networkManager.on(Events.NetworkManager.Response, event => this.emit(Events.Page.Response, event));
-    # networkManager.on(Events.NetworkManager.RequestFailed, event => this.emit(Events.Page.RequestFailed, event));
-    # networkManager.on(Events.NetworkManager.RequestFinished, event => this.emit(Events.Page.RequestFinished, event));
+    network_manager = @frame_manager.network_manager
+    network_manager.on_event 'Events.NetworkManager.Request' do |event|
+      emit_event 'Events.Page.Request', event
+    end
+    network_manager.on_event 'Events.NetworkManager.Response' do |event|
+      emit_event 'Events.Page.Response', event
+    end
+    network_manager.on_event 'Events.NetworkManager.RequestFailed' do |event|
+      emit_event 'Events.Page.RequestFailed', event
+    end
+    network_manager.on_event 'Events.NetworkManager.RequestFinished' do |event|
+      emit_event 'Events.Page.RequestFinished', event
+    end
     # this._fileChooserInterceptionIsDisabled = false;
     # this._fileChooserInterceptors = new Set();
 

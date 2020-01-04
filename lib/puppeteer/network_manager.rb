@@ -1,4 +1,6 @@
 class Puppeteer::NetworkManager
+  include Puppeteer::EventCallbackable
+
   class Credentials
     # @param username [String|NilClass]
     # @param password [String|NilClass]
