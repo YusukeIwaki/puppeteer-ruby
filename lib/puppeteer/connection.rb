@@ -84,26 +84,57 @@ class Puppeteer::Connection
     end
   end
 
-  NON_DEBUG_PRINT_METHODS = [
-    'Network.dataReceived',
-    'Network.requestWillBeSent',
-    'Network.requestWillBeSentExtraInfo',
-    'Network.responseReceived',
-    'Network.responseReceivedExtraInfo'
-  ]
+  # Just for effective debugging :)
+  class ResponseDebugPrinter
+    include Puppeteer::DebugPrint
+
+    NON_DEBUG_PRINT_METHODS = [
+      'Network.dataReceived',
+      'Network.requestWillBeSent',
+      'Network.requestWillBeSentExtraInfo',
+      'Network.responseReceived',
+      'Network.responseReceivedExtraInfo'
+    ]
+
+    def handle_message(message)
+      if skip_debug_print?(message['method'])
+        print "."
+        @prev_log_skipped = true
+      else
+        print "\n" if @prev_log_skipped
+        @prev_log_skipped = nil
+        debug_print "RECV << #{decorate(message)}"
+      end
+    end
+
+    private def skip_debug_print?(method)
+      method && NON_DEBUG_PRINT_METHODS.include?(method)
+    end
+
+    private def decorate(message)
+      # decorate RED for error.
+      if message['error']
+        return "\u001b[31m#{message}\u001b[0m"
+      end
+
+      # ignore method call response, or with no method.
+      return message if message['id'] || !message['method']
+
+      # decorate cyan for method name.
+      message.to_s.gsub(message['method'], "\u001b[36m#{message['method']}\u001b[0m")
+    end
+  end
+
+  private def response_debug_printer
+    @response_debug_printer ||= ResponseDebugPrinter.new
+  end
 
   private def handle_message(message)
     if @delay > 0
       sleep(@delay / 1000.0)
     end
-    if message['method'] && NON_DEBUG_PRINT_METHODS.include?(message['method'])
-      print "."
-      @prev_log_skipped = true
-    else
-      print "\n" if @prev_log_skipped
-      @prev_log_skipped = nil
-      debug_print "RECV << #{message}"
-    end
+
+    response_debug_printer.handle_message(message)
 
     case message['method']
     when 'Target.attachedToTarget'
