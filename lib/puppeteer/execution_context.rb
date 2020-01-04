@@ -37,6 +37,8 @@ class Puppeteer::ExecutionContext
     evaluate_internal(false, page_function, *args)
   end
 
+  class EvaluationError < StandardError ; end
+
   # @param {boolean} returnByValue
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -59,23 +61,18 @@ class Puppeteer::ExecutionContext
                  awaitPromise: true,
                  userGesture: true)
       # }).catch(rewriteError);
-    end
+      if result['exceptionDetails']
+        raise EvaluationError.new("Evaluation failed: #{result['exceptionDetails']}")
+      end
 
-  #   if (helper.isString(pageFunction)) {
-  #     const contextId = this._contextId;
-  #     const expression = /** @type {string} */ (pageFunction);
-  #     const expressionWithSourceUrl = SOURCE_URL_REGEX.test(expression) ? expression : expression + '\n' + suffix;
-  #     const {exceptionDetails, result: remoteObject} = await this._client.send('Runtime.evaluate', {
-  #       expression: expressionWithSourceUrl,
-  #       contextId,
-  #       returnByValue,
-  #       awaitPromise: true,
-  #       userGesture: true
-  #     }).catch(rewriteError);
-  #     if (exceptionDetails)
-  #       throw new Error('Evaluation failed: ' + helper.getExceptionMessage(exceptionDetails));
-  #     return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
-  #   }
+      remote_object = result['result']
+
+      if return_by_value
+        return remote_object
+      else
+        return create_js_handle(self, remote_object)
+      end
+    end
 
   #   if (typeof pageFunction !== 'function')
   #     throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
