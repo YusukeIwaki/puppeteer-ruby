@@ -40,14 +40,12 @@ class Puppeteer::LifecycleWatcher
     #
     # @param frame [Puppeteer::Frame]
     def completed?(frame)
-      # for (const event of expectedLifecycle) {
-      #   if (!frame._lifecycleEvents.has(event))
-      #     return false;
-      # }
-      # for (const child of frame.childFrames()) {
-      #   if (!checkLifecycle(child, expectedLifecycle))
-      #     return false;
-      # }
+      if expected_lifecycle.any? { |event| !frame.lifecycle_events.include?(event) }
+        return false
+      end
+      if frame.child_frames.any? { |child| !completed?(child) }
+        return false
+      end
       true
     end
   end
@@ -142,7 +140,7 @@ class Puppeteer::LifecycleWatcher
       block.call
     end
   rescue Timeout::Error
-    raise NavigationError("Navigation timeout of #{@timeout}ms exceeded")
+    raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
   end
 
   # @param frame [Puppeteer::Frame]
