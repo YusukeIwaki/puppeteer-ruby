@@ -1,16 +1,52 @@
+require 'securerandom'
+
 module Puppeteer::EventCallbackable
+  class EventListeners
+    include Enumerable
+
+    def initialize
+      @listeners = {}
+    end
+
+    # @return [String] Listener ID
+    def add(&block)
+      id = SecureRandom.hex(8)
+      @listeners[id] = block
+      id
+    end
+
+    # @param id [String] Listener ID returned on #add
+    def delete(id)
+      @listeners.delete(id)
+    end
+
+    # @implement Enumerable#each
+    def each(&block)
+      @listeners.values.each(&block)
+    end
+  end
+
+  def add_event_listener(event_name, &block)
+    @event_listeners ||= {}
+    (@event_listeners[event_name] ||= EventListeners.new).add(&block)
+  end
+
+  def remove_event_listener(*id_args)
+    (@event_listeners ||= {}).each do |event_name, listeners|
+      id_args.each do |id|
+        listeners.delete(id)
+      end
+    end
+  end
+
   def on_event(event_name, &block)
     @event_callbackable_handlers ||= {}
     @event_callbackable_handlers[event_name] = block
   end
 
-  def ignore_event(event_name)
-    @event_callbackable_handlers ||= {}
-    @event_callbackable_handlers.delete(event_name)
-  end
-
   def emit_event(event_name, *args, **kwargs)
     @event_callbackable_handlers ||= {}
+    @event_listeners ||= {}
 
     if kwargs.empty?
       # In Ruby's specification (version < 2.7),
@@ -37,8 +73,16 @@ module Puppeteer::EventCallbackable
       #
       # So Let's avoid it by checking kwargs.
       @event_callbackable_handlers[event_name]&.call(*args)
+      @event_listeners[event_name]&.each do |proc|
+        proc.call(*args)
+      end
     else
       @event_callbackable_handlers[event_name]&.call(*args, **kwargs)
+      @event_listeners[event_name]&.each do |proc|
+        proc.call(*args, **kwargs)
+      end
     end
+
+    event_name
   end
 end

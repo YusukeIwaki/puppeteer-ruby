@@ -178,15 +178,16 @@ class Puppeteer::Browser
     existing_target = targets.first{ |target| predicate.call(target) }
     return existing_target if existing_target
 
+    event_listening_ids = []
     queue = Queue.new
     begin
       Timeout.timeout(timeout_in_sec) do
-        on_event 'Events.Browser.TargetCreated' do |target|
+        event_listening_ids << add_event_listener('Events.Browser.TargetCreated') do |target|
           if predicate.call(target) && !queue.closed?
             queue.push(1)
           end
         end
-        on_event 'Events.Browser.TargetChanged' do |target|
+        event_listening_ids << add_event_listener('Events.Browser.TargetChanged') do |target|
           if predicate.call(target) && !queue.closed?
             queue.push(1)
           end
@@ -194,8 +195,7 @@ class Puppeteer::Browser
         queue.pop
       end
     ensure
-      ignore_event 'Events.Browser.TargetCreated'
-      ignore_event 'Events.Browser.TargetChanged'
+      remove_event_listener(*event_listening_ids)
       queue.close
     end
   end

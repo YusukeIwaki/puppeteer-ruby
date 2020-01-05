@@ -179,4 +179,34 @@ RSpec.describe Puppeteer::EventCallbackable do
       expect { parent.emit_event 'Parent.awesome' }.to change { called }.from(false).to(true)
     end
   end
+
+  describe 'add event listeners' do
+    class Pub
+      include Puppeteer::EventCallbackable
+    end
+
+    let!(:pub) { Pub.new }
+    let!(:sub1) { double(:sub1) }
+    let!(:sub2) { double(:sub2) }
+    let!(:sub1_listener) { pub.add_event_listener('Pub.Event.awesome') { sub1.ok } }
+    let!(:sub2_listener) { pub.add_event_listener('Pub.Event.awesome') { sub2.yes } }
+
+    it 'notify event callbacks for all listeners' do
+      expect(sub1).to receive(:ok)
+      expect(sub2).to receive(:yes)
+      pub.emit_event 'Pub.Event.awesome'
+    end
+
+    context 'after removing a listener' do
+      before {
+        pub.remove_event_listener(sub1_listener)
+      }
+
+      it 'notify event callbacks only for listeners which keep listening' do
+        expect(sub1).not_to receive(:ok)
+        expect(sub2).to receive(:yes)
+        pub.emit_event 'Pub.Event.awesome'
+      end
+    end
+  end
 end
