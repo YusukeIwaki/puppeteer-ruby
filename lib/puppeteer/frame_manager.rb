@@ -55,7 +55,7 @@ class Puppeteer::FrameManager
     end
   end
 
-  attr_reader :timeout_settings
+  attr_reader :client, :timeout_settings
 
   def init
     @client.send_message('Page.enable')
@@ -68,23 +68,9 @@ class Puppeteer::FrameManager
     @network_manager.init
   end
 
-  # @return {!NetworkManager}
-  def network_manager
-    @network_manager
-  end
+  attr_reader :network_manager
 
   class NavigationError < StandardError ; end
-
-  # Temporary implementation instead of LifecycleWatcher#timeoutOrTerminationPromise
-  private def with_navigation_timeout(timeout_ms, &block)
-    raise ArgymentError.new('block must be provided') if block.nil?
-
-    Timeout.timeout(timeout_ms / 1000.0) do
-      block.call
-    end
-  rescue Timeout::Error
-    raise NavigationError("Navigation timeout of #{timeout_ms}ms exceeded")
-  end
 
   # @param frame [Puppeteer::Frame]
   # @param url [String]
@@ -103,29 +89,30 @@ class Puppeteer::FrameManager
 
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     ensure_new_document_navigation = false
-    with_navigation_timeout(option_timeout) do
-      result = @client.send_message('Page.navigate', navigate_params)
-      loader_id = result['loaderId']
-      ensure_new_document_navigation = !!loader_id
-      if result['errorText']
-        raise NavigationError.new("#{result['errorText']} at #{url}")
+    begin
+      watcher.with_timeout_or_termination_handling do
+        result = @client.send_message('Page.navigate', navigate_params)
+        loader_id = result['loaderId']
+        ensure_new_document_navigation = !!loader_id
+        if result['errorText']
+          raise NavigationError.new("#{result['errorText']} at #{url}")
+        end
       end
+
+      if ensure_new_document_navigation
+        watcher.with_timeout_or_termination_handling do
+          watcher.wait_for_new_document_navigation
+        end
+      else
+        watcher.with_timeout_or_termination_handling do
+          watcher.wait_for_same_document_navigation
+        end
+      end
+    ensure
+      watcher.dispose
     end
 
-    #    let error = await Promise.race([
-    #      navigate(this._client, url, referer, frame._id),
-    #      watcher.timeoutOrTerminationPromise(),
-    #    ]);
-    #    if (!error) {
-    #      error = await Promise.race([
-    #        watcher.timeoutOrTerminationPromise(),
-    #        ensureNewDocumentNavigation ? watcher.newDocumentNavigationPromise() : watcher.sameDocumentNavigationPromise(),
-    #      ]);
-    #    }
-    #    watcher.dispose();
-    #    if (error)
-    #      throw error;
-    #    return watcher.navigationResponse();
+    watcher.navigation_response
   end
 
   #  /**

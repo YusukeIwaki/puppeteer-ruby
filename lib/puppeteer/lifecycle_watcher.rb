@@ -1,5 +1,9 @@
+require 'thread'
+
 # https://github.com/puppeteer/puppeteer/blob/master/lib/LifecycleWatcher.js
 class Puppeteer::LifecycleWatcher
+  include Puppeteer::IfPresent
+
   class ExpectedLifecycle
     PUPPETEER_TO_PROTOCOL_LIFECYCLE = {
       'load' => 'load',
@@ -48,6 +52,8 @@ class Puppeteer::LifecycleWatcher
     end
   end
 
+  class TerminatedError < StandardError ; end
+
   #  * @param {!Puppeteer.FrameManager} frameManager
   #  * @param {!Puppeteer.Frame} frame
   #  * @param {string|!Array<string>} waitUntil
@@ -59,87 +65,67 @@ class Puppeteer::LifecycleWatcher
     @initial_loader_id = frame.loader_id
     @timeout = timeout
 
-    # this._eventListeners = [
-    #   helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, () => this._terminate(new Error('Navigation failed because browser has disconnected!'))),
-    #   helper.addEventListener(this._frameManager, Events.FrameManager.LifecycleEvent, this._checkLifecycleComplete.bind(this)),
-    #   helper.addEventListener(this._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, this._navigatedWithinDocument.bind(this)),
-    #   helper.addEventListener(this._frameManager, Events.FrameManager.FrameDetached, this._onFrameDetached.bind(this)),
-    #   helper.addEventListener(this._frameManager.networkManager(), Events.NetworkManager.Request, this._onRequest.bind(this)),
-    # ];
-
-    # this._sameDocumentNavigationPromise = new Promise(fulfill => {
-    #   this._sameDocumentNavigationCompleteCallback = fulfill;
-    # });
-
-    # this._lifecyclePromise = new Promise(fulfill => {
-    #   this._lifecycleCallback = fulfill;
-    # });
-
-    # this._newDocumentNavigationPromise = new Promise(fulfill => {
-    #   this._newDocumentNavigationCompleteCallback = fulfill;
-    # });
+    @listener_ids = {}
+    @listener_ids['client'] = @frame_manager.client.add_event_listener('Events.CDPSession.Disconnected') do
+      terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
+    end
+    @listener_ids['frame_manager'] = [
+      @frame_manager.add_event_listener('Events.FrameManager.LifecycleEvent') do |frame|
+        check_lifecycle_complete
+      end,
+      @frame_manager.add_event_listener('Events.FrameManager.FrameNavigatedWithinDocument', &method(:navigated_within_document)),
+      @frame_manager.add_event_listener('Events.FrameManager.FrameDetached', &method(:handle_frame_detached))
+    ]
+    @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener('Events.NetworkManager.Request', &method(:handle_request))
 
     # this._timeoutPromise = this._createTimeoutPromise();
     # this._terminationPromise = new Promise(fulfill => {
     #   this._terminationCallback = fulfill;
     # });
-    # this._checkLifecycleComplete();
+    check_lifecycle_complete
   end
 
-  # /**
-  #  * @param {!Puppeteer.Request} request
-  #  */
-  # _onRequest(request) {
-  #   if (request.frame() !== this._frame || !request.isNavigationRequest())
-  #     return;
-  #   this._navigationRequest = request;
-  # }
+  # @param [Puppeteer::Request] request
+  def handle_request(request)
+    return if request.frame != @frame || !request.navigation_request?
+    @navigation_request = request
+  end
 
-  # /**
-  #  * @param {!Puppeteer.Frame} frame
-  #  */
-  # _onFrameDetached(frame) {
-  #   if (this._frame === frame) {
-  #     this._terminationCallback.call(null, new Error('Navigating frame was detached'));
-  #     return;
-  #   }
-  #   this._checkLifecycleComplete();
-  # }
+  # @param frame [Puppeteer::Frame]
+  def handle_frame_detached(frame)
+    if @frame == frame
+      # this._terminationCallback.call(null, new Error('Navigating frame was detached'));
+      return
+    end
+    check_lifecycle_complete
+  end
 
-  # /**
-  #  * @return {?Puppeteer.Response}
-  #  */
-  # navigationResponse() {
-  #   return this._navigationRequest ? this._navigationRequest.response() : null;
-  # }
+  # @return [Puppeteer::Response]
+  def navigation_response
+    if_present(@navigation_request) do |request|
+      request.response
+    end
+  end
 
-  # /**
-  #  * @param {!Error} error
-  #  */
-  # _terminate(error) {
-  #   this._terminationCallback.call(null, error);
-  # }
+  # @param error [TerminatedError]
+  def terminate(error)
+    #   this._terminationCallback.call(null, error);
+  end
 
-  # /**
-  #  * @return {!Promise<?Error>}
-  #  */
-  # sameDocumentNavigationPromise() {
-  #   return this._sameDocumentNavigationPromise;
-  # }
+  # Alternative implementation of #sameDocumentNavigationPromise.
+  def wait_for_same_document_navigation
+    @wait_for_same_document_navigation ||= (@wait_for_same_document_navigation_queue ||= Queue.new).pop
+  end
 
-  # /**
-  #  * @return {!Promise<?Error>}
-  #  */
-  # newDocumentNavigationPromise() {
-  #   return this._newDocumentNavigationPromise;
-  # }
+  # Alternative implementation of #newDocumentNavigationPromise.
+  def wait_for_new_document_navigation
+    @wait_for_new_document_navigation ||= (@wait_for_new_document_navigation_queue ||= Queue.new).pop
+  end
 
-  # /**
-  #  * @return {!Promise}
-  #  */
-  # lifecyclePromise() {
-  #   return this._lifecyclePromise;
-  # }
+  # Alternative implementation of #lifecyclePromise.
+  def wait_for_lifecycle
+    @wait_for_lifecycle ||= (@wait_for_lifecycle_queue ||= Queue.new).pop
+  end
 
   # /**
   #  * @return {!Promise<?Error>}
@@ -148,59 +134,67 @@ class Puppeteer::LifecycleWatcher
   #   return Promise.race([this._timeoutPromise, this._terminationPromise]);
   # }
 
-  # /**
-  #  * @return {!Promise<?Error>}
-  #  */
-  # _createTimeoutPromise() {
-  #   if (!this._timeout)
-  #     return new Promise(() => {});
-  #   const errorMessage = 'Navigation timeout of ' + this._timeout + ' ms exceeded';
-  #   return new Promise(fulfill => this._maximumTimer = setTimeout(fulfill, this._timeout))
-  #       .then(() => new TimeoutError(errorMessage));
-  # }
+  # Alternative implementation of #timeoutOrTerminationPromise
+  def with_timeout_or_termination_handling(&block)
+    raise ArgymentError.new('block must be provided') if block.nil?
 
-  # /**
-  #  * @param {!Puppeteer.Frame} frame
-  #  */
-  # _navigatedWithinDocument(frame) {
-  #   if (frame !== this._frame)
-  #     return;
-  #   this._hasSameDocumentNavigation = true;
-  #   this._checkLifecycleComplete();
-  # }
+    Timeout.timeout(@timeout / 1000.0) do
+      block.call
+    end
+  rescue Timeout::Error
+    raise NavigationError("Navigation timeout of #{@timeout}ms exceeded")
+  end
 
-  # _checkLifecycleComplete() {
-  #   // We expect navigation to commit.
-  #   if (!checkLifecycle(this._frame, this._expectedLifecycle))
-  #     return;
-  #   this._lifecycleCallback();
-  #   if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation)
-  #     return;
-  #   if (this._hasSameDocumentNavigation)
-  #     this._sameDocumentNavigationCompleteCallback();
-  #   if (this._frame._loaderId !== this._initialLoaderId)
-  #     this._newDocumentNavigationCompleteCallback();
+  # @param frame [Puppeteer::Frame]
+  private def navigated_within_document(frame)
+    return if frame != @frame
+    @has_same_document_navigation = true
+    check_lifecycle_complete
+  end
 
-  #   /**
-  #    * @param {!Puppeteer.Frame} frame
-  #    * @param {!Array<string>} expectedLifecycle
-  #    * @return {boolean}
-  #    */
-  #   function checkLifecycle(frame, expectedLifecycle) {
-  #     for (const event of expectedLifecycle) {
-  #       if (!frame._lifecycleEvents.has(event))
-  #         return false;
-  #     }
-  #     for (const child of frame.childFrames()) {
-  #       if (!checkLifecycle(child, expectedLifecycle))
-  #         return false;
-  #     }
-  #     return true;
-  #   }
-  # }
+  private def handle_lifecycle_callback
+    unless @wait_for_lifecycle
+      (@wait_for_lifecycle_queue ||= Queue.new).push(1)
+    end
+  end
 
-  # dispose() {
-  #   helper.removeEventListeners(this._eventListeners);
-  #   clearTimeout(this._maximumTimer);
-  # }
+  private def handle_same_document_navigation_complete_callback
+    unless @wait_for_same_document_navigation
+      (@wait_for_same_document_navigation_queue ||= Queue.new).push(1)
+    end
+  end
+
+  private def handle_new_document_navigation_complete_callback
+    unless @wait_for_new_document_navigation
+      (@wait_for_new_document_navigation_queue ||= Queue.new).push(1)
+    end
+  end
+
+  private def check_lifecycle_complete
+    # We expect navigation to commit.
+    return unless @expected_lifecycle.completed?(@frame)
+    handle_lifecycle_callback
+    if @frame.loader_id == @initial_loader_id && !@has_same_document_navigation
+      return
+    end
+    if @has_same_document_navigation
+      handle_same_document_navigation_complete_callback
+    end
+    if @frame.loader_id != @initial_loader_id
+      handle_new_document_navigation_complete_callback
+    end
+  end
+
+  def dispose
+    if_present(@listener_ids['client']) do |id|
+      @frame_manager.client.remove_event_listener(id)
+    end
+    if_present(@listener_ids['frame_manager']) do |ids|
+      @frame_manager.remove_event_listener(*ids)
+    end
+    if_present(@listener_ids['network_manager']) do |id|
+      @frame_manager.network_manager.remove_event_listener(id)
+    end
+    #   clearTimeout(this._maximumTimer);
+  end
 end
