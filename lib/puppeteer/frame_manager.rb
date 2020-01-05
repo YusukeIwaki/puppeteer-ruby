@@ -101,7 +101,7 @@ class Puppeteer::FrameManager
     option_wait_until = wait_until || ['load']
     option_timeout = timeout || @timeout_settings.navigation_timeout
 
-    #    const watcher = new LifecycleWatcher(this, frame, waitUntil, timeout);
+    watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     ensure_new_document_navigation = false
     with_navigation_timeout(option_timeout) do
       result = @client.send_message('Page.navigate', navigate_params)

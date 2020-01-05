@@ -20,7 +20,7 @@ class Puppeteer::Frame
     end
   end
 
-  attr_accessor :id, :main_world, :secondary_world
+  attr_accessor :id, :loader_id, :main_world, :secondary_world
 
   # @param url [String]
   # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
