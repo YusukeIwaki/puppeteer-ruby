@@ -43,26 +43,26 @@ class Puppeteer::Page
     @screenshot_task_queue = screenshot_task_queue
 
     @workers = {}
-    # client.on('Target.attachedToTarget', event => {
-    #   if (event.targetInfo.type !== 'worker') {
-    #     // If we don't detach from service workers, they will never die.
-    #     client.send('Target.detachFromTarget', {
-    #       sessionId: event.sessionId
-    #     }).catch(debugError);
-    #     return;
-    #   }
-    #   const session = Connection.fromSession(client).session(event.sessionId);
-    #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
-    #   this._workers.set(event.sessionId, worker);
-    #   this.emit(Events.Page.WorkerCreated, worker);
-    # });
-    # client.on('Target.detachedFromTarget', event => {
-    #   const worker = this._workers.get(event.sessionId);
-    #   if (!worker)
-    #     return;
-    #   this.emit(Events.Page.WorkerDestroyed, worker);
-    #   this._workers.delete(event.sessionId);
-    # });
+    @client.on_event 'Target.attachedToTarget' do |event|
+      if event['targetInfo']['type'] != 'worker'
+        # If we don't detach from service workers, they will never die.
+        @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
+        return
+      end
+
+      session = Puppeteer::Connection.from_session(@client).session(event['sessionId'])
+      #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
+      #   this._workers.set(event.sessionId, worker);
+      #   this.emit(Events.Page.WorkerCreated, worker);
+    end
+    @client.on_event 'Target.detachedFromTarget' do |event|
+      session_id = event['sessionId']
+      worker = @workers[session_id]
+      return unless worker
+
+      emit_event('Events.Page.WorkerDestroyed', worker)
+      @workers.delete(session_id)
+    end
 
     @frame_manager.on_event 'Events.FrameManager.FrameAttached' do |event|
       emit_event 'Events.Page.FrameAttached', event
@@ -90,8 +90,12 @@ class Puppeteer::Page
     # this._fileChooserInterceptionIsDisabled = false;
     # this._fileChooserInterceptors = new Set();
 
-    # client.on('Page.domContentEventFired', event => this.emit(Events.Page.DOMContentLoaded));
-    # client.on('Page.loadEventFired', event => this.emit(Events.Page.Load));
+    @client.on_event 'Page.domContentEventFired' do |event|
+      emit_event 'Events.Page.DOMContentLoaded'
+    end
+    @client.on_event 'Page.loadEventFired' do |event|
+      emit_event 'Events.Page.Load'
+    end
     # client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
     # client.on('Page.javascriptDialogOpening', event => this._onDialog(event));
@@ -100,10 +104,10 @@ class Puppeteer::Page
     # client.on('Performance.metrics', event => this._emitMetrics(event));
     # client.on('Log.entryAdded', event => this._onLogEntryAdded(event));
     # client.on('Page.fileChooserOpened', event => this._onFileChooser(event));
-    # this._target._isClosedPromise.then(() => {
-    #   this.emit(Events.Page.Close);
-    #   this._closed = true;
-    # });
+    @target.on_close do
+      emit_event 'Events.Page.Close'
+      @closed = true
+    end
   end
 
   def init

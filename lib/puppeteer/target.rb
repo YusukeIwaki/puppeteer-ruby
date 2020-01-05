@@ -65,6 +65,11 @@ class Puppeteer::Target
 
   def handle_closed
     @closed = true
+    @on_close&.call
+  end
+
+  def on_close(&block)
+    @on_close = block
   end
 
   def initialized?
