@@ -60,7 +60,7 @@ class Puppeteer::Connection
     id = generate_id
     payload = JSON.fast_generate(message.merge(id: id))
     @transport.send_text(payload)
-    debug_print "SEND >> #{payload}"
+    request_debug_printer.handle_payload(payload)
     response = read_until{ |message| message["id"] == id }
     if response['error']
       raise ProtocolError.new(
@@ -85,6 +85,18 @@ class Puppeteer::Connection
   end
 
   # Just for effective debugging :)
+  class RequestDebugPrinter
+    include Puppeteer::DebugPrint
+
+    def handle_payload(payload)
+      debug_print "SEND >> #{decorate(payload)}"
+    end
+
+    private def decorate(payload)
+      payload.gsub(/"method":"([^"]+)"/, "method: \"\u001b[32m\\1\u001b[0m\"")
+    end
+  end
+
   class ResponseDebugPrinter
     include Puppeteer::DebugPrint
 
@@ -123,6 +135,10 @@ class Puppeteer::Connection
       # decorate cyan for method name.
       message.to_s.gsub(message['method'], "\u001b[36m#{message['method']}\u001b[0m")
     end
+  end
+
+  private def request_debug_printer
+    @request_debug_printer ||= RequestDebugPrinter.new
   end
 
   private def response_debug_printer
