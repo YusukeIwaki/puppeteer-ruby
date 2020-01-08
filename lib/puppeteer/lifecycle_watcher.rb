@@ -24,7 +24,7 @@ class Puppeteer::LifecycleWatcher
         unless PUPPETEER_TO_PROTOCOL_LIFECYCLE.has_key?(wait_until)
           raise ArgumentError.new("Unknown value for options.waitUntil: #{wait_until}")
         end
-        [wait_until]
+        @wait_until = [wait_until]
       else
         raise ArgumentError.new('wait_until should be a Array<String> or String')
       end
