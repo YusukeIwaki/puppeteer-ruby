@@ -2,10 +2,11 @@ class Puppeteer::WebSocketTransport
   # @param {string} url
   # @return {!Promise<!WebSocketTransport>}
   def self.create(url)
-    Puppeteer::WebSocket.new(
+    ws = Puppeteer::WebSocket.new(
       url: url,
       max_payload_size: 256 * 1024 * 1024 # 256MB
     )
+    Puppeteer::WebSocketTransport.new(ws)
   end
 
   # @param {!WebSocket::Driver} web_socket
@@ -25,6 +26,10 @@ class Puppeteer::WebSocketTransport
   # @param message [String]
   def send_text(message)
     @ws.send_text(message)
+  end
+
+  def read
+    @ws.read
   end
 
   def close
