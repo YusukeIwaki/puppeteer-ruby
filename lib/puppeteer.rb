@@ -134,7 +134,7 @@ class Puppeteer
 
   # @return {string}
   def executable_path
-    @launcher.executable_path
+    launcher.executable_path
   end
 
   private def launcher
