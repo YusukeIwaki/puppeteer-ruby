@@ -3,6 +3,7 @@ require 'json'
 class Puppeteer::Connection
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
+  using Puppeteer::AsyncAwaitBehavior
 
   class ProtocolError < StandardError
     def initialize(method:, error_message:, error_data:)
@@ -15,13 +16,35 @@ class Puppeteer::Connection
     end
   end
 
+  # callback object stored in @callbacks.
+  class MessageCallback
+    # @param method [String]
+    # @param promise [Concurrent::Promises::ResolvableFuture]
+    def initialize(method:, promise:)
+      @method = method
+      @promise = promise
+    end
+
+    def resolve(result)
+      @promise.fulfill(result)
+    end
+
+    def reject(error)
+      @promise.reject(error)
+    end
+
+    attr_reader :method
+  end
+
   def initialize(url, transport, delay = 0)
     @url = url
     @last_id = 0
+    @callbacks = {}
     @delay = delay
 
     @transport = transport
     @transport.on_message do |data|
+      puts "on_message"
       handle_message(JSON.parse(data))
     end
     @transport.on_close do |reason, code|
@@ -48,8 +71,11 @@ class Puppeteer::Connection
 
   # @param {string} method
   # @param {!Object=} params
-  def send_message(method, params = {})
-    raw_send(message: { method: method, params: params })
+  async def send_message(method, params = {})
+    id = raw_send(message: { method: method, params: params })
+    promise = Concurrent::Promises.resolvable_future
+    @callbacks[id] = MessageCallback.new(method: method, promise: promise)
+    await promise
   end
 
   private def generate_id
@@ -61,27 +87,7 @@ class Puppeteer::Connection
     payload = JSON.fast_generate(message.merge(id: id))
     @transport.send_text(payload)
     request_debug_printer.handle_payload(payload)
-    response = read_until{ |message| message["id"] == id }
-    if response['error']
-      raise ProtocolError.new(
-              method: message[:method],
-              error_message: response['error']['message'],
-              error_data: response['error']['data'])
-    end
-    response["result"]
-  end
-
-  private def raw_read
-    JSON.parse(@transport.read)
-  end
-
-  private def read_until(&predicate)
-    loop do
-      message = raw_read
-      if predicate.call(message)
-        return message
-      end
-    end
+    id
   end
 
   # Just for effective debugging :)
@@ -170,7 +176,18 @@ class Puppeteer::Connection
       session_id = message['sessionId']
       @sessions[session_id]&.handle_message(message)
     elsif message['id']
-      # handled in read_until
+      # Callbacks could be all rejected if someone has called `.dispose()`.
+      if callback = @callbacks.delete(message['id'])
+        if message['error']
+          callback.reject(
+            ProtocolError.new(
+              method: callback.method,
+              error_message: response['error']['message'],
+              error_data: response['error']['data']))
+        else
+          callback.resolve(message["result"])
+        end
+      end
     else
       emit_event message['method'], message['params']
     end
@@ -181,9 +198,13 @@ class Puppeteer::Connection
     @closed = true
     @transport.on_message
     @transport.on_close
-    # for (const callback of this._callbacks.values())
-    #   callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-    # this._callbacks.clear();
+    @callback.values.each do |callback|
+      callback.reject(
+        ProtocolError.new(
+          method: callback.method,
+          error_message: 'Target Closed.'))
+    end
+    @callbacks.clear
     @sessions.values.each do |session|
       session.handle_closed
     end
@@ -206,8 +227,8 @@ class Puppeteer::Connection
 
   # @param {Protocol.Target.TargetInfo} targetInfo
   # @return {!Promise<!CDPSession>}
-  def create_session(target_info)
-    result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
+  async def create_session(target_info)
+    result = await send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
     @sessions[session_id]
   end

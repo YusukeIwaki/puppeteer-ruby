@@ -1,6 +1,6 @@
 class Puppeteer::WebSocketTransport
   # @param {string} url
-  # @return {!Promise<!WebSocketTransport>}
+  # @return [Puppeteer::WebSocketTransport]
   def self.create(url)
     ws = Puppeteer::WebSocket.new(
       url: url,
@@ -26,10 +26,6 @@ class Puppeteer::WebSocketTransport
   # @param message [String]
   def send_text(message)
     @ws.send_text(message)
-  end
-
-  def read
-    @ws.read
   end
 
   def close

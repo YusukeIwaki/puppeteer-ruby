@@ -4,6 +4,7 @@ require 'timeout'
 class Puppeteer::Browser
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
+  using Puppeteer::AsyncAwaitBehavior
 
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds

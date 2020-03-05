@@ -1,9 +1,12 @@
+require 'concurrent'
+
 # Custom data types.
 require 'puppeteer/device'
 require 'puppeteer/errors'
 require 'puppeteer/viewport'
 
 # Modules
+require 'puppeteer/async_await_behavior'
 require 'puppeteer/debug_print'
 require 'puppeteer/event_callbackable'
 require 'puppeteer/if_present'

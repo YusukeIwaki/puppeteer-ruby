@@ -31,7 +31,6 @@ class Puppeteer::WebSocket
   def initialize(url:, max_payload_size:)
     @impl = DriverImpl.new(url)
     @driver = ::WebSocket::Driver.client(@impl, max_length: max_payload_size)
-    @message_buffer = []
 
     setup
     @driver.start
@@ -53,8 +52,8 @@ class Puppeteer::WebSocket
       end
     end
     @driver.on(:message) do |event|
+      puts "on_message"
       handle_on_message(event.data)
-      @message_buffer << event.data
     end
   end
 
