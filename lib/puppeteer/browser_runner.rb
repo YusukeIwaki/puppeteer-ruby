@@ -121,9 +121,7 @@ class Puppeteer::BrowserRunner
       transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
       @connection = Puppeteer::Connection.new(browser_ws_endpoint, transport, slow_mo)
     else
-      #   const transport = new PipeTransport(/** @type {!NodeJS.WritableStream} */(this.proc.stdio[3]), /** @type {!NodeJS.ReadableStream} */ (this.proc.stdio[4]));
-      transport = PipeTransport.new()
-      @connection = Connection.new('', transport, slow_mo)
+      raise NotImplementedError.new("PipeTransport is not yet implemented")
     end
 
     @connection
