@@ -9,7 +9,7 @@ class Puppeteer::LifecycleWatcher
       'load' => 'load',
       'domcontentloaded' => 'DOMContentLoaded',
       'networkidle0' => 'networkIdle',
-      'networkidle2' => 'networkAlmostIdle'
+      'networkidle2' => 'networkAlmostIdle',
     }
 
     def initialize(wait_until)
@@ -72,7 +72,7 @@ class Puppeteer::LifecycleWatcher
         check_lifecycle_complete
       end,
       @frame_manager.add_event_listener('Events.FrameManager.FrameNavigatedWithinDocument', &method(:navigated_within_document)),
-      @frame_manager.add_event_listener('Events.FrameManager.FrameDetached', &method(:handle_frame_detached))
+      @frame_manager.add_event_listener('Events.FrameManager.FrameDetached', &method(:handle_frame_detached)),
     ]
     @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener('Events.NetworkManager.Request', &method(:handle_request))
 

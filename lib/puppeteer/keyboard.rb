@@ -2,6 +2,8 @@ require_relative './keyboard/key_description'
 require_relative './keyboard/us_keyboard_layout'
 
 class Puppeteer::Keyboard
+  using Puppeteer::AsyncAwaitBehavior
+
   # @param {!Puppeteer.CDPSession} client
   def initialize(client)
     @client = client
@@ -11,8 +13,9 @@ class Puppeteer::Keyboard
 
   attr_reader :modifiers
 
-  # @param {string} key
+  # @param key [String]
   # @param text [String]
+  # @return [Future]
   def down(key, text: nil)
     description = key_description_for_string(key)
 
@@ -31,7 +34,7 @@ class Puppeteer::Keyboard
       unmodifiedText: sending_text,
       autoRepeat: auto_repeat,
       location: description.location,
-      isKeypad: description.location == 3
+      isKeypad: description.location == 3,
     }.compact
     @client.send_message('Input.dispatchKeyEvent', params);
   end
@@ -104,7 +107,8 @@ class Puppeteer::Keyboard
     KeyDescription.new(**description)
   end
 
-    # @param {string} key
+  # @param key [String]
+  # @return [Future]
   def up(key)
     description = key_description_for_string(key)
 
@@ -117,11 +121,12 @@ class Puppeteer::Keyboard
       key: description.key,
       windowsVirtualKeyCode: description.keyCode,
       code: description.code,
-      location: description.location
+      location: description.location,
     )
   end
 
-  # @param {string} char
+  # @param char [string]
+  # @return [Future]
   def send_character(char)
     @client.send_message('Input.insertText', text: char)
   end
@@ -141,12 +146,13 @@ class Puppeteer::Keyboard
     end
   end
 
-  # @param {string} key
-  def press(key, delay: nil)
-    down(key)
+  # @param key [String]
+  # @return [Future]
+  async def press(key, delay: nil)
+    await down(key)
     if delay
       sleep(delay.to_i / 1000.0)
     end
-    up(key)
+    await up(key)
   end
 end

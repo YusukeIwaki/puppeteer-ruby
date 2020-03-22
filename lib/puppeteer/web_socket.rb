@@ -31,17 +31,20 @@ class Puppeteer::WebSocket
   def initialize(url:, max_payload_size:)
     @impl = DriverImpl.new(url)
     @driver = ::WebSocket::Driver.client(@impl, max_length: max_payload_size)
-    @message_buffer = []
 
     setup
     @driver.start
-    wait_for_opened
+
+    Thread.new do
+      wait_for_data until @ready_state >= STATE_CLOSING
+    end
   end
 
   private def setup
     @ready_state = STATE_CONNECTING
     @driver.on(:open) do
       @ready_state = STATE_OPENED
+      handle_on_open
     end
     @driver.on(:close) do |event|
       @ready_state = STATE_CLOSED
@@ -54,12 +57,7 @@ class Puppeteer::WebSocket
     end
     @driver.on(:message) do |event|
       handle_on_message(event.data)
-      @message_buffer << event.data
     end
-  end
-
-  private def wait_for_opened
-    wait_for_data until @ready_state >= STATE_OPENED
   end
 
   private def wait_for_data
@@ -72,15 +70,14 @@ class Puppeteer::WebSocket
     @driver.text(message)
   end
 
-  def read
-    wait_for_data until first_message = @message_buffer.shift
-    first_message
-  end
-
   def close(code: 1000, reason: "")
     return if @ready_state >= STATE_CLOSING
     @ready_state = STATE_CLOSING
     @driver.close(reason, code)
+  end
+
+  def on_open(&block)
+    @on_open = block
   end
 
   # @param block [Proc(reason: String, code: Numeric)]
@@ -95,6 +92,10 @@ class Puppeteer::WebSocket
 
   def on_message(&block)
     @on_message = block
+  end
+
+  private def handle_on_open
+    @on_open&.call
   end
 
   private def handle_on_close(reason:, code:)

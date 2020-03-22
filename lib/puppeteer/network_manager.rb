@@ -1,5 +1,6 @@
 class Puppeteer::NetworkManager
   include Puppeteer::EventCallbackable
+  using Puppeteer::AsyncAwaitBehavior
 
   class Credentials
     # @param username [String|NilClass]
@@ -38,10 +39,10 @@ class Puppeteer::NetworkManager
     # this._requestIdToInterceptionId = new Map();
   end
 
-  def init
-    @client.send_message('Network.enable')
+  async def init
+    await @client.send_message('Network.enable')
     if @ignore_https_errors
-      @client.send_message('Security.setIgnoreCertificateErrors', ignore: true)
+      await @client.send_message('Security.setIgnoreCertificateErrors', ignore: true)
     end
   end
 
@@ -49,7 +50,7 @@ class Puppeteer::NetworkManager
   # @param password [String|NilClass]
   def authenticate(username:, password:)
     @credentials = Credentials.new(username: username, password: password)
-    update_protocol_request_interception
+    await update_protocol_request_interception
   end
 
   # @param {!Object<string, string>} extraHTTPHeaders
@@ -62,7 +63,7 @@ class Puppeteer::NetworkManager
       new_extra_http_headers[key.downcase] = value
     end
     @extra_http_headers = new_extra_http_headers
-    @client.send_message('Network.setExtraHTTPHeaders', headers: new_extra_http_headers)
+    await @client.send_message('Network.setExtraHTTPHeaders', headers: new_extra_http_headers)
   end
 
   # @return {!Object<string, string>}
@@ -74,47 +75,53 @@ class Puppeteer::NetworkManager
   def offline_mode=(value)
     return if @offline == value
     @offline = value
-    @client.send_message('Network.emulateNetworkConditions',
+    await @client.send_message('Network.emulateNetworkConditions',
       offline: @offline,
       # values of 0 remove any active throttling. crbug.com/456324#c9
       latency: 0,
       downloadThroughput: -1,
-      uploadThroughput: -1
+      uploadThroughput: -1,
     )
   end
 
   # @param user_agent [String]
   def user_agent=(user_agent)
-    @client.send_message('Network.setUserAgentOverride', userAgent: user_agent)
+    await @client.send_message('Network.setUserAgentOverride', userAgent: user_agent)
   end
 
   def cache_enabled=(enabled)
     @user_cache_disabled = !enabled
-    update_protocol_cache_disabled
+    await update_protocol_cache_disabled
   end
 
   def request_interception=(enabled)
     @user_request_interception_enabled = enabled
-    update_protocol_request_interception
+    await update_protocol_request_interception
   end
 
+  # @returns [Future]
   private def update_protocol_request_interception
     enabled = @user_request_interception_enabled || !@credentials.nil?
     return if @protocol_request_interception_enabled == enabled
     @protocol_request_interception_enabled = enabled
 
     if enabled
-      update_protocol_cache_disabled
-      @client.send_message('Fetch.enable',
-        handleAuthRequests: true,
-        patterns: [{urlPattern: '*'}],
+      Concurrent::Promises.zip(
+        update_protocol_cache_disabled,
+        @client.send_message('Fetch.enable',
+          handleAuthRequests: true,
+          patterns: [{urlPattern: '*'}],
+        ),
       )
     else
-      update_protocol_cache_disabled
-      @client.send_message('Fetch.disable')
+      Concurrent::Promises.zip(
+        update_protocol_cache_disabled,
+        @client.send_message('Fetch.disable'),
+      )
     end
   end
 
+  # @returns [Future]
   private def update_protocol_cache_disabled
     cache_disabled = @user_cache_disabled || @protocol_request_interception_enabled
     @client.send_message('Network.setCacheDisabled', cacheDisabled: cache_disabled)

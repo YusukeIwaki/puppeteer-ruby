@@ -1,4 +1,6 @@
 class Puppeteer::Mouse
+  using Puppeteer::AsyncAwaitBehavior
+
   module Button
     NONE = 'none'
     LEFT = 'left'
@@ -20,7 +22,8 @@ class Puppeteer::Mouse
   # @param x [number]
   # @param y [number]
   # @param steps [number]
-  def move(x, y, steps: nil)
+  # @return [Future]
+  async def move(x, y, steps: nil)
     move_steps = (steps || 1).to_i
 
     from_x = @x
@@ -32,12 +35,12 @@ class Puppeteer::Mouse
 
     move_steps.times do |i|
       n = i + 1
-      @client.send_message('Input.dispatchMouseEvent',
+      await @client.send_message('Input.dispatchMouseEvent',
         type: 'mouseMoved',
         button: @button,
         x: from_x + (@x - from_x) * n / steps,
         y: from_y + (@y - from_y) * n / steps,
-        modifiers: @keyboard.modifiers
+        modifiers: @keyboard.modifiers,
       )
     end
   end
@@ -45,20 +48,26 @@ class Puppeteer::Mouse
   # @param x [number]
   # @param y [number]
   # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-  def click(x, y, delay: nil, button: nil, click_count: nil)
+  # @return [Future]
+  async def click(x, y, delay: nil, button: nil, click_count: nil)
     if delay
-      move(x, y)
-      down(button: button, click_count: click_count)
+      await Concurrent::Promises.zip(
+        move(x, y),
+        down(button: button, click_count: click_count),
+      )
       sleep(delay / 1000.0)
-      up(button: button, click_count: click_count)
+      await up(button: button, click_count: click_count)
     else
-      move(x, y)
-      down(button: button, click_count: click_count)
-      up(button: button, click_count: click_count)
+      await Concurrent::Promises.zip(
+        move(x, y),
+        down(button: button, click_count: click_count),
+        up(button: button, click_count: click_count),
+      )
     end
   end
 
   # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @return [Future]
   def down(button: nil, click_count: nil)
     @button = button || Button::LEFT
     @client.send_message('Input.dispatchMouseEvent',
@@ -67,11 +76,12 @@ class Puppeteer::Mouse
       x: @x,
       y: @y,
       modifiers: @keyboard.modifiers,
-      clickCount: click_count || 1
+      clickCount: click_count || 1,
     )
   end
 
   # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @return [Future]
   def up(button: nil, click_count: nil)
     @button = Button::NONE
     @client.send_message('Input.dispatchMouseEvent',
@@ -80,7 +90,7 @@ class Puppeteer::Mouse
       x: @x,
       y: @y,
       modifiers: @keyboard.modifiers,
-      clickCount: click_count || 1
+      clickCount: click_count || 1,
     )
   end
 end

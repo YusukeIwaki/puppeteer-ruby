@@ -21,7 +21,7 @@ class Puppeteer::BrowserContext
   def wait_for_target(predicate:, timeout: nil)
     @browser.wait_for_target(
       predicate: ->(target) { target.browser_context == self && predicate.call(target) },
-      timeout: timeout
+      timeout: timeout,
     )
   end
 
@@ -71,7 +71,7 @@ class Puppeteer::BrowserContext
   #   await this._connection.send('Browser.resetPermissions', {browserContextId: this._id || undefined});
   # }
 
-  #  * @return {!Promise<!Puppeteer.Page>}
+  # @return [Future<Puppeteer::Page>]
   def new_page
     @browser.create_page_in_context(@id)
   end

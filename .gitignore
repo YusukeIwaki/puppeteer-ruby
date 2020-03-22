@@ -7,6 +7,7 @@
 /spec/reports/
 /tmp/
 
+/.vscode
 /Gemfile.lock
 /vendor/bundle
 
