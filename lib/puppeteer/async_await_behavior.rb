@@ -2,21 +2,23 @@ module Puppeteer::AsyncAwaitBehavior
   refine Class do
     # wrap with Concurrent::Promises.future
     def async(method_name)
-      if respond_to?(method_name)
-        original_method = singleton_method(method_name)
-
-        define_singleton_method(method_name) do |*args|
-          Concurrent::Promises.future {
-            original_method.call(*args)
-          }
-        end
-      else
+      begin
         original_method = instance_method(method_name)
 
         define_method(method_name) do |*args|
           Concurrent::Promises.future {
             original_method.bind(self).call(*args)
           }
+        end
+      rescue NameError
+        if respond_to?(method_name)
+          original_method = singleton_method(method_name)
+
+          define_singleton_method(method_name) do |*args|
+            Concurrent::Promises.future {
+              original_method.call(*args)
+            }
+          end
         end
       end
     end
