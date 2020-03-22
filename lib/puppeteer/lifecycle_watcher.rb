@@ -76,10 +76,10 @@ class Puppeteer::LifecycleWatcher
     ]
     @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener('Events.NetworkManager.Request', &method(:handle_request))
 
-    # this._timeoutPromise = this._createTimeoutPromise();
-    # this._terminationPromise = new Promise(fulfill => {
-    #   this._terminationCallback = fulfill;
-    # });
+    @same_document_navigation_promise = Concurrent::Promises.resolvable_future
+    @lifecycle_promise = Concurrent::Promises.resolvable_future
+    @new_document_navigation_promise = Concurrent::Promises.resolvable_future
+    @termination_promise = Concurrent::Promises.resolvable_future
     check_lifecycle_complete
   end
 
@@ -106,41 +106,30 @@ class Puppeteer::LifecycleWatcher
   end
 
   # @param error [TerminatedError]
-  def terminate(error)
-    #   this._terminationCallback.call(null, error);
+  private def terminate(error)
+    @termination_promise.reject(error)
   end
 
-  # Alternative implementation of #sameDocumentNavigationPromise.
-  def wait_for_same_document_navigation
-    @wait_for_same_document_navigation ||= (@wait_for_same_document_navigation_queue ||= Queue.new).pop
-  end
+  attr_reader(
+    :same_document_navigation_promise,
+    :new_document_navigation_promise,
+    :lifecycle_promise,
+  )
 
-  # Alternative implementation of #newDocumentNavigationPromise.
-  def wait_for_new_document_navigation
-    @wait_for_new_document_navigation ||= (@wait_for_new_document_navigation_queue ||= Queue.new).pop
-  end
-
-  # Alternative implementation of #lifecyclePromise.
-  def wait_for_lifecycle
-    @wait_for_lifecycle ||= (@wait_for_lifecycle_queue ||= Queue.new).pop
-  end
-
-  # /**
-  #  * @return {!Promise<?Error>}
-  #  */
-  # timeoutOrTerminationPromise() {
-  #   return Promise.race([this._timeoutPromise, this._terminationPromise]);
-  # }
-
-  # Alternative implementation of #timeoutOrTerminationPromise
-  def with_timeout_or_termination_handling(&block)
-    raise ArgymentError.new('block must be provided') if block.nil?
-
-    Timeout.timeout(@timeout / 1000.0) do
-      block.call
+  def timeout_or_termination_promise
+    if @timeout > 0
+      Concurrent::Promises.future do
+        begin
+          Timeout.timeout(@timeout / 1000.0) do
+            @termination_promise.value!
+          end
+        rescue Timeout::Error
+          raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
+        end
+      end
+    else
+      @termination_promise
     end
-  rescue Timeout::Error
-    raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
   end
 
   # @param frame [Puppeteer::Frame]
@@ -150,36 +139,18 @@ class Puppeteer::LifecycleWatcher
     check_lifecycle_complete
   end
 
-  private def handle_lifecycle_callback
-    unless @wait_for_lifecycle
-      (@wait_for_lifecycle_queue ||= Queue.new).push(1)
-    end
-  end
-
-  private def handle_same_document_navigation_complete_callback
-    unless @wait_for_same_document_navigation
-      (@wait_for_same_document_navigation_queue ||= Queue.new).push(1)
-    end
-  end
-
-  private def handle_new_document_navigation_complete_callback
-    unless @wait_for_new_document_navigation
-      (@wait_for_new_document_navigation_queue ||= Queue.new).push(1)
-    end
-  end
-
   private def check_lifecycle_complete
     # We expect navigation to commit.
     return unless @expected_lifecycle.completed?(@frame)
-    handle_lifecycle_callback
+    @lifecycle_promise.fulfill(true)
     if @frame.loader_id == @initial_loader_id && !@has_same_document_navigation
       return
     end
     if @has_same_document_navigation
-      handle_same_document_navigation_complete_callback
+      @same_document_navigation_promise.fulfill(true)
     end
     if @frame.loader_id != @initial_loader_id
-      handle_new_document_navigation_complete_callback
+      @new_document_navigation_promise.fulfill(true)
     end
   end
 
@@ -193,6 +164,5 @@ class Puppeteer::LifecycleWatcher
     if_present(@listener_ids['network_manager']) do |id|
       @frame_manager.network_manager.remove_event_listener(id)
     end
-    #   clearTimeout(this._maximumTimer);
   end
 end

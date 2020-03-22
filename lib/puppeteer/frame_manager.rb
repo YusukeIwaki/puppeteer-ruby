@@ -89,13 +89,15 @@ class Puppeteer::FrameManager
       referer: referer || @network_manager.extra_http_headers['referer'],
       frameId: frame.id,
     }.compact
+    puts "UNTIL_WAIT=================>#{wait_until}"
     option_wait_until = wait_until || ['load']
     option_timeout = timeout || @timeout_settings.navigation_timeout
 
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     ensure_new_document_navigation = false
+
     begin
-      watcher.with_timeout_or_termination_handling do
+      navigate = Concurrent::Promises.future do
         result = await @client.send_message('Page.navigate', navigate_params)
         loader_id = result['loaderId']
         ensure_new_document_navigation = !!loader_id
@@ -103,16 +105,21 @@ class Puppeteer::FrameManager
           raise NavigationError.new("#{result['errorText']} at #{url}")
         end
       end
+      Concurrent::Promises.any(
+        navigate,
+        watcher.timeout_or_termination_promise,
+      ).value!
 
-      if ensure_new_document_navigation
-        watcher.with_timeout_or_termination_handling do
-          watcher.wait_for_new_document_navigation
+      document_navigation_promise =
+        if ensure_new_document_navigation
+          watcher.new_document_navigation_promise
+        else
+          watcher.same_document_navigation_promise
         end
-      else
-        watcher.with_timeout_or_termination_handling do
-          watcher.wait_for_same_document_navigation
-        end
-      end
+      Concurrent::Promises.any(
+        document_navigation_promise,
+        watcher.timeout_or_termination_promise,
+      ).value!
     ensure
       watcher.dispose
     end
