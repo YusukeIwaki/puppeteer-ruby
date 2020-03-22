@@ -20,7 +20,7 @@ module Puppeteer::Launcher
     Chrome.new(
       project_root: project_root,
       preferred_revision: preferred_revision,
-      is_puppeteer_core: is_puppeteer_core
+      is_puppeteer_core: is_puppeteer_core,
     )
   end
 end

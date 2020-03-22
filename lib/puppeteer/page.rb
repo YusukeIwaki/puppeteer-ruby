@@ -5,6 +5,7 @@ require_relative './page/screenshot_options'
 class Puppeteer::Page
   include Puppeteer::EventCallbackable
   include Puppeteer::IfPresent
+  using Puppeteer::AsyncAwaitBehavior
 
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Target} target
@@ -14,7 +15,7 @@ class Puppeteer::Page
   # @return {!Promise<!Page>}
   def self.create(client, target, ignore_https_errors, default_viewport, screenshot_task_queue)
     page = Puppeteer::Page.new(client, target, ignore_https_errors, screenshot_task_queue)
-    page.init
+    await page.init
     if default_viewport
       page.viewport = default_viewport
     end
@@ -46,7 +47,7 @@ class Puppeteer::Page
     @client.on_event 'Target.attachedToTarget' do |event|
       if event['targetInfo']['type'] != 'worker'
         # If we don't detach from service workers, they will never die.
-        @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
+        await @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
         return
       end
 
@@ -110,29 +111,27 @@ class Puppeteer::Page
     end
   end
 
-  def init
-    @frame_manager.init
-    @client.send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true)
-    @client.send_message('Performance.enable')
-    @client.send_message('Log.enable')
-    begin
-      @client.send_message('Page.setInterceptFileChooserDialog', enabled: true)
-    rescue => err
-      @file_chooser_interception_is_disabled = true
-    end
+  async def init
+    await Concurrent::Promises.zip(
+      @frame_manager.init,
+      @client.send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true),
+      @client.send_message('Performance.enable'),
+      @client.send_message('Log.enable'),
+    )
   end
 
   # /**
   #  * @param {!Protocol.Page.fileChooserOpenedPayload} event
   #  */
-  # _onFileChooser(event) {
-  #   if (!this._fileChooserInterceptors.size) {
-  #     this._client.send('Page.handleFileChooser', { action: 'fallback' }).catch(debugError);
+  # async _onFileChooser(event) {
+  #   if (!this._fileChooserInterceptors.size)
   #     return;
-  #   }
+  #   const frame = this._frameManager.frame(event.frameId);
+  #   const context = await frame.executionContext();
+  #   const element = await context._adoptBackendNodeId(event.backendNodeId);
   #   const interceptors = Array.from(this._fileChooserInterceptors);
   #   this._fileChooserInterceptors.clear();
-  #   const fileChooser = new FileChooser(this._client, event);
+  #   const fileChooser = new FileChooser(this._client, element, event);
   #   for (const interceptor of interceptors)
   #     interceptor.call(null, fileChooser);
   # }
@@ -142,8 +141,9 @@ class Puppeteer::Page
   #  * @return !Promise<!FileChooser>}
   #  */
   # async waitForFileChooser(options = {}) {
-  #   if (this._fileChooserInterceptionIsDisabled)
-  #     throw new Error('File chooser handling does not work with multiple connections to the same page');
+  #   if (!this._fileChooserInterceptors.size)
+  #     await this._client.send('Page.setInterceptFileChooserDialog', {enabled: true});
+
   #   const {
   #     timeout = this._timeoutSettings.timeout(),
   #   } = options;
@@ -155,6 +155,7 @@ class Puppeteer::Page
   #     throw e;
   #   });
   # }
+
 
   # /**
   #  * @param {!{longitude: number, latitude: number, accuracy: (number|undefined)}} options
@@ -812,7 +813,7 @@ class Puppeteer::Page
     screenshot_params = {
       format: format,
       quality: screenshot_options.quality,
-      clip: clip
+      clip: clip,
     }.compact
     result = @client.send_message('Page.captureScreenshot', screenshot_params)
     if should_set_default_background

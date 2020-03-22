@@ -9,8 +9,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Blackberry PlayBook landscape',
@@ -21,8 +21,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'BlackBerry Z30',
@@ -33,8 +33,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'BlackBerry Z30 landscape',
@@ -45,8 +45,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Galaxy Note 3',
@@ -57,8 +57,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Galaxy Note 3 landscape',
@@ -69,8 +69,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Galaxy Note II',
@@ -81,8 +81,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Galaxy Note II landscape',
@@ -93,8 +93,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Galaxy S III',
@@ -105,8 +105,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Galaxy S III landscape',
@@ -117,8 +117,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Galaxy S5',
@@ -129,8 +129,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Galaxy S5 landscape',
@@ -141,8 +141,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPad',
@@ -153,8 +153,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPad landscape',
@@ -165,8 +165,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPad Mini',
@@ -177,8 +177,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPad Mini landscape',
@@ -189,8 +189,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPad Pro',
@@ -201,8 +201,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPad Pro landscape',
@@ -213,8 +213,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 4',
@@ -225,8 +225,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 4 landscape',
@@ -237,8 +237,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 5',
@@ -249,8 +249,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 5 landscape',
@@ -261,8 +261,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 6',
@@ -273,8 +273,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 6 landscape',
@@ -285,8 +285,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 6 Plus',
@@ -297,8 +297,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 6 Plus landscape',
@@ -309,8 +309,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 7',
@@ -321,8 +321,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 7 landscape',
@@ -333,8 +333,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 7 Plus',
@@ -345,8 +345,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 7 Plus landscape',
@@ -357,8 +357,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 8',
@@ -369,8 +369,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 8 landscape',
@@ -381,8 +381,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone 8 Plus',
@@ -393,8 +393,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone 8 Plus landscape',
@@ -405,8 +405,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone SE',
@@ -417,8 +417,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone SE landscape',
@@ -429,8 +429,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone X',
@@ -441,8 +441,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone X landscape',
@@ -453,8 +453,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'iPhone XR',
@@ -465,8 +465,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'iPhone XR landscape',
@@ -477,8 +477,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'JioPhone 2',
@@ -489,8 +489,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'JioPhone 2 landscape',
@@ -501,8 +501,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Kindle Fire HDX',
@@ -513,8 +513,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Kindle Fire HDX landscape',
@@ -525,8 +525,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'LG Optimus L70',
@@ -537,8 +537,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1.25,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'LG Optimus L70 landscape',
@@ -549,8 +549,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1.25,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Microsoft Lumia 550',
@@ -561,8 +561,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Microsoft Lumia 950',
@@ -573,8 +573,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 4,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Microsoft Lumia 950 landscape',
@@ -585,8 +585,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 4,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 10',
@@ -597,8 +597,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 10 landscape',
@@ -609,8 +609,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 4',
@@ -621,8 +621,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 4 landscape',
@@ -633,8 +633,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 5',
@@ -645,8 +645,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 5 landscape',
@@ -657,8 +657,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 5X',
@@ -669,8 +669,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2.625,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 5X landscape',
@@ -681,8 +681,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2.625,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 6',
@@ -693,8 +693,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 6 landscape',
@@ -705,8 +705,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 6P',
@@ -717,8 +717,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 6P landscape',
@@ -729,8 +729,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nexus 7',
@@ -741,8 +741,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nexus 7 landscape',
@@ -753,8 +753,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nokia Lumia 520',
@@ -765,8 +765,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nokia Lumia 520 landscape',
@@ -777,8 +777,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Nokia N9',
@@ -789,8 +789,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Nokia N9 landscape',
@@ -801,8 +801,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 1,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Pixel 2',
@@ -813,8 +813,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2.625,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Pixel 2 landscape',
@@ -825,8 +825,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 2.625,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
+        'isLandscape': true,
+      },
     },
     {
       'name': 'Pixel 2 XL',
@@ -837,8 +837,8 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': false
-      }
+        'isLandscape': false,
+      },
     },
     {
       'name': 'Pixel 2 XL landscape',
@@ -849,9 +849,9 @@ Puppeteer::DEVICES = Hash[
         'deviceScaleFactor': 3.5,
         'isMobile': true,
         'hasTouch': true,
-        'isLandscape': true
-      }
-    }
+        'isLandscape': true,
+      },
+    },
   ].map do |json|
     [
       json[:name],
@@ -864,9 +864,9 @@ Puppeteer::DEVICES = Hash[
           device_scale_factor: json[:viewport][:deviceScaleFactor],
           is_mobile: json[:viewport][:isMobile],
           has_touch: json[:viewport][:hasTouch],
-          is_landscape: json[:viewport][:isLandscape]
-        )
-      )
+          is_landscape: json[:viewport][:isLandscape],
+        ),
+      ),
     ]
   end
 ]

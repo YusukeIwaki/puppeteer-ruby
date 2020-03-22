@@ -4,6 +4,7 @@ class Puppeteer::FrameManager
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
   include Puppeteer::EventCallbackable
+  using Puppeteer::AsyncAwaitBehavior
 
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
 
@@ -57,15 +58,19 @@ class Puppeteer::FrameManager
 
   attr_reader :client, :timeout_settings
 
-  def init
-    @client.send_message('Page.enable')
-    result = @client.send_message('Page.getFrameTree')
-    frame_tree = result['frameTree']
+  async def init
+    results = await Concurrent::Promises.zip(
+      @client.send_message('Page.enable'),
+      @client.send_message('Page.getFrameTree'),
+    )
+    frame_tree = results.last['frameTree']
     handle_frame_tree(frame_tree)
-    @client.send_message('Page.setLifecycleEventsEnabled', enabled: true)
-    @client.send_message('Runtime.enable')
+    await Concurrent::Promises.zip(
+      @client.send_message('Page.setLifecycleEventsEnabled', enabled: true),
+      @client.send_message('Runtime.enable'),
+    )
     ensure_isolated_world(UTILITY_WORLD_NAME)
-    @network_manager.init
+    await @network_manager.init
   end
 
   attr_reader :network_manager
@@ -82,7 +87,7 @@ class Puppeteer::FrameManager
     navigate_params = {
       url: url,
       referer: referer || @network_manager.extra_http_headers['referer'],
-      frameId: frame.id
+      frameId: frame.id,
     }.compact
     option_wait_until = wait_until || ['load']
     option_timeout = timeout || @timeout_settings.navigation_timeout
@@ -91,7 +96,7 @@ class Puppeteer::FrameManager
     ensure_new_document_navigation = false
     begin
       watcher.with_timeout_or_termination_handling do
-        result = @client.send_message('Page.navigate', navigate_params)
+        result = await @client.send_message('Page.navigate', navigate_params)
         loader_id = result['loaderId']
         ensure_new_document_navigation = !!loader_id
         if result['errorText']
@@ -248,21 +253,18 @@ class Puppeteer::FrameManager
     return if @isolated_worlds.include?(name)
     @isolated_worlds << name
 
-    @client.send_message('Page.addScriptToEvaluateOnNewDocument',
+    await @client.send_message('Page.addScriptToEvaluateOnNewDocument',
       source: "//# sourceURL=#{Puppeteer::ExecutionContext::EVALUATION_SCRIPT_URL}",
       worldName: name,
     )
-    frames.each do |frame|
-      begin
-        @client.send_message('Page.createIsolatedWorld',
-          frameId: frame.id,
-          grantUniveralAccess: true,
-          worldName: name,
-        )
-      rescue => err
-        debug_print(err)
-      end
+    create_isolated_worlds_promises = frames.map do |frame|
+      @client.send_message('Page.createIsolatedWorld',
+        frameId: frame.id,
+        grantUniveralAccess: true,
+        worldName: name,
+      )
     end
+    await Concurrent::Promises.zip(*create_isolated_worlds_promises)
   end
 
   # @param frame_id [String]

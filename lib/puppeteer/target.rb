@@ -33,7 +33,7 @@ class Puppeteer::Target
     #    this._pagePromise = null;
     #    /** @type {?Promise<!Worker>} */
     #    this._workerPromise = null;
-    #    this._initializedPromise = new Promise(fulfill => this._initializedCallback = fulfill).then(async success => {
+    @initialized_promise = Concurrent::Promises.resolvable_future
     #    this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
 
     @is_initialized = @target_info.type != 'page' || !@target_info.url.empty?
@@ -43,12 +43,16 @@ class Puppeteer::Target
     end
   end
 
-  attr_reader :target_id
+  attr_reader :target_id, :initialized_promise
+
+  class InitializeFailure < StandardError ; end
 
   def handle_initialized(success)
-    @initialized_promise = success
-    return unless success
+    unless success
+      @initialized_promise.reject(InitializeFailure.new("Failed to create target for page"))
+    end
     @on_initialize_succeeded&.call
+    @initialized_promise.fulfill(true)
     opener_page = opener&.page
     if opener_page.nil? || type != 'page'
       return
@@ -59,7 +63,7 @@ class Puppeteer::Target
     opener_page.emit_event('Events.Page.Popup', popup_page)
   end
 
-  def on_initialize_completed(&block)
+  def on_initialize_succeeded(&block)
     @on_initialize_succeeded = block
   end
 

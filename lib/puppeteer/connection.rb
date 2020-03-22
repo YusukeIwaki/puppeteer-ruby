@@ -6,7 +6,7 @@ class Puppeteer::Connection
   using Puppeteer::AsyncAwaitBehavior
 
   class ProtocolError < StandardError
-    def initialize(method:, error_message:, error_data:)
+    def initialize(method:, error_message:, error_data: nil)
       msg = "Protocol error (#{method}): #{error_message}"
       if error_data
         super("#{msg} #{error_data}")
@@ -44,7 +44,6 @@ class Puppeteer::Connection
 
     @transport = transport
     @transport.on_message do |data|
-      puts "on_message"
       handle_message(JSON.parse(data))
     end
     @transport.on_close do |reason, code|
@@ -111,7 +110,7 @@ class Puppeteer::Connection
       'Network.requestWillBeSent',
       'Network.requestWillBeSentExtraInfo',
       'Network.responseReceived',
-      'Network.responseReceivedExtraInfo'
+      'Network.responseReceivedExtraInfo',
     ]
 
     def handle_message(message)
@@ -198,7 +197,7 @@ class Puppeteer::Connection
     @closed = true
     @transport.on_message
     @transport.on_close
-    @callback.values.each do |callback|
+    @callbacks.values.each do |callback|
       callback.reject(
         ProtocolError.new(
           method: callback.method,
@@ -226,8 +225,8 @@ class Puppeteer::Connection
   end
 
   # @param {Protocol.Target.TargetInfo} targetInfo
-  # @return {!Promise<!CDPSession>}
-  async def create_session(target_info)
+  # @return [CDPSession]
+  def create_session(target_info)
     result = await send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
     @sessions[session_id]

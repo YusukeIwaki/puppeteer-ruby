@@ -4,9 +4,16 @@ class Puppeteer::WebSocketTransport
   def self.create(url)
     ws = Puppeteer::WebSocket.new(
       url: url,
-      max_payload_size: 256 * 1024 * 1024 # 256MB
+      max_payload_size: 256 * 1024 * 1024, # 256MB
     )
-    Puppeteer::WebSocketTransport.new(ws)
+    promise = Concurrent::Promises.resolvable_future
+    ws.on_open do
+      promise.fulfill(Puppeteer::WebSocketTransport.new(ws))
+    end
+    ws.on_error do |error_message|
+      promise.reject(Puppeteer::WebSocktTransportError.new(error_message))
+    end
+    promise.value!
   end
 
   # @param {!WebSocket::Driver} web_socket

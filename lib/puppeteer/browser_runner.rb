@@ -54,12 +54,12 @@ class Puppeteer::BrowserRunner
       timeout: timeout,
       dumpio: dumpio,
       env: env,
-      pipe: pipe
+      pipe: pipe,
     }.compact)
     @proc = BrowserProcess.new(
       @launch_options.env,
       @executable_path,
-      @process_arguments
+      @process_arguments,
     )
     # if (dumpio) {
     #   this.proc.stderr.pipe(process.stderr);

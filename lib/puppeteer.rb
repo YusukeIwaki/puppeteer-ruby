@@ -130,7 +130,7 @@ class Puppeteer
       transport: transport,
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
-      slow_mo: slow_mo
+      slow_mo: slow_mo,
     }.compact
     launcher.connect(options)
   end

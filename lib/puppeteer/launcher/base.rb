@@ -20,7 +20,7 @@ module Puppeteer::Launcher
           return executable_path
         end
         raise ExecutablePathNotFound.new(
-          "Tried to use PUPPETEER_EXECUTABLE_PATH env variable to launch browser but did not find any executable at: #{executablePath}"
+          "Tried to use PUPPETEER_EXECUTABLE_PATH env variable to launch browser but did not find any executable at: #{executablePath}",
         )
       end
 

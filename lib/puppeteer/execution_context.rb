@@ -1,5 +1,6 @@
 class Puppeteer::ExecutionContext
   include Puppeteer::IfPresent
+  using Puppeteer::AsyncAwaitBehavior
 
   EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__'
   SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m
@@ -54,12 +55,13 @@ class Puppeteer::ExecutionContext
         else
           "#{expression}\n#{suffix}"
         end
-      result = @client.send_message('Runtime.evaluate',
-                 expression: expression_with_source_url,
-                 contextId: context_id,
-                 returnByValue: return_by_value,
-                 awaitPromise: true,
-                 userGesture: true)
+      result = await @client.send_message('Runtime.evaluate',
+        expression: expression_with_source_url,
+        contextId: context_id,
+        returnByValue: return_by_value,
+        awaitPromise: true,
+        userGesture: true,
+      )
       # }).catch(rewriteError);
       if result['exceptionDetails']
         raise EvaluationError.new("Evaluation failed: #{result['exceptionDetails']}")

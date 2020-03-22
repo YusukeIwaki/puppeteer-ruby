@@ -19,10 +19,9 @@ class Puppeteer::Browser
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
       process: process,
-      close_callback: close_callback
+      close_callback: close_callback,
     )
-    connection.send_message('Target.setDiscoverTargets', discover: true)
-
+    await connection.send_message('Target.setDiscoverTargets', discover: true)
     browser
   end
 
@@ -61,7 +60,7 @@ class Puppeteer::Browser
 
   # @return [Puppeteer::BrowserContext]
   def create_incognito_browser_context
-    result = @connection.send_message('Target.createBrowserContext')
+    result = await @connection.send_message('Target.createBrowserContext')
     browser_context_id = result['browserContextId']
     @contexts[browser_context_id] = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
   end
@@ -77,7 +76,7 @@ class Puppeteer::Browser
 
   # @param context_id [String]
   def dispose_context(context_id)
-    @connection.send_message('Target.disposeBrowserContext', browser_context_id: context_id)
+    await @connection.send_message('Target.disposeBrowserContext', browser_context_id: context_id)
     @contexts.remove(context_id)
   end
 
@@ -98,12 +97,12 @@ class Puppeteer::Browser
       session_factory: ->{ @connection.create_session(target_info) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
-      screenshot_task_queue: @screenshot_task_queue
+      screenshot_task_queue: @screenshot_task_queue,
     )
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
     @targets[target_info.target_id] = target
 
-    target.on_initialize_completed do
+    target.on_initialize_succeeded do
       emit_event 'Events.Browser.TargetCreated', target
       context.emit_event 'Events.BrowserContext.TargetCreated', target
     end
@@ -117,7 +116,7 @@ class Puppeteer::Browser
     target.handle_initialized(false)
     @targets.delete(target_id)
     target.handle_closed
-    target.on_initialize_completed do
+    target.on_initialize_succeeded do
       emit_event 'Events.Browser.TargetDestroyed', target
       target.browser_context.emit_event 'Events.BrowserContext.TargetDestroyed', target
     end
@@ -151,13 +150,14 @@ class Puppeteer::Browser
   # @param {?string} contextId
   # @return {!Promise<!Puppeteer.Page>}
   def create_page_in_context(context_id)
-    result = @connection.send_message('Target.createTarget',
-                url: 'about:blank',
-                browserContextId: context_id)
+    result = await @connection.send_message('Target.createTarget',
+      url: 'about:blank',
+      browserContextId: context_id,
+    )
     target_id = result['targetId']
     target = @targets[target_id]
-  #   assert(await target._initializedPromise, 'Failed to create target for page');
-    target.page;
+    await target.initialized_promise
+    await target.page;
   end
 
   # @return {!Array<!Target>}
@@ -180,24 +180,28 @@ class Puppeteer::Browser
     return existing_target if existing_target
 
     event_listening_ids = []
-    queue = Queue.new
+    target_promise = Concurrent::Promises.resolvable_future
+    event_listening_ids << add_event_listener('Events.Browser.TargetCreated') do |target|
+      if predicate.call(target)
+        target_promise.fulfill(target)
+      end
+    end
+    event_listening_ids << add_event_listener('Events.Browser.TargetChanged') do |target|
+      if predicate.call(target)
+        target_promise.fulfill(target)
+      end
+    end
+
     begin
-      Timeout.timeout(timeout_in_sec) do
-        event_listening_ids << add_event_listener('Events.Browser.TargetCreated') do |target|
-          if predicate.call(target) && !queue.closed?
-            queue.push(1)
-          end
+      if timeout_in_sec > 0
+        Timeout.timeout(timeout_in_sec) do
+          target_promise.value!
         end
-        event_listening_ids << add_event_listener('Events.Browser.TargetChanged') do |target|
-          if predicate.call(target) && !queue.closed?
-            queue.push(1)
-          end
-        end
-        queue.pop
+      else
+        target_promise.value!
       end
     ensure
       remove_event_listener(*event_listening_ids)
-      queue.close
     end
   end
 
@@ -230,6 +234,6 @@ class Puppeteer::Browser
   end
 
   private def get_version
-    @connection.send_message('Browser.getVersion')
+    await @connection.send_message('Browser.getVersion')
   end
 end
