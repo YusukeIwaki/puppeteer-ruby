@@ -142,7 +142,7 @@ class Puppeteer::LifecycleWatcher
   private def check_lifecycle_complete
     # We expect navigation to commit.
     return unless @expected_lifecycle.completed?(@frame)
-    @lifecycle_promise.fulfill(true)
+    @lifecycle_promise.fulfill(true) if @lifecycle_promise.pending?
     if @frame.loader_id == @initial_loader_id && !@has_same_document_navigation
       return
     end
