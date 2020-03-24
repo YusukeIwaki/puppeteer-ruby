@@ -89,7 +89,6 @@ class Puppeteer::FrameManager
       referer: referer || @network_manager.extra_http_headers['referer'],
       frameId: frame.id,
     }.compact
-    puts "UNTIL_WAIT=================>#{wait_until}"
     option_wait_until = wait_until || ['load']
     option_timeout = timeout || @timeout_settings.navigation_timeout
 

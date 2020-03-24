@@ -103,7 +103,9 @@ class Puppeteer::Page
     # client.on('Runtime.exceptionThrown', exception => this._handleException(exception.exceptionDetails));
     # client.on('Inspector.targetCrashed', event => this._onTargetCrashed());
     # client.on('Performance.metrics', event => this._emitMetrics(event));
-    # client.on('Log.entryAdded', event => this._onLogEntryAdded(event));
+    @client.on_event 'Log.entryAdded' do |event|
+      handle_log_entry_added(event)
+    end
     # client.on('Page.fileChooserOpened', event => this._onFileChooser(event));
     @target.on_close do
       emit_event 'Events.Page.Close'
@@ -187,16 +189,25 @@ class Puppeteer::Page
     emit_event 'error', TargetCrashedError.new('Page crashed!')
   end
 
-  # /**
-  #  * @param {!Protocol.Log.entryAddedPayload} event
-  #  */
-  # _onLogEntryAdded(event) {
-  #   const {level, text, args, source, url, lineNumber} = event.entry;
-  #   if (args)
-  #     args.map(arg => helper.releaseObject(this._client, arg));
-  #   if (source !== 'worker')
-  #     this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
-  # }
+  private def handle_log_entry_added(event)
+    entry = event["entry"]
+    level = entry["level"]
+    text = entry["text"]
+    args = entry["args"]
+    source = entry["source"]
+    url = entry["url"]
+    line_number = entry["lineNumber"]
+
+    args.map do |arg|
+      Puppeteer::RemoteObject.new(arg).release(@client)
+    end
+    if source != 'worker'
+      console_message_location = Puppeteer::ConsoleMessage::Location.new(
+                                    url: url, line_number: line_number)
+      emit_event("Events.Page.Console",
+        Puppeteer::ConsoleMessage.new(level, text, [], console_message_location))
+    end
+  end
 
   def main_frame
     @frame_manager.main_frame
