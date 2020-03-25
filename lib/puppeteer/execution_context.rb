@@ -14,7 +14,7 @@ class Puppeteer::ExecutionContext
     @context_id = context_payload['id']
   end
 
-  attr_reader :world
+  attr_reader :client, :world
 
   # @return [Puppeteer::Frame]
   def frame
@@ -70,9 +70,12 @@ class Puppeteer::ExecutionContext
       remote_object = result['result']
 
       if return_by_value
-        return remote_object
+        remote_object
       else
-        return create_js_handle(self, remote_object)
+        Puppeteer::JSHandle.create(
+          context: self,
+          remote_object: Puppeteer::RemoteObject.new(remote_object),
+        )
       end
     end
 

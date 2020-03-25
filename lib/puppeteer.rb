@@ -24,6 +24,7 @@ require 'puppeteer/emulation_manager'
 require 'puppeteer/execution_context'
 require 'puppeteer/frame'
 require 'puppeteer/frame_manager'
+require 'puppeteer/j_s_handle'
 require 'puppeteer/keyboard'
 require 'puppeteer/launcher'
 require 'puppeteer/lifecycle_watcher'
@@ -38,6 +39,9 @@ require 'puppeteer/version'
 require 'puppeteer/wait_task'
 require 'puppeteer/web_socket'
 require 'puppeteer/web_socket_transport'
+
+# subclasses
+require 'puppeteer/element_handle'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 class Puppeteer
