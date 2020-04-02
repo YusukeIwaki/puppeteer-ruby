@@ -1,35 +1,29 @@
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
-  # /**
-  #  * @param {!Puppeteer.ExecutionContext} context
-  #  * @param {!Puppeteer.CDPSession} client
-  #  * @param {!Protocol.Runtime.RemoteObject} remoteObject
-  #  * @param {!Puppeteer.Page} page
-  #  * @param {!Puppeteer.FrameManager} frameManager
-  #  */
-  # constructor(context, client, remoteObject, page, frameManager) {
-  #   super(context, client, remoteObject);
-  #   this._client = client;
-  #   this._remoteObject = remoteObject;
-  #   this._page = page;
-  #   this._frameManager = frameManager;
-  #   this._disposed = false;
-  # }
+  # @param context [Puppeteer::ExecutionContext]
+  # @param client [Puppeteer::CDPSession]
+  # @param remote_object [Puppeteer::RemoteObject]
+  # @param page [Puppeteer::Page]
+  # @param frame_manager [Puppeteer::FrameManager]
+  def initialize(context:, client:, remote_object:, page:, frame_manager:)
+    super(context: context, client: client, remote_object: remote_object)
+    @page = page
+    @frame_manager = frame_manager
+    @disposed = false
+  end
 
   def as_element
     self
   end
 
-  #   /**
-  #   * @return {!Promise<?Puppeteer.Frame>}
-  #   */
-  #  async contentFrame() {
-  #    const nodeInfo = await this._client.send('DOM.describeNode', {
-  #      objectId: this._remoteObject.objectId
-  #    });
-  #    if (typeof nodeInfo.node.frameId !== 'string')
-  #      return null;
-  #    return this._frameManager.frame(nodeInfo.node.frameId);
-  #  }
+  def content_frame
+    node_info = await @remote_object.node_info
+    frame_id = node_info["node"]["frameId"]
+    if frame_id.is_a?(String)
+      @frame_manager.frame(frame_id)
+    else
+      nil
+    end
+  end
 
   #  async _scrollIntoViewIfNeeded() {
   #    const error = await this.evaluate(async(element, pageJavascriptEnabled) => {
@@ -312,21 +306,21 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #    return imageData;
   #  }
 
-  #  /**
-  #   * @param {string} selector
-  #   * @return {!Promise<?ElementHandle>}
-  #   */
-  #  async $(selector) {
-  #    const handle = await this.evaluateHandle(
-  #        (element, selector) => element.querySelector(selector),
-  #        selector
-  #    );
-  #    const element = handle.asElement();
-  #    if (element)
-  #      return element;
-  #    await handle.dispose();
-  #    return null;
-  #  }
+  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  def S(selector)
+    handle = evaluate_handle(
+      "(element, selector) => element.querySelector(selector)",
+      selector,
+    )
+    element = handle.as_element
+
+    if element
+      return element
+    end
+    handle.dispose
+    nil
+  end
 
   #  /**
   #   * @param {string} selector

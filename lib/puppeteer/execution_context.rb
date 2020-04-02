@@ -38,6 +38,144 @@ class Puppeteer::ExecutionContext
     evaluate_internal(false, page_function, *args)
   end
 
+  class JavaScriptExpression
+    def initialize(execution_context, expression, return_by_value)
+      @execution_context = execution_context
+      @expression = expression
+      @return_by_value = return_by_value
+    end
+
+    # @param client [Puppeteer::CDPSession]
+    # @param context_id [String]
+    def evaluate_with(client:, context_id:)
+      result = await client.send_message('Runtime.evaluate',
+        expression: expression_with_source_url,
+        contextId: context_id,
+        returnByValue: @return_by_value,
+        awaitPromise: true,
+        userGesture: true,
+      )
+      # }).catch(rewriteError);
+
+      exception_details = result["exceptionDetails"]
+      remote_object = result['result']
+
+      if exception_details
+        raise EvaluationError.new("Evaluation failed: #{exception_details}")
+      end
+
+      if @return_by_value
+        remote_object
+      else
+        Puppeteer::JSHandle.create(
+          context: @execution_context,
+          remote_object: Puppeteer::RemoteObject.new(remote_object),
+        )
+      end
+    end
+
+    private def suffix
+      "//# sourceURL=#{EVALUATION_SCRIPT_URL}"
+    end
+
+    private def expression_with_source_url
+      if SOURCE_URL_REGEX.match?(@expression)
+        @expression
+      else
+        "#{@expression}\n#{suffix}"
+      end
+    end
+  end
+
+  class JavaScriptFunction
+    include Puppeteer::IfPresent
+
+    def initialize(execution_context, expression, args, return_by_value)
+      @execution_context = execution_context
+      @expression = expression
+      @return_by_value = return_by_value
+      @args = args
+    end
+
+    def evaluate_with(client:, context_id:)
+      # `function` can be omitted in JS after ES2015.
+      # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer
+      #
+      # Original puppeteer implementation take it into consideration.
+      # But we don't support the syntax here.
+
+      result = await client.send_message('Runtime.callFunctionOn',
+        functionDeclaration: "#{@expression}\n#{suffix}\n",
+        executionContextId: context_id,
+        arguments: converted_args,
+        returnByValue: @return_by_value,
+        awaitPromise: true,
+        userGesture: true,
+      ) #.catch(rewriteError);
+
+      exception_details = result["exceptionDetails"]
+      remote_object = result["result"]
+
+      if exception_details
+        raise EvaluationError.new("Evaluation failed: #{exceptionDetails}")
+      end
+
+      if @return_by_value
+        remote_object
+      else
+        Puppeteer::JSHandle.create(
+          context: @execution_context,
+          remote_object: Puppeteer::RemoteObject.new(remote_object),
+        )
+      end
+    end
+
+    private def converted_args
+      #     if (typeof arg === 'bigint') // eslint-disable-line valid-typeof
+      #       return { unserializableValue: `${arg.toString()}n` };
+      #     if (Object.is(arg, -0))
+      #       return { unserializableValue: '-0' };
+      #     if (Object.is(arg, Infinity))
+      #       return { unserializableValue: 'Infinity' };
+      #     if (Object.is(arg, -Infinity))
+      #       return { unserializableValue: '-Infinity' };
+      #     if (Object.is(arg, NaN))
+      #       return { unserializableValue: 'NaN' };
+      @args.map do |arg|
+        if arg && arg.is_a?(Puppeteer::JSHandle)
+          if arg.context != @execution_context
+            raise EvaluationError.new('JSHandles can be evaluated only in the context they were created!')
+          elsif arg.disposed?
+            raise EvaluationError.new('JSHandles is disposed!')
+          end
+
+          arg.remote_object.converted_arg
+        else
+          { value: arg }
+        end
+      end
+    end
+
+    #   /**
+    #    * @param {!Error} error
+    #    * @return {!Protocol.Runtime.evaluateReturnValue}
+    #    */
+    #   function rewriteError(error) {
+    #     if (error.message.includes('Object reference chain is too long'))
+    #       return {result: {type: 'undefined'}};
+    #     if (error.message.includes('Object couldn\'t be returned by value'))
+    #       return {result: {type: 'undefined'}};
+
+    #     if (error.message.endsWith('Cannot find context with specified id') || error.message.endsWith('Inspected target navigated or closed'))
+    #       throw new Error('Execution context was destroyed, most likely because of a navigation.');
+    #     throw error;
+    #   }
+
+    private def suffix
+      "//# sourceURL=#{EVALUATION_SCRIPT_URL}"
+    end
+  end
+
   class EvaluationError < StandardError ; end
 
   # @param {boolean} returnByValue
@@ -45,125 +183,20 @@ class Puppeteer::ExecutionContext
   # @param {!Array<*>} args
   # @return {!Promise<!Puppeteer.JSHandle>}
   private def evaluate_internal(return_by_value, page_function, *args)
-    suffix = "//# sourceURL=#{EVALUATION_SCRIPT_URL}"
-    if page_function.is_a?(String)
-      context_id = @context_id
-      expression = page_function
-      expression_with_source_url =
-        if SOURCE_URL_REGEX.match?(expression)
-          expression
-        else
-          "#{expression}\n#{suffix}"
-        end
-      result = await @client.send_message('Runtime.evaluate',
-        expression: expression_with_source_url,
-        contextId: context_id,
-        returnByValue: return_by_value,
-        awaitPromise: true,
-        userGesture: true,
-      )
-      # }).catch(rewriteError);
-      if result['exceptionDetails']
-        raise EvaluationError.new("Evaluation failed: #{result['exceptionDetails']}")
-      end
-
-      remote_object = result['result']
-
-      if return_by_value
-        remote_object
+    # `function` can be omitted in JS after ES2015.
+    # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer
+    # But we don't support the syntax here.
+    js_object =
+      if ["=>", "async", "function"].any? { |keyword| page_function.include?(keyword) }
+        JavaScriptFunction.new(self, page_function, args, return_by_value)
       else
-        Puppeteer::JSHandle.create(
-          context: self,
-          remote_object: Puppeteer::RemoteObject.new(remote_object),
-        )
+        JavaScriptExpression.new(self, page_function, return_by_value)
       end
-    end
 
-  #   if (typeof pageFunction !== 'function')
-  #     throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
-
-  #   let functionText = pageFunction.toString();
-  #   try {
-  #     new Function('(' + functionText + ')');
-  #   } catch (e1) {
-  #     // This means we might have a function shorthand. Try another
-  #     // time prefixing 'function '.
-  #     if (functionText.startsWith('async '))
-  #       functionText = 'async function ' + functionText.substring('async '.length);
-  #     else
-  #       functionText = 'function ' + functionText;
-  #     try {
-  #       new Function('(' + functionText  + ')');
-  #     } catch (e2) {
-  #       // We tried hard to serialize, but there's a weird beast here.
-  #       throw new Error('Passed function is not well-serializable!');
-  #     }
-  #   }
-  #   let callFunctionOnPromise;
-  #   try {
-  #     callFunctionOnPromise = this._client.send('Runtime.callFunctionOn', {
-  #       functionDeclaration: functionText + '\n' + suffix + '\n',
-  #       executionContextId: this._contextId,
-  #       arguments: args.map(convertArgument.bind(this)),
-  #       returnByValue,
-  #       awaitPromise: true,
-  #       userGesture: true
-  #     });
-  #   } catch (err) {
-  #     if (err instanceof TypeError && err.message.startsWith('Converting circular structure to JSON'))
-  #       err.message += ' Are you passing a nested JSHandle?';
-  #     throw err;
-  #   }
-  #   const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
-  #   if (exceptionDetails)
-  #     throw new Error('Evaluation failed: ' + helper.getExceptionMessage(exceptionDetails));
-  #   return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
-
-  #   /**
-  #    * @param {*} arg
-  #    * @return {*}
-  #    * @this {ExecutionContext}
-  #    */
-  #   function convertArgument(arg) {
-  #     if (typeof arg === 'bigint') // eslint-disable-line valid-typeof
-  #       return { unserializableValue: `${arg.toString()}n` };
-  #     if (Object.is(arg, -0))
-  #       return { unserializableValue: '-0' };
-  #     if (Object.is(arg, Infinity))
-  #       return { unserializableValue: 'Infinity' };
-  #     if (Object.is(arg, -Infinity))
-  #       return { unserializableValue: '-Infinity' };
-  #     if (Object.is(arg, NaN))
-  #       return { unserializableValue: 'NaN' };
-  #     const objectHandle = arg && (arg instanceof JSHandle) ? arg : null;
-  #     if (objectHandle) {
-  #       if (objectHandle._context !== this)
-  #         throw new Error('JSHandles can be evaluated only in the context they were created!');
-  #       if (objectHandle._disposed)
-  #         throw new Error('JSHandle is disposed!');
-  #       if (objectHandle._remoteObject.unserializableValue)
-  #         return { unserializableValue: objectHandle._remoteObject.unserializableValue };
-  #       if (!objectHandle._remoteObject.objectId)
-  #         return { value: objectHandle._remoteObject.value };
-  #       return { objectId: objectHandle._remoteObject.objectId };
-  #     }
-  #     return { value: arg };
-  #   }
-
-  #   /**
-  #    * @param {!Error} error
-  #    * @return {!Protocol.Runtime.evaluateReturnValue}
-  #    */
-  #   function rewriteError(error) {
-  #     if (error.message.includes('Object reference chain is too long'))
-  #       return {result: {type: 'undefined'}};
-  #     if (error.message.includes('Object couldn\'t be returned by value'))
-  #       return {result: {type: 'undefined'}};
-
-  #     if (error.message.endsWith('Cannot find context with specified id') || error.message.endsWith('Inspected target navigated or closed'))
-  #       throw new Error('Execution context was destroyed, most likely because of a navigation.');
-  #     throw error;
-  #   }
+    js_object.evaluate_with(
+      client: @client,
+      context_id: @context_id,
+    )
   end
 
   # /**

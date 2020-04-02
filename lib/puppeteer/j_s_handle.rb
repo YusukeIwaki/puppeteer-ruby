@@ -33,6 +33,8 @@ class Puppeteer::JSHandle
     @disposed = false
   end
 
+  attr_reader :context, :remote_object
+
   # @return [Puppeteer::ExecutionContext]
   def execution_context
     @context
@@ -47,11 +49,9 @@ class Puppeteer::JSHandle
     execution_context.evaluate(page_function, self, *args)
   end
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<!Puppeteer.JSHandle>}
-  #  */
+  # @param page_function [String]
+  # @param args {Array<*>}
+  # @return [Puppeteer::JSHandle]
   def evaluate_handle(page_function, *args)
     execution_context.evaluate_handle(page_function, self, *args)
   end
@@ -118,6 +118,10 @@ class Puppeteer::JSHandle
 
     @disposed = true
     @remote_object.release(@client)
+  end
+
+  def disposed?
+    @disposed
   end
 
   # /**

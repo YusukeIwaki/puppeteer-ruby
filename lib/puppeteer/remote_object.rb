@@ -7,6 +7,7 @@ class Puppeteer::RemoteObject
   def initialize(payload)
     @object_id = payload["objectId"]
     @sub_type = payload["subtype"]
+    @unserializable_value = payload["unserializableValue"]
   end
 
   attr_reader :sub_type
@@ -40,6 +41,11 @@ class Puppeteer::RemoteObject
     end
   end
 
+  # used in ElementHandle#content_frame
+  def node_info(client)
+    client.send_message("DOM.describeNode", objectId: @object_id)
+  end
+
   # helper#valueFromRemoteObject
   def value
 
@@ -57,6 +63,26 @@ class Puppeteer::RemoteObject
       # Swallow these since they are harmless and we don't leak anything in this case.
       debug_print(err)
       nil
+    end
+  end
+
+  def converted_arg
+    # ported logic from ExecutionContext#convertArgument
+    # https://github.com/puppeteer/puppeteer/blob/master/lib/ExecutionContext.js
+    #
+    # Original logic:
+    # if (objectHandle._remoteObject.unserializableValue)
+    #   return { unserializableValue: objectHandle._remoteObject.unserializableValue };
+    # if (!objectHandle._remoteObject.objectId)
+    #   return { value: objectHandle._remoteObject.value };
+    # return { objectId: objectHandle._remoteObject.objectId };
+
+    if @unserializable_value
+      { unserializableValue: @unserializable_value }
+    elsif @object_id
+      { objectId: @object_id }
+    else
+      { value: value }
     end
   end
 end
