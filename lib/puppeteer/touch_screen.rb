@@ -10,12 +10,11 @@ class Puppeteer::TouchScreen
 
   # @param x [number]
   # @param y [number]
-  # @return [Future]
-  async def tap(x, y)
+  def tap(x, y)
     # Touches appear to be lost during the first frame after navigation.
     # This waits a frame before sending the tap.
     # @see https://crbug.com/613219
-    await @client.send_message('Runtime.evaluate',
+    @client.send_message('Runtime.evaluate',
       expression: 'new Promise(x => requestAnimationFrame(() => requestAnimationFrame(x)))',
       awaitPromise: true,
     )
@@ -23,15 +22,22 @@ class Puppeteer::TouchScreen
     touch_points = [
       { x: x.round, y: y.round },
     ]
-    await @client.send_message('Input.dispatchTouchEvent',
+    @client.send_message('Input.dispatchTouchEvent',
       type: 'touchStart',
       touchPoints: touch_points,
       modifiers: @keyboard.modifiers,
     )
-    await @client.send_message('Input.dispatchTouchEvent',
+    @client.send_message('Input.dispatchTouchEvent',
       type: 'touchEnd',
       touchPoints: [],
       modifiers: @keyboard.modifiers,
     )
+  end
+
+  # @param x [number]
+  # @param y [number]
+  # @return [Future]
+  async def async_tap(x, y)
+    tap(x, y)
   end
 end

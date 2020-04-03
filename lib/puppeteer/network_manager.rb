@@ -1,6 +1,5 @@
 class Puppeteer::NetworkManager
   include Puppeteer::EventCallbackable
-  using Puppeteer::AsyncAwaitBehavior
 
   class Credentials
     # @param username [String|NilClass]
@@ -39,10 +38,10 @@ class Puppeteer::NetworkManager
     # this._requestIdToInterceptionId = new Map();
   end
 
-  async def init
-    await @client.send_message('Network.enable')
+  def init
+    @client.send_message('Network.enable')
     if @ignore_https_errors
-      await @client.send_message('Security.setIgnoreCertificateErrors', ignore: true)
+      @client.send_message('Security.setIgnoreCertificateErrors', ignore: true)
     end
   end
 
@@ -50,7 +49,7 @@ class Puppeteer::NetworkManager
   # @param password [String|NilClass]
   def authenticate(username:, password:)
     @credentials = Credentials.new(username: username, password: password)
-    await update_protocol_request_interception
+    update_protocol_request_interception
   end
 
   # @param {!Object<string, string>} extraHTTPHeaders
@@ -63,7 +62,7 @@ class Puppeteer::NetworkManager
       new_extra_http_headers[key.downcase] = value
     end
     @extra_http_headers = new_extra_http_headers
-    await @client.send_message('Network.setExtraHTTPHeaders', headers: new_extra_http_headers)
+    @client.send_message('Network.setExtraHTTPHeaders', headers: new_extra_http_headers)
   end
 
   # @return {!Object<string, string>}
@@ -75,7 +74,7 @@ class Puppeteer::NetworkManager
   def offline_mode=(value)
     return if @offline == value
     @offline = value
-    await @client.send_message('Network.emulateNetworkConditions',
+    @client.send_message('Network.emulateNetworkConditions',
       offline: @offline,
       # values of 0 remove any active throttling. crbug.com/456324#c9
       latency: 0,
@@ -86,17 +85,17 @@ class Puppeteer::NetworkManager
 
   # @param user_agent [String]
   def user_agent=(user_agent)
-    await @client.send_message('Network.setUserAgentOverride', userAgent: user_agent)
+    @client.send_message('Network.setUserAgentOverride', userAgent: user_agent)
   end
 
   def cache_enabled=(enabled)
     @user_cache_disabled = !enabled
-    await update_protocol_cache_disabled
+    update_protocol_cache_disabled
   end
 
   def request_interception=(enabled)
     @user_request_interception_enabled = enabled
-    await update_protocol_request_interception
+    update_protocol_request_interception
   end
 
   # @returns [Future]

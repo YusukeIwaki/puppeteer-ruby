@@ -21,7 +21,7 @@ class Puppeteer::Browser
       process: process,
       close_callback: close_callback,
     )
-    await connection.send_message('Target.setDiscoverTargets', discover: true)
+    connection.send_message('Target.setDiscoverTargets', discover: true)
     browser
   end
 
@@ -60,7 +60,7 @@ class Puppeteer::Browser
 
   # @return [Puppeteer::BrowserContext]
   def create_incognito_browser_context
-    result = await @connection.send_message('Target.createBrowserContext')
+    result = @connection.send_message('Target.createBrowserContext')
     browser_context_id = result['browserContextId']
     @contexts[browser_context_id] = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
   end
@@ -76,7 +76,7 @@ class Puppeteer::Browser
 
   # @param context_id [String]
   def dispose_context(context_id)
-    await @connection.send_message('Target.disposeBrowserContext', browser_context_id: context_id)
+    @connection.send_message('Target.disposeBrowserContext', browser_context_id: context_id)
     @contexts.remove(context_id)
   end
 
@@ -150,7 +150,7 @@ class Puppeteer::Browser
   # @param {?string} contextId
   # @return {!Promise<!Puppeteer.Page>}
   def create_page_in_context(context_id)
-    result = await @connection.send_message('Target.createTarget',
+    result = @connection.send_message('Target.createTarget',
       url: 'about:blank',
       browserContextId: context_id,
     )
@@ -234,6 +234,6 @@ class Puppeteer::Browser
   end
 
   private def get_version
-    await @connection.send_message('Browser.getVersion')
+    @connection.send_message('Browser.getVersion')
   end
 end

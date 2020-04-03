@@ -13,7 +13,7 @@ class Puppeteer::RemoteObject
   attr_reader :sub_type
 
   # @return [Future<Puppeteer::RemoteObject|nil>]
-  async def evaluate_self(client)
+  def evaluate_self(client)
     # ported logic from JSHandle#json_value.
 
     # original logic:
@@ -34,7 +34,7 @@ class Puppeteer::RemoteObject
         'returnByValue': true,
         'awaitPromise': true,
       }
-      response = await client.send_message("Runtime.callFunctionOn", params)
+      response = client.send_message("Runtime.callFunctionOn", params)
       Puppeteer::RemoteObject.new(response["result"])
     else
       nil
@@ -52,18 +52,25 @@ class Puppeteer::RemoteObject
   end
 
   # @param client [Puppeteer::CDPSession]
-  # @return [Future]
   def release(client)
     return unless @object_id
 
-    client.send_message('Runtime.releaseObject',
-      objectId: @object_id,
-    ).rescue do |err|
+    begin
+      client.send_message('Runtime.releaseObject',
+        objectId: @object_id,
+      )
+    rescue => err
       # Exceptions might happen in case of a page been navigated or closed.
       # Swallow these since they are harmless and we don't leak anything in this case.
       debug_print(err)
-      nil
     end
+
+    nil
+  end
+
+  # @param client [Puppeteer::CDPSession]
+  async def async_release(client)
+    release(client)
   end
 
   def converted_arg

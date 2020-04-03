@@ -23,17 +23,14 @@ class Puppeteer::ExecutionContext
     end
   end
 
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<*>}
+  # @param page_function [String]
+  # @return [Object]
   def evaluate(page_function, *args)
     evaluate_internal(true, page_function, *args)
   end
 
-
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<!Puppeteer.JSHandle>}
+  # @param page_function [String]
+  # @return [Puppeteer::JSHandle]
   def evaluate_handle(page_function, *args)
     evaluate_internal(false, page_function, *args)
   end
@@ -47,8 +44,9 @@ class Puppeteer::ExecutionContext
 
     # @param client [Puppeteer::CDPSession]
     # @param context_id [String]
+    # @return [Object|JSHandle]
     def evaluate_with(client:, context_id:)
-      result = await client.send_message('Runtime.evaluate',
+      result = client.send_message('Runtime.evaluate',
         expression: expression_with_source_url,
         contextId: context_id,
         returnByValue: @return_by_value,
@@ -97,6 +95,9 @@ class Puppeteer::ExecutionContext
       @args = args
     end
 
+    # @param client [Puppeteer::CDPSession]
+    # @param context_id [String]
+    # @return [Object|JSHandle]
     def evaluate_with(client:, context_id:)
       # `function` can be omitted in JS after ES2015.
       # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer
@@ -104,7 +105,7 @@ class Puppeteer::ExecutionContext
       # Original puppeteer implementation take it into consideration.
       # But we don't support the syntax here.
 
-      result = await client.send_message('Runtime.callFunctionOn',
+      result = client.send_message('Runtime.callFunctionOn',
         functionDeclaration: "#{@expression}\n#{suffix}\n",
         executionContextId: context_id,
         arguments: converted_args,
@@ -178,10 +179,9 @@ class Puppeteer::ExecutionContext
 
   class EvaluationError < StandardError ; end
 
-  # @param {boolean} returnByValue
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<!Puppeteer.JSHandle>}
+  # @param return_by_value [Boolean]
+  # @param page_function [String]
+  # @return [Object|Puppeteer::JSHandle]
   private def evaluate_internal(return_by_value, page_function, *args)
     # `function` can be omitted in JS after ES2015.
     # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer

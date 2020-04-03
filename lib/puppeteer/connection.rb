@@ -44,7 +44,7 @@ class Puppeteer::Connection
 
     @transport = transport
     @transport.on_message do |data|
-      handle_message(JSON.parse(data))
+      async_handle_message(JSON.parse(data))
     end
     @transport.on_close do |reason, code|
       handle_close(reason, code)
@@ -70,11 +70,15 @@ class Puppeteer::Connection
 
   # @param {string} method
   # @param {!Object=} params
-  async def send_message(method, params = {})
+  def send_message(method, params = {})
+    await async_send_message(method, params)
+  end
+
+  def async_send_message(method, params = {})
     id = raw_send(message: { method: method, params: params })
     promise = Concurrent::Promises.resolvable_future
     @callbacks[id] = MessageCallback.new(method: method, promise: promise)
-    await promise
+    promise
   end
 
   private def generate_id
@@ -98,7 +102,7 @@ class Puppeteer::Connection
     end
 
     private def decorate(payload)
-      payload.gsub(/"method":"([^"]+)"/, "method: \"\u001b[32m\\1\u001b[0m\"")
+      payload.gsub(/"method":"([^"]+)"/, "\"method\":\"\u001b[32m\\1\u001b[0m\"")
     end
   end
 
@@ -192,6 +196,10 @@ class Puppeteer::Connection
     end
   end
 
+  private async def async_handle_message(message)
+    handle_message(message)
+  end
+
   private def handle_close
     return if @closed
     @closed = true
@@ -227,8 +235,18 @@ class Puppeteer::Connection
   # @param {Protocol.Target.TargetInfo} targetInfo
   # @return [CDPSession]
   def create_session(target_info)
-    result = await send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
+    result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
-    @sessions[session_id]
+
+    # Target.attachedToTarget is often notified after the result of Target.attachToTarget.
+    # D, [2020-04-04T23:04:30.736311 #91875] DEBUG -- : RECV << {"id"=>2, "result"=>{"sessionId"=>"DA002F8A95B04710502CB40D8430B95A"}}
+    # D, [2020-04-04T23:04:30.736649 #91875] DEBUG -- : RECV << {"method"=>"Target.attachedToTarget", "params"=>{"sessionId"=>"DA002F8A95B04710502CB40D8430B95A", "targetInfo"=>{"targetId"=>"EBAB949A7DE63F12CB94268AD3A9976B", "type"=>"page", "title"=>"about:blank", "url"=>"about:blank", "attached"=>true, "browserContextId"=>"46D23767E9B79DD9E589101121F6DADD"}, "waitingForDebugger"=>false}}
+    # So we have to wait for "Target.attachedToTarget" a bit.
+    20.times do
+      if @sessions[session_id]
+        return @sessions[session_id]
+      end
+      sleep 0.1
+    end
   end
 end

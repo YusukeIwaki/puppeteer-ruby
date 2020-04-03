@@ -1,4 +1,6 @@
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
+  using Puppeteer::AsyncAwaitBehavior
+
   # @param context [Puppeteer::ExecutionContext]
   # @param client [Puppeteer::CDPSession]
   # @param remote_object [Puppeteer::RemoteObject]
@@ -16,7 +18,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   def content_frame
-    node_info = await @remote_object.node_info
+    node_info = @remote_object.node_info
     frame_id = node_info["node"]["frameId"]
     if frame_id.is_a?(String)
       @frame_manager.frame(frame_id)
@@ -200,27 +202,42 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #    await this._page.touchscreen.tap(x, y);
   #  }
 
-  #  async focus() {
-  #    await this.evaluate(element => element.focus());
-  #  }
 
-  #  /**
-  #   * @param {string} text
-  #   * @param {{delay: (number|undefined)}=} options
-  #   */
-  #  async type(text, options) {
-  #    await this.focus();
-  #    await this._page.keyboard.type(text, options);
-  #  }
+  def focus
+    evaluate('element => element.focus()')
+  end
 
-  #  /**
-  #   * @param {string} key
-  #   * @param {!{delay?: number, text?: string}=} options
-  #   */
-  #  async press(key, options) {
-  #    await this.focus();
-  #    await this._page.keyboard.press(key, options);
-  #  }
+  async def async_focus
+    focus
+  end
+
+  # @param text [String]
+  # @param delay [number|nil]
+  def type_text(text, delay: nil)
+    focus
+    @page.keyboard.type_text(text, delay: delay)
+  end
+
+  # @param text [String]
+  # @param delay [number|nil]
+  # @return [Future]
+  async def async_type_text(text, delay: nil)
+    type_text(text, delay: delay)
+  end
+
+  # @param key [String]
+  # @param delay [number|nil]
+  def press(key, delay: nil)
+    focus
+    @page.keyboard.press(key, delay: delay)
+  end
+
+  # @param key [String]
+  # @param delay [number|nil]
+  # @return [Future]
+  async def async_press(key, delay: nil)
+    press(key, delay: delay)
+  end
 
   #  /**
   #   * @return {!Promise<?{x: number, y: number, width: number, height: number}>}
@@ -320,6 +337,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
     handle.dispose
     nil
+  end
+
+  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  async def async_S(selector)
+    S(selector)
   end
 
   #  /**

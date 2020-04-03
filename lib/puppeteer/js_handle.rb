@@ -40,13 +40,16 @@ class Puppeteer::JSHandle
     @context
   end
 
-  # /**
-  #  * @param {Function|String} pageFunction
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<(!Object|undefined)>}
-  #  */
+  # @param page_function [String]
+  # @return [Object]
   def evaluate(page_function, *args)
     execution_context.evaluate(page_function, self, *args)
+  end
+
+  # @param page_function [String]
+  # @return [Future<Object>]
+  async def async_evaluate(page_function, *args)
+    evaluate(page_function, *args)
   end
 
   # @param page_function [String]
@@ -54,6 +57,13 @@ class Puppeteer::JSHandle
   # @return [Puppeteer::JSHandle]
   def evaluate_handle(page_function, *args)
     execution_context.evaluate_handle(page_function, self, *args)
+  end
+
+  # @param page_function [String]
+  # @param args {Array<*>}
+  # @return [Future<Puppeteer::JSHandle>]
+  async def async_evaluate_handle(page_function, *args)
+    evaluate_handle(page_function, *args)
   end
 
   # /**
@@ -89,8 +99,7 @@ class Puppeteer::JSHandle
   #   return result;
   # }
 
-  # @return [Future]
-  async def json_value
+  def json_value
     # original logic was:
     #   if (this._remoteObject.objectId) {
     #     const response = await this._client.send('Runtime.callFunctionOn', {
@@ -105,7 +114,7 @@ class Puppeteer::JSHandle
     #
     # However it would be better that RemoteObject is responsible for
     # the logic `if (this._remoteObject.objectId) { ... }`.
-    (await @remote_object.evaluate_self) || @remote_object.value
+    @remote_object.evaluate_self || @remote_object.value
   end
 
   def as_element

@@ -16,17 +16,24 @@ class Puppeteer::CDPSession
 
   attr_reader :connection
 
-  # @param {string} method
-  # @param {!Object=} params
-  # @return {!Promise<?Object>}
-  async def send_message(method, params = {})
+  # @param method [String]
+  # @param params [Hash]
+  # @returns [Hash]
+  def send_message(method, params = {})
+    await async_send_message(method, params)
+  end
+
+  # @param method [String]
+  # @param params [Hash]
+  # @returns [Future<Hash>]
+  def async_send_message(method, params = {})
     if !@connection
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
     end
     id = @connection.raw_send(message: { sessionId: @session_id, method: method, params: params })
     promise = Concurrent::Promises.resolvable_future
     @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
-    await promise
+    promise
   end
 
   # @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
@@ -54,7 +61,7 @@ class Puppeteer::CDPSession
     if !@connection
       raise Error.new("Session already detarched. Most likely the #{@target_type} has been closed.")
     end
-    await @connection.send_message('Target.detachFromTarget',  sessionId: @session_id)
+    @connection.send_message('Target.detachFromTarget',  sessionId: @session_id)
   end
 
   def handle_closed

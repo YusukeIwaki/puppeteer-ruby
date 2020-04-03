@@ -20,7 +20,7 @@ class Puppeteer::Keyboard
       @location = hash[:location]
     end
 
-    attr_reader :key_code, :key, :text, :shift_key_code, :shift_key, :shift_text, :location
+    attr_reader :key_code, :key, :code, :text, :shift_key_code, :shift_key, :shift_text, :location
   end
 
   KEY_DEFINITIONS = {

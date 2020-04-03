@@ -15,7 +15,7 @@ class Puppeteer::Page
   # @return {!Promise<!Page>}
   def self.create(client, target, ignore_https_errors, default_viewport, screenshot_task_queue)
     page = Puppeteer::Page.new(client, target, ignore_https_errors, screenshot_task_queue)
-    await page.init
+    page.init
     if default_viewport
       page.viewport = default_viewport
     end
@@ -113,12 +113,12 @@ class Puppeteer::Page
     end
   end
 
-  async def init
+  def init
     await Concurrent::Promises.zip(
-      @frame_manager.init,
-      @client.send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true),
-      @client.send_message('Performance.enable'),
-      @client.send_message('Log.enable'),
+      @frame_manager.async_init,
+      @client.async_send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true),
+      @client.async_send_message('Performance.enable'),
+      @client.async_send_message('Log.enable'),
     )
   end
 
@@ -193,13 +193,14 @@ class Puppeteer::Page
     entry = event["entry"]
     level = entry["level"]
     text = entry["text"]
-    args = entry["args"]
     source = entry["source"]
     url = entry["url"]
     line_number = entry["lineNumber"]
 
-    args.map do |arg|
-      Puppeteer::RemoteObject.new(arg).release(@client)
+    if_present(entry["args"]) do |args|
+      args.map do |arg|
+        Puppeteer::RemoteObject.new(arg).async_release(@client)
+      end
     end
     if source != 'worker'
       console_message_location = Puppeteer::ConsoleMessage::Location.new(

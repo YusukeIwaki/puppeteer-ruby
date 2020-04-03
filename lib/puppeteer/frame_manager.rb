@@ -58,19 +58,23 @@ class Puppeteer::FrameManager
 
   attr_reader :client, :timeout_settings
 
-  async def init
+  private def init
     results = await Concurrent::Promises.zip(
-      @client.send_message('Page.enable'),
-      @client.send_message('Page.getFrameTree'),
+      @client.async_send_message('Page.enable'),
+      @client.async_send_message('Page.getFrameTree'),
     )
     frame_tree = results.last['frameTree']
     handle_frame_tree(frame_tree)
     await Concurrent::Promises.zip(
-      @client.send_message('Page.setLifecycleEventsEnabled', enabled: true),
-      @client.send_message('Runtime.enable'),
+      @client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
+      @client.async_send_message('Runtime.enable'),
     )
     ensure_isolated_world(UTILITY_WORLD_NAME)
-    await @network_manager.init
+    @network_manager.init
+  end
+
+  async def async_init
+    init
   end
 
   attr_reader :network_manager
@@ -97,7 +101,7 @@ class Puppeteer::FrameManager
 
     begin
       navigate = Concurrent::Promises.future do
-        result = await @client.send_message('Page.navigate', navigate_params)
+        result = @client.send_message('Page.navigate', navigate_params)
         loader_id = result['loaderId']
         ensure_new_document_navigation = !!loader_id
         if result['errorText']
@@ -259,12 +263,12 @@ class Puppeteer::FrameManager
     return if @isolated_worlds.include?(name)
     @isolated_worlds << name
 
-    await @client.send_message('Page.addScriptToEvaluateOnNewDocument',
+    @client.send_message('Page.addScriptToEvaluateOnNewDocument',
       source: "//# sourceURL=#{Puppeteer::ExecutionContext::EVALUATION_SCRIPT_URL}",
       worldName: name,
     )
     create_isolated_worlds_promises = frames.map do |frame|
-      @client.send_message('Page.createIsolatedWorld',
+      @client.async_send_message('Page.createIsolatedWorld',
         frameId: frame.id,
         grantUniveralAccess: true,
         worldName: name,

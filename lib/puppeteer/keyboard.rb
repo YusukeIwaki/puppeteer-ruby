@@ -15,7 +15,6 @@ class Puppeteer::Keyboard
 
   # @param key [String]
   # @param text [String]
-  # @return [Future]
   def down(key, text: nil)
     description = key_description_for_string(key)
 
@@ -26,8 +25,8 @@ class Puppeteer::Keyboard
     sending_text = text || description.text
     params = {
       type: sending_text ? 'keyDown' : 'rawKeyDown',
-      modifiers: this._modifiers,
-      windowsVirtualKeyCode: description.keyCode,
+      modifiers: @modifiers,
+      windowsVirtualKeyCode: description.key_code,
       code: description.code,
       key: description.key,
       text: sending_text,
@@ -37,6 +36,13 @@ class Puppeteer::Keyboard
       isKeypad: description.location == 3,
     }.compact
     @client.send_message('Input.dispatchKeyEvent', params);
+  end
+
+  # @param key [String]
+  # @param text [String]
+  # @return [Future]
+  async def async_down(key, text: nil)
+    down(key, text)
   end
 
   # @param {string} key
@@ -61,9 +67,9 @@ class Puppeteer::Keyboard
   private def key_description_for_string(key_string)
     shift = @modifiers & 8
     description = {}
-    definition = KEY_DEFINITIONS[key_string]
+    definition = KEY_DEFINITIONS[key_string.to_sym]
     if !definition
-      raise ArgumentError.new("Unknown key: \"#{keyString}\"")
+      raise ArgumentError.new("Unknown key: \"#{key_string}\"")
     end
 
     if definition.key
@@ -73,9 +79,8 @@ class Puppeteer::Keyboard
       description[:key] = definition.shift_key
     end
 
-    if definition.key_code
-      description[:key_code] = definition.key_code
-    end
+    description[:key_code] = definition.key_code || 0
+
     if shift && definition.shift_key_code
       description[:key_code] = definition.shift_key_code
     end
@@ -84,9 +89,7 @@ class Puppeteer::Keyboard
       description[:code] = definition.code
     end
 
-    if definition.location
-      description[:location] = definition.location
-    end
+    description[:location] = definition.location || 0
 
     if description[:key].length == 1
       description[:text] = description[:key]
@@ -108,7 +111,6 @@ class Puppeteer::Keyboard
   end
 
   # @param key [String]
-  # @return [Future]
   def up(key)
     description = key_description_for_string(key)
 
@@ -119,23 +121,34 @@ class Puppeteer::Keyboard
       type: 'keyUp',
       modifiers: @modifiers,
       key: description.key,
-      windowsVirtualKeyCode: description.keyCode,
+      windowsVirtualKeyCode: description.key_code,
       code: description.code,
       location: description.location,
     )
   end
 
-  # @param char [string]
+  # @param key [String]
   # @return [Future]
+  async def async_up(key)
+    up(key)
+  end
+
+  # @param char [string]
   def send_character(char)
     @client.send_message('Input.insertText', text: char)
   end
 
-  # @param {string} text
-  #
-  def type(text, delay: nil)
+  # @param char [string]
+  # @return [Future]
+  async def async_send_character(char)
+    send_character(char)
+  end
+
+  # @param text [String]
+  # @return [Future]
+  def type_text(text, delay: nil)
     text.each_char do |char|
-      if KEY_DEFINITIONS.include?(char)
+      if KEY_DEFINITIONS.include?(char.to_sym)
         press(char, delay: delay)
       else
         if delay
@@ -146,13 +159,25 @@ class Puppeteer::Keyboard
     end
   end
 
+  # @param text [String]
+  # @return [Future]
+  async def async_type_text(text, delay: nil)
+    type_text(text, delay)
+  end
+
   # @param key [String]
   # @return [Future]
-  async def press(key, delay: nil)
-    await down(key)
+  def press(key, delay: nil)
+    down(key)
     if delay
       sleep(delay.to_i / 1000.0)
     end
-    await up(key)
+    up(key)
+  end
+
+  # @param key [String]
+  # @return [Future]
+  async def async_press(key, delay: nil)
+    press(key, delay)
   end
 end

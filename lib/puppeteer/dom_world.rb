@@ -2,6 +2,8 @@ require 'thread'
 
 # https://github.com/puppeteer/puppeteer/blob/master/lib/DOMWorld.js
 class Puppeteer::DOMWorld
+  using Puppeteer::AsyncAwaitBehavior
+
   # on state: initialized
   #   context is nil.
   #   available_context blocks until context is set.
