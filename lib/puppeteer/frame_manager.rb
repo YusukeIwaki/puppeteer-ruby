@@ -298,6 +298,15 @@ class Puppeteer::FrameManager
 
   # @param context_payload [Hash]
   def handle_execution_context_created(context_payload)
+    # executionContextCleared is often notified after executionContextCreated.
+    #   D, [2020-04-06T01:47:03.101227 #13823] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>5, "origin"=>"https://github.com", "name"=>"", "auxData"=>{"isDefault"=>true, "type"=>"default", "frameId"=>"71C347B70848B89DDDEFAA8AB5B0BC92"}}}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
+    #   D, [2020-04-06T01:47:03.101439 #13823] DEBUG -- : RECV << {"method"=>"Page.frameNavigated", "params"=>{"frame"=>{"id"=>"71C347B70848B89DDDEFAA8AB5B0BC92", "loaderId"=>"80338225D035AC96BAE8F6D4E81C7D51", "url"=>"https://github.com/search?q=puppeteer", "securityOrigin"=>"https://github.com", "mimeType"=>"text/html"}}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
+    #   D, [2020-04-06T01:47:03.101325 #13823] DEBUG -- : RECV << {"method"=>"Target.targetInfoChanged", "params"=>{"targetInfo"=>{"targetId"=>"71C347B70848B89DDDEFAA8AB5B0BC92", "type"=>"page", "title"=>"https://github.com/search?q=puppeteer", "url"=>"https://github.com/search?q=puppeteer", "attached"=>true, "browserContextId"=>"AF37BC660284CE1552B4ECB147BE9305"}}}
+    #   D, [2020-04-06T01:47:03.101269 #13823] DEBUG -- : RECV << {"method"=>"Runtime.executionContextsCleared", "params"=>{}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
+    # it unexpectedly clears the created execution context.
+    # To avoid the problem, just sleep a bit.
+    sleep 1
+
     frame = if_present(context_payload.dig('auxData', 'frameId')) { |frame_id| @frames[frame_id] }
 
     world = nil

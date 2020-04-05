@@ -111,10 +111,12 @@ class Puppeteer::Connection
 
     NON_DEBUG_PRINT_METHODS = [
       'Network.dataReceived',
+      'Network.loadingFinished',
       'Network.requestWillBeSent',
       'Network.requestWillBeSentExtraInfo',
       'Network.responseReceived',
       'Network.responseReceivedExtraInfo',
+      'Page.lifecycleEvent',
     ]
 
     def handle_message(message)
