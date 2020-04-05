@@ -1,35 +1,8 @@
 require 'thread'
 
-# https://github.com/puppeteer/puppeteer/blob/master/lib/DOMWorld.js
+# https://github.com/puppeteer/puppeteer/blob/master/src/DOMWorld.js
 class Puppeteer::DOMWorld
   using Puppeteer::AsyncAwaitBehavior
-
-  # on state: initialized
-  #   context is nil.
-  #   available_context blocks until context is set.
-  # on state: resolved
-  #   context is set
-  #   available_context returns context immediately.
-  class ContextResolver
-    def initialize
-      @queue = Queue.new
-    end
-
-    def resolve(context)
-      if context.nil?
-        raise ArgumentError.new("context should not be nil")
-      end
-      @queue.push(context)
-    end
-
-    def resolved?
-      !!@context
-    end
-
-    def available_context
-      @context ||= @queue.pop
-    end
-  end
 
   # @param {!Puppeteer.FrameManager} frameManager
   # @param {!Puppeteer.Frame} frame
@@ -38,7 +11,7 @@ class Puppeteer::DOMWorld
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
-    @context_resolver = ContextResolver.new
+    @context_promise = resolvable_future
     @wait_tasks = Set.new
     @detached = false
   end
@@ -48,17 +21,17 @@ class Puppeteer::DOMWorld
   # @param {?Puppeteer.ExecutionContext} context
   def context=(context)
     if context
-      @context_resolver.resolve(context)
+      @context_promise.fulfill(context)
     #   for (const waitTask of this._waitTasks)
     #     waitTask.rerun();
     else
       @document = nil
-      @context_resolver = ContextResolver.new
+      @context_promise = resolvable_future
     end
   end
 
   def has_context?
-    @context_resolver.resolved?
+    @context_promise.resolved?
   end
 
   private def detach
@@ -75,7 +48,7 @@ class Puppeteer::DOMWorld
     if @detached
       raise DetachedError.new("Execution Context is not available in detached frame \"#{@frame.url}\" (are you trying to evaluate?)")
     end
-    @context_resolver.available_context
+    @context_promise.value!
   end
 
   # @param {Function|string} pageFunction
