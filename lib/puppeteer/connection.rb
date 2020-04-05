@@ -87,7 +87,7 @@ class Puppeteer::Connection
 
   def raw_send(message:)
     id = generate_id
-    payload = JSON.fast_generate(message.merge(id: id))
+    payload = JSON.fast_generate(message.compact.merge(id: id))
     @transport.send_text(payload)
     request_debug_printer.handle_payload(payload)
     id
