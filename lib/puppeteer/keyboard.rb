@@ -65,7 +65,7 @@ class Puppeteer::Keyboard
   # @param {string} keyString
   # @return {KeyDescription}
   private def key_description_for_string(key_string)
-    shift = @modifiers & 8
+    shift = (@modifiers & 8) != 0
     description = {}
     definition = KEY_DEFINITIONS[key_string.to_sym]
     if !definition
@@ -103,7 +103,7 @@ class Puppeteer::Keyboard
     end
 
     # if any modifiers besides shift are pressed, no text should be sent
-    if @modifiers & ~8
+    if (@modifiers & ~8) != 0
       description[:text] = ''
     end
 
