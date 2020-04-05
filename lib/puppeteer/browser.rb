@@ -76,7 +76,7 @@ class Puppeteer::Browser
 
   # @param context_id [String]
   def dispose_context(context_id)
-    @connection.send_message('Target.disposeBrowserContext', browser_context_id: context_id)
+    @connection.send_message('Target.disposeBrowserContext', browserContextId: context_id)
     @contexts.remove(context_id)
   end
 
@@ -150,10 +150,11 @@ class Puppeteer::Browser
   # @param {?string} contextId
   # @return {!Promise<!Puppeteer.Page>}
   def create_page_in_context(context_id)
-    result = @connection.send_message('Target.createTarget',
-      url: 'about:blank',
-      browserContextId: context_id,
-    )
+    create_target_params = { url: 'about:blank' }
+    if context_id
+      create_target_params[:browserContextId] = context_id
+    end
+    result = @connection.send_message('Target.createTarget', **create_target_params)
     target_id = result['targetId']
     target = @targets[target_id]
     await target.initialized_promise
