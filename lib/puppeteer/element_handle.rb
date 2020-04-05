@@ -1,4 +1,5 @@
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
+  include Puppeteer::IfPresent
   using Puppeteer::AsyncAwaitBehavior
 
   # @param context [Puppeteer::ExecutionContext]
@@ -339,63 +340,52 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     nil
   end
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
-  async def async_S(selector)
-    S(selector)
+  def SS(selector)
+    handles = evaluate_handle(
+      "(element, selector) => element.querySelectorAll(selector)",
+      selector,
+    )
+    properties = handles.properties
+    handles.dispose
+    properties.values.map(&:as_element).compact
   end
 
-  #  /**
-  #   * @param {string} selector
-  #   * @return {!Promise<!Array<!ElementHandle>>}
-  #   */
-  #  async $$(selector) {
-  #    const arrayHandle = await this.evaluateHandle(
-  #        (element, selector) => element.querySelectorAll(selector),
-  #        selector
-  #    );
-  #    const properties = await arrayHandle.getProperties();
-  #    await arrayHandle.dispose();
-  #    const result = [];
-  #    for (const property of properties.values()) {
-  #      const elementHandle = property.asElement();
-  #      if (elementHandle)
-  #        result.push(elementHandle);
-  #    }
-  #    return result;
-  #  }
+  class ElementNotFoundError < StandardError
+    def initialize(selector)
+      super("failed to find element matching selector \"#{selector}\"")
+    end
+  end
 
-  #  /**
-  #   * @param {string} selector
-  #   * @param {Function|String} pageFunction
-  #   * @param {!Array<*>} args
-  #   * @return {!Promise<(!Object|undefined)>}
-  #   */
-  #  async $eval(selector, pageFunction, ...args) {
-  #    const elementHandle = await this.$(selector);
-  #    if (!elementHandle)
-  #      throw new Error(`Error: failed to find element matching selector "${selector}"`);
-  #    const result = await elementHandle.evaluate(pageFunction, ...args);
-  #    await elementHandle.dispose();
-  #    return result;
-  #  }
+  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Object]
+  def Seval(selector, page_function, *args)
+    element_handle = S(selector)
+    unless element_handle
+      raise ElementNotFoundError.new(selector)
+    end
+    result = element_handle.evaluate(page_function, *args)
+    element_handle.dispose
 
-  #  /**
-  #   * @param {string} selector
-  #   * @param {Function|String} pageFunction
-  #   * @param {!Array<*>} args
-  #   * @return {!Promise<(!Object|undefined)>}
-  #   */
-  #  async $$eval(selector, pageFunction, ...args) {
-  #    const arrayHandle = await this.evaluateHandle(
-  #        (element, selector) => Array.from(element.querySelectorAll(selector)),
-  #        selector
-  #    );
+    result
+  end
 
-  #    const result = await arrayHandle.evaluate(pageFunction, ...args);
-  #    await arrayHandle.dispose();
-  #    return result;
-  #  }
+  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Object]
+  def SSeval(selector, page_function, *args)
+    handles = evaluate_handle(
+                '(element, selector) => Array.from(element.querySelectorAll(selector))',
+                selector)
+    result = handles.evaluate(page_function, *args)
+    handles.dispose
+
+    result
+  end
 
   #  /**
   #   * @param {string} expression

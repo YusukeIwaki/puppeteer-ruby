@@ -82,22 +82,17 @@ class Puppeteer::JSHandle
   #   return result;
   # }
 
-  # /**
-  #  * @return {!Promise<!Map<string, !JSHandle>>}
-  #  */
-  # async getProperties() {
-  #   const response = await this._client.send('Runtime.getProperties', {
-  #     objectId: this._remoteObject.objectId,
-  #     ownProperties: true
-  #   });
-  #   const result = new Map();
-  #   for (const property of response.result) {
-  #     if (!property.enumerable)
-  #       continue;
-  #     result.set(property.name, createJSHandle(this._context, property.value));
-  #   }
-  #   return result;
-  # }
+  # getProperties in JavaScript.
+  # @return [Hash<String, JSHandle>]
+  def properties
+    response = @remote_object.properties(@client)
+    response['result'].each_with_object({}) do |prop, h|
+      next unless prop['enumerable']
+      h[prop['name']] = Puppeteer::JSHandle.create(
+                          context: @context,
+                          remote_object: Puppeteer::RemoteObject.new(prop['value']))
+    end
+  end
 
   def json_value
     # original logic was:
@@ -114,7 +109,7 @@ class Puppeteer::JSHandle
     #
     # However it would be better that RemoteObject is responsible for
     # the logic `if (this._remoteObject.objectId) { ... }`.
-    @remote_object.evaluate_self || @remote_object.value
+    @remote_object.evaluate_self(@client) || @remote_object.value
   end
 
   def as_element

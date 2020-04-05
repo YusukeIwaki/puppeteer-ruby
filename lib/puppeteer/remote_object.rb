@@ -8,6 +8,7 @@ class Puppeteer::RemoteObject
     @object_id = payload["objectId"]
     @sub_type = payload["subtype"]
     @unserializable_value = payload["unserializableValue"]
+    @value = payload["value"]
   end
 
   attr_reader :sub_type
@@ -41,6 +42,16 @@ class Puppeteer::RemoteObject
     end
   end
 
+  # used in JSHandle#properties
+  def properties(client)
+    # original logic:
+    #   const response = await this._client.send('Runtime.getProperties', {
+    #     objectId: this._remoteObject.objectId,
+    #     ownProperties: true
+    #   });
+    client.send_message('Runtime.getProperties', objectId: @object_id, ownProperties: true)
+  end
+
   # used in ElementHandle#content_frame
   def node_info(client)
     client.send_message("DOM.describeNode", objectId: @object_id)
@@ -48,7 +59,25 @@ class Puppeteer::RemoteObject
 
   # helper#valueFromRemoteObject
   def value
-
+    if @unserializable_value
+      # if (remoteObject.type === 'bigint' && typeof BigInt !== 'undefined')
+      #   return BigInt(remoteObject.unserializableValue.replace('n', ''));
+      # switch (remoteObject.unserializableValue) {
+      #   case '-0':
+      #     return -0;
+      #   case 'NaN':
+      #     return NaN;
+      #   case 'Infinity':
+      #     return Infinity;
+      #   case '-Infinity':
+      #     return -Infinity;
+      #   default:
+      #     throw new Error('Unsupported unserializable value: ' + remoteObject.unserializableValue);
+      # }
+      raise NotImplementedError.new("unserializable_value is not implemented yet")
+    else
+      @value
+    end
   end
 
   # @param client [Puppeteer::CDPSession]

@@ -56,18 +56,17 @@ class Puppeteer::ExecutionContext
       # }).catch(rewriteError);
 
       exception_details = result["exceptionDetails"]
-      remote_object = result['result']
-
       if exception_details
         raise EvaluationError.new("Evaluation failed: #{exception_details}")
       end
 
+      remote_object = Puppeteer::RemoteObject.new(result['result'])
       if @return_by_value
-        remote_object
+        remote_object.value
       else
         Puppeteer::JSHandle.create(
           context: @execution_context,
-          remote_object: Puppeteer::RemoteObject.new(remote_object),
+          remote_object: remote_object,
         )
       end
     end
@@ -115,18 +114,18 @@ class Puppeteer::ExecutionContext
       ) #.catch(rewriteError);
 
       exception_details = result["exceptionDetails"]
-      remote_object = result["result"]
+      remote_object = Puppeteer::RemoteObject.new(result["result"])
 
       if exception_details
         raise EvaluationError.new("Evaluation failed: #{exceptionDetails}")
       end
 
       if @return_by_value
-        remote_object
+        remote_object.value
       else
         Puppeteer::JSHandle.create(
           context: @execution_context,
-          remote_object: Puppeteer::RemoteObject.new(remote_object),
+          remote_object: remote_object,
         )
       end
     end
