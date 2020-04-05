@@ -62,7 +62,7 @@ class Puppeteer::RemoteObject
     rescue => err
       # Exceptions might happen in case of a page been navigated or closed.
       # Swallow these since they are harmless and we don't leak anything in this case.
-      debug_print(err)
+      debug_puts(err)
     end
 
     nil

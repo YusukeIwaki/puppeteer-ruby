@@ -98,7 +98,7 @@ class Puppeteer::Connection
     include Puppeteer::DebugPrint
 
     def handle_payload(payload)
-      debug_print "SEND >> #{decorate(payload)}"
+      debug_puts "SEND >> #{decorate(payload)}"
     end
 
     private def decorate(payload)
@@ -119,12 +119,12 @@ class Puppeteer::Connection
 
     def handle_message(message)
       if skip_debug_print?(message['method'])
-        print "."
+        debug_print "."
         @prev_log_skipped = true
       else
-        print "\n" if @prev_log_skipped
+        debug_print "\n" if @prev_log_skipped
         @prev_log_skipped = nil
-        debug_print "RECV << #{decorate(message)}"
+        debug_puts "RECV << #{decorate(message)}"
       end
     end
 
