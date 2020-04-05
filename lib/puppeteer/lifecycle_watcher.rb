@@ -76,10 +76,10 @@ class Puppeteer::LifecycleWatcher
     ]
     @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener('Events.NetworkManager.Request', &method(:handle_request))
 
-    @same_document_navigation_promise = Concurrent::Promises.resolvable_future
-    @lifecycle_promise = Concurrent::Promises.resolvable_future
-    @new_document_navigation_promise = Concurrent::Promises.resolvable_future
-    @termination_promise = Concurrent::Promises.resolvable_future
+    @same_document_navigation_promise = resolvable_future
+    @lifecycle_promise = resolvable_future
+    @new_document_navigation_promise = resolvable_future
+    @termination_promise = resolvable_future
     check_lifecycle_complete
   end
 
@@ -118,7 +118,7 @@ class Puppeteer::LifecycleWatcher
 
   def timeout_or_termination_promise
     if @timeout > 0
-      Concurrent::Promises.future do
+      future {
         begin
           Timeout.timeout(@timeout / 1000.0) do
             @termination_promise.value!
@@ -126,7 +126,7 @@ class Puppeteer::LifecycleWatcher
         rescue Timeout::Error
           raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
         end
-      end
+      }
     else
       @termination_promise
     end

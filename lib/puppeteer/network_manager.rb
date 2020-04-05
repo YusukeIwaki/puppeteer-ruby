@@ -98,29 +98,23 @@ class Puppeteer::NetworkManager
     update_protocol_request_interception
   end
 
-  # @returns [Future]
   private def update_protocol_request_interception
     enabled = @user_request_interception_enabled || !@credentials.nil?
     return if @protocol_request_interception_enabled == enabled
     @protocol_request_interception_enabled = enabled
 
     if enabled
-      Concurrent::Promises.zip(
-        update_protocol_cache_disabled,
-        @client.send_message('Fetch.enable',
-          handleAuthRequests: true,
-          patterns: [{urlPattern: '*'}],
-        ),
+      update_protocol_cache_disabled
+      @client.send_message('Fetch.enable',
+        handleAuthRequests: true,
+        patterns: [{urlPattern: '*'}],
       )
     else
-      Concurrent::Promises.zip(
-        update_protocol_cache_disabled,
-        @client.send_message('Fetch.disable'),
-      )
+      update_protocol_cache_disabled
+      @client.async_send_message('Fetch.disable')
     end
   end
 
-  # @returns [Future]
   private def update_protocol_cache_disabled
     cache_disabled = @user_cache_disabled || @protocol_request_interception_enabled
     @client.send_message('Network.setCacheDisabled', cacheDisabled: cache_disabled)

@@ -31,7 +31,7 @@ class Puppeteer::CDPSession
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
     end
     id = @connection.raw_send(message: { sessionId: @session_id, method: method, params: params })
-    promise = Concurrent::Promises.resolvable_future
+    promise = resolvable_future
     @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
     promise
   end

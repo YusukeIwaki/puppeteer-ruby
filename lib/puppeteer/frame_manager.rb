@@ -59,13 +59,13 @@ class Puppeteer::FrameManager
   attr_reader :client, :timeout_settings
 
   private def init
-    results = await Concurrent::Promises.zip(
+    results = await_all(
       @client.async_send_message('Page.enable'),
       @client.async_send_message('Page.getFrameTree'),
     )
     frame_tree = results.last['frameTree']
     handle_frame_tree(frame_tree)
-    await Concurrent::Promises.zip(
+    await_all(
       @client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
       @client.async_send_message('Runtime.enable'),
     )
@@ -100,18 +100,18 @@ class Puppeteer::FrameManager
     ensure_new_document_navigation = false
 
     begin
-      navigate = Concurrent::Promises.future do
+      navigate = future {
         result = @client.send_message('Page.navigate', navigate_params)
         loader_id = result['loaderId']
         ensure_new_document_navigation = !!loader_id
         if result['errorText']
           raise NavigationError.new("#{result['errorText']} at #{url}")
         end
-      end
-      Concurrent::Promises.any(
+      }
+      await_any(
         navigate,
         watcher.timeout_or_termination_promise,
-      ).value!
+      )
 
       document_navigation_promise =
         if ensure_new_document_navigation
@@ -119,10 +119,10 @@ class Puppeteer::FrameManager
         else
           watcher.same_document_navigation_promise
         end
-      Concurrent::Promises.any(
+      await_any(
         document_navigation_promise,
         watcher.timeout_or_termination_promise,
-      ).value!
+      )
     ensure
       watcher.dispose
     end
@@ -274,7 +274,7 @@ class Puppeteer::FrameManager
         worldName: name,
       )
     end
-    await Concurrent::Promises.zip(*create_isolated_worlds_promises)
+    await_all(*create_isolated_worlds_promises)
   end
 
   # @param frame_id [String]

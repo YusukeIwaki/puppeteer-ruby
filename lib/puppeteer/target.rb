@@ -33,7 +33,7 @@ class Puppeteer::Target
     #    this._pagePromise = null;
     #    /** @type {?Promise<!Worker>} */
     #    this._workerPromise = null;
-    @initialized_promise = Concurrent::Promises.resolvable_future
+    @initialized_promise = resolvable_future
     #    this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
 
     @is_initialized = @target_info.type != 'page' || !@target_info.url.empty?

@@ -76,7 +76,7 @@ class Puppeteer::Connection
 
   def async_send_message(method, params = {})
     id = raw_send(message: { method: method, params: params })
-    promise = Concurrent::Promises.resolvable_future
+    promise = resolvable_future
     @callbacks[id] = MessageCallback.new(method: method, promise: promise)
     promise
   end

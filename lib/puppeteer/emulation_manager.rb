@@ -19,7 +19,7 @@ class Puppeteer::EmulationManager
     # const screenOrientation = viewport.isLandscape ? { angle: 90, type: 'landscapePrimary' } : { angle: 0, type: 'portraitPrimary' };
     has_touch = viewport.has_touch?
 
-    await Concurrent::Promises.zip(
+    await_all(
       @client.async_send_message('Emulation.setDeviceMetricsOverride',
         mobile: mobile,
         width: width,

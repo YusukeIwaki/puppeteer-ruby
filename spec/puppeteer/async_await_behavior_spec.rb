@@ -32,30 +32,4 @@ RSpec.describe Puppeteer::AsyncAwaitBehavior do
       expect(res.value!).to eq("my tap!")
     end
   end
-
-  describe 'await' do
-    class Fuga
-      using Puppeteer::AsyncAwaitBehavior
-
-      def fuga1
-        await 123
-      end
-
-      def fuga2
-        await fuga
-      end
-
-      async def fuga
-        "hoge"
-      end
-    end
-
-    it 'return as it is, on no future' do
-      expect(Fuga.new.fuga1).to eq(123)
-    end
-
-    it 'wait until value is set, on future exists' do
-      expect(Fuga.new.fuga2).to eq("hoge")
-    end
-  end
 end

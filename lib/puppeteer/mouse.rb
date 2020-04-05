@@ -57,14 +57,14 @@ class Puppeteer::Mouse
   # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
   def click(x, y, delay: nil, button: nil, click_count: nil)
     if delay
-      await Concurrent::Promises.zip(
+      await_all(
         async_move(x, y),
         async_down(button: button, click_count: click_count),
       )
       sleep(delay / 1000.0)
       up(button: button, click_count: click_count)
     else
-      await Concurrent::Promises.zip(
+      await_all(
         async_move(x, y),
         async_down(button: button, click_count: click_count),
         async_up(button: button, click_count: click_count),

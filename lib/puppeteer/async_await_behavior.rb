@@ -31,15 +31,4 @@ module Puppeteer::AsyncAwaitBehavior
       end
     end
   end
-
-  refine Object do
-    # blocking get value of Future.
-    def await(future_or_value)
-      if future_or_value.is_a?(Concurrent::Promises::Future)
-        future_or_value.value!
-      else
-        future_or_value
-      end
-    end
-  end
 end

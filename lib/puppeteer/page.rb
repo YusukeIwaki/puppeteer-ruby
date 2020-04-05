@@ -114,7 +114,7 @@ class Puppeteer::Page
   end
 
   def init
-    await Concurrent::Promises.zip(
+    await_all(
       @frame_manager.async_init,
       @client.async_send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true),
       @client.async_send_message('Performance.enable'),

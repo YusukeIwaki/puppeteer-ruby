@@ -7,6 +7,7 @@ require 'puppeteer/viewport'
 
 # Modules
 require 'puppeteer/async_await_behavior'
+require 'puppeteer/concurrent_ruby_utils'
 require 'puppeteer/debug_print'
 require 'puppeteer/event_callbackable'
 require 'puppeteer/if_present'

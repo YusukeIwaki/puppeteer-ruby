@@ -6,7 +6,7 @@ class Puppeteer::WebSocketTransport
       url: url,
       max_payload_size: 256 * 1024 * 1024, # 256MB
     )
-    promise = Concurrent::Promises.resolvable_future
+    promise = resolvable_future
     ws.on_open do
       promise.fulfill(Puppeteer::WebSocketTransport.new(ws))
     end
