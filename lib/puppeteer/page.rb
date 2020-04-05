@@ -600,9 +600,10 @@ class Puppeteer::Page
     main_frame.set_content(html)
   end
 
-  # @param {string} url
-  # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return {!Promise<?Puppeteer.Response>}
+  # @param url [String]
+  # @param rederer [String]
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   def goto(url, referer: nil, timeout: nil, wait_until: nil)
     main_frame.goto(url, referer: referer, timeout: timeout, wait_until: wait_until)
   end
@@ -617,10 +618,17 @@ class Puppeteer::Page
     # return response;
   end
 
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return {!Promise<?Puppeteer.Response>}
-  def wait_for_navigation(timeout: nil, wait_until: nil)
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  private def wait_for_navigation(timeout: nil, wait_until: nil)
     main_frame.wait_for_navigation(timeout: timeout, wait_until: wait_until)
+  end
+
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @return [Future]
+  async def async_wait_for_navigation(timeout: nil, wait_until: nil)
+    wait_for_navigation(timeout: timeout, wait_until: wait_until)
   end
 
   # /**
@@ -659,28 +667,28 @@ class Puppeteer::Page
   #   }, timeout, this._sessionClosePromise());
   # }
 
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return {!Promise<?Puppeteer.Response>}
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   def go_back(timeout: nil, wait_until: nil)
     go(-1, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return {!Promise<?Puppeteer.Response>}
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   def go_forward(timeout: nil, wait_until: nil)
     go(+1, timeout: timeout, wait_until: wait_until)
   end
 
   private def go(delta, timeout: nil, wait_until: nil)
-    # const history = await this._client.send('Page.getNavigationHistory');
-    # const entry = history.entries[history.currentIndex + delta];
-    # if (!entry)
-    #   return null;
-    # const [response] = await Promise.all([
-    #   this.waitForNavigation(options),
-    #   this._client.send('Page.navigateToHistoryEntry', {entryId: entry.id}),
-    # ]);
-    # return response;
+    history = @client.send_message('Page.getNavigationHistory')
+    entries = history['entries']
+    index = history['currentIndex'] + delta
+    if_present(entries[index]) do |entry|
+      await_all(
+        async_wait_for_navigation(timeout: timeout, wait_until: wait_until),
+        @client.async_send_message('Page.navigateToHistoryEntry', entryId: entry['id'])
+      )
+    end
   end
 
   # @param device [Device]

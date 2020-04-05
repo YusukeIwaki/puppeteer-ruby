@@ -23,16 +23,18 @@ class Puppeteer::Frame
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :secondary_world
 
   # @param url [String]
-  # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @param rederer [String]
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   # @return [Puppeteer::Response]
   def goto(url, referer: nil, timeout: nil, wait_until: nil)
     @frame_manager.navigate_frame(self, url, referer: referer, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return {!Promise<?Puppeteer.Response>}
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   def wait_for_navigation(timeout: nil, wait_until: nil)
-    @frame_manager.wait_for_navigation(self, timeout: timeout, wait_until: wait_until)
+    @frame_manager.wait_for_frame_navigation(self, timeout: timeout, wait_until: wait_until)
   end
 
   def execution_context

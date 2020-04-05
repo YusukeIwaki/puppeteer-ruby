@@ -130,28 +130,27 @@ class Puppeteer::FrameManager
     watcher.navigation_response
   end
 
-  #  /**
-  #   * @param {!Puppeteer.Frame} frame
-  #   * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  #   * @return {!Promise<?Puppeteer.Response>}
-  #   */
-  #  async waitForFrameNavigation(frame, options = {}) {
-  #    assertNoLegacyNavigationOptions(options);
-  #    const {
-  #      waitUntil = ['load'],
-  #      timeout = this._timeoutSettings.navigationTimeout(),
-  #    } = options;
-  #    const watcher = new LifecycleWatcher(this, frame, waitUntil, timeout);
-  #    const error = await Promise.race([
-  #      watcher.timeoutOrTerminationPromise(),
-  #      watcher.sameDocumentNavigationPromise(),
-  #      watcher.newDocumentNavigationPromise()
-  #    ]);
-  #    watcher.dispose();
-  #    if (error)
-  #      throw error;
-  #    return watcher.navigationResponse();
-  #  }
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @return [Puppeteer::Response]
+  def wait_for_frame_navigation(frame, timeout: nil, wait_until: nil)
+    assert_no_legacy_navigation_options(wait_until: wait_until)
+
+    option_wait_until = wait_until || ['load']
+    option_timeout = timeout || @timeout_settings.navigation_timeout
+    watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
+    begin
+      await_any(
+        watcher.timeout_or_termination_promise,
+        watcher.same_document_navigation_promise,
+        watcher.new_document_navigation_promise,
+      )
+    ensure
+      watcher.dispose
+    end
+
+    watcher.navigation_response
+  end
 
   # @param event [Hash]
   def handle_lifecycle_event(event)
