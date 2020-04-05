@@ -2,6 +2,8 @@
 
 A Ruby port of [puppeteer](https://pptr.dev/).
 
+REMARK: This Gem is NOT production-ready!!
+
 ## Getting Started
 
 Simple usage:
