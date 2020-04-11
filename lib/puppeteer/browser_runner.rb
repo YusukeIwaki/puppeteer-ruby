@@ -23,6 +23,13 @@ class Puppeteer::BrowserRunner
     def initialize(env, executable_path, args)
       stdin, @stdout, @stderr, @thread = Open3.popen3(env, executable_path, *args)
       stdin.close
+      @pid = @thread.pid
+    end
+
+    def kill
+      Process.kill(:KILL, @pid)
+    rescue Errno::ESRCH
+      # already killed
     end
 
     def dispose
@@ -104,12 +111,24 @@ class Puppeteer::BrowserRunner
     if @temp_directory
       kill
     elsif @connection
-      @connection.sendCommand("Browser.close")
+      begin
+        @connection.send_message("Browser.close")
+      rescue
+        kill
+      end
     end
+
+    @process_closing.call
   end
 
   # @return {Promise}
   def kill
+    unless @closed
+      @proc.kill
+    end
+    if @temp_directory
+      FileUtils.rm_rf(@temp_directory)
+    end
   end
 
 

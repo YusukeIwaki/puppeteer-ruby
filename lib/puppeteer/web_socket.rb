@@ -37,6 +37,9 @@ class Puppeteer::WebSocket
 
     Thread.new do
       wait_for_data until @ready_state >= STATE_CLOSING
+    rescue EOFError
+      # Google Chrome was gone.
+      # We have nothing todo. Just finish polling.
     end
   end
 
