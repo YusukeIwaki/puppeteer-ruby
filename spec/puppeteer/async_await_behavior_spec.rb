@@ -6,30 +6,30 @@ RSpec.describe Puppeteer::AsyncAwaitBehavior do
       using Puppeteer::AsyncAwaitBehavior
 
       async def hoge
-        "-> hoge"
+        '-> hoge'
       end
 
       async def self.hogehoge
-        "=> hogehoge"
+        '=> hogehoge'
       end
 
       async def tap
-        "my tap!"
+        'my tap!'
       end
     end
 
     it 'is wrapped with Concurrent::Promises::Future' do
       res = Hoge.new.hoge
       expect(res).to be_a(Concurrent::Promises::Future)
-      expect(res.value!).to eq("-> hoge")
+      expect(res.value!).to eq('-> hoge')
 
       res = Hoge.hogehoge
       expect(res).to be_a(Concurrent::Promises::Future)
-      expect(res.value!).to eq("=> hogehoge")
+      expect(res.value!).to eq('=> hogehoge')
 
       res = Hoge.new.tap
       expect(res).to be_a(Concurrent::Promises::Future)
-      expect(res.value!).to eq("my tap!")
+      expect(res.value!).to eq('my tap!')
     end
   end
 end

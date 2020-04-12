@@ -55,7 +55,7 @@ class Puppeteer::ExecutionContext
       )
       # }).catch(rewriteError);
 
-      exception_details = result["exceptionDetails"]
+      exception_details = result['exceptionDetails']
       if exception_details
         raise EvaluationError.new("Evaluation failed: #{exception_details}")
       end
@@ -111,10 +111,10 @@ class Puppeteer::ExecutionContext
         returnByValue: @return_by_value,
         awaitPromise: true,
         userGesture: true,
-      ) #.catch(rewriteError);
+      ) # .catch(rewriteError);
 
-      exception_details = result["exceptionDetails"]
-      remote_object = Puppeteer::RemoteObject.new(result["result"])
+      exception_details = result['exceptionDetails']
+      remote_object = Puppeteer::RemoteObject.new(result['result'])
 
       if exception_details
         raise EvaluationError.new("Evaluation failed: #{exceptionDetails}")
@@ -176,7 +176,7 @@ class Puppeteer::ExecutionContext
     end
   end
 
-  class EvaluationError < StandardError ; end
+  class EvaluationError < StandardError; end
 
   # @param return_by_value [Boolean]
   # @param page_function [String]
@@ -186,7 +186,7 @@ class Puppeteer::ExecutionContext
     # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer
     # But we don't support the syntax here.
     js_object =
-      if ["=>", "async", "function"].any? { |keyword| page_function.include?(keyword) }
+      if ['=>', 'async', 'function'].any? { |keyword| page_function.include?(keyword) }
         JavaScriptFunction.new(self, page_function, args, return_by_value)
       else
         JavaScriptExpression.new(self, page_function, return_by_value)

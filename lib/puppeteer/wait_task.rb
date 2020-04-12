@@ -1,5 +1,5 @@
 class Puppeteer::WaitTask
-  class TerminatedError < StandardError ; end
+  class TerminatedError < StandardError; end
 
   def initialize
   end

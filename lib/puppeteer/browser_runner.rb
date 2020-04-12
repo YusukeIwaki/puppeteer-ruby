@@ -33,7 +33,7 @@ class Puppeteer::BrowserRunner
     end
 
     def dispose
-      [@stdout, @stderr].each{ |io| io.close unless io.closed? }
+      [@stdout, @stderr].each { |io| io.close unless io.closed? }
       @thread.join
     end
 
@@ -112,7 +112,7 @@ class Puppeteer::BrowserRunner
       kill
     elsif @connection
       begin
-        @connection.send_message("Browser.close")
+        @connection.send_message('Browser.close')
       rescue
         kill
       end
@@ -140,7 +140,7 @@ class Puppeteer::BrowserRunner
       transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
       @connection = Puppeteer::Connection.new(browser_ws_endpoint, transport, slow_mo)
     else
-      raise NotImplementedError.new("PipeTransport is not yet implemented")
+      raise NotImplementedError.new('PipeTransport is not yet implemented')
     end
 
     @connection

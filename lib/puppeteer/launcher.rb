@@ -14,7 +14,7 @@ module Puppeteer::Launcher
   # @return {!Puppeteer.ProductLauncher}
   module_function def new(project_root:, preferred_revision:, is_puppeteer_core:, product:)
     if product == 'firefox'
-      raise NotImplementedError.new("FirefoxLauncher is not implemented yet.")
+      raise NotImplementedError.new('FirefoxLauncher is not implemented yet.')
     end
 
     Chrome.new(

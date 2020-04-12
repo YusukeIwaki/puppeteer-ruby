@@ -35,7 +35,7 @@ class Puppeteer::Keyboard
       location: description.location,
       isKeypad: description.location == 3,
     }.compact
-    @client.send_message('Input.dispatchKeyEvent', params);
+    @client.send_message('Input.dispatchKeyEvent', params)
   end
 
   # @param key [String]

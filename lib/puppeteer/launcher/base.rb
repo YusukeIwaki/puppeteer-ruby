@@ -8,7 +8,7 @@ module Puppeteer::Launcher
       @is_puppeteer_core = is_puppeteer_core
     end
 
-    class ExecutablePathNotFound < StandardError ; end
+    class ExecutablePathNotFound < StandardError; end
 
     # @returns [String] Chrome Executable file path.
     # @raise [ExecutablePathNotFound]
@@ -25,7 +25,7 @@ module Puppeteer::Launcher
       end
 
       # temporal logic.
-      if RUBY_PLATFORM.include?("darwin") # MacOS
+      if RUBY_PLATFORM.include?('darwin') # MacOS
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
       else
         '/usr/bin/google-chrome'

@@ -45,11 +45,11 @@ class Puppeteer::Target
 
   attr_reader :target_id, :initialized_promise
 
-  class InitializeFailure < StandardError ; end
+  class InitializeFailure < StandardError; end
 
   def handle_initialized(success)
     unless success
-      @initialized_promise.reject(InitializeFailure.new("Failed to create target for page"))
+      @initialized_promise.reject(InitializeFailure.new('Failed to create target for page'))
     end
     @on_initialize_succeeded&.call
     @initialized_promise.fulfill(true)

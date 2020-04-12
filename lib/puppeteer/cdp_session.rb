@@ -2,7 +2,7 @@ class Puppeteer::CDPSession
   include Puppeteer::EventCallbackable
   using Puppeteer::AsyncAwaitBehavior
 
-  class Error < StandardError ; end
+  class Error < StandardError; end
 
   # @param {!Connection} connection
   # @param {string} targetType
@@ -65,7 +65,7 @@ class Puppeteer::CDPSession
   end
 
   def handle_closed
-    @callbacks.values.each do |callback|
+    @callbacks.each_value do |callback|
       callback.reject(
         Puppeteer::Connection::ProtocolError.new(
           method: callback.method,

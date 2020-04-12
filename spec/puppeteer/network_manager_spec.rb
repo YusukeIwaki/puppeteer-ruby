@@ -10,13 +10,13 @@ RSpec.describe Puppeteer::NetworkManager do
 
     context 'when setting non-string values' do
       let(:headers) { { 'My-Header' => ['Puppeteer', Puppeteer::VERSION] } }
-      it { expect{ subject }.to raise_error(ArgumentError) }
+      it { expect { subject }.to raise_error(ArgumentError) }
     end
 
     context 'when setting valid hash' do
-      before {
+      before do
         instance.extra_http_headers = { 'custom-key' => 'custom-value' }
-      }
+      end
 
       let(:headers) { { 'My-Header' => 'Puppeteer 1' } }
 
@@ -28,27 +28,27 @@ RSpec.describe Puppeteer::NetworkManager do
     end
 
     context 'Updating headers with getter and setter' do
-      before {
+      before do
         instance.extra_http_headers = { 'custom-key' => 'custom-value' }
-      }
+      end
 
       let(:headers) { instance.extra_http_headers }
 
       context 'when new header contains non-string values' do
-        before {
-          headers['custom-key'] = ["Puppeteer", Puppeteer::VERSION]
-        }
+        before do
+          headers['custom-key'] = ['Puppeteer', Puppeteer::VERSION]
+        end
 
         it 'keeps original extra_http_headers' do
-          expect{ subject }.to raise_error(ArgumentError)
+          expect { subject }.to raise_error(ArgumentError)
           expect(instance.extra_http_headers['custom-key']).to eq('custom-value')
         end
       end
 
       context 'with new header' do
-        before {
+        before do
           headers['New-custom-key'] = 'new-custom-value'
-        }
+        end
 
         it 'updates extra_http_headers' do
           subject
@@ -58,10 +58,10 @@ RSpec.describe Puppeteer::NetworkManager do
       end
 
       context 'with replacing key' do
-        before {
-          value = headers.delete('custom-key')
+        before do
+          headers.delete('custom-key')
           headers['New-custom-key'] = 'new-custom-value'
-        }
+        end
 
         it 'updates extra_http_headers' do
           subject
@@ -74,14 +74,15 @@ RSpec.describe Puppeteer::NetworkManager do
     context 'Trying to update with getter' do
       subject { instance.extra_http_headers[new_key] = new_value }
 
-      before {
+      before do
         instance.extra_http_headers = { 'custom-key' => 'custom-value' }
-      }
+      end
+
       let(:new_key) { 'My-Header' }
       let(:new_value) { 'My-Value' }
 
       it "doesn't update extra_http_headers" do
-        expect{ subject }.not_to change{ instance.extra_http_headers }
+        expect { subject }.not_to change { instance.extra_http_headers }
       end
     end
   end

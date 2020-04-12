@@ -80,7 +80,7 @@ class Puppeteer::FrameManager
 
   attr_reader :network_manager
 
-  class NavigationError < StandardError ; end
+  class NavigationError < StandardError; end
 
   # @param frame [Puppeteer::Frame]
   # @param url [String]
@@ -101,14 +101,14 @@ class Puppeteer::FrameManager
     ensure_new_document_navigation = false
 
     begin
-      navigate = future {
+      navigate = future do
         result = @client.send_message('Page.navigate', navigate_params)
         loader_id = result['loaderId']
         ensure_new_document_navigation = !!loader_id
         if result['errorText']
           raise NavigationError.new("#{result['errorText']} at #{url}")
         end
-      }
+      end
       await_any(
         navigate,
         watcher.timeout_or_termination_promise,
@@ -253,7 +253,7 @@ class Puppeteer::FrameManager
     end
 
     # Update frame payload.
-    frame.navigated(frame_payload);
+    frame.navigated(frame_payload)
 
     emit_event 'Events.FrameManager.FrameNavigated', frame
   end
@@ -346,12 +346,12 @@ class Puppeteer::FrameManager
     # To avoid the problem, just skip recent created ids.
     now = Time.now
     context_ids_to_skip = @context_id_created.select { |k, v| now - v < 1 }.keys
-    @context_id_to_context.reject{ |k, v| context_ids_to_skip.include?(k) }.values.each do |context|
+    @context_id_to_context.reject { |k, v| context_ids_to_skip.include?(k) }.each_value do |context|
       if context.world
         context.world.context = nil
       end
     end
-    @context_id_to_context.select!{ |k, v| context_ids_to_skip.include?(k) }
+    @context_id_to_context.select! { |k, v| context_ids_to_skip.include?(k) }
   end
 
   def execution_context_by_id(context_id)
@@ -359,7 +359,7 @@ class Puppeteer::FrameManager
     if !context
       raise "INTERNAL ERROR: missing context with id = #{context_id}"
     end
-    return context
+    context
   end
 
   # @param {!Frame} frame

@@ -12,7 +12,7 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
       end
 
       def fuga
-        future { "hoge" }
+        future { 'hoge' }
       end
     end
 
@@ -21,7 +21,7 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
     end
 
     it 'wait until value is set, on future exists' do
-      expect(Fuga.new.fuga2).to eq("hoge")
+      expect(Fuga.new.fuga2).to eq('hoge')
     end
   end
 end

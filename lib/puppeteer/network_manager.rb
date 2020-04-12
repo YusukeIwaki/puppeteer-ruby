@@ -107,7 +107,7 @@ class Puppeteer::NetworkManager
       update_protocol_cache_disabled
       @client.send_message('Fetch.enable',
         handleAuthRequests: true,
-        patterns: [{urlPattern: '*'}],
+        patterns: [{ urlPattern: '*' }],
       )
     else
       update_protocol_cache_disabled

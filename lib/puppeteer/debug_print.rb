@@ -1,7 +1,7 @@
 require 'logger'
 
 module Puppeteer::DebugPrint
-  if ["1", "true"].include?(ENV["DEBUG"])
+  if ['1', 'true'].include?(ENV['DEBUG'])
     def debug_puts(*args, **kwargs)
       @__debug_logger ||= Logger.new(STDOUT)
       @__debug_logger.debug(*args, **kwargs)

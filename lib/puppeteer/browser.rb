@@ -94,7 +94,7 @@ class Puppeteer::Browser
     target = Puppeteer::Target.new(
       target_info: target_info,
       browser_context: context,
-      session_factory: ->{ @connection.create_session(target_info) },
+      session_factory: -> { @connection.create_session(target_info) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
       screenshot_task_queue: @screenshot_task_queue,
@@ -158,18 +158,18 @@ class Puppeteer::Browser
     target_id = result['targetId']
     target = @targets[target_id]
     await target.initialized_promise
-    await target.page;
+    await target.page
   end
 
   # @return {!Array<!Target>}
   def targets
-    @targets.values.select{ |target| target.initialized? }
+    @targets.values.select { |target| target.initialized? }
   end
 
 
   # @return {!Target}
   def target
-    targets.first{ |target| target.type == 'browser' }
+    targets.first { |target| target.type == 'browser' }
   end
 
   # @param {function(!Target):boolean} predicate
@@ -177,7 +177,7 @@ class Puppeteer::Browser
   # @return {!Promise<!Target>}
   def wait_for_target(predicate:, timeout: nil)
     timeout_in_sec = (timeout || 30000).to_i / 1000.0
-    existing_target = targets.first{ |target| predicate.call(target) }
+    existing_target = targets.first { |target| predicate.call(target) }
     return existing_target if existing_target
 
     event_listening_ids = []

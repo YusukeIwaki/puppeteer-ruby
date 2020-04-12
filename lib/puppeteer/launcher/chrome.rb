@@ -24,7 +24,7 @@ module Puppeteer::Launcher
       #
       # let temporaryUserDataDir = null;
 
-      if chrome_arguments.none?{ |arg| arg.start_with?('--remote-debugging-') }
+      if chrome_arguments.none? { |arg| arg.start_with?('--remote-debugging-') }
         if @launch_options.pipe?
           chrome_arguments << '--remote-debugging-pipe'
         else
@@ -33,7 +33,7 @@ module Puppeteer::Launcher
       end
 
       temporary_user_data_dir = nil
-      if chrome_arguments.none?{ |arg| arg.start_with?('--user-data-dir') }
+      if chrome_arguments.none? { |arg| arg.start_with?('--user-data-dir') }
         temporary_user_data_dir = Dir.mktmpdir('puppeteer_dev_profile-')
         chrome_arguments << "--user-data-dir=#{temporary_user_data_dir}"
       end
@@ -48,7 +48,7 @@ module Puppeteer::Launcher
         dumpio: @launch_options.dumpio?,
         env: @launch_options.env,
         pipe: use_pipe,
-      );
+      )
 
       begin
         connection = runner.setup_connection(
@@ -64,7 +64,7 @@ module Puppeteer::Launcher
           ignore_https_errors: @browser_options.ignore_https_errors?,
           default_viewport: @browser_options.default_viewport,
           process: runner.proc,
-          close_callback: ->{ runner.close },
+          close_callback: -> { runner.close },
         )
 
         browser.wait_for_target(predicate: ->(target) { target.type == 'page' })
@@ -115,7 +115,7 @@ module Puppeteer::Launcher
           chrome_arguments << '--auto-open-devtools-for-tabs'
         end
 
-        if (chrome_arg_options.headless?)
+        if chrome_arg_options.headless?
           chrome_arguments.concat([
             '--headless',
             '--hide-scrollbars',
@@ -123,7 +123,7 @@ module Puppeteer::Launcher
           ])
         end
 
-        if chrome_arg_options.args.all?{ |arg| arg.start_with?('-') }
+        if chrome_arg_options.args.all? { |arg| arg.start_with?('-') }
           chrome_arguments << 'about:blank'
         end
 

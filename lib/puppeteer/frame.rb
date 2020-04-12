@@ -211,7 +211,7 @@ class Puppeteer::Frame
     main_execution_context = @main_world.execution_context
     result = main_execution_context.adopt_element_handle(handle)
     handle.dispose
-    return result
+    result
   end
 
   # @param {string} xpath
@@ -225,7 +225,7 @@ class Puppeteer::Frame
     main_execution_context = @main_world.execution_context
     result = main_execution_context.adopt_element_handle(handle)
     handle.dispose
-    return result
+    result
   end
 
   # @param {Function|string} pageFunction

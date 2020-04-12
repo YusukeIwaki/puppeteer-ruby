@@ -121,7 +121,7 @@ class Puppeteer::Connection
 
     def handle_message(message)
       if skip_debug_print?(message['method'])
-        debug_print "."
+        debug_print '.'
         @prev_log_skipped = true
       else
         debug_print "\n" if @prev_log_skipped
@@ -190,7 +190,7 @@ class Puppeteer::Connection
               error_message: response['error']['message'],
               error_data: response['error']['data']))
         else
-          callback.resolve(message["result"])
+          callback.resolve(message['result'])
         end
       end
     else
@@ -207,14 +207,14 @@ class Puppeteer::Connection
     @closed = true
     @transport.on_message
     @transport.on_close
-    @callbacks.values.each do |callback|
+    @callbacks.each_value do |callback|
       callback.reject(
         ProtocolError.new(
           method: callback.method,
           error_message: 'Target Closed.'))
     end
     @callbacks.clear
-    @sessions.values.each do |session|
+    @sessions.each_value do |session|
       session.handle_closed
     end
     @sessions.clear

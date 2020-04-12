@@ -20,7 +20,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   def content_frame
     node_info = @remote_object.node_info
-    frame_id = node_info["node"]["frameId"]
+    frame_id = node_info['node']['frameId']
     if frame_id.is_a?(String)
       @frame_manager.frame(frame_id)
     else
@@ -328,7 +328,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param selector [String]
   def S(selector)
     handle = evaluate_handle(
-      "(element, selector) => element.querySelector(selector)",
+      '(element, selector) => element.querySelector(selector)',
       selector,
     )
     element = handle.as_element
@@ -344,7 +344,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param selector [String]
   def SS(selector)
     handles = evaluate_handle(
-      "(element, selector) => element.querySelectorAll(selector)",
+      '(element, selector) => element.querySelectorAll(selector)',
       selector,
     )
     properties = handles.properties

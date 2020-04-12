@@ -1,6 +1,6 @@
 require 'concurrent'
 
-class Puppeteer ; end
+class Puppeteer; end
 
 # Custom data types.
 require 'puppeteer/device'
@@ -56,7 +56,7 @@ class Puppeteer
     def instance
       @instance ||= Puppeteer.new(
                       project_root: __dir__,
-                      preferred_revision: "706915",
+                      preferred_revision: '706915',
                       is_puppeteer_core: true)
     end
   end

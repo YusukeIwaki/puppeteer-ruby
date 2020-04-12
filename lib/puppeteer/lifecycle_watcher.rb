@@ -50,7 +50,7 @@ class Puppeteer::LifecycleWatcher
     end
   end
 
-  class TerminatedError < StandardError ; end
+  class TerminatedError < StandardError; end
 
   #  * @param {!Puppeteer.FrameManager} frameManager
   #  * @param {!Puppeteer.Frame} frame
@@ -118,15 +118,13 @@ class Puppeteer::LifecycleWatcher
 
   def timeout_or_termination_promise
     if @timeout > 0
-      future {
-        begin
-          Timeout.timeout(@timeout / 1000.0) do
-            @termination_promise.value!
-          end
-        rescue Timeout::Error
-          raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
+      future do
+        Timeout.timeout(@timeout / 1000.0) do
+          @termination_promise.value!
         end
-      }
+      rescue Timeout::Error
+        raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
+      end
     else
       @termination_promise
     end

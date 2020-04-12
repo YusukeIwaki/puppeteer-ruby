@@ -5,10 +5,10 @@ class Puppeteer::RemoteObject
 
   # @param payload [Hash]
   def initialize(payload)
-    @object_id = payload["objectId"]
-    @sub_type = payload["subtype"]
-    @unserializable_value = payload["unserializableValue"]
-    @value = payload["value"]
+    @object_id = payload['objectId']
+    @sub_type = payload['subtype']
+    @unserializable_value = payload['unserializableValue']
+    @value = payload['value']
   end
 
   attr_reader :sub_type
@@ -35,8 +35,8 @@ class Puppeteer::RemoteObject
         'returnByValue': true,
         'awaitPromise': true,
       }
-      response = client.send_message("Runtime.callFunctionOn", params)
-      Puppeteer::RemoteObject.new(response["result"])
+      response = client.send_message('Runtime.callFunctionOn', params)
+      Puppeteer::RemoteObject.new(response['result'])
     else
       nil
     end
@@ -54,7 +54,7 @@ class Puppeteer::RemoteObject
 
   # used in ElementHandle#content_frame
   def node_info(client)
-    client.send_message("DOM.describeNode", objectId: @object_id)
+    client.send_message('DOM.describeNode', objectId: @object_id)
   end
 
   # helper#valueFromRemoteObject
@@ -74,7 +74,7 @@ class Puppeteer::RemoteObject
       #   default:
       #     throw new Error('Unsupported unserializable value: ' + remoteObject.unserializableValue);
       # }
-      raise NotImplementedError.new("unserializable_value is not implemented yet")
+      raise NotImplementedError.new('unserializable_value is not implemented yet')
     else
       @value
     end

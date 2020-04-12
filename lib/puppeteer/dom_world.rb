@@ -57,7 +57,7 @@ class Puppeteer::DOMWorld
     end
   end
 
-  class DetachedError < StandardError ; end
+  class DetachedError < StandardError; end
 
   # @return {!Promise<!Puppeteer.ExecutionContext>}
   def execution_context

@@ -34,12 +34,12 @@ class Puppeteer::Page
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
-    #@accessibility = Accessibility.new(client)
+    # @accessibility = Accessibility.new(client)
     @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings)
     @emulation_manager = Puppeteer::EmulationManager.new(client)
-    #@tracing = Tracing.new(client)
+    # @tracing = Tracing.new(client)
     @page_bindings = {}
-    #@coverage = Coverage.new(client)
+    # @coverage = Coverage.new(client)
     @javascript_enabled = true
     @screenshot_task_queue = screenshot_task_queue
 
@@ -183,21 +183,21 @@ class Puppeteer::Page
     @target.browser_context
   end
 
-  class TargetCrashedError < StandardError ; end
+  class TargetCrashedError < StandardError; end
 
   private def handle_target_crashed
     emit_event 'error', TargetCrashedError.new('Page crashed!')
   end
 
   private def handle_log_entry_added(event)
-    entry = event["entry"]
-    level = entry["level"]
-    text = entry["text"]
-    source = entry["source"]
-    url = entry["url"]
-    line_number = entry["lineNumber"]
+    entry = event['entry']
+    level = entry['level']
+    text = entry['text']
+    source = entry['source']
+    url = entry['url']
+    line_number = entry['lineNumber']
 
-    if_present(entry["args"]) do |args|
+    if_present(entry['args']) do |args|
       args.map do |arg|
         Puppeteer::RemoteObject.new(arg).async_release(@client)
       end
@@ -205,7 +205,7 @@ class Puppeteer::Page
     if source != 'worker'
       console_message_location = Puppeteer::ConsoleMessage::Location.new(
                                     url: url, line_number: line_number)
-      emit_event("Events.Page.Console",
+      emit_event('Events.Page.Console',
         Puppeteer::ConsoleMessage.new(level, text, [], console_message_location))
     end
   end
@@ -686,7 +686,7 @@ class Puppeteer::Page
     if_present(entries[index]) do |entry|
       await_all(
         async_wait_for_navigation(timeout: timeout, wait_until: wait_until),
-        @client.async_send_message('Page.navigateToHistoryEntry', entryId: entry['id'])
+        @client.async_send_message('Page.navigateToHistoryEntry', entryId: entry['id']),
       )
     end
   end
@@ -699,9 +699,9 @@ class Puppeteer::Page
 
   # @param {boolean} enabled
   def javascript_enabled=(enabled)
-    return if (@javascript_enabled == enabled)
+    return if @javascript_enabled == enabled
     @javascript_enabled = enabled
-    @client.send_message('Emulation.setScriptExecutionDisabled', value: !enabled);
+    @client.send_message('Emulation.setScriptExecutionDisabled', value: !enabled)
   end
 
   # /**
@@ -788,7 +788,7 @@ class Puppeteer::Page
   def screenshot(options = {})
     screenshot_options = ScreenshotOptions.new(options)
 
-    #@screenshot_task_queue.post_task(-> { screenshot_task(screenshot_options.type, screenshot_options) })
+    # @screenshot_task_queue.post_task(-> { screenshot_task(screenshot_options.type, screenshot_options) })
     screenshot_task(screenshot_options.type, screenshot_options)
   end
 
@@ -796,7 +796,7 @@ class Puppeteer::Page
   # @param {!ScreenshotOptions=} options
   # @return {!Promise<!Buffer|!String>}
   private def screenshot_task(format, screenshot_options)
-    @client.send_message('Target.activateTarget', targetId: @target.target_id);
+    @client.send_message('Target.activateTarget', targetId: @target.target_id)
 
     clip = if_present(screenshot_options.clip) do |rect|
       x = rect[:x].round
