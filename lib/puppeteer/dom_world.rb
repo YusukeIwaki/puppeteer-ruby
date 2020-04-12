@@ -20,13 +20,29 @@ class Puppeteer::DOMWorld
 
   # @param {?Puppeteer.ExecutionContext} context
   def context=(context)
+    # D, [2020-04-12T22:45:03.938754 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>3, "origin"=>"https://github.com", "name"=>"", "auxData"=>{"isDefault"=>true, "type"=>"default", "frameId"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB"}}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
+    # D, [2020-04-12T22:45:03.938856 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>4, "origin"=>"://", "name"=>"__puppeteer_utility_world__", "auxData"=>{"isDefault"=>false, "type"=>"isolated", "frameId"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB"}}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
+    # D, [2020-04-12T22:45:03.938960 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextDestroyed", "params"=>{"executionContextId"=>1}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
+    # D, [2020-04-12T22:45:03.939110 #46154] DEBUG -- : RECV << {"method"=>"Page.frameNavigated", "params"=>{"frame"=>{"id"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB", "loaderId"=>"301B349884E582986C502CBE020966DF", "url"=>"https://github.com/", "securityOrigin"=>"https://github.com", "mimeType"=>"text/html"}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
+    # D, [2020-04-12T22:45:03.939793 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextDestroyed", "params"=>{"executionContextId"=>2}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
+    # executionContextDestroyed is often notified after executionContextCreated.
+
     if context
+      if @context_promise.fulfilled?
+        @document = nil
+        @context_promise = resolvable_future
+        @pending_destroy_exists = true
+      end
       @context_promise.fulfill(context)
     #   for (const waitTask of this._waitTasks)
     #     waitTask.rerun();
     else
-      @document = nil
-      @context_promise = resolvable_future
+      if @pending_destroy_exists
+        @pending_destroy_exists = false
+      else
+        @document = nil
+        @context_promise = resolvable_future
+      end
     end
   end
 
