@@ -6,7 +6,17 @@ REMARK: This Gem is NOT production-ready!!
 
 ## Getting Started
 
-Simple usage:
+### Capture a site
+
+```ruby
+Puppeteer.launch(headless: false) do |browser|
+  page = browser.pages.first || browser.new_page
+  page.goto("https://github.com/YusukeIwaki")
+  page.screenshot(path: "YusukeIwaki.png")
+end
+```
+
+### Simple scraping
 
 ```ruby
 require 'puppeteer'
