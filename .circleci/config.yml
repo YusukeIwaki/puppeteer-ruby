@@ -1,0 +1,41 @@
+version: 2.1
+orbs:
+  ruby: circleci/ruby@0.1.2
+
+jobs:
+  deploy:
+    docker:
+      - image: circleci/ruby:2.6.3-stretch-node
+    executor: ruby/default
+    steps:
+      - checkout
+      - run:
+          name: Which bundler?
+          command: bundle -v
+      - ruby/bundle-install
+      - run:
+          name: rake build
+          command: rake build
+      - run:
+          name: setup API key
+          command: |
+            mkdir -p ~/.gem/
+            echo "---" > ~/.gem/credentials
+            echo ":rubygems_api_key: $RUBYGEMS_API_KEY" >> ~/.gem/credentials
+            chmod 600 ~/.gem/credentials
+      - run:
+          name: Check Puppeteer::version
+          command: bundle exec ruby -e 'raise "invalid Puppeteer::VERSION" unless Puppeteer::VERSION == ENV["CIRCLE_TAG"]'
+      - run:
+          name: gem push
+          command: gem push pkg/puppeteer-ruby-$CIRCLE_TAG.gem
+
+workflows:
+  rubygems-deploy:
+    jobs:
+      - deploy:
+          filters:
+            tags:
+              only: /^[0-9]\.[0-9]+\.[0-9].*/
+            branches:
+              ignore: /.*/
