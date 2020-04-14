@@ -173,7 +173,7 @@ class Puppeteer::Page
   #   await this._client.send('Emulation.setGeolocationOverride', {longitude, latitude, accuracy});
   # }
 
-  attr_reader :target
+  attr_reader :javascript_enabled, :target
 
   def browser
     @target.browser
@@ -932,10 +932,21 @@ class Puppeteer::Page
 
   attr_reader :mouse
 
-  # @param {string} selector
-  # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @param selector [String]
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
   def click(selector, delay: nil, button: nil, click_count: nil)
     main_frame.click(selector, delay: delay, button: button, click_count: click_count)
+  end
+
+  # @param selector [String]
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
+  # @return [Future]
+  async def async_click(selector, delay: nil, button: nil, click_count: nil)
+    click(selector, delay: delay, button: button, click_count: click_count)
   end
 
   # @param {string} selector

@@ -143,8 +143,10 @@ class Puppeteer::Frame
     @main_world.add_style_tag(style_tag)
   end
 
-  # @param {string} selector
-  # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @param selector [String]
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
   def click(selector, delay: nil, button: nil, click_count: nil)
     @secondary_world.click(selector, delay: delay, button: button, click_count: click_count)
   end

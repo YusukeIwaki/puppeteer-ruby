@@ -28,62 +28,89 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  #  async _scrollIntoViewIfNeeded() {
-  #    const error = await this.evaluate(async(element, pageJavascriptEnabled) => {
-  #      if (!element.isConnected)
-  #        return 'Node is detached from document';
-  #      if (element.nodeType !== Node.ELEMENT_NODE)
-  #        return 'Node is not of type HTMLElement';
-  #      // force-scroll if page's javascript is disabled.
-  #      if (!pageJavascriptEnabled) {
-  #        element.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'});
-  #        return false;
-  #      }
-  #      const visibleRatio = await new Promise(resolve => {
-  #        const observer = new IntersectionObserver(entries => {
-  #          resolve(entries[0].intersectionRatio);
-  #          observer.disconnect();
-  #        });
-  #        observer.observe(element);
-  #      });
-  #      if (visibleRatio !== 1.0)
-  #        element.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'});
-  #      return false;
-  #    }, this._page._javascriptEnabled);
-  #    if (error)
-  #      throw new Error(error);
-  #  }
+  class ScrollIntoViewError < StandardError; end
 
-  #  /**
-  #   * @return {!Promise<!{x: number, y: number}>}
-  #   */
-  #  async _clickablePoint() {
-  #    const [result, layoutMetrics] = await Promise.all([
-  #      this._client.send('DOM.getContentQuads', {
-  #        objectId: this._remoteObject.objectId
-  #      }).catch(debugError),
-  #      this._client.send('Page.getLayoutMetrics'),
-  #    ]);
-  #    if (!result || !result.quads.length)
-  #      throw new Error('Node is either not visible or not an HTMLElement');
-  #    // Filter out quads that have too small area to click into.
-  #    const {clientWidth, clientHeight} = layoutMetrics.layoutViewport;
-  #    const quads = result.quads.map(quad => this._fromProtocolQuad(quad)).map(quad => this._intersectQuadWithViewport(quad, clientWidth, clientHeight)).filter(quad => computeQuadArea(quad) > 1);
-  #    if (!quads.length)
-  #      throw new Error('Node is either not visible or not an HTMLElement');
-  #    // Return the middle point of the first quad.
-  #    const quad = quads[0];
-  #    let x = 0;
-  #    let y = 0;
-  #    for (const point of quad) {
-  #      x += point.x;
-  #      y += point.y;
-  #    }
-  #    return {
-  #      x: x / 4,
-  #      y: y / 4
-  #    };
-  #  }
+  def scroll_into_view_if_needed
+    js = <<~JAVASCRIPT
+      async(element, pageJavascriptEnabled) => {
+        if (!element.isConnected)
+          return 'Node is detached from document';
+        if (element.nodeType !== Node.ELEMENT_NODE)
+          return 'Node is not of type HTMLElement';
+        // force-scroll if page's javascript is disabled.
+        if (!pageJavascriptEnabled) {
+          element.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'});
+          return false;
+        }
+        const visibleRatio = await new Promise(resolve => {
+          const observer = new IntersectionObserver(entries => {
+            resolve(entries[0].intersectionRatio);
+            observer.disconnect();
+          });
+          observer.observe(element);
+        });
+        if (visibleRatio !== 1.0)
+          element.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'});
+        return false;
+      }
+    JAVASCRIPT
+    error = evaluate(js, @page.javascript_enabled) # returns String or false
+    if error
+      raise ScrollIntoViewError.new(error)
+    end
+  end
+
+  class Point
+    def initialize(x:, y:)
+      @x = x
+      @y = y
+    end
+
+    def +(other)
+      Point.new(
+        x: @x + other.x,
+        y: @y + other.y,
+      )
+    end
+
+    def /(num)
+      Point.new(
+        x: @x / num,
+        y: @y / num,
+      )
+    end
+
+    attr_reader :x, :y
+  end
+
+  class ElementNotVisibleError < StandardError
+    def initialize
+      super("Node is either not visible or not an HTMLElement")
+    end
+  end
+
+  def clickable_point
+    result = @remote_object.content_quads(@client)
+    if !result || result["quads"].empty?
+      raise ElementNotVisibleError.new
+    end
+
+    # Filter out quads that have too small area to click into.
+    layout_metrics = @client.send_message('Page.getLayoutMetrics')
+    client_width = layout_metrics["layoutViewport"]["clientWidth"]
+    client_height = layout_metrics["layoutViewport"]["clientHeight"]
+
+    quads = result["quads"].
+              map { |quad| from_protocol_quad(quad) }.
+              map { |quad| intersect_quad_with_viewport(quad, client_width, client_height) }.
+              select { |quad| compute_quad_area(quad) > 1 }
+    if quads.empty?
+      raise ElementNotVisibleError.new
+    end
+
+    # Return the middle point of the first quad.
+    quads.first.reduce(:+) / 4
+  end
 
   #  /**
   #   * @return {!Promise<void|Protocol.DOM.getBoxModelReturnValue>}
@@ -94,37 +121,41 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #    }).catch(error => debugError(error));
   #  }
 
-  #  /**
-  #   * @param {!Array<number>} quad
-  #   * @return {!Array<{x: number, y: number}>}
-  #   */
-  #  _fromProtocolQuad(quad) {
-  #    return [
-  #      {x: quad[0], y: quad[1]},
-  #      {x: quad[2], y: quad[3]},
-  #      {x: quad[4], y: quad[5]},
-  #      {x: quad[6], y: quad[7]}
-  #    ];
-  #  }
+  # @param quad [Array<number>]
+  # @return [Array<Point>]
+  private def from_protocol_quad(quad)
+    quad.each_slice(2).map do |x, y|
+      Point.new(x: x, y: y)
+    end
+  end
 
-  #  /**
-  #   * @param {!Array<{x: number, y: number}>} quad
-  #   * @param {number} width
-  #   * @param {number} height
-  #   * @return {!Array<{x: number, y: number}>}
-  #   */
-  #  _intersectQuadWithViewport(quad, width, height) {
-  #    return quad.map(point => ({
-  #      x: Math.min(Math.max(point.x, 0), width),
-  #      y: Math.min(Math.max(point.y, 0), height),
-  #    }));
-  #  }
+  # @param quad [Array<Point>]
+  # @param width [number]
+  # @param height [number]
+  # @return [Array<Point>]
+  private def intersect_quad_with_viewport(quad, width, height)
+    quad.map do |point|
+      Point.new(
+        x: [[point.x, 0].max, width].min,
+        y: [[point.y, 0].max, height].min,
+      )
+    end
+  end
 
   #  async hover() {
   #    await this._scrollIntoViewIfNeeded();
   #    const {x, y} = await this._clickablePoint();
   #    await this._page.mouse.move(x, y);
   #  }
+
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
+  def click(delay: nil, button: nil, click_count: nil)
+    scroll_into_view_if_needed
+    point = clickable_point
+    @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count)
+  end
 
   #  /**
   #   * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
@@ -430,4 +461,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #      return visibleRatio > 0;
   #    });
   #  }
+
+  # @param quad [Array<Point>]
+  private def compute_quad_area(quad)
+    # Compute sum of all directed areas of adjacent triangles
+    # https://en.wikipedia.org/wiki/Polygon#Simple_polygons
+    quad.zip(quad.rotate).map { |p1, p2| (p1.x * p2.y - p2.x * p1.y) / 2 }.reduce(:+).abs
+  end
 end

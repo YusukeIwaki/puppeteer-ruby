@@ -37,8 +37,8 @@ class Puppeteer::Mouse
       @client.send_message('Input.dispatchMouseEvent',
         type: 'mouseMoved',
         button: @button,
-        x: from_x + (@x - from_x) * n / steps,
-        y: from_y + (@y - from_y) * n / steps,
+        x: from_x + (@x - from_x) * n / move_steps,
+        y: from_y + (@y - from_y) * n / move_steps,
         modifiers: @keyboard.modifiers,
       )
     end

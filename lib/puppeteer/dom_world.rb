@@ -303,16 +303,15 @@ class Puppeteer::DOMWorld
   #   }
   # }
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-  #  */
-  # async click(selector, options) {
-  #   const handle = await this.$(selector);
-  #   assert(handle, 'No node found for selector: ' + selector);
-  #   await handle.click(options);
-  #   await handle.dispose();
-  # }
+  # @param selector [String]
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
+  def click(selector, delay: nil, button: nil, click_count: nil)
+    handle = S(selector)
+    handle.click(delay: delay, button: button, click_count: click_count)
+    handle.dispose
+  end
 
   # /**
   #  * @param {string} selector

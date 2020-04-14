@@ -57,6 +57,11 @@ class Puppeteer::RemoteObject
     client.send_message('DOM.describeNode', objectId: @object_id)
   end
 
+  # used in ElementHandle#clickable_point
+  def content_quads(client)
+    client.send_message('DOM.getContentQuads', objectId: @object_id)
+  end
+
   # helper#valueFromRemoteObject
   def value
     if @unserializable_value
