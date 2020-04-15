@@ -56,16 +56,19 @@ class Puppeteer::Mouse
   # @param y [number]
   # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
   def click(x, y, delay: nil, button: nil, click_count: nil)
+    # await_all(async_move, async_down, async_up) often breaks the order of CDP commands.
+    # D, [2020-04-15T17:09:47.895895 #88683] DEBUG -- : RECV << {"id"=>23, "result"=>{"layoutViewport"=>{"pageX"=>0, "pageY"=>1, "clientWidth"=>375, "clientHeight"=>667}, "visualViewport"=>{"offsetX"=>0, "offsetY"=>0, "pageX"=>0, "pageY"=>1, "clientWidth"=>375, "clientHeight"=>667, "scale"=>1, "zoom"=>1}, "contentSize"=>{"x"=>0, "y"=>0, "width"=>375, "height"=>2007}}, "sessionId"=>"0B09EA5E18DEE403E525B3E7FCD7E225"}
+    # D, [2020-04-15T17:09:47.898422 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mouseReleased","button":"left","x":0,"y":0,"modifiers":0,"clickCount":1},"id":24}
+    # D, [2020-04-15T17:09:47.899711 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mousePressed","button":"left","x":0,"y":0,"modifiers":0,"clickCount":1},"id":25}
+    # D, [2020-04-15T17:09:47.900237 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mouseMoved","button":"left","x":187,"y":283,"modifiers":0},"id":26}
+    # So we execute move in advance.
+    move(x, y)
     if delay
-      await_all(
-        async_move(x, y),
-        async_down(button: button, click_count: click_count),
-      )
+      down(button: button, click_count: click_count)
       sleep(delay / 1000.0)
       up(button: button, click_count: click_count)
     else
       await_all(
-        async_move(x, y),
         async_down(button: button, click_count: click_count),
         async_up(button: button, click_count: click_count),
       )
