@@ -12,6 +12,7 @@ class Puppeteer::DOMWorld
     @frame = frame
     @timeout_settings = timeout_settings
     @context_promise = resolvable_future
+    @pending_destroy = []
     @wait_tasks = Set.new
     @detached = false
   end
@@ -29,20 +30,24 @@ class Puppeteer::DOMWorld
 
     if context
       if @context_promise.fulfilled?
+        @pending_destroy << context["id"]
         @document = nil
         @context_promise = resolvable_future
-        @pending_destroy_exists = true
       end
       @context_promise.fulfill(context)
     #   for (const waitTask of this._waitTasks)
     #     waitTask.rerun();
     else
-      if @pending_destroy_exists
-        @pending_destroy_exists = false
-      else
-        @document = nil
-        @context_promise = resolvable_future
-      end
+      raise ArgumentError.new("context should now be nil. Use #delete_context for clearing document.")
+    end
+  end
+
+  def delete_context(execution_context_id)
+    if @pending_destroy.include?(execution_context_id)
+      @pending_destroy.delete(execution_context_id)
+    else
+      @document = nil
+      @context_promise = resolvable_future
     end
   end
 

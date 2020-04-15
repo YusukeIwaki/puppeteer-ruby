@@ -332,7 +332,7 @@ class Puppeteer::FrameManager
     @context_id_to_context.delete(execution_context_id)
     @context_id_created.delete(execution_context_id)
     if context.world
-      context.world.context = nil
+      context.world.delete_context(execution_context_id)
     end
   end
 
@@ -346,9 +346,9 @@ class Puppeteer::FrameManager
     # To avoid the problem, just skip recent created ids.
     now = Time.now
     context_ids_to_skip = @context_id_created.select { |k, v| now - v < 1 }.keys
-    @context_id_to_context.reject { |k, v| context_ids_to_skip.include?(k) }.each_value do |context|
+    @context_id_to_context.reject { |k, v| context_ids_to_skip.include?(k) }.each_value do |context_id, context|
       if context.world
-        context.world.context = nil
+        context.world.delete_context(execution_context_id)
       end
     end
     @context_id_to_context.select! { |k, v| context_ids_to_skip.include?(k) }
