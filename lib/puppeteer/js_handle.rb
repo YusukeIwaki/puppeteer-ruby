@@ -116,7 +116,6 @@ class Puppeteer::JSHandle
     nil
   end
 
-  # @return [Future]
   def dispose
     return if @disposed
 
