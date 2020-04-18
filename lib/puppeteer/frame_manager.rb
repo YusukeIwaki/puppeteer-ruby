@@ -206,12 +206,12 @@ class Puppeteer::FrameManager
   # @param {string} frameId
   # @param {?string} parentFrameId
   def handle_frame_attached(frame_id, parent_frame_id)
-    return if @frames.has_key?[frame_id]
+    return if @frames.has_key?(frame_id)
     if !parent_frame_id
       raise ArgymentError.new('parent_frame_id must not be nil')
     end
     parent_frame = @frames[parent_frame_id]
-    frame = Frame.new(self, @client, parent_frame, frame_id)
+    frame = Puppeteer::Frame.new(self, @client, parent_frame, frame_id)
     @frames[frame_id] = frame
 
     emit_event 'Events.FrameManager.FrameAttached', frame
