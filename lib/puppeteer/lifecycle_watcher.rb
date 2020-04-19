@@ -50,6 +50,11 @@ class Puppeteer::LifecycleWatcher
     end
   end
 
+  class FrameDetachedError < StandardError
+    def initialize
+      super('Navigating frame was detached')
+    end
+  end
   class TerminatedError < StandardError; end
 
   #  * @param {!Puppeteer.FrameManager} frameManager
@@ -92,7 +97,7 @@ class Puppeteer::LifecycleWatcher
   # @param frame [Puppeteer::Frame]
   def handle_frame_detached(frame)
     if @frame == frame
-      # this._terminationCallback.call(null, new Error('Navigating frame was detached'));
+      @termination_promise.reject(FrameDetachedError.new)
       return
     end
     check_lifecycle_complete
