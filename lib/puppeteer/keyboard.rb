@@ -178,6 +178,6 @@ class Puppeteer::Keyboard
   # @param key [String]
   # @return [Future]
   async def async_press(key, delay: nil)
-    press(key, delay)
+    press(key, delay: delay)
   end
 end
