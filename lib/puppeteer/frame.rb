@@ -270,8 +270,8 @@ class Puppeteer::Frame
 
   def detach
     @detached = true
-    #   this._mainWorld._detach();
-    #   this._secondaryWorld._detach();
+    @main_world.detach
+    @secondary_world.detach
     if @parent_frame
       @parent_frame._child_frames.delete(self)
     end
