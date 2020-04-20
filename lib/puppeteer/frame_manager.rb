@@ -337,7 +337,7 @@ class Puppeteer::FrameManager
   end
 
   def handle_execution_contexts_cleared
-    # executionContextCleared is often notified after executionContextCreated.
+    # executionContextsCleared is often notified after executionContextCreated.
     #   D, [2020-04-06T01:47:03.101227 #13823] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>5, "origin"=>"https://github.com", "name"=>"", "auxData"=>{"isDefault"=>true, "type"=>"default", "frameId"=>"71C347B70848B89DDDEFAA8AB5B0BC92"}}}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
     #   D, [2020-04-06T01:47:03.101439 #13823] DEBUG -- : RECV << {"method"=>"Page.frameNavigated", "params"=>{"frame"=>{"id"=>"71C347B70848B89DDDEFAA8AB5B0BC92", "loaderId"=>"80338225D035AC96BAE8F6D4E81C7D51", "url"=>"https://github.com/search?q=puppeteer", "securityOrigin"=>"https://github.com", "mimeType"=>"text/html"}}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
     #   D, [2020-04-06T01:47:03.101325 #13823] DEBUG -- : RECV << {"method"=>"Target.targetInfoChanged", "params"=>{"targetInfo"=>{"targetId"=>"71C347B70848B89DDDEFAA8AB5B0BC92", "type"=>"page", "title"=>"https://github.com/search?q=puppeteer", "url"=>"https://github.com/search?q=puppeteer", "attached"=>true, "browserContextId"=>"AF37BC660284CE1552B4ECB147BE9305"}}}
@@ -346,7 +346,7 @@ class Puppeteer::FrameManager
     # To avoid the problem, just skip recent created ids.
     now = Time.now
     context_ids_to_skip = @context_id_created.select { |k, v| now - v < 1 }.keys
-    @context_id_to_context.reject { |k, v| context_ids_to_skip.include?(k) }.each_value do |context_id, context|
+    @context_id_to_context.reject { |k, v| context_ids_to_skip.include?(k) }.each do |execution_context_id, context|
       if context.world
         context.world.delete_context(execution_context_id)
       end

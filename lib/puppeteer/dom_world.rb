@@ -30,7 +30,7 @@ class Puppeteer::DOMWorld
 
     if context
       if @context_promise.fulfilled?
-        @pending_destroy << context["id"]
+        @pending_destroy << context._context_id
         @document = nil
         @context_promise = resolvable_future
       end

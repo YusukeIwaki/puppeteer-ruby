@@ -16,6 +16,11 @@ class Puppeteer::ExecutionContext
 
   attr_reader :client, :world
 
+  # only used in DomWorld#delete_context
+  def _context_id
+    @context_id
+  end
+
   # @return [Puppeteer::Frame]
   def frame
     if_present(@world) do |world|
