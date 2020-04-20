@@ -46,6 +46,8 @@ end
 ![puppeteer-ruby](https://user-images.githubusercontent.com/11763113/78505735-6e7f3000-77b0-11ea-9c82-9016828dd2a9.gif)
 
 
+More usage examples can be found [here](https://github.com/YusukeIwaki/puppeteer-ruby-example)
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/YusukeIwaki/puppeteer-ruby.
