@@ -48,7 +48,7 @@ class Puppeteer::Page
       if event['targetInfo']['type'] != 'worker'
         # If we don't detach from service workers, they will never die.
         await @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
-        return
+        next
       end
 
       session = Puppeteer::Connection.from_session(@client).session(event['sessionId'])
@@ -59,7 +59,7 @@ class Puppeteer::Page
     @client.on_event 'Target.detachedFromTarget' do |event|
       session_id = event['sessionId']
       worker = @workers[session_id]
-      return unless worker
+      next unless worker
 
       emit_event('Events.Page.WorkerDestroyed', worker)
       @workers.delete(session_id)

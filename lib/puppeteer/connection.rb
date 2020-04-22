@@ -172,7 +172,7 @@ class Puppeteer::Connection
       session_id = message['params']['sessionId']
       session = @sessions[session_id]
       if session
-        session._onClosed
+        session.handle_closed
         @sessions.delete(session_id)
       end
     end

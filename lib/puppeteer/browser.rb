@@ -4,6 +4,7 @@ require 'timeout'
 class Puppeteer::Browser
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
+  include Puppeteer::IfPresent
   using Puppeteer::AsyncAwaitBehavior
 
   # @param {!Puppeteer.Connection} connection
@@ -106,6 +107,10 @@ class Puppeteer::Browser
       emit_event 'Events.Browser.TargetCreated', target
       context.emit_event 'Events.BrowserContext.TargetCreated', target
     end
+
+    if_present(pending_target_info_changed_event.delete(target_info.target_id)) do |event|
+      handle_target_info_changed(event)
+    end
   end
 
 
@@ -127,7 +132,18 @@ class Puppeteer::Browser
     target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
     target = @targets[target_info.target_id]
     if !target
-      throw StandardError.new('target should exist before targetInfoChanged')
+      # targetCreated is sometimes notified after targetInfoChanged.
+      # We don't raise error. Instead, keep the event as a pending change,
+      # and handle it on handle_target_created.
+      #
+      # D, [2020-04-22T00:22:26.630328 #79646] DEBUG -- : RECV << {"method"=>"Target.targetInfoChanged", "params"=>{"targetInfo"=>{"targetId"=>"8068CED48357B9557EEC85AA62165A8E", "type"=>"iframe", "title"=>"", "url"=>"", "attached"=>true, "browserContextId"=>"7895BFB24BF22CE40584808713D96E8D"}}}
+      # E, [2020-04-22T00:22:26.630448 #79646] ERROR -- : target should exist before targetInfoChanged (StandardError)
+      # D, [2020-04-22T00:22:26.630648 #79646] DEBUG -- : RECV << {"method"=>"Target.targetCreated", "params"=>{"targetInfo"=>{"targetId"=>"8068CED48357B9557EEC85AA62165A8E", "type"=>"iframe", "title"=>"", "url"=>"", "attached"=>false, "browserContextId"=>"7895BFB24BF22CE40584808713D96E8D"}}}
+      pending_target_info_changed_event[target_info.target_id] = event
+      return
+      # original implementation is:
+      #
+      # raise StandardError.new('target should exist before targetInfoChanged')
     end
     previous_url = target.url
     was_initialized = target.initialized?
@@ -136,6 +152,10 @@ class Puppeteer::Browser
       emit_event 'Events.Browser.TargetChanged', target
       target.browser_context.emit_event 'Events.BrowserContext.TargetChanged', target
     end
+  end
+
+  private def pending_target_info_changed_event
+    @pending_target_info_changed_event ||= {}
   end
 
   # @return [String]

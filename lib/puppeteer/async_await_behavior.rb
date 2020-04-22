@@ -11,6 +11,9 @@ module Puppeteer::AsyncAwaitBehavior
       define_method(method_name) do |*args|
         Concurrent::Promises.future do
           original_method.bind(self).call(*args)
+        rescue => err
+          Logger.new(STDERR).warn(err)
+          raise err
         end
       end
     rescue NameError
@@ -24,6 +27,9 @@ module Puppeteer::AsyncAwaitBehavior
         define_singleton_method(method_name) do |*args|
           Concurrent::Promises.future do
             original_method.call(*args)
+          rescue => err
+            Logger.new(STDERR).warn(err)
+            raise err
           end
         end
       end

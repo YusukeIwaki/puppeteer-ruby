@@ -55,7 +55,7 @@ class Puppeteer::DOMWorld
     @context_promise.resolved?
   end
 
-  private def detach
+  def detach
     @detached = true
     @wait_tasks.each do |wait_task|
       wait_task.terminate(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
