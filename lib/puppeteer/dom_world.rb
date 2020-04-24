@@ -93,8 +93,21 @@ class Puppeteer::DOMWorld
     document.S(selector)
   end
 
+  class DocumentEvaluationError < StandardError; end
+
+  private def evaluate_document
+    # sometimes execution_context.evaluate_handle('document') returns null object.
+    # D, [2020-04-24T02:17:51.023631 #220] DEBUG -- : RECV << {"id"=>20, "result"=>{"result"=>{"type"=>"object", "subtype"=>"null", "value"=>nil}}, "sessionId"=>"78E9CF1E14D81294E320E7C20E5CDE06"}
+    # retry if so.
+    5.times do
+      handle = execution_context.evaluate_handle('document')
+      return handle if handle.is_a?(Puppeteer::ElementHandle)
+    end
+    raise DocumentEvaluationError.new("'document' object cannot be evaluated as an Element")
+  end
+
   private def document
-    @document ||= execution_context.evaluate_handle('document').as_element
+    @document ||= evaluate_document.as_element
   end
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
