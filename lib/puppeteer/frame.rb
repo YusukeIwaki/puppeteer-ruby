@@ -248,6 +248,10 @@ class Puppeteer::Frame
     # TODO(lushnikov): remove this once requestInterception has loaderId exposed.
     @navigation_url = frame_payload['url']
     @url = frame_payload['url']
+
+    # Ensure loaderId updated.
+    # The order of [Page.lifecycleEvent name="init"] and [Page.frameNavigated] is random... for some reason...
+    @loader_id = frame_payload['loaderId']
   end
 
   # @param url [String]
