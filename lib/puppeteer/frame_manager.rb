@@ -219,7 +219,7 @@ class Puppeteer::FrameManager
 
   # @param frame_payload [Hash]
   def handle_frame_navigated(frame_payload)
-    is_main_frame = !frame_payload['parent_id']
+    is_main_frame = !frame_payload['parentId']
     frame =
       if is_main_frame
         @main_frame
