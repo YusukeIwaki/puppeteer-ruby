@@ -149,10 +149,10 @@ class Puppeteer::LifecycleWatcher
     if @frame.loader_id == @initial_loader_id && !@has_same_document_navigation
       return
     end
-    if @has_same_document_navigation
+    if @has_same_document_navigation && @same_document_navigation_promise.pending?
       @same_document_navigation_promise.fulfill(true)
     end
-    if @frame.loader_id != @initial_loader_id
+    if @frame.loader_id != @initial_loader_id && @new_document_navigation_promise.pending?
       @new_document_navigation_promise.fulfill(true)
     end
   end
