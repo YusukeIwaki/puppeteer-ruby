@@ -1,0 +1,2414 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Class: Puppeteer::FrameManager
+  
+    &mdash; Documentation by YARD 0.9.24
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" />
+
+<script type="text/javascript">
+  pathId = "Puppeteer::FrameManager";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (F)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span>
+     &raquo; 
+    <span class="title">FrameManager</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Class: Puppeteer::FrameManager
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+  <dl>
+    <dt>Inherits:</dt>
+    <dd>
+      <span class="inheritName">Object</span>
+      
+        <ul class="fullTree">
+          <li>Object</li>
+          
+            <li class="next">Puppeteer::FrameManager</li>
+          
+        </ul>
+        <a href="#" class="inheritanceTree">show all</a>
+      
+    </dd>
+  </dl>
+  
+
+  
+  
+  
+  
+  <dl>
+      <dt>Includes:</dt>
+      <dd><span class='object_link'><a href="DebugPrint.html" title="Puppeteer::DebugPrint (module)">DebugPrint</a></span>, <span class='object_link'><a href="EventCallbackable.html" title="Puppeteer::EventCallbackable (module)">EventCallbackable</a></span>, <span class='object_link'><a href="IfPresent.html" title="Puppeteer::IfPresent (module)">IfPresent</a></span></dd>
+  </dl>
+  
+  
+
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/puppeteer/frame_manager.rb</dd>
+  </dl>
+  
+</div>
+
+<h2>Defined Under Namespace</h2>
+<p class="children">
+  
+    
+  
+    
+      <strong class="classes">Classes:</strong> <span class='object_link'><a href="FrameManager/NavigationError.html" title="Puppeteer::FrameManager::NavigationError (class)">NavigationError</a></span>
+    
+  
+</p>
+
+  
+    <h2>
+      Constant Summary
+      <small><a href="#" class="constants_summary_toggle">collapse</a></small>
+    </h2>
+
+    <dl class="constants">
+      
+        <dt id="UTILITY_WORLD_NAME-constant" class="">UTILITY_WORLD_NAME =
+          
+        </dt>
+        <dd><pre class="code"><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>__puppeteer_utility_world__</span><span class='tstring_end'>&#39;</span></span></pre></dd>
+      
+    </dl>
+  
+
+
+
+
+  <h2>Instance Attribute Summary <small><a href="#" class="summary_toggle">collapse</a></small></h2>
+  <ul class="summary">
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#client-instance_method" title="#client (instance method)">#<strong>client</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute client.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#network_manager-instance_method" title="#network_manager (instance method)">#<strong>network_manager</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute network_manager.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#timeout_settings-instance_method" title="#timeout_settings (instance method)">#<strong>timeout_settings</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute timeout_settings.</p>
+</div></span>
+  
+</li>
+
+    
+  </ul>
+
+
+
+
+  
+    <h2>
+      Instance Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#ensure_isolated_world-instance_method" title="#ensure_isolated_world (instance method)">#<strong>ensure_isolated_world</strong>(name)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#execution_context_by_id-instance_method" title="#execution_context_by_id (instance method)">#<strong>execution_context_by_id</strong>(context_id)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#frame-instance_method" title="#frame (instance method)">#<strong>frame</strong>(frame_id)  &#x21d2; ?Frame </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#frames-instance_method" title="#frames (instance method)">#<strong>frames</strong>  &#x21d2; !Array&lt;!Frame&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_execution_context_created-instance_method" title="#handle_execution_context_created (instance method)">#<strong>handle_execution_context_created</strong>(context_payload)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_execution_context_destroyed-instance_method" title="#handle_execution_context_destroyed (instance method)">#<strong>handle_execution_context_destroyed</strong>(execution_context_id)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_execution_contexts_cleared-instance_method" title="#handle_execution_contexts_cleared (instance method)">#<strong>handle_execution_contexts_cleared</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_frame_attached-instance_method" title="#handle_frame_attached (instance method)">#<strong>handle_frame_attached</strong>(frame_id, parent_frame_id)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_frame_detached-instance_method" title="#handle_frame_detached (instance method)">#<strong>handle_frame_detached</strong>(frame_id)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_frame_navigated-instance_method" title="#handle_frame_navigated (instance method)">#<strong>handle_frame_navigated</strong>(frame_payload)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_frame_navigated_within_document-instance_method" title="#handle_frame_navigated_within_document (instance method)">#<strong>handle_frame_navigated_within_document</strong>(frame_id, url)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_frame_stopped_loading-instance_method" title="#handle_frame_stopped_loading (instance method)">#<strong>handle_frame_stopped_loading</strong>(frame_id)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_frame_tree-instance_method" title="#handle_frame_tree (instance method)">#<strong>handle_frame_tree</strong>(frame_tree)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#handle_lifecycle_event-instance_method" title="#handle_lifecycle_event (instance method)">#<strong>handle_lifecycle_event</strong>(event)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(client, page, ignore_https_errors, timeout_settings)  &#x21d2; FrameManager </a>
+    
+
+    
+  </span>
+  
+  
+    <span class="note title constructor">constructor</span>
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>A new instance of FrameManager.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#main_frame-instance_method" title="#main_frame (instance method)">#<strong>main_frame</strong>  &#x21d2; !Frame </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#navigate_frame-instance_method" title="#navigate_frame (instance method)">#<strong>navigate_frame</strong>(frame, url, referer: nil, timeout: nil, wait_until: nil)  &#x21d2; Puppeteer::Response </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#page-instance_method" title="#page (instance method)">#<strong>page</strong>  &#x21d2; !Puppeteer.Page </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#wait_for_frame_navigation-instance_method" title="#wait_for_frame_navigation (instance method)">#<strong>wait_for_frame_navigation</strong>(frame, timeout: nil, wait_until: nil)  &#x21d2; Puppeteer::Response </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3 class="inherited">Methods included from <span class='object_link'><a href="EventCallbackable.html" title="Puppeteer::EventCallbackable (module)">EventCallbackable</a></span></h3>
+  <p class="inherited"><span class='object_link'><a href="EventCallbackable.html#add_event_listener-instance_method" title="Puppeteer::EventCallbackable#add_event_listener (method)">#add_event_listener</a></span>, <span class='object_link'><a href="EventCallbackable.html#emit_event-instance_method" title="Puppeteer::EventCallbackable#emit_event (method)">#emit_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#on_event-instance_method" title="Puppeteer::EventCallbackable#on_event (method)">#on_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#remove_event_listener-instance_method" title="Puppeteer::EventCallbackable#remove_event_listener (method)">#remove_event_listener</a></span></p>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3 class="inherited">Methods included from <span class='object_link'><a href="IfPresent.html" title="Puppeteer::IfPresent (module)">IfPresent</a></span></h3>
+  <p class="inherited"><span class='object_link'><a href="IfPresent.html#if_present-instance_method" title="Puppeteer::IfPresent#if_present (method)">#if_present</a></span></p>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3 class="inherited">Methods included from <span class='object_link'><a href="DebugPrint.html" title="Puppeteer::DebugPrint (module)">DebugPrint</a></span></h3>
+  <p class="inherited"><span class='object_link'><a href="DebugPrint.html#debug_print-instance_method" title="Puppeteer::DebugPrint#debug_print (method)">#debug_print</a></span>, <span class='object_link'><a href="DebugPrint.html#debug_puts-instance_method" title="Puppeteer::DebugPrint#debug_puts (method)">#debug_puts</a></span></p>
+<div id="constructor_details" class="method_details_list">
+  <h2>Constructor Details</h2>
+  
+    <div class="method_details first">
+  <h3 class="signature first" id="initialize-instance_method">
+  
+    #<strong>initialize</strong>(client, page, ignore_https_errors, timeout_settings)  &#x21d2; <tt><span class='object_link'><a href="" title="Puppeteer::FrameManager (class)">FrameManager</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns a new instance of FrameManager.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>client</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="CDPSession.html" title="Puppeteer::CDPSession (class)">CDPSession</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>page</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Page.html" title="Puppeteer::Page (class)">Page</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ignoreHTTPSErrors</span>
+      
+      
+        <span class='type'>(<tt>boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>timeoutSettings</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="TimeoutSettings.html" title="Puppeteer::TimeoutSettings (class)">TimeoutSettings</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 15</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='id identifier rubyid_page'>page</span><span class='comma'>,</span> <span class='id identifier rubyid_ignore_https_errors'>ignore_https_errors</span><span class='comma'>,</span> <span class='id identifier rubyid_timeout_settings'>timeout_settings</span><span class='rparen'>)</span>
+  <span class='ivar'>@client</span> <span class='op'>=</span> <span class='id identifier rubyid_client'>client</span>
+  <span class='ivar'>@page</span> <span class='op'>=</span> <span class='id identifier rubyid_page'>page</span>
+  <span class='ivar'>@network_manager</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="NetworkManager.html" title="Puppeteer::NetworkManager (class)">NetworkManager</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="NetworkManager.html#initialize-instance_method" title="Puppeteer::NetworkManager#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='id identifier rubyid_ignore_https_errors'>ignore_https_errors</span><span class='comma'>,</span> <span class='kw'>self</span><span class='rparen'>)</span>
+  <span class='ivar'>@timeout_settings</span> <span class='op'>=</span> <span class='id identifier rubyid_timeout_settings'>timeout_settings</span>
+
+  <span class='comment'># @type {!Map&lt;string, !Frame&gt;}
+</span>  <span class='ivar'>@frames</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+
+  <span class='comment'># @type {!Map&lt;number, !ExecutionContext&gt;}
+</span>  <span class='ivar'>@context_id_to_context</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='ivar'>@context_id_created</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+
+  <span class='comment'># @type {!Set&lt;string&gt;}
+</span>  <span class='ivar'>@isolated_worlds</span> <span class='op'>=</span> <span class='const'>Set</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.frameAttached</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_frame_attached'>handle_frame_attached</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frameId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>parentFrameId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.frameNavigated</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_frame_navigated'>handle_frame_navigated</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frame</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.navigatedWithinDocument</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_frame_navigated_within_document'>handle_frame_navigated_within_document</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frameId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>url</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.frameDetached</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_frame_detached'>handle_frame_detached</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frameId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.frameStoppedLoading</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_frame_stopped_loading'>handle_frame_stopped_loading</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frameId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Runtime.executionContextCreated</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_execution_context_created'>handle_execution_context_created</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>context</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Runtime.executionContextDestroyed</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_execution_context_destroyed'>handle_execution_context_destroyed</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>executionContextId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Runtime.executionContextsCleared</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_execution_contexts_cleared'>handle_execution_contexts_cleared</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.lifecycleEvent</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_lifecycle_event'>handle_lifecycle_event</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+  
+</div>
+
+  <div id="instance_attr_details" class="attr_details">
+    <h2>Instance Attribute Details</h2>
+    
+      
+      <span id=""></span>
+      <div class="method_details first">
+  <h3 class="signature first" id="client-instance_method">
+  
+    #<strong>client</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute client.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+60
+61
+62</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 60</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_client'>client</span>
+  <span class='ivar'>@client</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="network_manager-instance_method">
+  
+    #<strong>network_manager</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute network_manager.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+81
+82
+83</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 81</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_network_manager'>network_manager</span>
+  <span class='ivar'>@network_manager</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="timeout_settings-instance_method">
+  
+    #<strong>timeout_settings</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute timeout_settings.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+60
+61
+62</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 60</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_timeout_settings'>timeout_settings</span>
+  <span class='ivar'>@timeout_settings</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="ensure_isolated_world-instance_method">
+  
+    #<strong>ensure_isolated_world</strong>(name)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>name</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 262</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_ensure_isolated_world'>ensure_isolated_world</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='ivar'>@isolated_worlds</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
+  <span class='ivar'>@isolated_worlds</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_name'>name</span>
+
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_send_message'>send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.addScriptToEvaluateOnNewDocument</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span>
+    <span class='label'>source:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>//# sourceURL=</span><span class='embexpr_beg'>#{</span><span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="ExecutionContext.html" title="Puppeteer::ExecutionContext (class)">ExecutionContext</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="ExecutionContext.html#EVALUATION_SCRIPT_URL-constant" title="Puppeteer::ExecutionContext::EVALUATION_SCRIPT_URL (constant)">EVALUATION_SCRIPT_URL</a></span></span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+    <span class='label'>worldName:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
+  <span class='rparen'>)</span>
+  <span class='id identifier rubyid_create_isolated_worlds_promises'>create_isolated_worlds_promises</span> <span class='op'>=</span> <span class='id identifier rubyid_frames'>frames</span><span class='period'>.</span><span class='id identifier rubyid_map'>map</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_frame'>frame</span><span class='op'>|</span>
+    <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_async_send_message'>async_send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.createIsolatedWorld</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span>
+      <span class='label'>frameId:</span> <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_id'>id</span><span class='comma'>,</span>
+      <span class='label'>grantUniveralAccess:</span> <span class='kw'>true</span><span class='comma'>,</span>
+      <span class='label'>worldName:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
+    <span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_await_all'><span class='object_link'><a href="ConcurrentRubyUtils.html#await_all-instance_method" title="Puppeteer::ConcurrentRubyUtils#await_all (method)">await_all</a></span></span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_create_isolated_worlds_promises'>create_isolated_worlds_promises</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="execution_context_by_id-instance_method">
+  
+    #<strong>execution_context_by_id</strong>(context_id)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+357
+358
+359
+360
+361
+362
+363</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 357</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_execution_context_by_id'>execution_context_by_id</span><span class='lparen'>(</span><span class='id identifier rubyid_context_id'>context_id</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='ivar'>@context_id_to_context</span><span class='lbracket'>[</span><span class='id identifier rubyid_context_id'>context_id</span><span class='rbracket'>]</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_context'>context</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>INTERNAL ERROR: missing context with id = </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_context_id'>context_id</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_context'>context</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="frame-instance_method">
+  
+    #<strong>frame</strong>(frame_id)  &#x21d2; <tt>?<span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frameId</span>
+      
+      
+        <span class='type'>(<tt>!string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>?<span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+202
+203
+204</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 202</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_frame'>frame</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rparen'>)</span>
+  <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rbracket'>]</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="frames-instance_method">
+  
+    #<strong>frames</strong>  &#x21d2; <tt>!Array&lt;!<span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Array&lt;!<span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+196
+197
+198</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 196</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_frames'>frames</span>
+  <span class='ivar'>@frames</span><span class='period'>.</span><span class='id identifier rubyid_values'>values</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_execution_context_created-instance_method">
+  
+    #<strong>handle_execution_context_created</strong>(context_payload)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>context_payload</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 301</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_execution_context_created'>handle_execution_context_created</span><span class='lparen'>(</span><span class='id identifier rubyid_context_payload'>context_payload</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='id identifier rubyid_if_present'>if_present</span><span class='lparen'>(</span><span class='id identifier rubyid_context_payload'>context_payload</span><span class='period'>.</span><span class='id identifier rubyid_dig'>dig</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>auxData</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frameId</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span><span class='rparen'>)</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='op'>|</span> <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rbracket'>]</span> <span class='rbrace'>}</span>
+
+  <span class='id identifier rubyid_world'>world</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_frame'>frame</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_context_payload'>context_payload</span><span class='period'>.</span><span class='id identifier rubyid_dig'>dig</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>auxData</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>isDefault</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_world'>world</span> <span class='op'>=</span> <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_main_world'>main_world</span>
+    <span class='kw'>elsif</span> <span class='id identifier rubyid_context_payload'>context_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span> <span class='op'>==</span> <span class='const'><span class='object_link'><a href="#UTILITY_WORLD_NAME-constant" title="Puppeteer::FrameManager::UTILITY_WORLD_NAME (constant)">UTILITY_WORLD_NAME</a></span></span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_secondary_world'>secondary_world</span><span class='period'>.</span><span class='id identifier rubyid_has_context?'>has_context?</span>
+      <span class='comment'># In case of multiple sessions to the same target, there&#39;s a race between
+</span>      <span class='comment'># connections so we might end up creating multiple isolated worlds.
+</span>      <span class='comment'># We can use either.
+</span>      <span class='id identifier rubyid_world'>world</span> <span class='op'>=</span> <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_secondary_world'>secondary_world</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>if</span> <span class='id identifier rubyid_context_payload'>context_payload</span><span class='period'>.</span><span class='id identifier rubyid_dig'>dig</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>auxData</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>type</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>isolated</span><span class='tstring_end'>&#39;</span></span>
+    <span class='ivar'>@isolated_worlds</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_context_payload'>context_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="ExecutionContext.html" title="Puppeteer::ExecutionContext (class)">ExecutionContext</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="ExecutionContext.html#initialize-instance_method" title="Puppeteer::ExecutionContext#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='ivar'>@client</span><span class='comma'>,</span> <span class='id identifier rubyid_context_payload'>context_payload</span><span class='comma'>,</span> <span class='id identifier rubyid_world'>world</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_world'>world</span>
+    <span class='id identifier rubyid_world'>world</span><span class='period'>.</span><span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='id identifier rubyid_context'>context</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@context_id_to_context</span><span class='lbracket'>[</span><span class='id identifier rubyid_context_payload'>context_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_context'>context</span>
+  <span class='ivar'>@context_id_created</span><span class='lbracket'>[</span><span class='id identifier rubyid_context_payload'>context_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='const'>Time</span><span class='period'>.</span><span class='id identifier rubyid_now'>now</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_execution_context_destroyed-instance_method">
+  
+    #<strong>handle_execution_context_destroyed</strong>(execution_context_id)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>executionContextId</span>
+      
+      
+        <span class='type'>(<tt>number</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+329
+330
+331
+332
+333
+334
+335
+336
+337</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 329</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_execution_context_destroyed'>handle_execution_context_destroyed</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='ivar'>@context_id_to_context</span><span class='lbracket'>[</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rbracket'>]</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_context'>context</span>
+  <span class='ivar'>@context_id_to_context</span><span class='period'>.</span><span class='id identifier rubyid_delete'>delete</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
+  <span class='ivar'>@context_id_created</span><span class='period'>.</span><span class='id identifier rubyid_delete'>delete</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_context'>context</span><span class='period'>.</span><span class='id identifier rubyid_world'>world</span>
+    <span class='id identifier rubyid_context'>context</span><span class='period'>.</span><span class='id identifier rubyid_world'>world</span><span class='period'>.</span><span class='id identifier rubyid_delete_context'>delete_context</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_execution_contexts_cleared-instance_method">
+  
+    #<strong>handle_execution_contexts_cleared</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 339</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_execution_contexts_cleared'>handle_execution_contexts_cleared</span>
+  <span class='comment'># executionContextsCleared is often notified after executionContextCreated.
+</span>  <span class='comment'>#   D, [2020-04-06T01:47:03.101227 #13823] DEBUG -- : RECV &lt;&lt; {&quot;method&quot;=&gt;&quot;Runtime.executionContextCreated&quot;, &quot;params&quot;=&gt;{&quot;context&quot;=&gt;{&quot;id&quot;=&gt;5, &quot;origin&quot;=&gt;&quot;https://github.com&quot;, &quot;name&quot;=&gt;&quot;&quot;, &quot;auxData&quot;=&gt;{&quot;isDefault&quot;=&gt;true, &quot;type&quot;=&gt;&quot;default&quot;, &quot;frameId&quot;=&gt;&quot;71C347B70848B89DDDEFAA8AB5B0BC92&quot;}}}, &quot;sessionId&quot;=&gt;&quot;53F088EED260C28001D26A019F95D9E3&quot;}
+</span>  <span class='comment'>#   D, [2020-04-06T01:47:03.101439 #13823] DEBUG -- : RECV &lt;&lt; {&quot;method&quot;=&gt;&quot;Page.frameNavigated&quot;, &quot;params&quot;=&gt;{&quot;frame&quot;=&gt;{&quot;id&quot;=&gt;&quot;71C347B70848B89DDDEFAA8AB5B0BC92&quot;, &quot;loaderId&quot;=&gt;&quot;80338225D035AC96BAE8F6D4E81C7D51&quot;, &quot;url&quot;=&gt;&quot;https://github.com/search?q=puppeteer&quot;, &quot;securityOrigin&quot;=&gt;&quot;https://github.com&quot;, &quot;mimeType&quot;=&gt;&quot;text/html&quot;}}, &quot;sessionId&quot;=&gt;&quot;53F088EED260C28001D26A019F95D9E3&quot;}
+</span>  <span class='comment'>#   D, [2020-04-06T01:47:03.101325 #13823] DEBUG -- : RECV &lt;&lt; {&quot;method&quot;=&gt;&quot;Target.targetInfoChanged&quot;, &quot;params&quot;=&gt;{&quot;targetInfo&quot;=&gt;{&quot;targetId&quot;=&gt;&quot;71C347B70848B89DDDEFAA8AB5B0BC92&quot;, &quot;type&quot;=&gt;&quot;page&quot;, &quot;title&quot;=&gt;&quot;https://github.com/search?q=puppeteer&quot;, &quot;url&quot;=&gt;&quot;https://github.com/search?q=puppeteer&quot;, &quot;attached&quot;=&gt;true, &quot;browserContextId&quot;=&gt;&quot;AF37BC660284CE1552B4ECB147BE9305&quot;}}}
+</span>  <span class='comment'>#   D, [2020-04-06T01:47:03.101269 #13823] DEBUG -- : RECV &lt;&lt; {&quot;method&quot;=&gt;&quot;Runtime.executionContextsCleared&quot;, &quot;params&quot;=&gt;{}, &quot;sessionId&quot;=&gt;&quot;53F088EED260C28001D26A019F95D9E3&quot;}
+</span>  <span class='comment'># it unexpectedly clears the created execution context.
+</span>  <span class='comment'># To avoid the problem, just skip recent created ids.
+</span>  <span class='id identifier rubyid_now'>now</span> <span class='op'>=</span> <span class='const'>Time</span><span class='period'>.</span><span class='id identifier rubyid_now'>now</span>
+  <span class='id identifier rubyid_context_ids_to_skip'>context_ids_to_skip</span> <span class='op'>=</span> <span class='ivar'>@context_id_created</span><span class='period'>.</span><span class='id identifier rubyid_select'>select</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_k'>k</span><span class='comma'>,</span> <span class='id identifier rubyid_v'>v</span><span class='op'>|</span> <span class='id identifier rubyid_now'>now</span> <span class='op'>-</span> <span class='id identifier rubyid_v'>v</span> <span class='op'>&lt;</span> <span class='int'>1</span> <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_keys'>keys</span>
+  <span class='ivar'>@context_id_to_context</span><span class='period'>.</span><span class='id identifier rubyid_reject'>reject</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_k'>k</span><span class='comma'>,</span> <span class='id identifier rubyid_v'>v</span><span class='op'>|</span> <span class='id identifier rubyid_context_ids_to_skip'>context_ids_to_skip</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='id identifier rubyid_k'>k</span><span class='rparen'>)</span> <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='comma'>,</span> <span class='id identifier rubyid_context'>context</span><span class='op'>|</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_context'>context</span><span class='period'>.</span><span class='id identifier rubyid_world'>world</span>
+      <span class='id identifier rubyid_context'>context</span><span class='period'>.</span><span class='id identifier rubyid_world'>world</span><span class='period'>.</span><span class='id identifier rubyid_delete_context'>delete_context</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@context_id_to_context</span><span class='period'>.</span><span class='id identifier rubyid_select!'>select!</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_k'>k</span><span class='comma'>,</span> <span class='id identifier rubyid_v'>v</span><span class='op'>|</span> <span class='id identifier rubyid_context_ids_to_skip'>context_ids_to_skip</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='id identifier rubyid_k'>k</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_frame_attached-instance_method">
+  
+    #<strong>handle_frame_attached</strong>(frame_id, parent_frame_id)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frameId</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>parentFrameId</span>
+      
+      
+        <span class='type'>(<tt>?string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 208</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_frame_attached'>handle_frame_attached</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='comma'>,</span> <span class='id identifier rubyid_parent_frame_id'>parent_frame_id</span><span class='rparen'>)</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='ivar'>@frames</span><span class='period'>.</span><span class='id identifier rubyid_has_key?'>has_key?</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_parent_frame_id'>parent_frame_id</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgymentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>parent_frame_id must not be nil</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_parent_frame'>parent_frame</span> <span class='op'>=</span> <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_parent_frame_id'>parent_frame_id</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Frame.html#initialize-instance_method" title="Puppeteer::Frame#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='kw'>self</span><span class='comma'>,</span> <span class='ivar'>@client</span><span class='comma'>,</span> <span class='id identifier rubyid_parent_frame'>parent_frame</span><span class='comma'>,</span> <span class='id identifier rubyid_frame_id'>frame_id</span><span class='rparen'>)</span>
+  <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_frame'>frame</span>
+
+  <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameAttached</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_frame_detached-instance_method">
+  
+    #<strong>handle_frame_detached</strong>(frame_id)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frame_id</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+293
+294
+295
+296
+297
+298</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 293</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_frame_detached'>handle_frame_detached</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rbracket'>]</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_frame'>frame</span>
+    <span class='id identifier rubyid_remove_frame_recursively'>remove_frame_recursively</span><span class='lparen'>(</span><span class='id identifier rubyid_frame'>frame</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_frame_navigated-instance_method">
+  
+    #<strong>handle_frame_navigated</strong>(frame_payload)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frame_payload</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 221</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_frame_navigated'>handle_frame_navigated</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_is_main_frame'>is_main_frame</span> <span class='op'>=</span> <span class='op'>!</span><span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>parentId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_is_main_frame'>is_main_frame</span>
+      <span class='ivar'>@main_frame</span>
+    <span class='kw'>else</span>
+      <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rbracket'>]</span>
+    <span class='kw'>end</span>
+
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_is_main_frame'>is_main_frame</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_frame'>frame</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>We either navigate top level or have old version of the navigated frame</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># Detach all child frames first.
+</span>  <span class='kw'>if</span> <span class='id identifier rubyid_frame'>frame</span>
+    <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_child_frames'>child_frames</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_child'>child</span><span class='op'>|</span>
+      <span class='id identifier rubyid_remove_frame_recursively'>remove_frame_recursively</span><span class='lparen'>(</span><span class='id identifier rubyid_child'>child</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># Update or create main frame.
+</span>  <span class='kw'>if</span> <span class='id identifier rubyid_is_main_frame'>is_main_frame</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_frame'>frame</span>
+      <span class='comment'># Update frame id to retain frame identity on cross-process navigation.
+</span>      <span class='ivar'>@frames</span><span class='period'>.</span><span class='id identifier rubyid_delete'>delete</span><span class='lparen'>(</span><span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_id'>id</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_id'>id</span> <span class='op'>=</span> <span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+    <span class='kw'>else</span>
+      <span class='comment'># Initial main frame navigation.
+</span>      <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Frame.html#initialize-instance_method" title="Puppeteer::Frame#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='kw'>self</span><span class='comma'>,</span> <span class='ivar'>@client</span><span class='comma'>,</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+    <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_frame'>frame</span>
+    <span class='ivar'>@main_frame</span> <span class='op'>=</span> <span class='id identifier rubyid_frame'>frame</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># Update frame payload.
+</span>  <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_navigated'>navigated</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_payload'>frame_payload</span><span class='rparen'>)</span>
+
+  <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameNavigated</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_frame_navigated_within_document-instance_method">
+  
+    #<strong>handle_frame_navigated_within_document</strong>(frame_id, url)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frame_id</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>url</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+282
+283
+284
+285
+286
+287
+288
+289
+290</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 282</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_frame_navigated_within_document'>handle_frame_navigated_within_document</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='comma'>,</span> <span class='id identifier rubyid_url'>url</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rbracket'>]</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_frame'>frame</span>
+  <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_navigated_within_document'>navigated_within_document</span><span class='lparen'>(</span><span class='id identifier rubyid_url'>url</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameNavigatedWithinDocument</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span>
+  <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameNavigated</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span>
+  <span class='id identifier rubyid_handle_frame_manager_frame_navigated_within_document'>handle_frame_manager_frame_navigated_within_document</span><span class='lparen'>(</span><span class='id identifier rubyid_frame'>frame</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_handle_frame_manager_frame_navigated'>handle_frame_manager_frame_navigated</span><span class='lparen'>(</span><span class='id identifier rubyid_frame'>frame</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_frame_stopped_loading-instance_method">
+  
+    #<strong>handle_frame_stopped_loading</strong>(frame_id)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frameId</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+165
+166
+167
+168
+169
+170</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 165</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_frame_stopped_loading'>handle_frame_stopped_loading</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_frame_id'>frame_id</span><span class='rbracket'>]</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_frame'>frame</span>
+  <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_handle_loading_stopped'>handle_loading_stopped</span>
+  <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.LifecycleEvent</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_frame_tree-instance_method">
+  
+    #<strong>handle_frame_tree</strong>(frame_tree)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frame_tree</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 173</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_frame_tree'>handle_frame_tree</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frame</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>parentId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_handle_frame_attached'>handle_frame_attached</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frame</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frame</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>parentId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_handle_frame_navigated'>handle_frame_navigated</span><span class='lparen'>(</span><span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frame</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>childFrames</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+
+  <span class='id identifier rubyid_frame_tree'>frame_tree</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>childFrames</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_child'>child</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_frame_tree'>handle_frame_tree</span><span class='lparen'>(</span><span class='id identifier rubyid_child'>child</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="handle_lifecycle_event-instance_method">
+  
+    #<strong>handle_lifecycle_event</strong>(event)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>event</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+157
+158
+159
+160
+161
+162</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 157</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_handle_lifecycle_event'>handle_lifecycle_event</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_frame'>frame</span> <span class='op'>=</span> <span class='ivar'>@frames</span><span class='lbracket'>[</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>frameId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rbracket'>]</span>
+  <span class='kw'>return</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_frame'>frame</span>
+  <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_handle_lifecycle_event'>handle_lifecycle_event</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>loaderId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.LifecycleEvent</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="main_frame-instance_method">
+  
+    #<strong>main_frame</strong>  &#x21d2; <tt>!<span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Frame</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+191
+192
+193</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 191</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_main_frame'>main_frame</span>
+  <span class='ivar'>@main_frame</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="navigate_frame-instance_method">
+  
+    #<strong>navigate_frame</strong>(frame, url, referer: nil, timeout: nil, wait_until: nil)  &#x21d2; <tt>Puppeteer::Response</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>frame</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Frame.html" title="Puppeteer::Frame (class)">Puppeteer::Frame</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>url</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{referer?: string, timeout?: number, waitUntil?: string|!Array&lt;string&gt;}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Puppeteer::Response</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 89</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_navigate_frame'>navigate_frame</span><span class='lparen'>(</span><span class='id identifier rubyid_frame'>frame</span><span class='comma'>,</span> <span class='id identifier rubyid_url'>url</span><span class='comma'>,</span> <span class='label'>referer:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_assert_no_legacy_navigation_options'>assert_no_legacy_navigation_options</span><span class='lparen'>(</span><span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+
+  <span class='id identifier rubyid_navigate_params'>navigate_params</span> <span class='op'>=</span> <span class='lbrace'>{</span>
+    <span class='label'>url:</span> <span class='id identifier rubyid_url'>url</span><span class='comma'>,</span>
+    <span class='label'>referer:</span> <span class='id identifier rubyid_referer'>referer</span> <span class='op'>||</span> <span class='ivar'>@network_manager</span><span class='period'>.</span><span class='id identifier rubyid_extra_http_headers'>extra_http_headers</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>referer</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span>
+    <span class='label'>frameId:</span> <span class='id identifier rubyid_frame'>frame</span><span class='period'>.</span><span class='id identifier rubyid_id'>id</span><span class='comma'>,</span>
+  <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_compact'>compact</span>
+  <span class='id identifier rubyid_option_wait_until'>option_wait_until</span> <span class='op'>=</span> <span class='id identifier rubyid_wait_until'>wait_until</span> <span class='op'>||</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>load</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_option_timeout'>option_timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_timeout'>timeout</span> <span class='op'>||</span> <span class='ivar'>@timeout_settings</span><span class='period'>.</span><span class='id identifier rubyid_navigation_timeout'>navigation_timeout</span>
+
+  <span class='id identifier rubyid_watcher'>watcher</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="LifecycleWatcher.html" title="Puppeteer::LifecycleWatcher (class)">LifecycleWatcher</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="LifecycleWatcher.html#initialize-instance_method" title="Puppeteer::LifecycleWatcher#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='kw'>self</span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span><span class='comma'>,</span> <span class='id identifier rubyid_option_wait_until'>option_wait_until</span><span class='comma'>,</span> <span class='id identifier rubyid_option_timeout'>option_timeout</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_ensure_new_document_navigation'>ensure_new_document_navigation</span> <span class='op'>=</span> <span class='kw'>false</span>
+
+  <span class='kw'>begin</span>
+    <span class='id identifier rubyid_navigate'>navigate</span> <span class='op'>=</span> <span class='id identifier rubyid_future'><span class='object_link'><a href="ConcurrentRubyUtils.html#future-instance_method" title="Puppeteer::ConcurrentRubyUtils#future (method)">future</a></span></span> <span class='kw'>do</span>
+      <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_send_message'>send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.navigate</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_navigate_params'>navigate_params</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_loader_id'>loader_id</span> <span class='op'>=</span> <span class='id identifier rubyid_result'>result</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>loaderId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+      <span class='id identifier rubyid_ensure_new_document_navigation'>ensure_new_document_navigation</span> <span class='op'>=</span> <span class='op'>!</span><span class='op'>!</span><span class='id identifier rubyid_loader_id'>loader_id</span>
+      <span class='kw'>if</span> <span class='id identifier rubyid_result'>result</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>errorText</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+        <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="FrameManager/NavigationError.html" title="Puppeteer::FrameManager::NavigationError (class)">NavigationError</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="#initialize-instance_method" title="Puppeteer::FrameManager#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_result'>result</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>errorText</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='embexpr_end'>}</span><span class='tstring_content'> at </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_url'>url</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+      <span class='kw'>end</span>
+    <span class='kw'>end</span>
+    <span class='id identifier rubyid_await_any'><span class='object_link'><a href="ConcurrentRubyUtils.html#await_any-instance_method" title="Puppeteer::ConcurrentRubyUtils#await_any (method)">await_any</a></span></span><span class='lparen'>(</span>
+      <span class='id identifier rubyid_navigate'>navigate</span><span class='comma'>,</span>
+      <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_timeout_or_termination_promise'>timeout_or_termination_promise</span><span class='comma'>,</span>
+    <span class='rparen'>)</span>
+
+    <span class='id identifier rubyid_document_navigation_promise'>document_navigation_promise</span> <span class='op'>=</span>
+      <span class='kw'>if</span> <span class='id identifier rubyid_ensure_new_document_navigation'>ensure_new_document_navigation</span>
+        <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_new_document_navigation_promise'>new_document_navigation_promise</span>
+      <span class='kw'>else</span>
+        <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_same_document_navigation_promise'>same_document_navigation_promise</span>
+      <span class='kw'>end</span>
+    <span class='id identifier rubyid_await_any'><span class='object_link'><a href="ConcurrentRubyUtils.html#await_any-instance_method" title="Puppeteer::ConcurrentRubyUtils#await_any (method)">await_any</a></span></span><span class='lparen'>(</span>
+      <span class='id identifier rubyid_document_navigation_promise'>document_navigation_promise</span><span class='comma'>,</span>
+      <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_timeout_or_termination_promise'>timeout_or_termination_promise</span><span class='comma'>,</span>
+    <span class='rparen'>)</span>
+  <span class='kw'>ensure</span>
+    <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_dispose'>dispose</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_navigation_response'>navigation_response</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="page-instance_method">
+  
+    #<strong>page</strong>  &#x21d2; <tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Page.html" title="Puppeteer::Page (class)">Page</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Page.html" title="Puppeteer::Page (class)">Page</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+186
+187
+188</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 186</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_page'>page</span>
+  <span class='ivar'>@page</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="wait_for_frame_navigation-instance_method">
+  
+    #<strong>wait_for_frame_navigation</strong>(frame, timeout: nil, wait_until: nil)  &#x21d2; <tt>Puppeteer::Response</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>wait_until</span>
+      
+      
+        <span class='type'>(<tt>string|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>&#39;load&#39; | &#39;domcontentloaded&#39; | &#39;networkidle0&#39; | &#39;networkidle2&#39;</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Puppeteer::Response</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/frame_manager.rb', line 137</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_wait_for_frame_navigation'>wait_for_frame_navigation</span><span class='lparen'>(</span><span class='id identifier rubyid_frame'>frame</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_assert_no_legacy_navigation_options'>assert_no_legacy_navigation_options</span><span class='lparen'>(</span><span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+
+  <span class='id identifier rubyid_option_wait_until'>option_wait_until</span> <span class='op'>=</span> <span class='id identifier rubyid_wait_until'>wait_until</span> <span class='op'>||</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>load</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_option_timeout'>option_timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_timeout'>timeout</span> <span class='op'>||</span> <span class='ivar'>@timeout_settings</span><span class='period'>.</span><span class='id identifier rubyid_navigation_timeout'>navigation_timeout</span>
+  <span class='id identifier rubyid_watcher'>watcher</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="LifecycleWatcher.html" title="Puppeteer::LifecycleWatcher (class)">LifecycleWatcher</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="LifecycleWatcher.html#initialize-instance_method" title="Puppeteer::LifecycleWatcher#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='kw'>self</span><span class='comma'>,</span> <span class='id identifier rubyid_frame'>frame</span><span class='comma'>,</span> <span class='id identifier rubyid_option_wait_until'>option_wait_until</span><span class='comma'>,</span> <span class='id identifier rubyid_option_timeout'>option_timeout</span><span class='rparen'>)</span>
+  <span class='kw'>begin</span>
+    <span class='id identifier rubyid_await_any'><span class='object_link'><a href="ConcurrentRubyUtils.html#await_any-instance_method" title="Puppeteer::ConcurrentRubyUtils#await_any (method)">await_any</a></span></span><span class='lparen'>(</span>
+      <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_timeout_or_termination_promise'>timeout_or_termination_promise</span><span class='comma'>,</span>
+      <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_same_document_navigation_promise'>same_document_navigation_promise</span><span class='comma'>,</span>
+      <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_new_document_navigation_promise'>new_document_navigation_promise</span><span class='comma'>,</span>
+    <span class='rparen'>)</span>
+  <span class='kw'>ensure</span>
+    <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_dispose'>dispose</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_watcher'>watcher</span><span class='period'>.</span><span class='id identifier rubyid_navigation_response'>navigation_response</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+      <div id="footer">
+  Generated on Sun Apr 26 15:52:57 2020 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.24 (ruby-2.6.3).
+</div>
+
+    </div>
+  </body>
+</html>

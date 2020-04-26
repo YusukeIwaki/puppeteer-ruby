@@ -1,0 +1,5426 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Class: Puppeteer::Page
+  
+    &mdash; Documentation by YARD 0.9.24
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" />
+
+<script type="text/javascript">
+  pathId = "Puppeteer::Page";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (P)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span>
+     &raquo; 
+    <span class="title">Page</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Class: Puppeteer::Page
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+  <dl>
+    <dt>Inherits:</dt>
+    <dd>
+      <span class="inheritName">Object</span>
+      
+        <ul class="fullTree">
+          <li>Object</li>
+          
+            <li class="next">Puppeteer::Page</li>
+          
+        </ul>
+        <a href="#" class="inheritanceTree">show all</a>
+      
+    </dd>
+  </dl>
+  
+
+  
+  
+  
+  
+  <dl>
+      <dt>Includes:</dt>
+      <dd><span class='object_link'><a href="EventCallbackable.html" title="Puppeteer::EventCallbackable (module)">EventCallbackable</a></span>, <span class='object_link'><a href="IfPresent.html" title="Puppeteer::IfPresent (module)">IfPresent</a></span></dd>
+  </dl>
+  
+  
+
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/puppeteer/page.rb<span class="defines">,<br />
+  lib/puppeteer/page/screenshot_options.rb</span>
+</dd>
+  </dl>
+  
+</div>
+
+<h2>Defined Under Namespace</h2>
+<p class="children">
+  
+    
+  
+    
+      <strong class="classes">Classes:</strong> <span class='object_link'><a href="Page/ScreenshotOptions.html" title="Puppeteer::Page::ScreenshotOptions (class)">ScreenshotOptions</a></span>, <span class='object_link'><a href="Page/ScriptTag.html" title="Puppeteer::Page::ScriptTag (class)">ScriptTag</a></span>, <span class='object_link'><a href="Page/StyleTag.html" title="Puppeteer::Page::StyleTag (class)">StyleTag</a></span>, <span class='object_link'><a href="Page/TargetCrashedError.html" title="Puppeteer::Page::TargetCrashedError (class)">TargetCrashedError</a></span>
+    
+  
+</p>
+
+
+
+
+  <h2>Instance Attribute Summary <small><a href="#" class="summary_toggle">collapse</a></small></h2>
+  <ul class="summary">
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#accessibility-instance_method" title="#accessibility (instance method)">#<strong>accessibility</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute accessibility.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#coverage-instance_method" title="#coverage (instance method)">#<strong>coverage</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute coverage.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#javascript_enabled-instance_method" title="#javascript_enabled (instance method)">#<strong>javascript_enabled</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>/**  * @param number, latitude: number, accuracy: (number|undefined)} options  */ async setGeolocation(options) {   const { longitude, latitude, accuracy = 0} = options;   if (longitude &lt; -180 || longitude &gt; 180)     throw new Error(`Invalid longitude “$longitude”: precondition -180 &lt;= LONGITUDE &lt;= 180 failed.`);   if (latitude &lt; -90 || latitude &gt; 90)     throw new Error(`Invalid latitude “$latitude”: precondition -90 &lt;= LATITUDE &lt;= 90 failed.`);   if (accuracy &lt; 0)     throw new Error(`Invalid accuracy “$accuracy”: precondition 0 &lt;= ACCURACY failed.`);   await this._client.send(&#39;Emulation.setGeolocationOverride&#39;, latitude, accuracy); }.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#keyboard-instance_method" title="#keyboard (instance method)">#<strong>keyboard</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute keyboard.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#mouse-instance_method" title="#mouse (instance method)">#<strong>mouse</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute mouse.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#target-instance_method" title="#target (instance method)">#<strong>target</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>/**  * @param number, latitude: number, accuracy: (number|undefined)} options  */ async setGeolocation(options) {   const { longitude, latitude, accuracy = 0} = options;   if (longitude &lt; -180 || longitude &gt; 180)     throw new Error(`Invalid longitude “$longitude”: precondition -180 &lt;= LONGITUDE &lt;= 180 failed.`);   if (latitude &lt; -90 || latitude &gt; 90)     throw new Error(`Invalid latitude “$latitude”: precondition -90 &lt;= LATITUDE &lt;= 90 failed.`);   if (accuracy &lt; 0)     throw new Error(`Invalid accuracy “$accuracy”: precondition 0 &lt;= ACCURACY failed.`);   await this._client.send(&#39;Emulation.setGeolocationOverride&#39;, latitude, accuracy); }.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#touch_screen-instance_method" title="#touch_screen (instance method)">#<strong>touch_screen</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute touch_screen.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#viewport-instance_method" title="#viewport (instance method)">#<strong>viewport</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute viewport.</p>
+</div></span>
+  
+</li>
+
+    
+  </ul>
+
+
+
+
+  
+    <h2>
+      Class Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#create-class_method" title="create (class method)">.<strong>create</strong>(client, target, ignore_https_errors, default_viewport, screenshot_task_queue)  &#x21d2; !Promise&lt;!Page&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+    </ul>
+  
+    <h2>
+      Instance Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#add_script_tag-instance_method" title="#add_script_tag (instance method)">#<strong>add_script_tag</strong>(script_tag)  &#x21d2; !Promise&lt;!ElementHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#add_style_tag-instance_method" title="#add_style_tag (instance method)">#<strong>add_style_tag</strong>(style_tag)  &#x21d2; !Promise&lt;!ElementHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#async_click-instance_method" title="#async_click (instance method)">#<strong>async_click</strong>  &#x21d2; Future </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#async_wait_for_navigation-instance_method" title="#async_wait_for_navigation (instance method)">#<strong>async_wait_for_navigation</strong>  &#x21d2; Future </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#authenticate-instance_method" title="#authenticate (instance method)">#<strong>authenticate</strong>(username: nil, password: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#browser-instance_method" title="#browser (instance method)">#<strong>browser</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#browser_context-instance_method" title="#browser_context (instance method)">#<strong>browser_context</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#cache_enabled=-instance_method" title="#cache_enabled= (instance method)">#<strong>cache_enabled=</strong>(enabled)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#click-instance_method" title="#click (instance method)">#<strong>click</strong>(selector, delay: nil, button: nil, click_count: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#close-instance_method" title="#close (instance method)">#<strong>close</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#closed%3F-instance_method" title="#closed? (instance method)">#<strong>closed?</strong>  &#x21d2; boolean </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#content-instance_method" title="#content (instance method)">#<strong>content</strong>  &#x21d2; String </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#content=-instance_method" title="#content= (instance method)">#<strong>content=</strong>(html)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#default_navigation_timeout=-instance_method" title="#default_navigation_timeout= (instance method)">#<strong>default_navigation_timeout=</strong>(timeout)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#default_timeout=-instance_method" title="#default_timeout= (instance method)">#<strong>default_timeout=</strong>(timeout)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#emulate-instance_method" title="#emulate (instance method)">#<strong>emulate</strong>(device)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#emulate_timezone-instance_method" title="#emulate_timezone (instance method)">#<strong>emulate_timezone</strong>(timezone_id)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#evaluate-instance_method" title="#evaluate (instance method)">#<strong>evaluate</strong>(page_function, *args)  &#x21d2; !Promise&lt;*&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#evaluate_handle-instance_method" title="#evaluate_handle (instance method)">#<strong>evaluate_handle</strong>(page_function, *args)  &#x21d2; !Promise&lt;!Puppeteer.JSHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#extra_http_headers=-instance_method" title="#extra_http_headers= (instance method)">#<strong>extra_http_headers=</strong>(headers)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#focus-instance_method" title="#focus (instance method)">#<strong>focus</strong>(selector)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#frames-instance_method" title="#frames (instance method)">#<strong>frames</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#go_back-instance_method" title="#go_back (instance method)">#<strong>go_back</strong>(timeout: nil, wait_until: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#go_forward-instance_method" title="#go_forward (instance method)">#<strong>go_forward</strong>(timeout: nil, wait_until: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#goto-instance_method" title="#goto (instance method)">#<strong>goto</strong>(url, referer: nil, timeout: nil, wait_until: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#hover-instance_method" title="#hover (instance method)">#<strong>hover</strong>(selector)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#init-instance_method" title="#init (instance method)">#<strong>init</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(client, target, ignore_https_errors, screenshot_task_queue)  &#x21d2; Page </a>
+    
+
+    
+  </span>
+  
+  
+    <span class="note title constructor">constructor</span>
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>A new instance of Page.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#main_frame-instance_method" title="#main_frame (instance method)">#<strong>main_frame</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#offline_mode=-instance_method" title="#offline_mode= (instance method)">#<strong>offline_mode=</strong>(enabled)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#query_objects-instance_method" title="#query_objects (instance method)">#<strong>query_objects</strong>(prototype_handle)  &#x21d2; !Promise&lt;!Puppeteer.JSHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#reload-instance_method" title="#reload (instance method)">#<strong>reload</strong>(timeout: nil, wait_until: nil)  &#x21d2; !Promise&lt;?Puppeteer.Response&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#request_interception=-instance_method" title="#request_interception= (instance method)">#<strong>request_interception=</strong>(value)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#S-instance_method" title="#S (instance method)">#<strong>S</strong>(selector)  &#x21d2; !Promise&lt;?Puppeteer.ElementHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>`$()` in JavaScript.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#screenshot-instance_method" title="#screenshot (instance method)">#<strong>screenshot</strong>(options = {})  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>/**  * @param !ScreenshotOptions= options  * @return !Promise&lt;!Buffer|!String&gt;  */.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#select-instance_method" title="#select (instance method)">#<strong>select</strong>(selector, *values)  &#x21d2; !Promise&lt;!Array&lt;string&gt;&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#set_content-instance_method" title="#set_content (instance method)">#<strong>set_content</strong>(html, timeout: nil, wait_until: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#Seval-instance_method" title="#Seval (instance method)">#<strong>Seval</strong>(selector, page_function, *args)  &#x21d2; !Promise&lt;(!Object|undefined)&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>`$eval()` in JavaScript.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#SS-instance_method" title="#SS (instance method)">#<strong>SS</strong>(selector)  &#x21d2; !Promise&lt;!Array&lt;!Puppeteer.ElementHandle&gt;&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>`$$()` in JavaScript.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#SSeval-instance_method" title="#SSeval (instance method)">#<strong>SSeval</strong>(selector, page_function, *args)  &#x21d2; !Promise&lt;(!Object|undefined)&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>`$$eval()` in JavaScript.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#Sx-instance_method" title="#Sx (instance method)">#<strong>Sx</strong>(expression)  &#x21d2; !Promise&lt;!Array&lt;!Puppeteer.ElementHandle&gt;&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>`$x()` in JavaScript.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#tap-instance_method" title="#tap (instance method)">#<strong>tap</strong>(selector)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#title-instance_method" title="#title (instance method)">#<strong>title</strong>  &#x21d2; !Promise&lt;string&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#type-instance_method" title="#type (instance method)">#<strong>type</strong>(selector, text, delay: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#url-instance_method" title="#url (instance method)">#<strong>url</strong>  &#x21d2; String </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#user_agent=-instance_method" title="#user_agent= (instance method)">#<strong>user_agent=</strong>(user_agent)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#wait_for_function-instance_method" title="#wait_for_function (instance method)">#<strong>wait_for_function</strong>(page_function, options = {}, *args)  &#x21d2; !Promise&lt;!Puppeteer.JSHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#wait_for_selector-instance_method" title="#wait_for_selector (instance method)">#<strong>wait_for_selector</strong>(selector, visible: nil, hidden: nil, timeout: nil)  &#x21d2; !Promise&lt;?Puppeteer.ElementHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#wait_for_xpath-instance_method" title="#wait_for_xpath (instance method)">#<strong>wait_for_xpath</strong>(xpath, visible: nil, hidden: nil, timeout: nil)  &#x21d2; !Promise&lt;?Puppeteer.ElementHandle&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#workers-instance_method" title="#workers (instance method)">#<strong>workers</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3 class="inherited">Methods included from <span class='object_link'><a href="IfPresent.html" title="Puppeteer::IfPresent (module)">IfPresent</a></span></h3>
+  <p class="inherited"><span class='object_link'><a href="IfPresent.html#if_present-instance_method" title="Puppeteer::IfPresent#if_present (method)">#if_present</a></span></p>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3 class="inherited">Methods included from <span class='object_link'><a href="EventCallbackable.html" title="Puppeteer::EventCallbackable (module)">EventCallbackable</a></span></h3>
+  <p class="inherited"><span class='object_link'><a href="EventCallbackable.html#add_event_listener-instance_method" title="Puppeteer::EventCallbackable#add_event_listener (method)">#add_event_listener</a></span>, <span class='object_link'><a href="EventCallbackable.html#emit_event-instance_method" title="Puppeteer::EventCallbackable#emit_event (method)">#emit_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#on_event-instance_method" title="Puppeteer::EventCallbackable#on_event (method)">#on_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#remove_event_listener-instance_method" title="Puppeteer::EventCallbackable#remove_event_listener (method)">#remove_event_listener</a></span></p>
+<div id="constructor_details" class="method_details_list">
+  <h2>Constructor Details</h2>
+  
+    <div class="method_details first">
+  <h3 class="signature first" id="initialize-instance_method">
+  
+    #<strong>initialize</strong>(client, target, ignore_https_errors, screenshot_task_queue)  &#x21d2; <tt><span class='object_link'><a href="" title="Puppeteer::Page (class)">Page</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns a new instance of Page.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>client</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="CDPSession.html" title="Puppeteer::CDPSession (class)">CDPSession</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>target</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Target.html" title="Puppeteer::Target (class)">Target</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ignoreHTTPSErrors</span>
+      
+      
+        <span class='type'>(<tt>boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>screenshotTaskQueue</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.TaskQueue</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 29</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='id identifier rubyid_target'>target</span><span class='comma'>,</span> <span class='id identifier rubyid_ignore_https_errors'>ignore_https_errors</span><span class='comma'>,</span> <span class='id identifier rubyid_screenshot_task_queue'>screenshot_task_queue</span><span class='rparen'>)</span>
+  <span class='ivar'>@closed</span> <span class='op'>=</span> <span class='kw'>false</span>
+  <span class='ivar'>@client</span> <span class='op'>=</span> <span class='id identifier rubyid_client'>client</span>
+  <span class='ivar'>@target</span> <span class='op'>=</span> <span class='id identifier rubyid_target'>target</span>
+  <span class='ivar'>@keyboard</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Keyboard.html" title="Puppeteer::Keyboard (class)">Keyboard</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Keyboard.html#initialize-instance_method" title="Puppeteer::Keyboard#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='rparen'>)</span>
+  <span class='ivar'>@mouse</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Mouse.html" title="Puppeteer::Mouse (class)">Mouse</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Mouse.html#initialize-instance_method" title="Puppeteer::Mouse#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='ivar'>@keyboard</span><span class='rparen'>)</span>
+  <span class='ivar'>@timeout_settings</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="TimeoutSettings.html" title="Puppeteer::TimeoutSettings (class)">TimeoutSettings</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="../Puppeteer.html#initialize-instance_method" title="Puppeteer#initialize (method)">new</a></span></span>
+  <span class='ivar'>@touchscreen</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="TouchScreen.html" title="Puppeteer::TouchScreen (class)">TouchScreen</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="TouchScreen.html#initialize-instance_method" title="Puppeteer::TouchScreen#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='ivar'>@keyboard</span><span class='rparen'>)</span>
+  <span class='comment'># @accessibility = Accessibility.new(client)
+</span>  <span class='ivar'>@frame_manager</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="FrameManager.html" title="Puppeteer::FrameManager (class)">FrameManager</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="FrameManager.html#initialize-instance_method" title="Puppeteer::FrameManager#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='kw'>self</span><span class='comma'>,</span> <span class='id identifier rubyid_ignore_https_errors'>ignore_https_errors</span><span class='comma'>,</span> <span class='ivar'>@timeout_settings</span><span class='rparen'>)</span>
+  <span class='ivar'>@emulation_manager</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="EmulationManager.html" title="Puppeteer::EmulationManager (class)">EmulationManager</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="EmulationManager.html#initialize-instance_method" title="Puppeteer::EmulationManager#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='rparen'>)</span>
+  <span class='comment'># @tracing = Tracing.new(client)
+</span>  <span class='ivar'>@page_bindings</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='comment'># @coverage = Coverage.new(client)
+</span>  <span class='ivar'>@javascript_enabled</span> <span class='op'>=</span> <span class='kw'>true</span>
+  <span class='ivar'>@screenshot_task_queue</span> <span class='op'>=</span> <span class='id identifier rubyid_screenshot_task_queue'>screenshot_task_queue</span>
+
+  <span class='ivar'>@workers</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Target.attachedToTarget</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>targetInfo</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>type</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span> <span class='op'>!=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>worker</span><span class='tstring_end'>&#39;</span></span>
+      <span class='comment'># If we don&#39;t detach from service workers, they will never die.
+</span>      <span class='id identifier rubyid_await'><span class='object_link'><a href="ConcurrentRubyUtils.html#await-instance_method" title="Puppeteer::ConcurrentRubyUtils#await (method)">await</a></span></span> <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_send_message'>send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Target.detachFromTarget</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='label'>sessionId:</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>sessionId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+      <span class='kw'>next</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_session'>session</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Connection.html" title="Puppeteer::Connection (class)">Connection</a></span></span><span class='period'>.</span><span class='id identifier rubyid_from_session'><span class='object_link'><a href="Connection.html#from_session-class_method" title="Puppeteer::Connection.from_session (method)">from_session</a></span></span><span class='lparen'>(</span><span class='ivar'>@client</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_session'>session</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>sessionId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
+    <span class='comment'>#   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
+</span>    <span class='comment'>#   this._workers.set(event.sessionId, worker);
+</span>    <span class='comment'>#   this.emit(Events.Page.WorkerCreated, worker);
+</span>  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Target.detachedFromTarget</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_session_id'>session_id</span> <span class='op'>=</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>sessionId</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_worker'>worker</span> <span class='op'>=</span> <span class='ivar'>@workers</span><span class='lbracket'>[</span><span class='id identifier rubyid_session_id'>session_id</span><span class='rbracket'>]</span>
+    <span class='kw'>next</span> <span class='kw'>unless</span> <span class='id identifier rubyid_worker'>worker</span>
+
+    <span class='id identifier rubyid_emit_event'>emit_event</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.WorkerDestroyed</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_worker'>worker</span><span class='rparen'>)</span>
+    <span class='ivar'>@workers</span><span class='period'>.</span><span class='id identifier rubyid_delete'>delete</span><span class='lparen'>(</span><span class='id identifier rubyid_session_id'>session_id</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameAttached</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.FrameAttached</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameDetached</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.FrameDetached</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.FrameManager.FrameNavigated</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.FrameNavigated</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_network_manager'>network_manager</span> <span class='op'>=</span> <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span>
+  <span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.NetworkManager.Request</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.Request</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.NetworkManager.Response</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.Response</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.NetworkManager.RequestFailed</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.RequestFailed</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.NetworkManager.RequestFinished</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.RequestFinished</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_event'>event</span>
+  <span class='kw'>end</span>
+  <span class='comment'># this._fileChooserInterceptionIsDisabled = false;
+</span>  <span class='comment'># this._fileChooserInterceptors = new Set();
+</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.domContentEventFired</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.DOMContentLoaded</span><span class='tstring_end'>&#39;</span></span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Page.loadEventFired</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.Load</span><span class='tstring_end'>&#39;</span></span>
+  <span class='kw'>end</span>
+  <span class='comment'># client.on(&#39;Runtime.consoleAPICalled&#39;, event =&gt; this._onConsoleAPI(event));
+</span>  <span class='comment'># client.on(&#39;Runtime.bindingCalled&#39;, event =&gt; this._onBindingCalled(event));
+</span>  <span class='comment'># client.on(&#39;Page.javascriptDialogOpening&#39;, event =&gt; this._onDialog(event));
+</span>  <span class='comment'># client.on(&#39;Runtime.exceptionThrown&#39;, exception =&gt; this._handleException(exception.exceptionDetails));
+</span>  <span class='comment'># client.on(&#39;Inspector.targetCrashed&#39;, event =&gt; this._onTargetCrashed());
+</span>  <span class='comment'># client.on(&#39;Performance.metrics&#39;, event =&gt; this._emitMetrics(event));
+</span>  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_on_event'>on_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Log.entryAdded</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
+    <span class='id identifier rubyid_handle_log_entry_added'>handle_log_entry_added</span><span class='lparen'>(</span><span class='id identifier rubyid_event'>event</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='comment'># client.on(&#39;Page.fileChooserOpened&#39;, event =&gt; this._onFileChooser(event));
+</span>  <span class='ivar'>@target</span><span class='period'>.</span><span class='id identifier rubyid_on_close'>on_close</span> <span class='kw'>do</span>
+    <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Page.Close</span><span class='tstring_end'>&#39;</span></span>
+    <span class='ivar'>@closed</span> <span class='op'>=</span> <span class='kw'>true</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+  
+</div>
+
+  <div id="instance_attr_details" class="attr_details">
+    <h2>Instance Attribute Details</h2>
+    
+      
+      <span id=""></span>
+      <div class="method_details first">
+  <h3 class="signature first" id="accessibility-instance_method">
+  
+    #<strong>accessibility</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute accessibility.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+219
+220
+221</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 219</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_accessibility'>accessibility</span>
+  <span class='ivar'>@accessibility</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="coverage-instance_method">
+  
+    #<strong>coverage</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute coverage.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+219
+220
+221</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 219</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_coverage'>coverage</span>
+  <span class='ivar'>@coverage</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id="javascript_enabled=-instance_method"></span>
+      <div class="method_details ">
+  <h3 class="signature " id="javascript_enabled-instance_method">
+  
+    #<strong>javascript_enabled</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>/**</p>
+
+<pre class="code ruby"><code class="ruby">* @param {!{longitude: number, latitude: number, accuracy: (number|undefined)}} options
+*/
+</code></pre>
+
+<p>async setGeolocation(options) 
+<pre class="code ruby"><code class="ruby">const { longitude, latitude, accuracy = 0 = options;
+if (longitude &lt; -180 || longitude &gt; 180)
+  throw new Error(`Invalid longitude &quot;$longitude&quot;: precondition -180 &lt;= LONGITUDE &lt;= 180 failed.`);
+if (latitude &lt; -90 || latitude &gt; 90)
+  throw new Error(`Invalid latitude &quot;$latitude&quot;: precondition -90 &lt;= LATITUDE &lt;= 90 failed.`);
+if (accuracy &lt; 0)
+  throw new Error(`Invalid accuracy &quot;$accuracy&quot;: precondition 0 &lt;= ACCURACY failed.`);
+await this._client.send(&#39;Emulation.setGeolocationOverride&#39;, latitude, accuracy);
+</code></pre>
+
+<p>}</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+176
+177
+178</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 176</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_javascript_enabled'>javascript_enabled</span>
+  <span class='ivar'>@javascript_enabled</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="keyboard-instance_method">
+  
+    #<strong>keyboard</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute keyboard.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+219
+220
+221</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 219</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_keyboard'>keyboard</span>
+  <span class='ivar'>@keyboard</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="mouse-instance_method">
+  
+    #<strong>mouse</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute mouse.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+935
+936
+937</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 935</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_mouse'>mouse</span>
+  <span class='ivar'>@mouse</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="target-instance_method">
+  
+    #<strong>target</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>/**</p>
+
+<pre class="code ruby"><code class="ruby">* @param {!{longitude: number, latitude: number, accuracy: (number|undefined)}} options
+*/
+</code></pre>
+
+<p>async setGeolocation(options) 
+<pre class="code ruby"><code class="ruby">const { longitude, latitude, accuracy = 0 = options;
+if (longitude &lt; -180 || longitude &gt; 180)
+  throw new Error(`Invalid longitude &quot;$longitude&quot;: precondition -180 &lt;= LONGITUDE &lt;= 180 failed.`);
+if (latitude &lt; -90 || latitude &gt; 90)
+  throw new Error(`Invalid latitude &quot;$latitude&quot;: precondition -90 &lt;= LATITUDE &lt;= 90 failed.`);
+if (accuracy &lt; 0)
+  throw new Error(`Invalid accuracy &quot;$accuracy&quot;: precondition 0 &lt;= ACCURACY failed.`);
+await this._client.send(&#39;Emulation.setGeolocationOverride&#39;, latitude, accuracy);
+</code></pre>
+
+<p>}</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+176
+177
+178</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 176</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_target'>target</span>
+  <span class='ivar'>@target</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="touch_screen-instance_method">
+  
+    #<strong>touch_screen</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute touch_screen.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+219
+220
+221</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 219</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_touch_screen'>touch_screen</span>
+  <span class='ivar'>@touch_screen</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id="viewport=-instance_method"></span>
+      <div class="method_details ">
+  <h3 class="signature " id="viewport-instance_method">
+  
+    #<strong>viewport</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute viewport.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+758
+759
+760</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 758</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_viewport'>viewport</span>
+  <span class='ivar'>@viewport</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+
+  <div id="class_method_details" class="method_details_list">
+    <h2>Class Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="create-class_method">
+  
+    .<strong>create</strong>(client, target, ignore_https_errors, default_viewport, screenshot_task_queue)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="" title="Puppeteer::Page (class)">Page</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>client</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="CDPSession.html" title="Puppeteer::CDPSession (class)">CDPSession</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>target</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Target.html" title="Puppeteer::Target (class)">Target</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ignoreHTTPSErrors</span>
+      
+      
+        <span class='type'>(<tt>boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>defaultViewport</span>
+      
+      
+        <span class='type'>(<tt>?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Viewport.html" title="Puppeteer::Viewport (class)">Viewport</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>screenshotTaskQueue</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.TaskQueue</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="" title="Puppeteer::Page (class)">Page</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+16
+17
+18
+19
+20
+21
+22
+23</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 16</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_create'>create</span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='id identifier rubyid_target'>target</span><span class='comma'>,</span> <span class='id identifier rubyid_ignore_https_errors'>ignore_https_errors</span><span class='comma'>,</span> <span class='id identifier rubyid_default_viewport'>default_viewport</span><span class='comma'>,</span> <span class='id identifier rubyid_screenshot_task_queue'>screenshot_task_queue</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_page'>page</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="" title="Puppeteer::Page (class)">Page</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="#initialize-instance_method" title="Puppeteer::Page#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='id identifier rubyid_target'>target</span><span class='comma'>,</span> <span class='id identifier rubyid_ignore_https_errors'>ignore_https_errors</span><span class='comma'>,</span> <span class='id identifier rubyid_screenshot_task_queue'>screenshot_task_queue</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_page'>page</span><span class='period'>.</span><span class='id identifier rubyid_init'>init</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_default_viewport'>default_viewport</span>
+    <span class='id identifier rubyid_page'>page</span><span class='period'>.</span><span class='id identifier rubyid_viewport'>viewport</span> <span class='op'>=</span> <span class='id identifier rubyid_default_viewport'>default_viewport</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_page'>page</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="add_script_tag-instance_method">
+  
+    #<strong>add_script_tag</strong>(script_tag)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>style_tag</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Page/ScriptTag.html" title="Puppeteer::Page::ScriptTag (class)">Puppeteer::Page::ScriptTag</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+357
+358
+359</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 357</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_add_script_tag'>add_script_tag</span><span class='lparen'>(</span><span class='id identifier rubyid_script_tag'>script_tag</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_add_script_tag'>add_script_tag</span><span class='lparen'>(</span><span class='id identifier rubyid_script_tag'>script_tag</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="add_style_tag-instance_method">
+  
+    #<strong>add_style_tag</strong>(style_tag)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>style_tag</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Page/StyleTag.html" title="Puppeteer::Page::StyleTag (class)">Puppeteer::Page::StyleTag</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+373
+374
+375</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 373</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_add_style_tag'>add_style_tag</span><span class='lparen'>(</span><span class='id identifier rubyid_style_tag'>style_tag</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_add_style_tag'>add_style_tag</span><span class='lparen'>(</span><span class='id identifier rubyid_style_tag'>style_tag</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="async_click-instance_method">
+  
+    #<strong>async_click</strong>  &#x21d2; <tt>Future</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>delay</span>
+      
+      
+        <span class='type'>(<tt>Number</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>button</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>“left”|“right”|“middle”</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>click_count</span>
+      
+      
+        <span class='type'>(<tt>Number</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Future</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+950
+951
+952</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 950</span>
+
+<span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_click'>async_click</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="async_wait_for_navigation-instance_method">
+  
+    #<strong>async_wait_for_navigation</strong>  &#x21d2; <tt>Future</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number|nil</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>wait_until</span>
+      
+      
+        <span class='type'>(<tt>string|nil</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>&#39;load&#39; | &#39;domcontentloaded&#39; | &#39;networkidle0&#39; | &#39;networkidle2&#39;</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Future</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+632
+633
+634</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 632</span>
+
+<span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_wait_for_navigation'>async_wait_for_navigation</span><span class='lparen'>(</span><span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_wait_for_navigation'>wait_for_navigation</span><span class='lparen'>(</span><span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="authenticate-instance_method">
+  
+    #<strong>authenticate</strong>(username: nil, password: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>username</span>
+      
+      
+        <span class='type'>(<tt>String?</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>password</span>
+      
+      
+        <span class='type'>(<tt>String?</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+411
+412
+413</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 411</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_authenticate'>authenticate</span><span class='lparen'>(</span><span class='label'>username:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>password:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_authenticate'>authenticate</span><span class='lparen'>(</span><span class='label'>username:</span> <span class='id identifier rubyid_username'>username</span><span class='comma'>,</span> <span class='label'>password:</span> <span class='id identifier rubyid_password'>password</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="browser-instance_method">
+  
+    #<strong>browser</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+178
+179
+180</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 178</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_browser'>browser</span>
+  <span class='ivar'>@target</span><span class='period'>.</span><span class='id identifier rubyid_browser'>browser</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="browser_context-instance_method">
+  
+    #<strong>browser_context</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+182
+183
+184</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 182</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_browser_context'>browser_context</span>
+  <span class='ivar'>@target</span><span class='period'>.</span><span class='id identifier rubyid_browser_context'>browser_context</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="cache_enabled=-instance_method">
+  
+    #<strong>cache_enabled=</strong>(enabled)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>enabled</span>
+      
+      
+        <span class='type'>(<tt>boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+777
+778
+779</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 777</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_cache_enabled='>cache_enabled=</span><span class='lparen'>(</span><span class='id identifier rubyid_enabled'>enabled</span><span class='rparen'>)</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_cache_enabled'>cache_enabled</span> <span class='op'>=</span> <span class='id identifier rubyid_enabled'>enabled</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="click-instance_method">
+  
+    #<strong>click</strong>(selector, delay: nil, button: nil, click_count: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>delay</span>
+      
+      
+        <span class='type'>(<tt>Number</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>button</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>“left”|“right”|“middle”</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>click_count</span>
+      
+      
+        <span class='type'>(<tt>Number</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+941
+942
+943</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 941</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="close-instance_method">
+  
+    #<strong>close</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{runBeforeUnload: (boolean|undefined)}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+919
+920
+921
+922
+923
+924
+925
+926
+927
+928</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 919</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_close'>close</span>
+  <span class='comment'># assert(!!this._client._connection, &#39;Protocol error: Connection closed. Most likely the page has been closed.&#39;);
+</span>  <span class='comment'># const runBeforeUnload = !!options.runBeforeUnload;
+</span>  <span class='comment'># if (runBeforeUnload) {
+</span>  <span class='comment'>#   await this._client.send(&#39;Page.close&#39;);
+</span>  <span class='comment'># } else {
+</span>  <span class='comment'>#   await this._client._connection.send(&#39;Target.closeTarget&#39;, { targetId: this._target._targetId });
+</span>  <span class='comment'>#   await this._target._isClosedPromise;
+</span>  <span class='comment'># }
+</span><span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="closed?-instance_method">
+  
+    #<strong>closed?</strong>  &#x21d2; <tt>boolean</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+931
+932
+933</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 931</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_closed?'>closed?</span>
+  <span class='ivar'>@closed</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="content-instance_method">
+  
+    #<strong>content</strong>  &#x21d2; <tt>String</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+590
+591
+592</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 590</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_content'>content</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_content'>content</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="content=-instance_method">
+  
+    #<strong>content=</strong>(html)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>html</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+601
+602
+603</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 601</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_content='>content=</span><span class='lparen'>(</span><span class='id identifier rubyid_html'>html</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_set_content'>set_content</span><span class='lparen'>(</span><span class='id identifier rubyid_html'>html</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="default_navigation_timeout=-instance_method">
+  
+    #<strong>default_navigation_timeout=</strong>(timeout)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+239
+240
+241</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 239</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_default_navigation_timeout='>default_navigation_timeout=</span><span class='lparen'>(</span><span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
+  <span class='ivar'>@timeout_settings</span><span class='period'>.</span><span class='id identifier rubyid_default_navigation_timeout'>default_navigation_timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_timeout'>timeout</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="default_timeout=-instance_method">
+  
+    #<strong>default_timeout=</strong>(timeout)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+244
+245
+246</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 244</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_default_timeout='>default_timeout=</span><span class='lparen'>(</span><span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
+  <span class='ivar'>@timeout_settings</span><span class='period'>.</span><span class='id identifier rubyid_default_timeout'>default_timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_timeout'>timeout</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="emulate-instance_method">
+  
+    #<strong>emulate</strong>(device)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>device</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Device.html" title="Puppeteer::Device (class)">Device</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+697
+698
+699
+700</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 697</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_emulate'>emulate</span><span class='lparen'>(</span><span class='id identifier rubyid_device'>device</span><span class='rparen'>)</span>
+  <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_viewport'>viewport</span> <span class='op'>=</span> <span class='id identifier rubyid_device'>device</span><span class='period'>.</span><span class='id identifier rubyid_viewport'>viewport</span>
+  <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_user_agent'>user_agent</span> <span class='op'>=</span> <span class='id identifier rubyid_device'>device</span><span class='period'>.</span><span class='id identifier rubyid_user_agent'>user_agent</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="emulate_timezone-instance_method">
+  
+    #<strong>emulate_timezone</strong>(timezone_id)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timezone_id</span>
+      
+      
+        <span class='type'>(<tt>String?</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+741
+742
+743
+744
+745
+746
+747
+748
+749</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 741</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_emulate_timezone'>emulate_timezone</span><span class='lparen'>(</span><span class='id identifier rubyid_timezone_id'>timezone_id</span><span class='rparen'>)</span>
+  <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_send_message'>send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Emulation.setTimezoneOverride</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='label'>timezoneId:</span> <span class='id identifier rubyid_timezoneId'>timezoneId</span> <span class='op'>||</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+<span class='kw'>rescue</span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_err'>err</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Invalid timezone</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Invalid timezone ID: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_timezone_id'>timezone_id</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>else</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='id identifier rubyid_err'>err</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="evaluate-instance_method">
+  
+    #<strong>evaluate</strong>(page_function, *args)  &#x21d2; <tt>!Promise&lt;*&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>pageFunction</span>
+      
+      
+        <span class='type'>(<tt>Function|string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>!Array&lt;*&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;*&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+763
+764
+765</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 763</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="evaluate_handle-instance_method">
+  
+    #<strong>evaluate_handle</strong>(page_function, *args)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>pageFunction</span>
+      
+      
+        <span class='type'>(<tt>Function|string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>!Array&lt;*&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+265
+266
+267
+268</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 265</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_execution_context'>execution_context</span>
+  <span class='id identifier rubyid_context'>context</span><span class='period'>.</span><span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="extra_http_headers=-instance_method">
+  
+    #<strong>extra_http_headers=</strong>(headers)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>headers</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+416
+417
+418</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 416</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_extra_http_headers='>extra_http_headers=</span><span class='lparen'>(</span><span class='id identifier rubyid_headers'>headers</span><span class='rparen'>)</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_extra_http_headers'>extra_http_headers</span> <span class='op'>=</span> <span class='id identifier rubyid_headers'>headers</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="focus-instance_method">
+  
+    #<strong>focus</strong>(selector)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+955
+956
+957</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 955</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_focus'>focus</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_focus'>focus</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="frames-instance_method">
+  
+    #<strong>frames</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+221
+222
+223</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 221</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_frames'>frames</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_frames'>frames</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="go_back-instance_method">
+  
+    #<strong>go_back</strong>(timeout: nil, wait_until: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>wait_until</span>
+      
+      
+        <span class='type'>(<tt>string|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>&#39;load&#39; | &#39;domcontentloaded&#39; | &#39;networkidle0&#39; | &#39;networkidle2&#39;</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+674
+675
+676</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 674</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_go_back'>go_back</span><span class='lparen'>(</span><span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_go'>go</span><span class='lparen'>(</span><span class='op'>-</span><span class='int'>1</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="go_forward-instance_method">
+  
+    #<strong>go_forward</strong>(timeout: nil, wait_until: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>wait_until</span>
+      
+      
+        <span class='type'>(<tt>string|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>&#39;load&#39; | &#39;domcontentloaded&#39; | &#39;networkidle0&#39; | &#39;networkidle2&#39;</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+680
+681
+682</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 680</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_go_forward'>go_forward</span><span class='lparen'>(</span><span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_go'>go</span><span class='lparen'>(</span><span class='int'>+1</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="goto-instance_method">
+  
+    #<strong>goto</strong>(url, referer: nil, timeout: nil, wait_until: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>url</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>rederer</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>number|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>wait_until</span>
+      
+      
+        <span class='type'>(<tt>string|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>&#39;load&#39; | &#39;domcontentloaded&#39; | &#39;networkidle0&#39; | &#39;networkidle2&#39;</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+609
+610
+611</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 609</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_goto'>goto</span><span class='lparen'>(</span><span class='id identifier rubyid_url'>url</span><span class='comma'>,</span> <span class='label'>referer:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_goto'>goto</span><span class='lparen'>(</span><span class='id identifier rubyid_url'>url</span><span class='comma'>,</span> <span class='label'>referer:</span> <span class='id identifier rubyid_referer'>referer</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="hover-instance_method">
+  
+    #<strong>hover</strong>(selector)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+960
+961
+962</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 960</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_hover'>hover</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_hover'>hover</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="init-instance_method">
+  
+    #<strong>init</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+116
+117
+118
+119
+120
+121
+122
+123</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 116</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_init'>init</span>
+  <span class='id identifier rubyid_await_all'><span class='object_link'><a href="ConcurrentRubyUtils.html#await_all-instance_method" title="Puppeteer::ConcurrentRubyUtils#await_all (method)">await_all</a></span></span><span class='lparen'>(</span>
+    <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_async_init'>async_init</span><span class='comma'>,</span>
+    <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_async_send_message'>async_send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Target.setAutoAttach</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='label'>autoAttach:</span> <span class='kw'>true</span><span class='comma'>,</span> <span class='label'>waitForDebuggerOnStart:</span> <span class='kw'>false</span><span class='comma'>,</span> <span class='label'>flatten:</span> <span class='kw'>true</span><span class='rparen'>)</span><span class='comma'>,</span>
+    <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_async_send_message'>async_send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Performance.enable</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span><span class='comma'>,</span>
+    <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_async_send_message'>async_send_message</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Log.enable</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span><span class='comma'>,</span>
+  <span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="main_frame-instance_method">
+  
+    #<strong>main_frame</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+215
+216
+217</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 215</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_main_frame'>main_frame</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_main_frame'>main_frame</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="offline_mode=-instance_method">
+  
+    #<strong>offline_mode=</strong>(enabled)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+234
+235
+236</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 234</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_offline_mode='>offline_mode=</span><span class='lparen'>(</span><span class='id identifier rubyid_enabled'>enabled</span><span class='rparen'>)</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_offline_mode'>offline_mode</span> <span class='op'>=</span> <span class='id identifier rubyid_enabled'>enabled</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="query_objects-instance_method">
+  
+    #<strong>query_objects</strong>(prototype_handle)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>prototypeHandle</span>
+      
+      
+        <span class='type'>(<tt>!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+272
+273
+274
+275</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 272</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_query_objects'>query_objects</span><span class='lparen'>(</span><span class='id identifier rubyid_prototype_handle'>prototype_handle</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_execution_context'>execution_context</span>
+  <span class='id identifier rubyid_context'>context</span><span class='period'>.</span><span class='id identifier rubyid_query_objects'>query_objects</span><span class='lparen'>(</span><span class='id identifier rubyid_prototype_handle'>prototype_handle</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="reload-instance_method">
+  
+    #<strong>reload</strong>(timeout: nil, wait_until: nil)  &#x21d2; <tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.Response&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{timeout?: number, waitUntil?: string|!Array&lt;string&gt;}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.Response&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+615
+616
+617
+618
+619
+620
+621</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 615</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_reload'>reload</span><span class='lparen'>(</span><span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='comment'># const [response] = await Promise.all([
+</span>  <span class='comment'>#   this.waitForNavigation(options),
+</span>  <span class='comment'>#   this._client.send(&#39;Page.reload&#39;)
+</span>  <span class='comment'># ]);
+</span>  <span class='comment'># return response;
+</span><span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="request_interception=-instance_method">
+  
+    #<strong>request_interception=</strong>(value)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>value</span>
+      
+      
+        <span class='type'>(<tt>Bool</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+230
+231
+232</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 230</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_request_interception='>request_interception=</span><span class='lparen'>(</span><span class='id identifier rubyid_value'>value</span><span class='rparen'>)</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_request_interception'>request_interception</span> <span class='op'>=</span> <span class='id identifier rubyid_value'>value</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="S-instance_method">
+  
+    #<strong>S</strong>(selector)  &#x21d2; <tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>`$()` in JavaScript. $ is not allowed to use as a method name in Ruby.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+251
+252
+253</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 251</span>
+
+<span class='kw'>def</span> <span class='const'>S</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='const'>S</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="screenshot-instance_method">
+  
+    #<strong>screenshot</strong>(options = {})  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>/**</p>
+
+<pre class="code ruby"><code class="ruby">* @param {!ScreenshotOptions=} options
+* @return {!Promise&lt;!Buffer|!String&gt;}
+*/
+</code></pre>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+790
+791
+792
+793
+794
+795</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 790</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_screenshot'>screenshot</span><span class='lparen'>(</span><span class='id identifier rubyid_options'>options</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_screenshot_options'>screenshot_options</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="Page/ScreenshotOptions.html" title="Puppeteer::Page::ScreenshotOptions (class)">ScreenshotOptions</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Page/ScreenshotOptions.html#initialize-instance_method" title="Puppeteer::Page::ScreenshotOptions#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
+
+  <span class='comment'># @screenshot_task_queue.post_task(-&gt; { screenshot_task(screenshot_options.type, screenshot_options) })
+</span>  <span class='id identifier rubyid_screenshot_task'>screenshot_task</span><span class='lparen'>(</span><span class='id identifier rubyid_screenshot_options'>screenshot_options</span><span class='period'>.</span><span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='id identifier rubyid_screenshot_options'>screenshot_options</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="select-instance_method">
+  
+    #<strong>select</strong>(selector, *values)  &#x21d2; <tt>!Promise&lt;!Array&lt;string&gt;&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>values</span>
+      
+      
+        <span class='type'>(<tt>!Array&lt;string&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!Array&lt;string&gt;&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+967
+968
+969</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 967</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_select'>select</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_values'>values</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_select'>select</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_values'>values</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="set_content-instance_method">
+  
+    #<strong>set_content</strong>(html, timeout: nil, wait_until: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>html</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{timeout?: number, waitUntil?: string|!Array&lt;string&gt;}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+596
+597
+598</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 596</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_set_content'>set_content</span><span class='lparen'>(</span><span class='id identifier rubyid_html'>html</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_set_content'>set_content</span><span class='lparen'>(</span><span class='id identifier rubyid_html'>html</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='comma'>,</span> <span class='label'>wait_until:</span> <span class='id identifier rubyid_wait_until'>wait_until</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="Seval-instance_method">
+  
+    #<strong>Seval</strong>(selector, page_function, *args)  &#x21d2; <tt>!Promise&lt;(!Object|undefined)&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>`$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>pageFunction</span>
+      
+      
+        <span class='type'>(<tt>Function|string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>!Array&lt;*&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;(!Object|undefined)&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+282
+283
+284</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 282</span>
+
+<span class='kw'>def</span> <span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="SS-instance_method">
+  
+    #<strong>SS</strong>(selector)  &#x21d2; <tt>!Promise&lt;!Array&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>`$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!Array&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+258
+259
+260</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 258</span>
+
+<span class='kw'>def</span> <span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="SSeval-instance_method">
+  
+    #<strong>SSeval</strong>(selector, page_function, *args)  &#x21d2; <tt>!Promise&lt;(!Object|undefined)&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>`$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>pageFunction</span>
+      
+      
+        <span class='type'>(<tt>Function|string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>!Array&lt;*&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;(!Object|undefined)&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+291
+292
+293</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 291</span>
+
+<span class='kw'>def</span> <span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="Sx-instance_method">
+  
+    #<strong>Sx</strong>(expression)  &#x21d2; <tt>!Promise&lt;!Array&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>`$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>expression</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!Array&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+298
+299
+300</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 298</span>
+
+<span class='kw'>def</span> <span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="tap-instance_method">
+  
+    #<strong>tap</strong>(selector)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+972
+973
+974</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 972</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_tap'>tap</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_tap'>tap</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="title-instance_method">
+  
+    #<strong>title</strong>  &#x21d2; <tt>!Promise&lt;string&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;string&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+782
+783
+784</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 782</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_title'>title</span>
+  <span class='ivar'>@title</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="type-instance_method">
+  
+    #<strong>type</strong>(selector, text, delay: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>text</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>{delay: (number|undefined)}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+979
+980
+981</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 979</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_type'>type</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_type'>type</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="url-instance_method">
+  
+    #<strong>url</strong>  &#x21d2; <tt>String</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+585
+586
+587</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 585</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_url'>url</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_url'>url</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="user_agent=-instance_method">
+  
+    #<strong>user_agent=</strong>(user_agent)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>user_agent</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+421
+422
+423</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 421</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_user_agent='>user_agent=</span><span class='lparen'>(</span><span class='id identifier rubyid_user_agent'>user_agent</span><span class='rparen'>)</span>
+  <span class='ivar'>@frame_manager</span><span class='period'>.</span><span class='id identifier rubyid_network_manager'>network_manager</span><span class='period'>.</span><span class='id identifier rubyid_user_agent'>user_agent</span> <span class='op'>=</span> <span class='id identifier rubyid_user_agent'>user_agent</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="wait_for_function-instance_method">
+  
+    #<strong>wait_for_function</strong>(page_function, options = {}, *args)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>pageFunction</span>
+      
+      
+        <span class='type'>(<tt>Function|string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{polling?: string|number, timeout?: number}=</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>!Array&lt;*&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="JSHandle.html" title="Puppeteer::JSHandle (class)">JSHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+1011
+1012
+1013</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 1011</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_wait_for_function'>wait_for_function</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_wait_for_function'>wait_for_function</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="wait_for_selector-instance_method">
+  
+    #<strong>wait_for_selector</strong>(selector, visible: nil, hidden: nil, timeout: nil)  &#x21d2; <tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{visible?: boolean, hidden?: boolean, timeout?: number}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+996
+997
+998</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 996</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_wait_for_selector'>wait_for_selector</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_wait_for_selector'>wait_for_selector</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='id identifier rubyid_visible'>visible</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='id identifier rubyid_hidden'>hidden</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="wait_for_xpath-instance_method">
+  
+    #<strong>wait_for_xpath</strong>(xpath, visible: nil, hidden: nil, timeout: nil)  &#x21d2; <tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>xpath</span>
+      
+      
+        <span class='type'>(<tt>string</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt>!{visible?: boolean, hidden?: boolean, timeout?: number}=</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>!Promise&lt;?<span class='object_link'><a href="../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="ElementHandle.html" title="Puppeteer::ElementHandle (class)">ElementHandle</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+1003
+1004
+1005</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 1003</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_wait_for_xpath'>wait_for_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_xpath'>xpath</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_main_frame'>main_frame</span><span class='period'>.</span><span class='id identifier rubyid_wait_for_xpath'>wait_for_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_xpath'>xpath</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='id identifier rubyid_visible'>visible</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='id identifier rubyid_hidden'>hidden</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="workers-instance_method">
+  
+    #<strong>workers</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+225
+226
+227</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/page.rb', line 225</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_workers'>workers</span>
+  <span class='ivar'>@workers</span><span class='period'>.</span><span class='id identifier rubyid_values'>values</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+      <div id="footer">
+  Generated on Sun Apr 26 15:52:56 2020 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.24 (ruby-2.6.3).
+</div>
+
+    </div>
+  </body>
+</html>
