@@ -67,6 +67,10 @@ Layout/IndentationConsistency:
   Enabled: true
   EnforcedStyle: indented_internal_methods
 
+# Detect hard tabs, no hard tabs.
+Layout/IndentationStyle:
+  Enabled: true
+
 # Two spaces, no tabs (for indentation).
 Layout/IndentationWidth:
   Enabled: true
@@ -122,10 +126,6 @@ Layout/SpaceInsideHashLiteralBraces:
   Enabled: true
 
 Layout/SpaceInsideParens:
-  Enabled: true
-
-# Detect hard tabs, no hard tabs.
-Layout/Tab:
   Enabled: true
 
 # Empty lines should not have any spaces.

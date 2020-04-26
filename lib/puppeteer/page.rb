@@ -51,7 +51,7 @@ class Puppeteer::Page
         next
       end
 
-      session = Puppeteer::Connection.from_session(@client).session(event['sessionId'])
+      session = Puppeteer::Connection.from_session(@client).session(event['sessionId']) # rubocop:disable Lint/UselessAssignment
       #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
       #   this._workers.set(event.sessionId, worker);
       #   this.emit(Events.Page.WorkerCreated, worker);

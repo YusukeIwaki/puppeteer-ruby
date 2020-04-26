@@ -3,6 +3,32 @@ orbs:
   ruby: circleci/ruby@0.1.2
 
 jobs:
+  rspec:
+    docker:
+      - image: circleci/ruby:2.6.3-stretch-node-browsers
+    executor: ruby/default
+    steps:
+      - checkout
+      - ruby/bundle-install
+      - run:
+          name: rspec
+          command: |
+            bundle exec rspec --profile 10 \
+              --format RspecJunitFormatter \
+              --out test_results/rspec.xml \
+              --format progress
+
+  rubocop:
+    docker:
+      - image: circleci/ruby:2.6.3-stretch-node
+    executor: ruby/default
+    steps:
+      - checkout
+      - ruby/bundle-install
+      - run:
+          name: rubocop
+          command: bundle exec rubocop
+
   deploy:
     docker:
       - image: circleci/ruby:2.6.3-stretch-node
@@ -31,6 +57,10 @@ jobs:
           command: gem push pkg/puppeteer-ruby-$CIRCLE_TAG.gem
 
 workflows:
+  ci:
+    jobs:
+      - rspec
+      - rubocop
   rubygems-deploy:
     jobs:
       - deploy:
