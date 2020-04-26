@@ -29,20 +29,6 @@ jobs:
           name: rubocop
           command: bundle exec rubocop
 
-  check_yardoc:
-    docker:
-      - image: circleci/ruby:2.6.3-stretch-node
-    executor: ruby/default
-    steps:
-      - checkout
-      - ruby/bundle-install
-      - run:
-          name: yardoc
-          command: mkdir -p docs && bundle exec yardoc --out docs_by_circleci
-      - run:
-          name: diff docs_by_circleci v.s. docs
-          command: diff -bru docs_by_circleci docs
-
   deploy:
     docker:
       - image: circleci/ruby:2.6.3-stretch-node
@@ -73,7 +59,6 @@ jobs:
 workflows:
   ci:
     jobs:
-      - check_yardoc
       - rspec
       - rubocop
   rubygems-deploy:
