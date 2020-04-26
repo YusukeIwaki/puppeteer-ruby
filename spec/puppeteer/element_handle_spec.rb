@@ -13,7 +13,7 @@ RSpec.describe Puppeteer::ElementHandle do
     end
 
     describe '/' do
-      subject { Puppeteer::ElementHandle::Point.new(x: 8, y:10) / 2 }
+      subject { Puppeteer::ElementHandle::Point.new(x: 8, y: 10) / 2 }
 
       it {
         expect(subject.x).to eq(4)
@@ -22,7 +22,7 @@ RSpec.describe Puppeteer::ElementHandle do
     end
 
     describe '+' do
-      subject { Puppeteer::ElementHandle::Point.new(x: 16, y:10) + Puppeteer::ElementHandle::Point.new(x: 3, y:9) }
+      subject { Puppeteer::ElementHandle::Point.new(x: 16, y: 10) + Puppeteer::ElementHandle::Point.new(x: 3, y: 9) }
 
       it {
         expect(subject.x).to eq(19)

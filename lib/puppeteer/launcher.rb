@@ -6,7 +6,6 @@ require_relative './launcher/launch_options'
 
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
 module Puppeteer::Launcher
-
   # @param {string} projectRoot
   # @param {string} preferredRevision
   # @param {boolean} isPuppeteerCore

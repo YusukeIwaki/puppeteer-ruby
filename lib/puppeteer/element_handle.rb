@@ -410,8 +410,9 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @return [Object]
   def SSeval(selector, page_function, *args)
     handles = evaluate_handle(
-                '(element, selector) => Array.from(element.querySelectorAll(selector))',
-                selector)
+      '(element, selector) => Array.from(element.querySelectorAll(selector))',
+      selector,
+    )
     result = handles.evaluate(page_function, *args)
     handles.dispose
 

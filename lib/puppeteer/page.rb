@@ -204,7 +204,9 @@ class Puppeteer::Page
     end
     if source != 'worker'
       console_message_location = Puppeteer::ConsoleMessage::Location.new(
-                                    url: url, line_number: line_number)
+        url: url,
+        line_number: line_number,
+      )
       emit_event('Events.Page.Console',
         Puppeteer::ConsoleMessage.new(level, text, [], console_message_location))
     end

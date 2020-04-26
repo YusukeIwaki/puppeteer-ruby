@@ -73,7 +73,7 @@ class Puppeteer::LifecycleWatcher
       terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
     end
     @listener_ids['frame_manager'] = [
-      @frame_manager.add_event_listener('Events.FrameManager.LifecycleEvent') do |frame|
+      @frame_manager.add_event_listener('Events.FrameManager.LifecycleEvent') do |_|
         check_lifecycle_complete
       end,
       @frame_manager.add_event_listener('Events.FrameManager.FrameNavigatedWithinDocument', &method(:navigated_within_document)),

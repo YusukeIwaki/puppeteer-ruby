@@ -55,9 +55,10 @@ class Puppeteer
 
     def instance
       @instance ||= Puppeteer.new(
-                      project_root: __dir__,
-                      preferred_revision: '706915',
-                      is_puppeteer_core: true)
+        project_root: __dir__,
+        preferred_revision: '706915',
+        is_puppeteer_core: true,
+      )
     end
   end
 
@@ -151,10 +152,11 @@ class Puppeteer
 
   private def launcher
     @launcher ||= Puppeteer::Launcher.new(
-                    project_root: @project_root,
-                    preferred_revision: @preferred_revision,
-                    is_puppeteer_core: @is_puppeteer_core,
-                    product: @product_name)
+      project_root: @project_root,
+      preferred_revision: @preferred_revision,
+      is_puppeteer_core: @is_puppeteer_core,
+      product: @product_name,
+    )
   end
 
   # @return {string}

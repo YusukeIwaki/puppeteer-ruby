@@ -89,8 +89,9 @@ class Puppeteer::JSHandle
     response['result'].each_with_object({}) do |prop, h|
       next unless prop['enumerable']
       h[prop['name']] = Puppeteer::JSHandle.create(
-                          context: @context,
-                          remote_object: Puppeteer::RemoteObject.new(prop['value']))
+        context: @context,
+        remote_object: Puppeteer::RemoteObject.new(prop['value']),
+      )
     end
   end
 

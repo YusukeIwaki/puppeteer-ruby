@@ -108,8 +108,8 @@ class Puppeteer::Browser
       context.emit_event 'Events.BrowserContext.TargetCreated', target
     end
 
-    if_present(pending_target_info_changed_event.delete(target_info.target_id)) do |event|
-      handle_target_info_changed(event)
+    if_present(pending_target_info_changed_event.delete(target_info.target_id)) do |pending_event|
+      handle_target_info_changed(pending_event)
     end
   end
 
