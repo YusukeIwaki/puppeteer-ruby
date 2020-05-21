@@ -19,6 +19,11 @@ class Puppeteer::DOMWorld
 
   attr_reader :frame
 
+  # only used in Puppeteer::WaitTask#initialize
+  def _wait_tasks
+    @wait_tasks
+  end
+
   # @param {?Puppeteer.ExecutionContext} context
   def context=(context)
     # D, [2020-04-12T22:45:03.938754 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>3, "origin"=>"https://github.com", "name"=>"", "auxData"=>{"isDefault"=>true, "type"=>"default", "frameId"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB"}}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
@@ -35,8 +40,7 @@ class Puppeteer::DOMWorld
         @context_promise = resolvable_future
       end
       @context_promise.fulfill(context)
-    #   for (const waitTask of this._waitTasks)
-    #     waitTask.rerun();
+      @wait_tasks.each(&:async_rerun)
     else
       raise ArgumentError.new("context should now be nil. Use #delete_context for clearing document.")
     end
@@ -386,14 +390,13 @@ class Puppeteer::DOMWorld
   #   await handle.dispose();
   # }
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # waitForSelector(selector, options) {
-  #   return this._waitForSelectorOrXPath(selector, false, options);
-  # }
+  # @param selector [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
+    wait_for_selector_or_xpath(selector, false, visible: visible, hidden: hidden, timeout: timeout)
+  end
 
   # /**
   #  * @param {string} xpath
@@ -424,57 +427,68 @@ class Puppeteer::DOMWorld
   #   return this.evaluate(() => document.title);
   # }
 
-  # /**
-  #  * @param {string} selectorOrXPath
-  #  * @param {boolean} isXPath
-  #  * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # async _waitForSelectorOrXPath(selectorOrXPath, isXPath, options = {}) {
-  #   const {
-  #     visible: waitForVisible = false,
-  #     hidden: waitForHidden = false,
-  #     timeout = this._timeoutSettings.timeout(),
-  #   } = options;
-  #   const polling = waitForVisible || waitForHidden ? 'raf' : 'mutation';
-  #   const title = `${isXPath ? 'XPath' : 'selector'} "${selectorOrXPath}"${waitForHidden ? ' to be hidden' : ''}`;
-  #   const waitTask = new WaitTask(this, predicate, title, polling, timeout, selectorOrXPath, isXPath, waitForVisible, waitForHidden);
-  #   const handle = await waitTask.promise;
-  #   if (!handle.asElement()) {
-  #     await handle.dispose();
-  #     return null;
-  #   }
-  #   return handle.asElement();
+  # @param selector_or_xpath [String]
+  # @param is_xpath [Boolean]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
+  private def wait_for_selector_or_xpath(selector_or_xpath, is_xpath, visible: nil, hidden: nil, timeout: nil)
+    option_wait_for_visible = visible || false
+    option_wait_for_hidden = hidden || false
+    option_timeout = timeout || @timeout_settings.timeout
 
-  #   /**
-  #    * @param {string} selectorOrXPath
-  #    * @param {boolean} isXPath
-  #    * @param {boolean} waitForVisible
-  #    * @param {boolean} waitForHidden
-  #    * @return {?Node|boolean}
-  #    */
-  #   function predicate(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
-  #     const node = isXPath
-  #       ? document.evaluate(selectorOrXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-  #       : document.querySelector(selectorOrXPath);
-  #     if (!node)
-  #       return waitForHidden;
-  #     if (!waitForVisible && !waitForHidden)
-  #       return node;
-  #     const element = /** @type {Element} */ (node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
+    polling =
+      if option_wait_for_visible || option_wait_for_hidden
+        'raf'
+      else
+        'mutation'
+      end
+    title = "#{is_xpath ? :XPath : :selector} #{selector_or_xpath}#{option_wait_for_hidden ? 'to be hidden' : ''}"
 
-  #     const style = window.getComputedStyle(element);
-  #     const isVisible = style && style.visibility !== 'hidden' && hasVisibleBoundingBox();
-  #     const success = (waitForVisible === isVisible || waitForHidden === !isVisible);
-  #     return success ? node : null;
+    wait_task = Puppeteer::WaitTask.new(
+      dom_world: self,
+      predicate_body: "return (#{PREDICATE})(...args)",
+      title: title,
+      polling: polling,
+      timeout: option_timeout,
+      args: [selector_or_xpath, is_xpath, option_wait_for_visible, option_wait_for_hidden],
+    )
+    handle = wait_task.await_promise
+    unless handle.as_element
+      handle.dispose
+      return nil
+    end
+    handle.as_element
+  end
 
-  #     /**
-  #      * @return {boolean}
-  #      */
-  #     function hasVisibleBoundingBox() {
-  #       const rect = element.getBoundingClientRect();
-  #       return !!(rect.top || rect.bottom || rect.width || rect.height);
-  #     }
-  #   }
-  # }
+  PREDICATE = <<~JAVASCRIPT
+  /**
+    * @param {string} selectorOrXPath
+    * @param {boolean} isXPath
+    * @param {boolean} waitForVisible
+    * @param {boolean} waitForHidden
+    * @return {?Node|boolean}
+    */
+  function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
+      const node = isXPath
+          ? document.evaluate(selectorOrXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+          : document.querySelector(selectorOrXPath);
+      if (!node)
+          return waitForHidden;
+      if (!waitForVisible && !waitForHidden)
+          return node;
+      const element = /** @type {Element} */ (node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
+      const style = window.getComputedStyle(element);
+      const isVisible = style && style.visibility !== 'hidden' && hasVisibleBoundingBox();
+      const success = (waitForVisible === isVisible || waitForHidden === !isVisible);
+      return success ? node : null;
+      /**
+        * @return {boolean}
+        */
+      function hasVisibleBoundingBox() {
+          const rect = element.getBoundingClientRect();
+          return !!(rect.top || rect.bottom || rect.width || rect.height);
+      }
+  }
+  JAVASCRIPT
 end

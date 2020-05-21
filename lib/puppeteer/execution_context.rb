@@ -122,7 +122,7 @@ class Puppeteer::ExecutionContext
       remote_object = Puppeteer::RemoteObject.new(result['result'])
 
       if exception_details
-        raise EvaluationError.new("Evaluation failed: #{exceptionDetails}")
+        raise EvaluationError.new("Evaluation failed: #{exception_details}")
       end
 
       if @return_by_value
@@ -216,20 +216,26 @@ class Puppeteer::ExecutionContext
   #   return createJSHandle(this, response.objects);
   # }
 
-  # /**
-  #  * @param {Puppeteer.ElementHandle} elementHandle
-  #  * @return {Promise<Puppeteer.ElementHandle>}
-  #  */
-  # async _adoptElementHandle(elementHandle) {
-  #   assert(elementHandle.executionContext() !== this, 'Cannot adopt handle that already belongs to this execution context');
-  #   assert(this._world, 'Cannot adopt handle without DOMWorld');
-  #   const nodeInfo = await this._client.send('DOM.describeNode', {
-  #     objectId: elementHandle._remoteObject.objectId,
-  #   });
-  #   const {object} = await this._client.send('DOM.resolveNode', {
-  #     backendNodeId: nodeInfo.node.backendNodeId,
-  #     executionContextId: this._contextId,
-  #   });
-  #   return /** @type {Puppeteer.ElementHandle}*/(createJSHandle(this, object));
-  # }
+  # @param element_handle [Puppeteer::ElementHandle]
+  # @return [Puppeteer::ElementHandle]
+  def adopt_element_handle(element_handle)
+    if element_handle.execution_context == self
+      raise ArgumentError.new('Cannot adopt handle that already belongs to this execution context')
+    end
+
+    unless @world
+      raise 'Cannot adopt handle without DOMWorld'
+    end
+
+    node_info = element_handle.remote_object.node_info(@client)
+    response = @client.send_message('DOM.resolveNode',
+      backendNodeId: node_info["node"]["backendNodeId"],
+      executionContextId: @context_id,
+    )
+
+    Puppeteer::JSHandle.create(
+      context: self,
+      remote_object: Puppeteer::RemoteObject.new(response["object"]),
+    )
+  end
 end
