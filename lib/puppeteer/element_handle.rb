@@ -419,33 +419,26 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     result
   end
 
-  #  /**
-  #   * @param {string} expression
-  #   * @return {!Promise<!Array<!ElementHandle>>}
-  #   */
-  #  async $x(expression) {
-  #    const arrayHandle = await this.evaluateHandle(
-  #        (element, expression) => {
-  #          const document = element.ownerDocument || element;
-  #          const iterator = document.evaluate(expression, element, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
-  #          const array = [];
-  #          let item;
-  #          while ((item = iterator.iterateNext()))
-  #            array.push(item);
-  #          return array;
-  #        },
-  #        expression
-  #    );
-  #    const properties = await arrayHandle.getProperties();
-  #    await arrayHandle.dispose();
-  #    const result = [];
-  #    for (const property of properties.values()) {
-  #      const elementHandle = property.asElement();
-  #      if (elementHandle)
-  #        result.push(elementHandle);
-  #    }
-  #    return result;
-  #  }
+  # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param expression [String]
+  # @return [Array<ElementHandle>]
+  def Sx(expression)
+    fn = <<~JAVASCRIPT
+    (element, expression) => {
+      const document = element.ownerDocument || element;
+      const iterator = document.evaluate(expression, element, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
+      const array = [];
+      let item;
+      while ((item = iterator.iterateNext()))
+        array.push(item);
+      return array;
+    }
+    JAVASCRIPT
+    handles = evaluate_handle(fn, expression)
+    properties = handles.properties
+    handles.dispose
+    properties.values.map(&:as_element).compact
+  end
 
   #  /**
   #   * @returns {!Promise<boolean>}
