@@ -228,11 +228,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #    }, files);
   #  }
 
-  #  async tap() {
-  #    await this._scrollIntoViewIfNeeded();
-  #    const {x, y} = await this._clickablePoint();
-  #    await this._page.touchscreen.tap(x, y);
-  #  }
+  def tap
+    scroll_into_view_if_needed
+    point = clickable_point
+    @page.touchscreen.tap(point.x, point.y)
+  end
 
 
   def focus

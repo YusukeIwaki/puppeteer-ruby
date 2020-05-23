@@ -173,11 +173,11 @@ class Puppeteer::Frame
     @secondary_world.tap(selector)
   end
 
-  # @param {string} selector
-  # @param {string} text
-  # @param {{delay: (number|undefined)}=} options
-  def type(selector, text, delay: nil)
-    @main_world.type(selector, text, delay: delay)
+  # @param selector [String]
+  # @param text [String]
+  # @param delay [Number]
+  def type_text(selector, text, delay: nil)
+    @main_world.type_text(selector, text, delay: delay)
   end
 
   # /**

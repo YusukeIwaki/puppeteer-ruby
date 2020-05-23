@@ -368,27 +368,21 @@ class Puppeteer::DOMWorld
   #   return result;
   # }
 
-  # /**
-  #  * @param {string} selector
-  #  */
-  # async tap(selector) {
-  #   const handle = await this.$(selector);
-  #   assert(handle, 'No node found for selector: ' + selector);
-  #   await handle.tap();
-  #   await handle.dispose();
-  # }
+  # @param selector [String]
+  def tap(selector)
+    handle = S(selector)
+    handle.tap
+    handle.dispose
+  end
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {string} text
-  #  * @param {{delay: (number|undefined)}=} options
-  #  */
-  # async type(selector, text, options) {
-  #   const handle = await this.$(selector);
-  #   assert(handle, 'No node found for selector: ' + selector);
-  #   await handle.type(text, options);
-  #   await handle.dispose();
-  # }
+  # @param selector [String]
+  # @param text [String]
+  # @param delay [Number]
+  def type_text(selector, text, delay: nil)
+    handle = S(selector)
+    handle.type_text(text, delay: delay)
+    handle.dispose
+  end
 
   # @param selector [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
@@ -398,14 +392,13 @@ class Puppeteer::DOMWorld
     wait_for_selector_or_xpath(selector, false, visible: visible, hidden: hidden, timeout: timeout)
   end
 
-  # /**
-  #  * @param {string} xpath
-  #  * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  #  * @return {!Promise<?Puppeteer.ElementHandle>}
-  #  */
-  # waitForXPath(xpath, options) {
-  #   return this._waitForSelectorOrXPath(xpath, true, options);
-  # }
+  # @param xpath [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+    wait_for_selector_or_xpath(xpath, true, visible: visible, hidden: hidden, timeout: timeout)
+  end
 
   # /**
   #  * @param {Function|string} pageFunction

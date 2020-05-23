@@ -973,11 +973,11 @@ class Puppeteer::Page
     main_frame.tap(selector)
   end
 
-  # @param {string} selector
-  # @param {string} text
-  # @param {{delay: (number|undefined)}=} options
-  def type(selector, text, delay: nil)
-    main_frame.type(selector, text, delay: delay)
+  # @param selector [String]
+  # @param text [String]
+  # @param delay [Number]
+  def type_text(selector, text, delay: nil)
+    main_frame.type_text(selector, text, delay: delay)
   end
 
   # /**
