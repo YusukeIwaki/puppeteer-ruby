@@ -158,15 +158,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   #  /**
-  #   * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-  #   */
-  #  async click(options) {
-  #    await this._scrollIntoViewIfNeeded();
-  #    const {x, y} = await this._clickablePoint();
-  #    await this._page.mouse.click(x, y, options);
-  #  }
-
-  #  /**
   #   * @param {!Array<string>} values
   #   * @return {!Promise<!Array<string>>}
   #   */
