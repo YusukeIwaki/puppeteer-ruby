@@ -1,4 +1,5 @@
 class Puppeteer::CDPSession
+  include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
   using Puppeteer::AsyncAwaitBehavior
 
@@ -12,6 +13,7 @@ class Puppeteer::CDPSession
     @connection = connection
     @target_type = target_type
     @session_id = session_id
+    @pending_messages = {}
   end
 
   attr_reader :connection
@@ -32,7 +34,13 @@ class Puppeteer::CDPSession
     end
     id = @connection.raw_send(message: { sessionId: @session_id, method: method, params: params })
     promise = resolvable_future
-    @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
+    callback = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
+    if pending_message = @pending_messages.delete(id)
+      debug_puts "Pending message (id: #{id}) is handled"
+      callback_with_message(callback, pending_message)
+    else
+      @callbacks[id] = callback
+    end
     promise
   end
 
@@ -40,20 +48,34 @@ class Puppeteer::CDPSession
   def handle_message(message)
     if message['id']
       if callback = @callbacks.delete(message['id'])
-        if message['error']
-          callback.reject(
-            Puppeteer::Connection::ProtocolError.new(
-              method: callback.method,
-              error_message: message['error']['message'],
-              error_data: message['error']['data']))
-        else
-          callback.resolve(message['result'])
-        end
+        callback_with_message(callback, message)
       else
-        raise Error.new("unknown id: #{message['id']}")
+        debug_puts "unknown id: #{id}. Store it into pending message"
+
+        # RECV is often notified before SEND.
+        # Wait about 10 frames before throwing an error.
+        message_id = message['id']
+        @pending_messages[message_id] = message
+        Concurrent::Promises.schedule(0.16, message_id) do |id|
+          if @pending_messages.delete(id)
+            raise Error.new("unknown id: #{id}")
+          end
+        end
       end
     else
       emit_event message['method'], message['params']
+    end
+  end
+
+  private def callback_with_message(callback, message)
+    if message['error']
+      callback.reject(
+        Puppeteer::Connection::ProtocolError.new(
+          method: callback.method,
+          error_message: message['error']['message'],
+          error_data: message['error']['data']))
+    else
+      callback.resolve(message['result'])
     end
   end
 

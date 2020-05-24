@@ -990,18 +990,36 @@ class Puppeteer::Page
   #   return this.mainFrame().waitFor(selectorOrFunctionOrTimeout, options, ...args);
   # }
 
-  # @param {string} selector
-  # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  # @return {!Promise<?Puppeteer.ElementHandle>}
+  # @param selector [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     main_frame.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
   end
 
-  # @param {string} xpath
-  # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  # @return {!Promise<?Puppeteer.ElementHandle>}
+  # @param selector [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
+  async def async_wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
+    wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
+  end
+
+  # @param xpath [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
     main_frame.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
+  end
+
+  # @param xpath [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
+  async def async_wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+    wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
   end
 
   # @param {Function|string} pageFunction

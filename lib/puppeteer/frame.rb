@@ -202,9 +202,10 @@ class Puppeteer::Frame
   #   return Promise.reject(new Error('Unsupported target type: ' + (typeof selectorOrFunctionOrTimeout)));
   # }
 
-  # @param {string} selector
-  # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  # @return {!Promise<?Puppeteer.ElementHandle>}
+  # @param selector [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     handle = @secondary_world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
     if !handle
@@ -216,9 +217,10 @@ class Puppeteer::Frame
     result
   end
 
-  # @param {string} xpath
-  # @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-  # @return {!Promise<?Puppeteer.ElementHandle>}
+  # @param xpath [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
     handle = @secondary_world.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
     if !handle
