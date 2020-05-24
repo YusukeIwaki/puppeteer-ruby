@@ -148,6 +148,13 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count)
   end
 
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
+  async def async_click(delay: nil, button: nil, click_count: nil)
+    click(delay: delay, button: button, click_count: click_count)
+  end
+
   #  /**
   #   * @param {!Array<string>} values
   #   * @return {!Promise<!Array<string>>}
