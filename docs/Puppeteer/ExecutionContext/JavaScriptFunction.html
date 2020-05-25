@@ -357,7 +357,7 @@
   <span class='id identifier rubyid_remote_object'>remote_object</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../../Puppeteer.html" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="../RemoteObject.html" title="Puppeteer::RemoteObject (class)">RemoteObject</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="../RemoteObject.html#initialize-instance_method" title="Puppeteer::RemoteObject#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>result</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='rparen'>)</span>
 
   <span class='kw'>if</span> <span class='id identifier rubyid_exception_details'>exception_details</span>
-    <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="EvaluationError.html" title="Puppeteer::ExecutionContext::EvaluationError (class)">EvaluationError</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="../ExecutionContext.html#initialize-instance_method" title="Puppeteer::ExecutionContext#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Evaluation failed: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_exceptionDetails'>exceptionDetails</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="EvaluationError.html" title="Puppeteer::ExecutionContext::EvaluationError (class)">EvaluationError</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="../ExecutionContext.html#initialize-instance_method" title="Puppeteer::ExecutionContext#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Evaluation failed: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_exception_details'>exception_details</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
   <span class='kw'>end</span>
 
   <span class='kw'>if</span> <span class='ivar'>@return_by_value</span>
@@ -379,7 +379,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Apr 26 15:52:58 2020 by
+  Generated on Mon May 25 23:22:50 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>

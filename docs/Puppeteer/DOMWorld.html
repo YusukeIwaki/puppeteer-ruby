@@ -121,6 +121,51 @@
   
 </p>
 
+  
+    <h2>
+      Constant Summary
+      <small><a href="#" class="constants_summary_toggle">collapse</a></small>
+    </h2>
+
+    <dl class="constants">
+      
+        <dt id="PREDICATE-constant" class="">PREDICATE =
+          
+        </dt>
+        <dd><pre class="code"><span class='heredoc_beg'>&lt;&lt;~JAVASCRIPT</span>
+<span class='tstring_content'>/**
+  * @param {string} selectorOrXPath
+  * @param {boolean} isXPath
+  * @param {boolean} waitForVisible
+  * @param {boolean} waitForHidden
+  * @return {?Node|boolean}
+  */
+function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
+    const node = isXPath
+        ? document.evaluate(selectorOrXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+        : document.querySelector(selectorOrXPath);
+    if (!node)
+        return waitForHidden;
+    if (!waitForVisible &amp;&amp; !waitForHidden)
+        return node;
+    const element = /** @type {Element} */ (node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
+    const style = window.getComputedStyle(element);
+    const isVisible = style &amp;&amp; style.visibility !== &#39;hidden&#39; &amp;&amp; hasVisibleBoundingBox();
+    const success = (waitForVisible === isVisible || waitForHidden === !isVisible);
+    return success ? node : null;
+    /**
+      * @return {boolean}
+      */
+    function hasVisibleBoundingBox() {
+        const rect = element.getBoundingClientRect();
+        return !!(rect.top || rect.bottom || rect.width || rect.height);
+    }
+}
+</span><span class='heredoc_end'>JAVASCRIPT</span></pre></dd>
+      
+    </dl>
+  
+
 
 
 
@@ -168,6 +213,30 @@
     </h2>
 
     <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#_wait_tasks-instance_method" title="#_wait_tasks (instance method)">#<strong>_wait_tasks</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>only used in Puppeteer::WaitTask#initialize.</p>
+</div></span>
+  
+</li>
+
       
         <li class="public ">
   <span class="summary_signature">
@@ -491,6 +560,94 @@
 </li>
 
       
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#tap-instance_method" title="#tap (instance method)">#<strong>tap</strong>(selector)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#type_text-instance_method" title="#type_text (instance method)">#<strong>type_text</strong>(selector, text, delay: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#wait_for_selector-instance_method" title="#wait_for_selector (instance method)">#<strong>wait_for_selector</strong>(selector, visible: nil, hidden: nil, timeout: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#wait_for_xpath-instance_method" title="#wait_for_xpath (instance method)">#<strong>wait_for_xpath</strong>(xpath, visible: nil, hidden: nil, timeout: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
     </ul>
   
 
@@ -643,7 +800,48 @@
 
     
       <div class="method_details first">
-  <h3 class="signature first" id="click-instance_method">
+  <h3 class="signature first" id="_wait_tasks-instance_method">
+  
+    #<strong>_wait_tasks</strong>  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>only used in Puppeteer::WaitTask#initialize</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+23
+24
+25</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 23</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid__wait_tasks'>_wait_tasks</span>
+  <span class='ivar'>@wait_tasks</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="click-instance_method">
   
     #<strong>click</strong>(selector, delay: nil, button: nil, click_count: nil)  &#x21d2; <tt>Object</tt> 
   
@@ -725,14 +923,14 @@
       <pre class="lines">
 
 
-328
-329
-330
-331
-332</pre>
+332
+333
+334
+335
+336</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 328</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 332</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -783,11 +981,6 @@
       <pre class="lines">
 
 
-23
-24
-25
-26
-27
 28
 29
 30
@@ -803,10 +996,14 @@
 40
 41
 42
-43</pre>
+43
+44
+45
+46
+47</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 23</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 28</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_context='>context=</span><span class='lparen'>(</span><span class='id identifier rubyid_context'>context</span><span class='rparen'>)</span>
   <span class='comment'># D, [2020-04-12T22:45:03.938754 #46154] DEBUG -- : RECV &lt;&lt; {&quot;method&quot;=&gt;&quot;Runtime.executionContextCreated&quot;, &quot;params&quot;=&gt;{&quot;context&quot;=&gt;{&quot;id&quot;=&gt;3, &quot;origin&quot;=&gt;&quot;https://github.com&quot;, &quot;name&quot;=&gt;&quot;&quot;, &quot;auxData&quot;=&gt;{&quot;isDefault&quot;=&gt;true, &quot;type&quot;=&gt;&quot;default&quot;, &quot;frameId&quot;=&gt;&quot;3AD7F1E82BCBA88BFE31D03BC49FF6CB&quot;}}}, &quot;sessionId&quot;=&gt;&quot;636CEF0C4FEAFC4FE815E9E7B5F7BA68&quot;}
@@ -823,9 +1020,8 @@
       <span class='ivar'>@context_promise</span> <span class='op'>=</span> <span class='id identifier rubyid_resolvable_future'><span class='object_link'><a href="ConcurrentRubyUtils.html#resolvable_future-instance_method" title="Puppeteer::ConcurrentRubyUtils#resolvable_future (method)">resolvable_future</a></span></span>
     <span class='kw'>end</span>
     <span class='ivar'>@context_promise</span><span class='period'>.</span><span class='id identifier rubyid_fulfill'>fulfill</span><span class='lparen'>(</span><span class='id identifier rubyid_context'>context</span><span class='rparen'>)</span>
-  <span class='comment'>#   for (const waitTask of this._waitTasks)
-</span>  <span class='comment'>#     waitTask.rerun();
-</span>  <span class='kw'>else</span>
+    <span class='ivar'>@wait_tasks</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:async_rerun</span><span class='rparen'>)</span>
+  <span class='kw'>else</span>
     <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>context should now be nil. Use #delete_context for clearing document.</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
   <span class='kw'>end</span>
 <span class='kw'>end</span></pre>
@@ -849,17 +1045,17 @@
       <pre class="lines">
 
 
-45
-46
-47
-48
 49
 50
 51
-52</pre>
+52
+53
+54
+55
+56</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 45</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 49</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_delete_context'>delete_context</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='ivar'>@pending_destroy</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='id identifier rubyid_execution_context_id'>execution_context_id</span><span class='rparen'>)</span>
@@ -889,15 +1085,15 @@
       <pre class="lines">
 
 
-58
-59
-60
-61
 62
-63</pre>
+63
+64
+65
+66
+67</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 58</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 62</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_detach'>detach</span>
   <span class='ivar'>@detached</span> <span class='op'>=</span> <span class='kw'>true</span>
@@ -973,12 +1169,12 @@
       <pre class="lines">
 
 
-85
-86
-87</pre>
+89
+90
+91</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 85</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 89</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_execution_context'>execution_context</span><span class='period'>.</span><span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -1051,12 +1247,12 @@
       <pre class="lines">
 
 
-78
-79
-80</pre>
+82
+83
+84</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 78</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 82</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_execution_context'>execution_context</span><span class='period'>.</span><span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span><span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -1103,15 +1299,15 @@
       <pre class="lines">
 
 
-68
-69
-70
-71
 72
-73</pre>
+73
+74
+75
+76
+77</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 68</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 72</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_execution_context'>execution_context</span>
   <span class='kw'>if</span> <span class='ivar'>@detached</span>
@@ -1161,12 +1357,12 @@
       <pre class="lines">
 
 
-54
-55
-56</pre>
+58
+59
+60</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 54</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 58</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_has_context?'>has_context?</span>
   <span class='ivar'>@context_promise</span><span class='period'>.</span><span class='id identifier rubyid_resolved?'>resolved?</span>
@@ -1230,12 +1426,12 @@
       <pre class="lines">
 
 
-92
-93
-94</pre>
+96
+97
+98</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 92</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 96</span>
 
 <span class='kw'>def</span> <span class='const'>S</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>S</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1321,12 +1517,12 @@
       <pre class="lines">
 
 
-125
-126
-127</pre>
+129
+130
+131</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 125</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 129</span>
 
 <span class='kw'>def</span> <span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -1390,12 +1586,12 @@
       <pre class="lines">
 
 
-141
-142
-143</pre>
+145
+146
+147</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 141</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 145</span>
 
 <span class='kw'>def</span> <span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1481,12 +1677,12 @@
       <pre class="lines">
 
 
-134
-135
-136</pre>
+138
+139
+140</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 134</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 138</span>
 
 <span class='kw'>def</span> <span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -1550,15 +1746,361 @@
       <pre class="lines">
 
 
-116
-117
-118</pre>
+120
+121
+122</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 116</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 120</span>
 
 <span class='kw'>def</span> <span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="tap-instance_method">
+  
+    #<strong>tap</strong>(selector)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+372
+373
+374
+375
+376</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 372</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_tap'>tap</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_handle'>handle</span><span class='period'>.</span><span class='id identifier rubyid_tap'>tap</span>
+  <span class='id identifier rubyid_handle'>handle</span><span class='period'>.</span><span class='id identifier rubyid_dispose'>dispose</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="type_text-instance_method">
+  
+    #<strong>type_text</strong>(selector, text, delay: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>text</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>delay</span>
+      
+      
+        <span class='type'>(<tt>Number</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+381
+382
+383
+384
+385</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 381</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_type_text'>type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_handle'>handle</span><span class='period'>.</span><span class='id identifier rubyid_type_text'>type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_handle'>handle</span><span class='period'>.</span><span class='id identifier rubyid_dispose'>dispose</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="wait_for_selector-instance_method">
+  
+    #<strong>wait_for_selector</strong>(selector, visible: nil, hidden: nil, timeout: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>selector</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>visible</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Wait for element visible (not &#39;display: none&#39; nor &#39;visibility: hidden&#39;) on true. default to false.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>hidden</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Wait for element invisible (&#39;display: none&#39; nor &#39;visibility: hidden&#39;) on true. default to false.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+391
+392
+393</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 391</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_wait_for_selector'>wait_for_selector</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_wait_for_selector_or_xpath'>wait_for_selector_or_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='kw'>false</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='id identifier rubyid_visible'>visible</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='id identifier rubyid_hidden'>hidden</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="wait_for_xpath-instance_method">
+  
+    #<strong>wait_for_xpath</strong>(xpath, visible: nil, hidden: nil, timeout: nil)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>xpath</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>visible</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Wait for element visible (not &#39;display: none&#39; nor &#39;visibility: hidden&#39;) on true. default to false.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>hidden</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Wait for element invisible (&#39;display: none&#39; nor &#39;visibility: hidden&#39;) on true. default to false.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+399
+400
+401</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 399</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_wait_for_xpath'>wait_for_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_xpath'>xpath</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_wait_for_selector_or_xpath'>wait_for_selector_or_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_xpath'>xpath</span><span class='comma'>,</span> <span class='kw'>true</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='id identifier rubyid_visible'>visible</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='id identifier rubyid_hidden'>hidden</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1570,7 +2112,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Apr 26 15:52:57 2020 by
+  Generated on Mon May 25 23:22:49 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
