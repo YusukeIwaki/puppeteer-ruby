@@ -610,14 +610,14 @@ class Puppeteer::Page
     main_frame.goto(url, referer: referer, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return {!Promise<?Puppeteer.Response>}
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @return [Puppeteer::Response]
   def reload(timeout: nil, wait_until: nil)
-    # const [response] = await Promise.all([
-    #   this.waitForNavigation(options),
-    #   this._client.send('Page.reload')
-    # ]);
-    # return response;
+    await_all(
+      async_wait_for_navigation(timeout: timeout, wait_until: wait_until),
+      @client.async_send_message('Page.reload'),
+    ).first
   end
 
   # @param timeout [number|nil]
