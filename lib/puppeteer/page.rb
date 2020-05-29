@@ -88,8 +88,8 @@ class Puppeteer::Page
     network_manager.on_event 'Events.NetworkManager.RequestFinished' do |event|
       emit_event 'Events.Page.RequestFinished', event
     end
-    # this._fileChooserInterceptionIsDisabled = false;
-    # this._fileChooserInterceptors = new Set();
+    @file_chooser_interception_is_disabled = false
+    @file_chooser_interceptors = Set.new
 
     @client.on_event 'Page.domContentEventFired' do |event|
       emit_event 'Events.Page.DOMContentLoaded'
@@ -106,7 +106,9 @@ class Puppeteer::Page
     @client.on_event 'Log.entryAdded' do |event|
       handle_log_entry_added(event)
     end
-    # client.on('Page.fileChooserOpened', event => this._onFileChooser(event));
+    @client.on_event 'Page.fileChooserOpened' do |event|
+      handle_file_chooser(event)
+    end
     @target.on_close do
       emit_event 'Events.Page.Close'
       @closed = true
@@ -122,41 +124,53 @@ class Puppeteer::Page
     )
   end
 
-  # /**
-  #  * @param {!Protocol.Page.fileChooserOpenedPayload} event
-  #  */
-  # async _onFileChooser(event) {
-  #   if (!this._fileChooserInterceptors.size)
-  #     return;
-  #   const frame = this._frameManager.frame(event.frameId);
-  #   const context = await frame.executionContext();
-  #   const element = await context._adoptBackendNodeId(event.backendNodeId);
-  #   const interceptors = Array.from(this._fileChooserInterceptors);
-  #   this._fileChooserInterceptors.clear();
-  #   const fileChooser = new FileChooser(this._client, element, event);
-  #   for (const interceptor of interceptors)
-  #     interceptor.call(null, fileChooser);
-  # }
+  def handle_file_chooser(event)
+    return if @file_chooser_interceptors.empty?
 
-  # /**
-  #  * @param {!{timeout?: number}=} options
-  #  * @return !Promise<!FileChooser>}
-  #  */
-  # async waitForFileChooser(options = {}) {
-  #   if (!this._fileChooserInterceptors.size)
-  #     await this._client.send('Page.setInterceptFileChooserDialog', {enabled: true});
+    frame = @frame_manager.frame(event['frameId'])
+    context = frame.execution_context
+    element = context.adopt_backend_node_id(event['backendNodeId'])
+    interceptors = @file_chooser_interceptors.to_a
+    @file_chooser_interceptors.clear
+    file_chooser = Puppeteer::FileChooser.new(element, event)
+    interceptors.each do |promise|
+      promise.fulfill(file_chooser)
+    end
+  end
 
-  #   const {
-  #     timeout = this._timeoutSettings.timeout(),
-  #   } = options;
-  #   let callback;
-  #   const promise = new Promise(x => callback = x);
-  #   this._fileChooserInterceptors.add(callback);
-  #   return helper.waitWithTimeout(promise, 'waiting for file chooser', timeout).catch(e => {
-  #     this._fileChooserInterceptors.delete(callback);
-  #     throw e;
-  #   });
-  # }
+  class FileChooserTimeoutError < StandardError
+    def initialize(timeout:)
+      super("waiting for filechooser failed: timeout #{timeout}ms exceeded")
+    end
+  end
+
+  # @param timeout [Integer]
+  # @return [Puppeteer::FileChooser]
+  def wait_for_file_chooser(timeout: nil)
+    if @file_chooser_interceptors.empty?
+      @client.send_message('Page.setInterceptFileChooserDialog', enabled: true)
+    end
+
+    option_timeout = timeout || @timeout_settings.timeout
+    promise = resolvable_future
+    @file_chooser_interceptors << promise
+
+    begin
+      Timeout.timeout(option_timeout / 1000.0) do
+        promise.value!
+      end
+    rescue Timeout::Error
+      raise FileChooserTimeoutError.new(timeout: option_timeout)
+    ensure
+      @file_chooser_interceptors.delete(promise)
+    end
+  end
+
+  # @param timeout [Integer]
+  # @return [Future<Puppeteer::FileChooser>]
+  async def async_wait_for_file_chooser(timeout: nil)
+    wait_for_file_chooser(timeout: timeout)
+  end
 
 
   # /**

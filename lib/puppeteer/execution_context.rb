@@ -216,6 +216,19 @@ class Puppeteer::ExecutionContext
   #   return createJSHandle(this, response.objects);
   # }
 
+  # @param backend_node_id [Integer]
+  # @return [Puppeteer::ElementHandle]
+  def adopt_backend_node_id(backend_node_id)
+    response = @client.send_message('DOM.resolveNode',
+      backendNodeId: backend_node_id,
+      executionContextId: @context_id,
+    )
+    Puppeteer::JSHandle.create(
+      context: self,
+      remote_object: Puppeteer::RemoteObject.new(response["object"]),
+    )
+  end
+
   # @param element_handle [Puppeteer::ElementHandle]
   # @return [Puppeteer::ElementHandle]
   def adopt_element_handle(element_handle)

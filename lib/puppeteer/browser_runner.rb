@@ -147,7 +147,7 @@ class Puppeteer::BrowserRunner
   end
 
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
-    Timeout.timeout(timeout / 1000) do
+    Timeout.timeout(timeout / 1000.0) do
       loop do
         line = browser_process.stderr.readline
         /^DevTools listening on (ws:\/\/.*)$/.match(line) do |m|

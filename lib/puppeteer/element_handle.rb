@@ -1,3 +1,5 @@
+require 'mime/types'
+
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
   include Puppeteer::IfPresent
   using Puppeteer::AsyncAwaitBehavior
@@ -179,43 +181,37 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #    }, values);
   #  }
 
-  #  /**
-  #   * @param {!Array<string>} filePaths
-  #   */
-  #  async uploadFile(...filePaths) {
-  #    const isMultiple = await this.evaluate(element => element.multiple);
-  #    assert(filePaths.length <= 1 || isMultiple, 'Multiple file uploads only work with <input type=file multiple>');
-  #    // These imports are only needed for `uploadFile`, so keep them
-  #    // scoped here to avoid paying the cost unnecessarily.
-  #    const path = require('path');
-  #    const mime = require('mime-types');
-  #    const fs = require('fs');
-  #    const readFileAsync = helper.promisify(fs.readFile);
+  # @param file_paths [Array<String>]
+  def upload_file(*file_paths)
+    is_multiple = evaluate("el => el.multiple")
+    if !is_multiple && file_paths.length >= 2
+      raise ArgumentError.new('Multiple file uploads only work with <input type=file multiple>')
+    end
 
-  #    const promises = filePaths.map(filePath => readFileAsync(filePath));
-  #    const files = [];
-  #    for (let i = 0; i < filePaths.length; i++) {
-  #      const buffer = await promises[i];
-  #      const filePath = path.basename(filePaths[i]);
-  #      const file = {
-  #        name: filePath,
-  #        content: buffer.toString('base64'),
-  #        mimeType: mime.lookup(filePath),
-  #      };
-  #      files.push(file);
-  #    }
-  #    await this.evaluateHandle(async(element, files) => {
-  #      const dt = new DataTransfer();
-  #      for (const item of files) {
-  #        const response = await fetch(`data:${item.mimeType};base64,${item.content}`);
-  #        const file = new File([await response.blob()], item.name);
-  #        dt.items.add(file);
-  #      }
-  #      element.files = dt.files;
-  #      element.dispatchEvent(new Event('input', { bubbles: true }));
-  #      element.dispatchEvent(new Event('change', { bubbles: true }));
-  #    }, files);
-  #  }
+    if error_path = file_paths.find { |file_path| !File.exist?(file_path) }
+      raise ArgmentError.new("#{error_path} does not exist or is not readable")
+    end
+
+    backend_node_id = @remote_object.node_info(@client)["node"]["backendNodeId"]
+
+    # The zero-length array is a special case, it seems that DOM.setFileInputFiles does
+    # not actually update the files in that case, so the solution is to eval the element
+    # value to a new FileList directly.
+    if file_paths.empty?
+      fn = <<~JAVASCRIPT
+      (element) => {
+        element.files = new DataTransfer().files;
+
+        // Dispatch events for this case because it should behave akin to a user action.
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      JAVASCRIPT
+      await this.evaluate(fn);
+    else
+      @remote_object.set_file_input_files(@client, file_paths, backend_node_id)
+    end
+  end
 
   def tap
     scroll_into_view_if_needed

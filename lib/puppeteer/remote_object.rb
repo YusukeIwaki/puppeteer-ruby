@@ -52,7 +52,7 @@ class Puppeteer::RemoteObject
     client.send_message('Runtime.getProperties', objectId: @object_id, ownProperties: true)
   end
 
-  # used in ElementHandle#content_frame
+  # used in ElementHandle#content_frame, ElementHandle#upload_file
   def node_info(client)
     client.send_message('DOM.describeNode', objectId: @object_id)
   end
@@ -125,5 +125,10 @@ class Puppeteer::RemoteObject
     else
       { value: value }
     end
+  end
+
+  # used in ElementHandle#upload_file
+  def set_file_input_files(client, files, backend_node_id)
+    client.send_message('DOM.setFileInputFiles', objectId: @object_id, files: files, backendNodeId: backend_node_id)
   end
 end
