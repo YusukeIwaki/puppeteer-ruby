@@ -497,9 +497,7 @@
   
 
   
-    <span class="summary_desc"><div class='inline'>
-<p>const promises = filePaths.map(filePath =&gt; readFileAsync(filePath));    const files = [];    for (let i = 0; i &lt; filePaths.length; i++) {      const buffer = await <a href="i">promises</a>;      const filePath = <a href="i">path.basename(filePaths</a>);      const file = {        name: filePath,        content: buffer.toString(&#39;base64&#39;),        mimeType: mime.lookup(filePath),      };      files.push(file);    }    await this.evaluateHandle(async(element, files) =&gt; {      const dt = new DataTransfer();      for (const item of files) {        const response = await fetch(`data:$itemitem.mimeType;base64,$itemitem.content`);        const file = new File([await response.blob()], item.name);        dt.items.add(file);      }      element.files = dt.files;      element.dispatchEvent(new Event(&#39;input&#39;, { bubbles: true }));      element.dispatchEvent(new Event(&#39;change&#39;, { bubbles: true }));    }, files);  }.</p>
-</div></span>
+    <span class="summary_desc"><div class='inline'></div></span>
   
 </li>
 
@@ -508,6 +506,28 @@
   <span class="summary_signature">
     
       <a href="#type_text-instance_method" title="#type_text (instance method)">#<strong>type_text</strong>(text, delay: nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#upload_file-instance_method" title="#upload_file (instance method)">#<strong>upload_file</strong>(*file_paths)  &#x21d2; Object </a>
     
 
     
@@ -639,15 +659,15 @@
       <pre class="lines">
 
 
-10
-11
 12
 13
 14
-15</pre>
+15
+16
+17</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 10</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 12</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>context:</span><span class='comma'>,</span> <span class='label'>client:</span><span class='comma'>,</span> <span class='label'>remote_object:</span><span class='comma'>,</span> <span class='label'>page:</span><span class='comma'>,</span> <span class='label'>frame_manager:</span><span class='rparen'>)</span>
   <span class='kw'>super</span><span class='lparen'>(</span><span class='label'>context:</span> <span class='id identifier rubyid_context'>context</span><span class='comma'>,</span> <span class='label'>client:</span> <span class='id identifier rubyid_client'>client</span><span class='comma'>,</span> <span class='label'>remote_object:</span> <span class='id identifier rubyid_remote_object'>remote_object</span><span class='rparen'>)</span>
@@ -682,12 +702,12 @@
       <pre class="lines">
 
 
-17
-18
-19</pre>
+19
+20
+21</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 17</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 19</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_as_element'>as_element</span>
   <span class='kw'>self</span>
@@ -760,12 +780,12 @@
       <pre class="lines">
 
 
-259
-260
-261</pre>
+255
+256
+257</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 259</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 255</span>
 
 <span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_press'>async_press</span><span class='lparen'>(</span><span class='id identifier rubyid_key'>key</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_press'>press</span><span class='lparen'>(</span><span class='id identifier rubyid_key'>key</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='rparen'>)</span>
@@ -838,12 +858,12 @@
       <pre class="lines">
 
 
-245
-246
-247</pre>
+241
+242
+243</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 245</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 241</span>
 
 <span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_type_text'>async_type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_type_text'>type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='rparen'>)</span>
@@ -925,14 +945,14 @@
       <pre class="lines">
 
 
-145
-146
 147
 148
-149</pre>
+149
+150
+151</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 145</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 147</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='label'>delay:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_scroll_into_view_if_needed'>scroll_into_view_if_needed</span>
@@ -959,8 +979,6 @@
       <pre class="lines">
 
 
-83
-84
 85
 86
 87
@@ -980,10 +998,12 @@
 101
 102
 103
-104</pre>
+104
+105
+106</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 83</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 85</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_clickable_point'>clickable_point</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='ivar'>@remote_object</span><span class='period'>.</span><span class='id identifier rubyid_content_quads'>content_quads</span><span class='lparen'>(</span><span class='ivar'>@client</span><span class='rparen'>)</span>
@@ -1027,18 +1047,18 @@
       <pre class="lines">
 
 
-21
-22
 23
 24
 25
 26
 27
 28
-29</pre>
+29
+30
+31</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 21</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 23</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_content_frame'>content_frame</span>
   <span class='id identifier rubyid_node_info'>node_info</span> <span class='op'>=</span> <span class='ivar'>@remote_object</span><span class='period'>.</span><span class='id identifier rubyid_node_info'>node_info</span>
@@ -1069,12 +1089,12 @@
       <pre class="lines">
 
 
-227
-228
-229</pre>
+223
+224
+225</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 227</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 223</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_focus'>focus</span>
   <span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>element =&gt; element.focus()</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
@@ -1136,13 +1156,13 @@
       <pre class="lines">
 
 
-251
-252
-253
-254</pre>
+247
+248
+249
+250</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 251</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 247</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_press'>press</span><span class='lparen'>(</span><span class='id identifier rubyid_key'>key</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_focus'>focus</span>
@@ -1194,6 +1214,10 @@
       <pre class="lines">
 
 
+345
+346
+347
+348
 349
 350
 351
@@ -1202,14 +1226,10 @@
 354
 355
 356
-357
-358
-359
-360
-361</pre>
+357</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 349</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 345</span>
 
 <span class='kw'>def</span> <span class='const'>S</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span>
@@ -1244,8 +1264,6 @@
       <pre class="lines">
 
 
-33
-34
 35
 36
 37
@@ -1263,10 +1281,12 @@
 49
 50
 51
-52</pre>
+52
+53
+54</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 33</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 35</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_scroll_into_view_if_needed'>scroll_into_view_if_needed</span>
   <span class='id identifier rubyid_js'>js</span> <span class='op'>=</span> <span class='heredoc_beg'>&lt;&lt;~JAVASCRIPT</span>
@@ -1358,19 +1378,19 @@
       <pre class="lines">
 
 
+381
+382
+383
+384
 385
 386
 387
 388
 389
-390
-391
-392
-393
-394</pre>
+390</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 385</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 381</span>
 
 <span class='kw'>def</span> <span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_element_handle'>element_handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::ElementHandle#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1428,18 +1448,18 @@
       <pre class="lines">
 
 
+361
+362
+363
+364
 365
 366
 367
 368
-369
-370
-371
-372
-373</pre>
+369</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 365</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 361</span>
 
 <span class='kw'>def</span> <span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handles'>handles</span> <span class='op'>=</span> <span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span>
@@ -1520,19 +1540,19 @@
       <pre class="lines">
 
 
+396
+397
+398
+399
 400
 401
 402
 403
 404
-405
-406
-407
-408
-409</pre>
+405</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 400</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 396</span>
 
 <span class='kw'>def</span> <span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handles'>handles</span> <span class='op'>=</span> <span class='id identifier rubyid_evaluate_handle'>evaluate_handle</span><span class='lparen'>(</span>
@@ -1603,6 +1623,10 @@
       <pre class="lines">
 
 
+410
+411
+412
+413
 414
 415
 416
@@ -1615,14 +1639,10 @@
 423
 424
 425
-426
-427
-428
-429
-430</pre>
+426</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 414</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 410</span>
 
 <span class='kw'>def</span> <span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_fn'>fn</span> <span class='op'>=</span> <span class='heredoc_beg'>&lt;&lt;~JAVASCRIPT</span>
@@ -1655,56 +1675,20 @@
   
 
   
-</h3><div class="docstring">
-  <div class="discussion">
-    
-<p>const promises = filePaths.map(filePath =&gt; readFileAsync(filePath));</p>
-
-<pre class="code ruby"><code class="ruby">  const files = [];
-  for (let i = 0; i &lt; filePaths.length; i++) {
-    const buffer = await promises[i];
-    const filePath = path.basename(filePaths[i]);
-    const file = {
-      name: filePath,
-      content: buffer.toString(&#39;base64&#39;),
-      mimeType: mime.lookup(filePath),
-    };
-    files.push(file);
-  }
-  await this.evaluateHandle(async(element, files) =&gt; {
-    const dt = new DataTransfer();
-    for (const item of files) {
-      const response = await fetch(`data:${item.mimeType};base64,${item.content}`);
-      const file = new File([await response.blob()], item.name);
-      dt.items.add(file);
-    }
-    element.files = dt.files;
-    element.dispatchEvent(new Event(&#39;input&#39;, { bubbles: true }));
-    element.dispatchEvent(new Event(&#39;change&#39;, { bubbles: true }));
-  }, files);
-}
-</code></pre>
-
-
-  </div>
-</div>
-<div class="tags">
-  
-
-</div><table class="source_code">
+</h3><table class="source_code">
   <tr>
     <td>
       <pre class="lines">
 
 
-220
-221
-222
-223
-224</pre>
+216
+217
+218
+219
+220</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 220</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 216</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_tap'>tap</span>
   <span class='id identifier rubyid_scroll_into_view_if_needed'>scroll_into_view_if_needed</span>
@@ -1768,17 +1752,125 @@
       <pre class="lines">
 
 
-237
-238
-239
-240</pre>
+233
+234
+235
+236</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 237</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 233</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_type_text'>type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_focus'>focus</span>
   <span class='ivar'>@page</span><span class='period'>.</span><span class='id identifier rubyid_keyboard'>keyboard</span><span class='period'>.</span><span class='id identifier rubyid_type_text'>type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="upload_file-instance_method">
+  
+    #<strong>upload_file</strong>(*file_paths)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>file_paths</span>
+      
+      
+        <span class='type'>(<tt>Array&lt;String&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 185</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_upload_file'>upload_file</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_file_paths'>file_paths</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_is_multiple'>is_multiple</span> <span class='op'>=</span> <span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>el =&gt; el.multiple</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_is_multiple'>is_multiple</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_file_paths'>file_paths</span><span class='period'>.</span><span class='id identifier rubyid_length'>length</span> <span class='op'>&gt;=</span> <span class='int'>2</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Multiple file uploads only work with &lt;input type=file multiple&gt;</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>if</span> <span class='id identifier rubyid_error_path'>error_path</span> <span class='op'>=</span> <span class='id identifier rubyid_file_paths'>file_paths</span><span class='period'>.</span><span class='id identifier rubyid_find'>find</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_file_path'>file_path</span><span class='op'>|</span> <span class='op'>!</span><span class='const'>File</span><span class='period'>.</span><span class='id identifier rubyid_exist?'>exist?</span><span class='lparen'>(</span><span class='id identifier rubyid_file_path'>file_path</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgmentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_error_path'>error_path</span><span class='embexpr_end'>}</span><span class='tstring_content'> does not exist or is not readable</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_backend_node_id'>backend_node_id</span> <span class='op'>=</span> <span class='ivar'>@remote_object</span><span class='period'>.</span><span class='id identifier rubyid_node_info'>node_info</span><span class='lparen'>(</span><span class='ivar'>@client</span><span class='rparen'>)</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>node</span><span class='tstring_end'>&quot;</span></span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>backendNodeId</span><span class='tstring_end'>&quot;</span></span><span class='rbracket'>]</span>
+
+  <span class='comment'># The zero-length array is a special case, it seems that DOM.setFileInputFiles does
+</span>  <span class='comment'># not actually update the files in that case, so the solution is to eval the element
+</span>  <span class='comment'># value to a new FileList directly.
+</span>  <span class='kw'>if</span> <span class='id identifier rubyid_file_paths'>file_paths</span><span class='period'>.</span><span class='id identifier rubyid_empty?'>empty?</span>
+    <span class='id identifier rubyid_fn'>fn</span> <span class='op'>=</span> <span class='heredoc_beg'>&lt;&lt;~JAVASCRIPT</span>
+<span class='tstring_content'>    (element) =&gt; {
+</span><span class='tstring_content'>      element.files = new DataTransfer().files;
+</span><span class='tstring_content'>
+</span><span class='tstring_content'>      // Dispatch events for this case because it should behave akin to a user action.
+</span><span class='tstring_content'>      element.dispatchEvent(new Event(&#39;input&#39;, { bubbles: true }));
+</span><span class='tstring_content'>      element.dispatchEvent(new Event(&#39;change&#39;, { bubbles: true }));
+</span><span class='tstring_content'>    }
+</span><span class='heredoc_end'>    JAVASCRIPT
+</span>    <span class='id identifier rubyid_await'><span class='object_link'><a href="ConcurrentRubyUtils.html#await-instance_method" title="Puppeteer::ConcurrentRubyUtils#await (method)">await</a></span></span> <span class='id identifier rubyid_this'>this</span><span class='period'>.</span><span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='id identifier rubyid_fn'>fn</span><span class='rparen'>)</span><span class='semicolon'>;</span>
+  <span class='kw'>else</span>
+    <span class='ivar'>@remote_object</span><span class='period'>.</span><span class='id identifier rubyid_set_file_input_files'>set_file_input_files</span><span class='lparen'>(</span><span class='ivar'>@client</span><span class='comma'>,</span> <span class='id identifier rubyid_file_paths'>file_paths</span><span class='comma'>,</span> <span class='id identifier rubyid_backend_node_id'>backend_node_id</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1790,7 +1882,7 @@
 </div>
 
       <div id="footer">
-  Generated on Mon May 25 23:22:50 2020 by
+  Generated on Sat May 30 15:59:53 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
