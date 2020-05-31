@@ -30,4 +30,32 @@ RSpec.describe Puppeteer::ElementHandle do
       }
     end
   end
+
+  describe 'tap' do
+    let(:handle) {
+      Puppeteer::ElementHandle.new(
+        context: double(Puppeteer::ExecutionContext),
+        client: double(Puppeteer::CDPSession),
+        remote_object: double(Puppeteer::RemoteObject),
+        page: double(Puppeteer::Page),
+        frame_manager: double(Puppeteer::FrameManager),
+      )
+    }
+
+    context 'called with block' do
+      let(:something) { double }
+      subject { handle.tap { |x| y = something.awesome(x) } }
+
+      it 'does not call TouchScreen#tap' do
+        allow(something).to receive(:awesome)
+        expect(handle).not_to receive(:scroll_into_view_if_needed)
+        subject
+      end
+
+      it "behaves as Ruby's #tap method" do
+        expect(something).to receive(:awesome).with(be_a(Puppeteer::ElementHandle))
+        subject
+      end
+    end
+  end
 end

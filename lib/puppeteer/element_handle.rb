@@ -157,29 +157,33 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     click(delay: delay, button: button, click_count: click_count)
   end
 
-  #  /**
-  #   * @param {!Array<string>} values
-  #   * @return {!Promise<!Array<string>>}
-  #   */
-  #  async select(...values) {
-  #    for (const value of values)
-  #      assert(helper.isString(value), 'Values must be strings. Found value "' + value + '" of type "' + (typeof value) + '"');
-  #    return this.evaluate((element, values) => {
-  #      if (element.nodeName.toLowerCase() !== 'select')
-  #        throw new Error('Element is not a <select> element.');
+  # @return [Array<String>]
+  def select(*values)
+    if nonstring = values.find{ |value| !value.is_a?(String) }
+      raise ArgumentError.new("Values must be strings. Found value \"#{value}\" of type \"#{value.class}\"")
+    end
 
-  #      const options = Array.from(element.options);
-  #      element.value = undefined;
-  #      for (const option of options) {
-  #        option.selected = values.includes(option.value);
-  #        if (option.selected && !element.multiple)
-  #          break;
-  #      }
-  #      element.dispatchEvent(new Event('input', { bubbles: true }));
-  #      element.dispatchEvent(new Event('change', { bubbles: true }));
-  #      return options.filter(option => option.selected).map(option => option.value);
-  #    }, values);
-  #  }
+    fn = <<~JAVASCRIPT
+    (element, values) => {
+      if (element.nodeName.toLowerCase() !== 'select') {
+        throw new Error('Element is not a <select> element.');
+      }
+
+      const options = Array.from(element.options);
+      element.value = undefined;
+      for (const option of options) {
+        option.selected = values.includes(option.value);
+        if (option.selected && !element.multiple) {
+          break;
+        }
+      }
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+      return options.filter(option => option.selected).map(option => option.value);
+    }
+    JAVASCRIPT
+    evaluate(fn, values)
+  end
 
   # @param file_paths [Array<String>]
   def upload_file(*file_paths)
@@ -213,12 +217,17 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  def tap
+  def tap(&block)
+    return super(&block) if block
+
     scroll_into_view_if_needed
     point = clickable_point
     @page.touchscreen.tap(point.x, point.y)
   end
 
+  async def async_tap
+    tap
+  end
 
   def focus
     evaluate('element => element.focus()')
@@ -389,6 +398,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     result
   end
 
+  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Object]
+  async def async_Seval(selector, page_function, *args)
+    Seval(selector, page_function, *args)
+  end
+
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
   # @param page_function [String]
@@ -402,6 +419,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     handles.dispose
 
     result
+  end
+
+  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Object]
+  async def async_SSeval(selector, page_function, *args)
+    SSeval(selector, page_function, *args)
   end
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.

@@ -355,18 +355,15 @@ class Puppeteer::DOMWorld
   #   await handle.dispose();
   # }
 
-  # /**
-  #  * @param {string} selector
-  #  * @param {!Array<string>} values
-  #  * @return {!Promise<!Array<string>>}
-  #  */
-  # async select(selector, ...values) {
-  #   const handle = await this.$(selector);
-  #   assert(handle, 'No node found for selector: ' + selector);
-  #   const result = await handle.select(...values);
-  #   await handle.dispose();
-  #   return result;
-  # }
+  # @param selector [String]
+  # @return [Array<String>]
+  def select(selector, *values)
+    handle = S(selector)
+    result = handle.select(*values)
+    handle.dispose
+
+    result
+  end
 
   # @param selector [String]
   def tap(selector)

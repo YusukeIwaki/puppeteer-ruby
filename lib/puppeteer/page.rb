@@ -289,21 +289,35 @@ class Puppeteer::Page
   end
 
   # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @param {string} selector
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<(!Object|undefined)>}
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Object]
   def Seval(selector, page_function, *args)
     main_frame.Seval(selector, page_function, *args)
   end
 
+  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Future]
+  async def async_Seval(selector, page_function, *args)
+    Seval(selector, page_function, *args)
+  end
+
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @param {string} selector
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<(!Object|undefined)>}
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Object]
   def SSeval(selector, page_function, *args)
     main_frame.SSeval(selector, page_function, *args)
+  end
+
+  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # @param selector [String]
+  # @param page_function [String]
+  # @return [Future]
+  async def async_SSeval(selector, page_function, *args)
+    SSeval(selector, page_function, *args)
   end
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
@@ -982,9 +996,14 @@ class Puppeteer::Page
     main_frame.select(selector, *values)
   end
 
-  # @param {string} selector
+  # @param selector [String]
   def tap(selector)
     main_frame.tap(selector)
+  end
+
+  # @param selector [String]
+  async def async_tap(selector)
+    tap(selector)
   end
 
   # @param selector [String]
