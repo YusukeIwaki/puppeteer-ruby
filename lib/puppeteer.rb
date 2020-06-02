@@ -143,7 +143,13 @@ class Puppeteer
       default_viewport: default_viewport,
       slow_mo: slow_mo,
     }.compact
-    launcher.connect(options)
+    browser = launcher.connect(options)
+    if block_given?
+      yield(browser)
+    else
+      browser
+    end
+
   end
 
   # @return {string}
