@@ -285,8 +285,6 @@ class Puppeteer::FrameManager
     frame.navigated_within_document(url)
     emit_event 'Events.FrameManager.FrameNavigatedWithinDocument', frame
     emit_event 'Events.FrameManager.FrameNavigated', frame
-    handle_frame_manager_frame_navigated_within_document(frame)
-    handle_frame_manager_frame_navigated(frame)
   end
 
   # @param frame_id [String]
