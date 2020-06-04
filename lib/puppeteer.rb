@@ -149,7 +149,6 @@ class Puppeteer
     else
       browser
     end
-
   end
 
   # @return {string}

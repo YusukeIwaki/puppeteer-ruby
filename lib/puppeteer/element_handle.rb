@@ -159,8 +159,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   # @return [Array<String>]
   def select(*values)
-    if nonstring = values.find{ |value| !value.is_a?(String) }
-      raise ArgumentError.new("Values must be strings. Found value \"#{value}\" of type \"#{value.class}\"")
+    if nonstring = values.find { |value| !value.is_a?(String) }
+      raise ArgumentError.new("Values must be strings. Found value \"#{nonstring}\" of type \"#{nonstring.class}\"")
     end
 
     fn = <<~JAVASCRIPT
@@ -211,7 +211,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         element.dispatchEvent(new Event('change', { bubbles: true }));
       }
       JAVASCRIPT
-      await this.evaluate(fn);
+      await this.evaluate(fn)
     else
       @remote_object.set_file_input_files(@client, file_paths, backend_node_id)
     end

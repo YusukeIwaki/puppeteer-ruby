@@ -44,7 +44,7 @@ RSpec.describe Puppeteer::ElementHandle do
 
     context 'called with block' do
       let(:something) { double }
-      subject { handle.tap { |x| y = something.awesome(x) } }
+      subject { handle.tap { |x| something.awesome(x) } }
 
       it 'does not call TouchScreen#tap' do
         allow(something).to receive(:awesome)
