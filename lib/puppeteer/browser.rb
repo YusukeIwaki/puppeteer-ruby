@@ -102,8 +102,7 @@ class Puppeteer::Browser
     )
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
     @targets[target_info.target_id] = target
-
-    target.on_initialize_succeeded do
+    if await target.initialized_promise
       emit_event 'Events.Browser.TargetCreated', target
       context.emit_event 'Events.BrowserContext.TargetCreated', target
     end
@@ -118,10 +117,10 @@ class Puppeteer::Browser
   def handle_target_destroyed(event)
     target_id = event['targetId']
     target = @targets[target_id]
-    target.handle_initialized(false)
+    target.ignore_initialize_callback_promise
     @targets.delete(target_id)
     target.handle_closed
-    target.on_initialize_succeeded do
+    if await target.initialized_promise
       emit_event 'Events.Browser.TargetDestroyed', target
       target.browser_context.emit_event 'Events.BrowserContext.TargetDestroyed', target
     end

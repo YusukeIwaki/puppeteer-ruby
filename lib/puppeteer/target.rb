@@ -33,13 +33,16 @@ class Puppeteer::Target
     #    this._pagePromise = null;
     #    /** @type {?Promise<!Worker>} */
     #    this._workerPromise = null;
-    @initialized_promise = resolvable_future
+    @initialize_callback_promise = resolvable_future
+    @initialized_promise = @initialize_callback_promise.then do |success|
+      handle_initialized(success)
+    end
     #    this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
 
     @is_initialized = @target_info.type != 'page' || !@target_info.url.empty?
 
     if @is_initialized
-      handle_initialized(true)
+      @initialize_callback_promise.fulfill(true)
     end
   end
 
@@ -47,24 +50,24 @@ class Puppeteer::Target
 
   class InitializeFailure < StandardError; end
 
-  def handle_initialized(success)
+  def ignore_initialize_callback_promise
+    @initialize_callback_promise.fulfill(false)
+  end
+
+  private def handle_initialized(success)
     unless success
-      @initialized_promise.reject(InitializeFailure.new('Failed to create target for page'))
+      raise InitializeFailure.new('Failed to create target for page')
     end
-    @on_initialize_succeeded&.call
-    @initialized_promise.fulfill(true)
     opener_page = opener&.page
     if opener_page.nil? || type != 'page'
-      return
+      return true
     end
     #      if (!openerPage.listenerCount(Events.Page.Popup))
     #        return true;
     popup_page = page
     opener_page.emit_event('Events.Page.Popup', popup_page)
-  end
 
-  def on_initialize_succeeded(&block)
-    @on_initialize_succeeded = block
+    true
   end
 
   def handle_closed
@@ -85,7 +88,7 @@ class Puppeteer::Target
   end
 
   def page
-    if ['page', 'background_page'].include?(@target_info.type) && @page.nil?
+    if ['page', 'background_page', 'webview'].include?(@target_info.type) && @page.nil?
       client = @session_factory.call
       @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
     end
@@ -142,9 +145,9 @@ class Puppeteer::Target
   def handle_target_info_changed(target_info)
     @target_info = target_info
 
-    if !@is_initialized && (@target_info.type != 'page' || !target_info.url.empty?)
+    if !@is_initialized && (@target_info.type != 'page' || !@target_info.url.empty?)
       @is_initialized = true
-      handle_initialized(true)
+      @initialize_callback_promise.fulfill(true)
     end
   end
 end
