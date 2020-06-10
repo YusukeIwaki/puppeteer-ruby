@@ -119,7 +119,7 @@ class Puppeteer::Browser
     target = @targets[target_id]
     target.ignore_initialize_callback_promise
     @targets.delete(target_id)
-    target.handle_closed
+    target.closed_callback
     if await target.initialized_promise
       emit_event 'Events.Browser.TargetDestroyed', target
       target.browser_context.emit_event 'Events.BrowserContext.TargetDestroyed', target

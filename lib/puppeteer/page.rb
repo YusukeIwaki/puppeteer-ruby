@@ -109,7 +109,7 @@ class Puppeteer::Page
     @client.on_event 'Page.fileChooserOpened' do |event|
       handle_file_chooser(event)
     end
-    @target.on_close do
+    @target.is_closed_promise.then do
       emit_event 'Events.Page.Close'
       @closed = true
     end

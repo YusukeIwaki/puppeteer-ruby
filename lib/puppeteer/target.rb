@@ -37,7 +37,7 @@ class Puppeteer::Target
     @initialized_promise = @initialize_callback_promise.then do |success|
       handle_initialized(success)
     end
-    #    this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
+    @is_closed_promise = resolvable_future
 
     @is_initialized = @target_info.type != 'page' || !@target_info.url.empty?
 
@@ -46,12 +46,18 @@ class Puppeteer::Target
     end
   end
 
-  attr_reader :target_id, :initialized_promise
+  attr_reader :target_id, :initialized_promise, :is_closed_promise
+
+  def closed_callback
+    @is_closed_promise.fulfill(true)
+  end
 
   class InitializeFailure < StandardError; end
 
   def ignore_initialize_callback_promise
-    @initialize_callback_promise.fulfill(false)
+    unless @initialize_callback_promise.fulfilled?
+      @initialize_callback_promise.fulfill(false)
+    end
   end
 
   private def handle_initialized(success)
@@ -68,15 +74,6 @@ class Puppeteer::Target
     opener_page.emit_event('Events.Page.Popup', popup_page)
 
     true
-  end
-
-  def handle_closed
-    @closed = true
-    @on_close&.call
-  end
-
-  def on_close(&block)
-    @on_close = block
   end
 
   def initialized?
