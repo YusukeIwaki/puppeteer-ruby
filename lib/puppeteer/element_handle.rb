@@ -1,4 +1,6 @@
-require 'mime/types'
+require_relative './element_handle/bounding_box'
+require_relative './element_handle/box_model'
+require_relative './element_handle/point'
 
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
   include Puppeteer::IfPresent
@@ -51,29 +53,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     # clickpoint is often calculated before scrolling is completed.
     # So, just sleep about 10 frames
     sleep 0.16
-  end
-
-  class Point
-    def initialize(x:, y:)
-      @x = x
-      @y = y
-    end
-
-    def +(other)
-      Point.new(
-        x: @x + other.x,
-        y: @y + other.y,
-      )
-    end
-
-    def /(num)
-      Point.new(
-        x: @x / num,
-        y: @y / num,
-      )
-    end
-
-    attr_reader :x, :y
   end
 
   class ElementNotVisibleError < StandardError
@@ -256,18 +235,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     press(key, delay: delay)
   end
 
-  class BoundingBox
-    def initialize(x:, y:, width:, height:)
-      @x = x
-      @y = y
-      @width = width
-      @height = height
-    end
-
-    attr_reader :x, :y, :width, :height
-  end
-
-  # @return [BoxModel|nil]
+  # @return [BoundingBox|nil]
   def bounding_box
     if_present(box_model) do |result_model|
       quads = result_model.border
@@ -283,24 +251,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  class BoxModel
-    QUAD_ATTRIBUTE_NAMES = %i(content padding border margin)
-    # @param result [Hash]
-    def initialize(result_model)
-      QUAD_ATTRIBUTE_NAMES.each do |attr_name|
-        quad = result_model[attr_name.to_s]
-        instance_variable_set(
-          :"@#{attr_name}",
-          quad.each_slice(2).map { |x, y| Point.new(x: x, y: y) },
-        )
-      end
-      @width = result_model['width']
-      @height = result_model['height']
-    end
-    attr_reader(*QUAD_ATTRIBUTE_NAMES)
-    attr_reader :width, :height
-  end
-
   # @return [BoxModel|nil]
   def box_model
     if_present(@remote_object.box_model(@client)) do |result|
@@ -313,7 +263,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
     box = bounding_box
     unless box
-      raise 'Node is either not visible or not an HTMLElement'
+      raise ElementNotVisibleError.new
     end
 
     viewport = @page.viewport
@@ -330,7 +280,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
     box = bounding_box
     unless box
-      raise 'Node is either not visible or not an HTMLElement'
+      raise ElementNotVisibleError.new
     end
     if box.width == 0
       raise 'Node has 0 width.'

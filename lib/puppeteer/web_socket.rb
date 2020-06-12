@@ -43,6 +43,8 @@ class Puppeteer::WebSocket
     end
   end
 
+  class TransportError < StandardError; end
+
   private def setup
     @ready_state = STATE_CONNECTING
     @driver.on(:open) do
@@ -55,7 +57,7 @@ class Puppeteer::WebSocket
     end
     @driver.on(:error) do |event|
       if !handle_on_error(error_message: event.message)
-        raise Puppeteer::WebSocktTransportError.new(event.message)
+        raise TransportError.new(event.message)
       end
     end
     @driver.on(:message) do |event|

@@ -11,7 +11,7 @@ class Puppeteer::WebSocketTransport
       promise.fulfill(Puppeteer::WebSocketTransport.new(ws))
     end
     ws.on_error do |error_message|
-      promise.reject(Puppeteer::WebSocktTransportError.new(error_message))
+      promise.reject(Puppeteer::WebSocket::TransportError.new(error_message))
     end
     promise.value!
   end
