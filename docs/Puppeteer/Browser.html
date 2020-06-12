@@ -1498,7 +1498,7 @@
   <span class='id identifier rubyid_target'>target</span> <span class='op'>=</span> <span class='ivar'>@targets</span><span class='lbracket'>[</span><span class='id identifier rubyid_target_id'>target_id</span><span class='rbracket'>]</span>
   <span class='id identifier rubyid_target'>target</span><span class='period'>.</span><span class='id identifier rubyid_ignore_initialize_callback_promise'>ignore_initialize_callback_promise</span>
   <span class='ivar'>@targets</span><span class='period'>.</span><span class='id identifier rubyid_delete'>delete</span><span class='lparen'>(</span><span class='id identifier rubyid_target_id'>target_id</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_target'>target</span><span class='period'>.</span><span class='id identifier rubyid_handle_closed'>handle_closed</span>
+  <span class='id identifier rubyid_target'>target</span><span class='period'>.</span><span class='id identifier rubyid_closed_callback'>closed_callback</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_await'><span class='object_link'><a href="ConcurrentRubyUtils.html#await-instance_method" title="Puppeteer::ConcurrentRubyUtils#await (method)">await</a></span></span> <span class='id identifier rubyid_target'>target</span><span class='period'>.</span><span class='id identifier rubyid_initialized_promise'>initialized_promise</span>
     <span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.Browser.TargetDestroyed</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_target'>target</span>
     <span class='id identifier rubyid_target'>target</span><span class='period'>.</span><span class='id identifier rubyid_browser_context'>browser_context</span><span class='period'>.</span><span class='id identifier rubyid_emit_event'>emit_event</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Events.BrowserContext.TargetDestroyed</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_target'>target</span>
@@ -2138,7 +2138,7 @@
 </div>
 
       <div id="footer">
-  Generated on Tue Jun  9 00:13:40 2020 by
+  Generated on Fri Jun 12 12:38:33 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
