@@ -33,4 +33,22 @@ class Puppeteer::Viewport
   def landscape?
     @is_landscape
   end
+
+  def merge(
+        width: nil,
+        height: nil,
+        device_scale_factor: nil,
+        is_mobile: nil,
+        has_touch: nil,
+        is_landscape: nil)
+
+    Puppeteer::Viewport.new(
+      width: width || @width,
+      height: height || @height,
+      device_scale_factor: device_scale_factor || @device_scale_factor,
+      is_mobile: is_mobile.nil? ? @is_mobile : is_mobile,
+      has_touch: has_touch.nil? ? @has_touch : has_touch,
+      is_landscape: is_landscape.nil? ? @is_landscape : is_landscape,
+    )
+  end
 end

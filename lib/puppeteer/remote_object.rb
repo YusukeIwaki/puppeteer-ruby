@@ -62,6 +62,15 @@ class Puppeteer::RemoteObject
     client.send_message('DOM.getContentQuads', objectId: @object_id)
   end
 
+  # used in ElementHandle#_box_model
+  def box_model(client)
+    client.send_message('DOM.getBoxModel', objectId: @object_id)
+  rescue => err
+    debug_puts(err)
+    nil
+  end
+
+
   # helper#valueFromRemoteObject
   def value
     if @unserializable_value

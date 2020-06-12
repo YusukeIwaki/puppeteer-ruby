@@ -105,15 +105,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     quads.first.reduce(:+) / 4
   end
 
-  #  /**
-  #   * @return {!Promise<void|Protocol.DOM.getBoxModelReturnValue>}
-  #   */
-  #  _getBoxModel() {
-  #    return this._client.send('DOM.getBoxModel', {
-  #      objectId: this._remoteObject.objectId
-  #    }).catch(error => debugError(error));
-  #  }
-
   # @param quad [Array<number>]
   # @return [Array<Point>]
   private def from_protocol_quad(quad)
@@ -265,89 +256,106 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     press(key, delay: delay)
   end
 
-  #  /**
-  #   * @return {!Promise<?{x: number, y: number, width: number, height: number}>}
-  #   */
-  #  async boundingBox() {
-  #    const result = await this._getBoxModel();
+  class BoundingBox
+    def initialize(x:, y:, width:, height:)
+      @x = x
+      @y = y
+      @width = width
+      @height = height
+    end
 
-  #    if (!result)
-  #      return null;
+    attr_reader :x, :y, :width, :height
+  end
 
-  #    const quad = result.model.border;
-  #    const x = Math.min(quad[0], quad[2], quad[4], quad[6]);
-  #    const y = Math.min(quad[1], quad[3], quad[5], quad[7]);
-  #    const width = Math.max(quad[0], quad[2], quad[4], quad[6]) - x;
-  #    const height = Math.max(quad[1], quad[3], quad[5], quad[7]) - y;
+  # @return [BoxModel|nil]
+  def bounding_box
+    if_present(box_model) do |result_model|
+      quads = result_model.border
 
-  #    return {x, y, width, height};
-  #  }
+      x = quads.map(&:x).min
+      y = quads.map(&:y).min
+      BoundingBox.new(
+        x: x,
+        y: y,
+        width: quads.map(&:x).max - x,
+        height: quads.map(&:y).max - y,
+      )
+    end
+  end
 
-  #  /**
-  #   * @return {!Promise<?BoxModel>}
-  #   */
-  #  async boxModel() {
-  #    const result = await this._getBoxModel();
+  class BoxModel
+    QUAD_ATTRIBUTE_NAMES = %i(content padding border margin)
+    # @param result [Hash]
+    def initialize(result_model)
+      QUAD_ATTRIBUTE_NAMES.each do |attr_name|
+        quad = result_model[attr_name.to_s]
+        instance_variable_set(
+          :"@#{attr_name}",
+          quad.each_slice(2).map { |x, y| Point.new(x: x, y: y) },
+        )
+      end
+      @width = result_model['width']
+      @height = result_model['height']
+    end
+    attr_reader(*QUAD_ATTRIBUTE_NAMES)
+    attr_reader :width, :height
+  end
 
-  #    if (!result)
-  #      return null;
+  # @return [BoxModel|nil]
+  def box_model
+    if_present(@remote_object.box_model(@client)) do |result|
+      BoxModel.new(result['model'])
+    end
+  end
 
-  #    const {content, padding, border, margin, width, height} = result.model;
-  #    return {
-  #      content: this._fromProtocolQuad(content),
-  #      padding: this._fromProtocolQuad(padding),
-  #      border: this._fromProtocolQuad(border),
-  #      margin: this._fromProtocolQuad(margin),
-  #      width,
-  #      height
-  #    };
-  #  }
+  def screenshot(options = {})
+    needs_viewport_reset = false
 
-  #  /**
-  #   *
-  #   * @param {!Object=} options
-  #   * @returns {!Promise<string|!Buffer>}
-  #   */
-  #  async screenshot(options = {}) {
-  #    let needsViewportReset = false;
+    box = bounding_box
+    unless box
+      raise 'Node is either not visible or not an HTMLElement'
+    end
 
-  #    let boundingBox = await this.boundingBox();
-  #    assert(boundingBox, 'Node is either not visible or not an HTMLElement');
+    viewport = @page.viewport
+    if viewport && (box.width > viewport.width || box.height > viewport.height)
+      new_viewport = viewport.merge(
+        width: [viewport.width, box.width.to_i].min,
+        height: [viewport.height, box.height.to_i].min,
+      )
+      @page.viewport = new_viewport
 
-  #    const viewport = this._page.viewport();
+      needs_viewport_reset = true
+    end
+    scroll_into_view_if_needed
 
-  #    if (viewport && (boundingBox.width > viewport.width || boundingBox.height > viewport.height)) {
-  #      const newViewport = {
-  #        width: Math.max(viewport.width, Math.ceil(boundingBox.width)),
-  #        height: Math.max(viewport.height, Math.ceil(boundingBox.height)),
-  #      };
-  #      await this._page.setViewport(Object.assign({}, viewport, newViewport));
+    box = bounding_box
+    unless box
+      raise 'Node is either not visible or not an HTMLElement'
+    end
+    if box.width == 0
+      raise 'Node has 0 width.'
+    end
+    if box.height == 0
+      raise 'Node has 0 height.'
+    end
 
-  #      needsViewportReset = true;
-  #    }
+    layout_metrics = @client.send_message('Page.getLayoutMetrics')
+    page_x = layout_metrics["layoutViewport"]["pageX"]
+    page_y = layout_metrics["layoutViewport"]["pageY"]
 
-  #    await this._scrollIntoViewIfNeeded();
+    clip = {
+      x: page_x + box.x,
+      y: page_y + box.y,
+      width: box.width,
+      height: box.height,
+    }
 
-  #    boundingBox = await this.boundingBox();
-  #    assert(boundingBox, 'Node is either not visible or not an HTMLElement');
-  #    assert(boundingBox.width !== 0, 'Node has 0 width.');
-  #    assert(boundingBox.height !== 0, 'Node has 0 height.');
-
-  #    const { layoutViewport: { pageX, pageY } } = await this._client.send('Page.getLayoutMetrics');
-
-  #    const clip = Object.assign({}, boundingBox);
-  #    clip.x += pageX;
-  #    clip.y += pageY;
-
-  #    const imageData = await this._page.screenshot(Object.assign({}, {
-  #      clip
-  #    }, options));
-
-  #    if (needsViewportReset)
-  #      await this._page.setViewport(viewport);
-
-  #    return imageData;
-  #  }
+    @page.screenshot({ clip: clip }.merge(options))
+  ensure
+    if needs_viewport_reset
+      @page.viewport = viewport
+    end
+  end
 
   # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
