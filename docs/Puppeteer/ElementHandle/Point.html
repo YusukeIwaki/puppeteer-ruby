@@ -94,12 +94,23 @@
   
   <dl>
     <dt>Defined in:</dt>
-    <dd>lib/puppeteer/element_handle.rb</dd>
+    <dd>lib/puppeteer/element_handle/point.rb</dd>
   </dl>
   
 </div>
 
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+<p>A class to represent (x, y)-coordinates supporting + and / operators.</p>
 
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
 
 
 
@@ -279,13 +290,13 @@
       <pre class="lines">
 
 
-57
-58
-59
-60</pre>
+5
+6
+7
+8</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 57</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle/point.rb', line 5</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>x:</span><span class='comma'>,</span> <span class='label'>y:</span><span class='rparen'>)</span>
   <span class='ivar'>@x</span> <span class='op'>=</span> <span class='id identifier rubyid_x'>x</span>
@@ -329,12 +340,12 @@
       <pre class="lines">
 
 
-76
-77
-78</pre>
+24
+25
+26</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 76</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle/point.rb', line 24</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_x'>x</span>
   <span class='ivar'>@x</span>
@@ -372,12 +383,12 @@
       <pre class="lines">
 
 
-76
-77
-78</pre>
+24
+25
+26</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 76</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle/point.rb', line 24</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_y'>y</span>
   <span class='ivar'>@y</span>
@@ -409,15 +420,15 @@
       <pre class="lines">
 
 
-62
-63
-64
-65
-66
-67</pre>
+10
+11
+12
+13
+14
+15</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 62</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle/point.rb', line 10</span>
 
 <span class='kw'>def</span> <span class='op'>+</span><span class='lparen'>(</span><span class='id identifier rubyid_other'>other</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="" title="Puppeteer::ElementHandle::Point (class)">Point</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="#initialize-instance_method" title="Puppeteer::ElementHandle::Point#initialize (method)">new</a></span></span><span class='lparen'>(</span>
@@ -445,15 +456,15 @@
       <pre class="lines">
 
 
-69
-70
-71
-72
-73
-74</pre>
+17
+18
+19
+20
+21
+22</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle.rb', line 69</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/element_handle/point.rb', line 17</span>
 
 <span class='kw'>def</span> <span class='op'>/</span><span class='lparen'>(</span><span class='id identifier rubyid_num'>num</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="" title="Puppeteer::ElementHandle::Point (class)">Point</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="#initialize-instance_method" title="Puppeteer::ElementHandle::Point#initialize (method)">new</a></span></span><span class='lparen'>(</span>
@@ -471,7 +482,7 @@
 </div>
 
       <div id="footer">
-  Generated on Tue Jun  9 00:13:41 2020 by
+  Generated on Fri Jun 12 12:38:35 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
