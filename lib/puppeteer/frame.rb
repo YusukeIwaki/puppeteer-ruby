@@ -1,4 +1,6 @@
 class Puppeteer::Frame
+  using Puppeteer::AsyncAwaitBehavior
+
   # @param {!FrameManager} frameManager
   # @param {!Puppeteer.CDPSession} client
   # @param {?Frame} parentFrame
@@ -33,8 +35,15 @@ class Puppeteer::Frame
 
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
-  def wait_for_navigation(timeout: nil, wait_until: nil)
+  private def wait_for_navigation(timeout: nil, wait_until: nil)
     @frame_manager.wait_for_frame_navigation(self, timeout: timeout, wait_until: wait_until)
+  end
+
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @return [Future]
+  async def async_wait_for_navigation(timeout: nil, wait_until: nil)
+    wait_for_navigation(timeout: timeout, wait_until: wait_until)
   end
 
   def execution_context
@@ -141,6 +150,15 @@ class Puppeteer::Frame
   # @return {!Promise<!ElementHandle>}
   def add_style_tag(style_tag)
     @main_world.add_style_tag(style_tag)
+  end
+
+  # @param selector [String]
+  # @param delay [Number]
+  # @param button [String] "left"|"right"|"middle"
+  # @param click_count [Number]
+  # @return [Future]
+  async def async_click(selector, delay: nil, button: nil, click_count: nil)
+    click(selector, delay: delay, button: button, click_count: click_count)
   end
 
   # @param selector [String]

@@ -651,7 +651,7 @@ class Puppeteer::Page
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   private def wait_for_navigation(timeout: nil, wait_until: nil)
-    main_frame.wait_for_navigation(timeout: timeout, wait_until: wait_until)
+    main_frame.send(:wait_for_navigation, timeout: timeout, wait_until: wait_until)
   end
 
   # @param timeout [number|nil]
