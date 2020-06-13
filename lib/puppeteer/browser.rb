@@ -46,12 +46,28 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self. context_id)
     end
     @targets = {}
-    @connection.on_event 'Events.CDPSession.Disconnected' do
+    @connection.on_event 'Events.Connection.Disconnected' do
       emit_event 'Events.Browser.Disconnected'
     end
     @connection.on_event 'Target.targetCreated', &method(:handle_target_created)
     @connection.on_event 'Target.targetDestroyed', &method(:handle_target_destroyed)
     @connection.on_event 'Target.targetInfoChanged', &method(:handle_target_info_changed)
+  end
+
+  EVENT_MAPPINGS = {
+    disconnected: 'Events.Browser.Disconnected',
+    targetcreated: 'Events.Browser.TargetCreated',
+    targetchanged: 'Events.Browser.TargetChanged',
+    targetdestroyed: 'Events.Browser.TargetDestroyed',
+  }
+
+  # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
+  def on(event_name, &block)
+    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    end
+
+    add_event_listener(EVENT_MAPPINGS[event_name.to_sym], &block)
   end
 
   # @return [Puppeteer::BrowserRunner::BrowserProcess]
