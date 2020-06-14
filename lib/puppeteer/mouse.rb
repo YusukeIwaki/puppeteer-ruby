@@ -61,18 +61,13 @@ class Puppeteer::Mouse
     # D, [2020-04-15T17:09:47.898422 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mouseReleased","button":"left","x":0,"y":0,"modifiers":0,"clickCount":1},"id":24}
     # D, [2020-04-15T17:09:47.899711 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mousePressed","button":"left","x":0,"y":0,"modifiers":0,"clickCount":1},"id":25}
     # D, [2020-04-15T17:09:47.900237 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mouseMoved","button":"left","x":187,"y":283,"modifiers":0},"id":26}
-    # So we execute move in advance.
+    # So we execute them sequential
     move(x, y)
+    down(button: button, click_count: click_count)
     if delay
-      down(button: button, click_count: click_count)
       sleep(delay / 1000.0)
-      up(button: button, click_count: click_count)
-    else
-      await_all(
-        async_down(button: button, click_count: click_count),
-        async_up(button: button, click_count: click_count),
-      )
     end
+    up(button: button, click_count: click_count)
   end
 
   # @param x [number]
