@@ -490,12 +490,12 @@
       <pre class="lines">
 
 
-82
-83
-84</pre>
+77
+78
+79</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 82</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 77</span>
 
 <span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_click'>async_click</span><span class='lparen'>(</span><span class='id identifier rubyid_x'>x</span><span class='comma'>,</span> <span class='id identifier rubyid_y'>y</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='id identifier rubyid_x'>x</span><span class='comma'>,</span> <span class='id identifier rubyid_y'>y</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='id identifier rubyid_delay'>delay</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
@@ -557,12 +557,12 @@
       <pre class="lines">
 
 
-101
-102
-103</pre>
+96
+97
+98</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 101</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 96</span>
 
 <span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_down'>async_down</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_down'>down</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
@@ -713,12 +713,12 @@
       <pre class="lines">
 
 
-120
-121
-122</pre>
+115
+116
+117</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 120</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 115</span>
 
 <span class='id identifier rubyid_async'>async</span> <span class='kw'>def</span> <span class='id identifier rubyid_async_up'>async_up</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_up'>up</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
@@ -802,12 +802,7 @@
 68
 69
 70
-71
-72
-73
-74
-75
-76</pre>
+71</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 58</span>
@@ -818,18 +813,13 @@
 </span>  <span class='comment'># D, [2020-04-15T17:09:47.898422 #88683] DEBUG -- : SEND &gt;&gt; {&quot;sessionId&quot;:&quot;0B09EA5E18DEE403E525B3E7FCD7E225&quot;,&quot;method&quot;:&quot;Input.dispatchMouseEvent&quot;,&quot;params&quot;:{&quot;type&quot;:&quot;mouseReleased&quot;,&quot;button&quot;:&quot;left&quot;,&quot;x&quot;:0,&quot;y&quot;:0,&quot;modifiers&quot;:0,&quot;clickCount&quot;:1},&quot;id&quot;:24}
 </span>  <span class='comment'># D, [2020-04-15T17:09:47.899711 #88683] DEBUG -- : SEND &gt;&gt; {&quot;sessionId&quot;:&quot;0B09EA5E18DEE403E525B3E7FCD7E225&quot;,&quot;method&quot;:&quot;Input.dispatchMouseEvent&quot;,&quot;params&quot;:{&quot;type&quot;:&quot;mousePressed&quot;,&quot;button&quot;:&quot;left&quot;,&quot;x&quot;:0,&quot;y&quot;:0,&quot;modifiers&quot;:0,&quot;clickCount&quot;:1},&quot;id&quot;:25}
 </span>  <span class='comment'># D, [2020-04-15T17:09:47.900237 #88683] DEBUG -- : SEND &gt;&gt; {&quot;sessionId&quot;:&quot;0B09EA5E18DEE403E525B3E7FCD7E225&quot;,&quot;method&quot;:&quot;Input.dispatchMouseEvent&quot;,&quot;params&quot;:{&quot;type&quot;:&quot;mouseMoved&quot;,&quot;button&quot;:&quot;left&quot;,&quot;x&quot;:187,&quot;y&quot;:283,&quot;modifiers&quot;:0},&quot;id&quot;:26}
-</span>  <span class='comment'># So we execute move in advance.
+</span>  <span class='comment'># So we execute them sequential
 </span>  <span class='id identifier rubyid_move'>move</span><span class='lparen'>(</span><span class='id identifier rubyid_x'>x</span><span class='comma'>,</span> <span class='id identifier rubyid_y'>y</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_down'>down</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_delay'>delay</span>
-    <span class='id identifier rubyid_down'>down</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
     <span class='id identifier rubyid_sleep'>sleep</span><span class='lparen'>(</span><span class='id identifier rubyid_delay'>delay</span> <span class='op'>/</span> <span class='float'>1000.0</span><span class='rparen'>)</span>
-    <span class='id identifier rubyid_up'>up</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
-  <span class='kw'>else</span>
-    <span class='id identifier rubyid_await_all'><span class='object_link'><a href="ConcurrentRubyUtils.html#await_all-instance_method" title="Puppeteer::ConcurrentRubyUtils#await_all (method)">await_all</a></span></span><span class='lparen'>(</span>
-      <span class='id identifier rubyid_async_down'>async_down</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span><span class='comma'>,</span>
-      <span class='id identifier rubyid_async_up'>async_up</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span><span class='comma'>,</span>
-    <span class='rparen'>)</span>
   <span class='kw'>end</span>
+  <span class='id identifier rubyid_up'>up</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='id identifier rubyid_button'>button</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='id identifier rubyid_click_count'>click_count</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -875,20 +865,20 @@
       <pre class="lines">
 
 
+82
+83
+84
+85
+86
 87
 88
 89
 90
 91
-92
-93
-94
-95
-96
-97</pre>
+92</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 87</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 82</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_down'>down</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='ivar'>@button</span> <span class='op'>=</span> <span class='id identifier rubyid_button'>button</span> <span class='op'>||</span> <span class='const'><span class='object_link'><a href="Mouse/Button.html" title="Puppeteer::Mouse::Button (module)">Button</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Mouse/Button.html#LEFT-constant" title="Puppeteer::Mouse::Button::LEFT (constant)">LEFT</a></span></span>
@@ -1059,20 +1049,20 @@
       <pre class="lines">
 
 
+101
+102
+103
+104
+105
 106
 107
 108
 109
 110
-111
-112
-113
-114
-115
-116</pre>
+111</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 106</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/mouse.rb', line 101</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_up'>up</span><span class='lparen'>(</span><span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='ivar'>@button</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="Mouse/Button.html" title="Puppeteer::Mouse::Button (module)">Button</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Mouse/Button.html#NONE-constant" title="Puppeteer::Mouse::Button::NONE (constant)">NONE</a></span></span>
@@ -1095,7 +1085,7 @@
 </div>
 
       <div id="footer">
-  Generated on Fri Jun 12 12:38:33 2020 by
+  Generated on Sat Jun 20 17:15:06 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>

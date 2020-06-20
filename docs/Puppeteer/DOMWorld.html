@@ -116,7 +116,7 @@
     
   
     
-      <strong class="classes">Classes:</strong> <span class='object_link'><a href="DOMWorld/DetachedError.html" title="Puppeteer::DOMWorld::DetachedError (class)">DetachedError</a></span>, <span class='object_link'><a href="DOMWorld/DocumentEvaluationError.html" title="Puppeteer::DOMWorld::DocumentEvaluationError (class)">DocumentEvaluationError</a></span>
+      <strong class="classes">Classes:</strong> <span class='object_link'><a href="DOMWorld/DetachedError.html" title="Puppeteer::DOMWorld::DetachedError (class)">DetachedError</a></span>
     
   
 </p>
@@ -945,14 +945,14 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-332
 333
 334
 335
-336</pre>
+336
+337</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 332</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 333</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_click'>click</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>button:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>click_count:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1515,16 +1515,16 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-360
 361
 362
 363
 364
 365
-366</pre>
+366
+367</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 360</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 361</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_select'>select</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_values'>values</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1614,12 +1614,12 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-129
 130
-131</pre>
+131
+132</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 129</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 130</span>
 
 <span class='kw'>def</span> <span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>Seval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -1683,12 +1683,12 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-145
 146
-147</pre>
+147
+148</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 145</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 146</span>
 
 <span class='kw'>def</span> <span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>SS</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1774,12 +1774,12 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-138
 139
-140</pre>
+140
+141</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 138</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 139</span>
 
 <span class='kw'>def</span> <span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>SSeval</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_page_function'>page_function</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -1843,12 +1843,12 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-120
 121
-122</pre>
+122
+123</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 120</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 121</span>
 
 <span class='kw'>def</span> <span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_document'>document</span><span class='period'>.</span><span class='const'>Sx</span><span class='lparen'>(</span><span class='id identifier rubyid_expression'>expression</span><span class='rparen'>)</span>
@@ -1897,14 +1897,14 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-369
 370
 371
 372
-373</pre>
+373
+374</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 369</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 370</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_tap'>tap</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -1979,14 +1979,14 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-378
 379
 380
 381
-382</pre>
+382
+383</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 378</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 379</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_type_text'>type_text</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='id identifier rubyid_text'>text</span><span class='comma'>,</span> <span class='label'>delay:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_handle'>handle</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="#S-instance_method" title="Puppeteer::DOMWorld#S (method)">S</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='rparen'>)</span>
@@ -2086,12 +2086,12 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-388
 389
-390</pre>
+390
+391</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 388</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 389</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_wait_for_selector'>wait_for_selector</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_wait_for_selector_or_xpath'>wait_for_selector_or_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='comma'>,</span> <span class='kw'>false</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='id identifier rubyid_visible'>visible</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='id identifier rubyid_hidden'>hidden</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
@@ -2189,12 +2189,12 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
       <pre class="lines">
 
 
-396
 397
-398</pre>
+398
+399</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 396</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 397</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_wait_for_xpath'>wait_for_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_xpath'>xpath</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_wait_for_selector_or_xpath'>wait_for_selector_or_xpath</span><span class='lparen'>(</span><span class='id identifier rubyid_xpath'>xpath</span><span class='comma'>,</span> <span class='kw'>true</span><span class='comma'>,</span> <span class='label'>visible:</span> <span class='id identifier rubyid_visible'>visible</span><span class='comma'>,</span> <span class='label'>hidden:</span> <span class='id identifier rubyid_hidden'>hidden</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
@@ -2209,7 +2209,7 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
 </div>
 
       <div id="footer">
-  Generated on Fri Jun 12 12:38:34 2020 by
+  Generated on Sat Jun 20 17:15:07 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
