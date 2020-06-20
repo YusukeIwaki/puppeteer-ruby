@@ -44,7 +44,9 @@ class Puppeteer::Connection
 
     @transport = transport
     @transport.on_message do |data|
-      async_handle_message(JSON.parse(data))
+      message = JSON.parse(data)
+      sleep_before_handling_message(message)
+      async_handle_message(message)
     end
     @transport.on_close do |reason, code|
       handle_close(reason, code)
@@ -52,6 +54,16 @@ class Puppeteer::Connection
 
     @sessions = {}
     @closed = false
+  end
+
+  private def sleep_before_handling_message(message)
+    # Puppeteer doesn't handle any Network monitoring responses.
+    # So we don't have to sleep.
+    return if message['method']&.start_with?('Network.')
+
+    # For some reasons, sleeping a bit reduces trivial errors...
+    # 4ms is an interval of internal shared timer of WebKit.
+    sleep 0.004
   end
 
   def self.from_session(session)
