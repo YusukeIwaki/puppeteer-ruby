@@ -1,6 +1,6 @@
 require 'tmpdir'
 
-# https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
+# https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts
 module Puppeteer::Launcher
   class Chrome < Base
     # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions)=} options

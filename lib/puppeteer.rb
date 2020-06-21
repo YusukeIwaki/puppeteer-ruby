@@ -63,17 +63,33 @@ class Puppeteer
     end
   end
 
-  # @param {string} projectRoot
-  # @param {string} preferredRevision
-  # @param {boolean} isPuppeteerCore
+  # @param project_root [String]
+  # @param prefereed_revision [String]
+  # @param is_puppeteer_core [String]
   def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
     @project_root = project_root
     @preferred_revision = preferred_revision
     @is_puppeteer_core = is_puppeteer_core
   end
 
-  # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions & {product?: string, extraPrefsFirefox?: !object})=} options
-  # @return {!Promise<!Puppeteer.Browser>}
+  # @param product [String]
+  # @param executable_path [String]
+  # @param ignore_default_args [Array<String>|nil]
+  # @param handle_SIGINT [Boolean]
+  # @param handle_SIGTERM [Boolean]
+  # @param handle_SIGHUP [Boolean]
+  # @param timeout [Integer]
+  # @param dumpio [Boolean]
+  # @param env [Hash]
+  # @param pipe [Boolean]
+  # @param args [Array<String>]
+  # @param user_data_dir [String]
+  # @param devtools [Boolean]
+  # @param headless [Boolean]
+  # @param ignore_https_errors [Boolean]
+  # @param default_viewport [Puppeteer::Viewport|nil]
+  # @param slow_mo [Integer]
+  # @return [Puppeteer::Browser]
   def launch(
     product: nil,
     executable_path: nil,
@@ -125,8 +141,13 @@ class Puppeteer
     end
   end
 
-  # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
-  # @return {!Promise<!Puppeteer.Browser>}
+  # @param browser_ws_endpoint [String]
+  # @param browser_url [String]
+  # @param transport [Puppeteer::WebSocketTransport]
+  # @param ignore_https_errors [Boolean]
+  # @param default_viewport [Puppeteer::Viewport|nil]
+  # @param slow_mo [Integer]
+  # @return [Puppeteer::Browser]
   def connect(
     browser_ws_endpoint: nil,
     browser_url: nil,
@@ -151,7 +172,7 @@ class Puppeteer
     end
   end
 
-  # @return {string}
+  # @return [String]
   def executable_path
     launcher.executable_path
   end
@@ -165,12 +186,12 @@ class Puppeteer
     )
   end
 
-  # @return {string}
+  # @return [String]
   def product
     launcher.product
   end
 
-  # @return {Puppeteer::Devices}
+  # @return [Puppeteer::Devices]
   def devices
     Puppeteer::Devices
   end
@@ -180,8 +201,11 @@ class Puppeteer
   #   # ???
   # end
 
-  # @param {!Launcher.ChromeArgOptions=} options
-  # @return {!Array<string>}
+  # @param args [Array<String>]
+  # @param user_data_dir [String]
+  # @param devtools [Boolean]
+  # @param headless [Boolean]
+  # @return [Array<String>]
   def default_args(args: nil, user_data_dir: nil, devtools: nil, headless: nil)
     options = {
       args: args,

@@ -1087,7 +1087,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#connect-instance_method" title="#connect (instance method)">#<strong>connect</strong>(browser_ws_endpoint: nil, browser_url: nil, transport: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; !Promise&lt;!Puppeteer.Browser&gt; </a>
+      <a href="#connect-instance_method" title="#connect (instance method)">#<strong>connect</strong>(browser_ws_endpoint: nil, browser_url: nil, transport: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; Puppeteer::Browser </a>
     
 
     
@@ -1131,7 +1131,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#default_args-instance_method" title="#default_args (instance method)">#<strong>default_args</strong>(args: nil, user_data_dir: nil, devtools: nil, headless: nil)  &#x21d2; !Array&lt;string&gt; </a>
+      <a href="#default_args-instance_method" title="#default_args (instance method)">#<strong>default_args</strong>(args: nil, user_data_dir: nil, devtools: nil, headless: nil)  &#x21d2; Array&lt;String&gt; </a>
     
 
     
@@ -1175,7 +1175,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#executable_path-instance_method" title="#executable_path (instance method)">#<strong>executable_path</strong>  &#x21d2; string </a>
+      <a href="#executable_path-instance_method" title="#executable_path (instance method)">#<strong>executable_path</strong>  &#x21d2; String </a>
     
 
     
@@ -1223,7 +1223,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#launch-instance_method" title="#launch (instance method)">#<strong>launch</strong>(product: nil, executable_path: nil, ignore_default_args: nil, handle_SIGINT: nil, handle_SIGTERM: nil, handle_SIGHUP: nil, timeout: nil, dumpio: nil, env: nil, pipe: nil, args: nil, user_data_dir: nil, devtools: nil, headless: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; !Promise&lt;!Puppeteer.Browser&gt; </a>
+      <a href="#launch-instance_method" title="#launch (instance method)">#<strong>launch</strong>(product: nil, executable_path: nil, ignore_default_args: nil, handle_SIGINT: nil, handle_SIGTERM: nil, handle_SIGHUP: nil, timeout: nil, dumpio: nil, env: nil, pipe: nil, args: nil, user_data_dir: nil, devtools: nil, headless: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; Puppeteer::Browser </a>
     
 
     
@@ -1245,7 +1245,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#product-instance_method" title="#product (instance method)">#<strong>product</strong>  &#x21d2; string </a>
+      <a href="#product-instance_method" title="#product (instance method)">#<strong>product</strong>  &#x21d2; String </a>
     
 
     
@@ -1293,21 +1293,10 @@
   
     <li>
       
-        <span class='name'>projectRoot</span>
+        <span class='name'>project_root</span>
       
       
-        <span class='type'>(<tt>string</tt>)</span>
-      
-      
-      
-    </li>
-  
-    <li>
-      
-        <span class='name'>preferredRevision</span>
-      
-      
-        <span class='type'>(<tt>string</tt>)</span>
+        <span class='type'>(<tt>String</tt>)</span>
       
       
       
@@ -1315,10 +1304,21 @@
   
     <li>
       
-        <span class='name'>isPuppeteerCore</span>
+        <span class='name'>prefereed_revision</span>
       
       
-        <span class='type'>(<tt>boolean</tt>)</span>
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>is_puppeteer_core</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
       
       
       
@@ -1436,7 +1436,7 @@
       <div class="method_details first">
   <h3 class="signature first" id="connect-instance_method">
   
-    #<strong>connect</strong>(browser_ws_endpoint: nil, browser_url: nil, transport: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Browser</a></span>&gt;</tt> 
+    #<strong>connect</strong>(browser_ws_endpoint: nil, browser_url: nil, transport: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; <tt><span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Puppeteer::Browser</a></span></tt> 
   
 
   
@@ -1454,11 +1454,78 @@
   
     <li>
       
-        <span class='name'>options</span>
+        <span class='name'>browser_ws_endpoint</span>
       
       
-        <span class='type'>(<tt>!(<span class='object_link'><a href="Puppeteer/Launcher.html" title="Puppeteer::Launcher (module)">Launcher</a></span>.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !<span class='object_link'><a href="" title="Puppeteer (class)">Puppeteer</a></span>.ConnectionTransport})</tt>)</span>
+        <span class='type'>(<tt>String</tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>browser_url</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>transport</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Puppeteer/WebSocketTransport.html" title="Puppeteer::WebSocketTransport (class)">Puppeteer::WebSocketTransport</a></span></tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ignore_https_errors</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>default_viewport</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Puppeteer/Viewport.html" title="Puppeteer::Viewport (class)">Puppeteer::Viewport</a></span>|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>slow_mo</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
       
       
     </li>
@@ -1471,7 +1538,7 @@
     <li>
       
       
-        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Browser</a></span>&gt;</tt>)</span>
+        <span class='type'>(<tt><span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Puppeteer::Browser</a></span></tt>)</span>
       
       
       
@@ -1485,32 +1552,32 @@
       <pre class="lines">
 
 
-130
-131
-132
-133
-134
-135
-136
-137
-138
-139
-140
-141
-142
-143
-144
-145
-146
-147
-148
-149
-150
 151
-152</pre>
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 130</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 151</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connect'>connect</span><span class='lparen'>(</span>
   <span class='label'>browser_ws_endpoint:</span> <span class='kw'>nil</span><span class='comma'>,</span>
@@ -1594,12 +1661,12 @@
       <pre class="lines">
 
 
-197
-198
-199</pre>
+221
+222
+223</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 197</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 221</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_createBrowserFetcher'>createBrowserFetcher</span><span class='lparen'>(</span><span class='id identifier rubyid_options'>options</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="Puppeteer/BrowserFetcher.html" title="Puppeteer::BrowserFetcher (class)">BrowserFetcher</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Puppeteer/BrowserFetcher.html#initialize-instance_method" title="Puppeteer::BrowserFetcher#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='ivar'>@project_root</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
@@ -1612,7 +1679,7 @@
       <div class="method_details ">
   <h3 class="signature " id="default_args-instance_method">
   
-    #<strong>default_args</strong>(args: nil, user_data_dir: nil, devtools: nil, headless: nil)  &#x21d2; <tt>!Array&lt;string&gt;</tt> 
+    #<strong>default_args</strong>(args: nil, user_data_dir: nil, devtools: nil, headless: nil)  &#x21d2; <tt>Array&lt;String&gt;</tt> 
   
 
   
@@ -1630,11 +1697,52 @@
   
     <li>
       
-        <span class='name'>options</span>
+        <span class='name'>args</span>
       
       
-        <span class='type'>(<tt>!<span class='object_link'><a href="Puppeteer/Launcher.html" title="Puppeteer::Launcher (module)">Launcher</a></span>.ChromeArgOptions=</tt>)</span>
+        <span class='type'>(<tt>Array&lt;String&gt;</tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>user_data_dir</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>devtools</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>headless</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
       
       
     </li>
@@ -1647,7 +1755,7 @@
     <li>
       
       
-        <span class='type'>(<tt>!Array&lt;string&gt;</tt>)</span>
+        <span class='type'>(<tt>Array&lt;String&gt;</tt>)</span>
       
       
       
@@ -1661,18 +1769,18 @@
       <pre class="lines">
 
 
-185
-186
-187
-188
-189
-190
-191
-192
-193</pre>
+209
+210
+211
+212
+213
+214
+215
+216
+217</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 185</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 209</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_default_args'>default_args</span><span class='lparen'>(</span><span class='label'>args:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>user_data_dir:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>devtools:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>headless:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_options'>options</span> <span class='op'>=</span> <span class='lbrace'>{</span>
@@ -1725,12 +1833,12 @@
       <pre class="lines">
 
 
-174
-175
-176</pre>
+195
+196
+197</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 174</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 195</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_devices'>devices</span>
   <span class='const'><span class='object_link'><a href="" title="Puppeteer (class)">Puppeteer</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Puppeteer/Devices.html" title="Puppeteer::Devices (class)">Devices</a></span></span>
@@ -1743,7 +1851,7 @@
       <div class="method_details ">
   <h3 class="signature " id="executable_path-instance_method">
   
-    #<strong>executable_path</strong>  &#x21d2; <tt>string</tt> 
+    #<strong>executable_path</strong>  &#x21d2; <tt>String</tt> 
   
 
   
@@ -1763,7 +1871,7 @@
     <li>
       
       
-        <span class='type'>(<tt>string</tt>)</span>
+        <span class='type'>(<tt>String</tt>)</span>
       
       
       
@@ -1777,12 +1885,12 @@
       <pre class="lines">
 
 
-155
-156
-157</pre>
+176
+177
+178</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 155</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 176</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_executable_path'>executable_path</span>
   <span class='id identifier rubyid_launcher'>launcher</span><span class='period'>.</span><span class='id identifier rubyid_executable_path'>executable_path</span>
@@ -1795,7 +1903,7 @@
       <div class="method_details ">
   <h3 class="signature " id="launch-instance_method">
   
-    #<strong>launch</strong>(product: nil, executable_path: nil, ignore_default_args: nil, handle_SIGINT: nil, handle_SIGTERM: nil, handle_SIGHUP: nil, timeout: nil, dumpio: nil, env: nil, pipe: nil, args: nil, user_data_dir: nil, devtools: nil, headless: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; <tt>!Promise&lt;!<span class='object_link'><a href="" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Browser</a></span>&gt;</tt> 
+    #<strong>launch</strong>(product: nil, executable_path: nil, ignore_default_args: nil, handle_SIGINT: nil, handle_SIGTERM: nil, handle_SIGHUP: nil, timeout: nil, dumpio: nil, env: nil, pipe: nil, args: nil, user_data_dir: nil, devtools: nil, headless: nil, ignore_https_errors: nil, default_viewport: nil, slow_mo: nil)  &#x21d2; <tt><span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Puppeteer::Browser</a></span></tt> 
   
 
   
@@ -1813,11 +1921,221 @@
   
     <li>
       
-        <span class='name'>options</span>
+        <span class='name'>product</span>
       
       
-        <span class='type'>(<tt>!(<span class='object_link'><a href="Puppeteer/Launcher.html" title="Puppeteer::Launcher (module)">Launcher</a></span>.LaunchOptions & <span class='object_link'><a href="Puppeteer/Launcher.html" title="Puppeteer::Launcher (module)">Launcher</a></span>.ChromeArgOptions & <span class='object_link'><a href="Puppeteer/Launcher.html" title="Puppeteer::Launcher (module)">Launcher</a></span>.BrowserOptions & {<span class='object_link'><a href="#product-instance_method" title="Puppeteer#product (method)">product</a></span>?: string, extraPrefsFirefox?: !object})=</tt>)</span>
+        <span class='type'>(<tt>String</tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>executable_path</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ignore_default_args</span>
+      
+      
+        <span class='type'>(<tt>Array&lt;String&gt;|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>handle_SIGINT</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>handle_SIGTERM</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>handle_SIGHUP</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>dumpio</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>env</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>pipe</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>Array&lt;String&gt;</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>user_data_dir</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>devtools</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>headless</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ignore_https_errors</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>default_viewport</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Puppeteer/Viewport.html" title="Puppeteer::Viewport (class)">Puppeteer::Viewport</a></span>|nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>slow_mo</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
       
       
     </li>
@@ -1830,7 +2148,7 @@
     <li>
       
       
-        <span class='type'>(<tt>!Promise&lt;!<span class='object_link'><a href="" title="Puppeteer (class)">Puppeteer</a></span>.<span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Browser</a></span>&gt;</tt>)</span>
+        <span class='type'>(<tt><span class='object_link'><a href="Puppeteer/Browser.html" title="Puppeteer::Browser (class)">Puppeteer::Browser</a></span></tt>)</span>
       
       
       
@@ -1844,22 +2162,6 @@
       <pre class="lines">
 
 
-77
-78
-79
-80
-81
-82
-83
-84
-85
-86
-87
-88
-89
-90
-91
-92
 93
 94
 95
@@ -1893,10 +2195,26 @@
 123
 124
 125
-126</pre>
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 77</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 93</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_launch'>launch</span><span class='lparen'>(</span>
   <span class='label'>product:</span> <span class='kw'>nil</span><span class='comma'>,</span>
@@ -1956,7 +2274,7 @@
       <div class="method_details ">
   <h3 class="signature " id="product-instance_method">
   
-    #<strong>product</strong>  &#x21d2; <tt>string</tt> 
+    #<strong>product</strong>  &#x21d2; <tt>String</tt> 
   
 
   
@@ -1976,7 +2294,7 @@
     <li>
       
       
-        <span class='type'>(<tt>string</tt>)</span>
+        <span class='type'>(<tt>String</tt>)</span>
       
       
       
@@ -1990,12 +2308,12 @@
       <pre class="lines">
 
 
-169
-170
-171</pre>
+190
+191
+192</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 169</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer.rb', line 190</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_product'>product</span>
   <span class='id identifier rubyid_launcher'>launcher</span><span class='period'>.</span><span class='id identifier rubyid_product'>product</span>
@@ -2010,7 +2328,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sat Jun 20 17:15:06 2020 by
+  Generated on Sun Jun 21 16:52:11 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
