@@ -6,14 +6,14 @@ class Puppeteer::WebSocketTransport
       url: url,
       max_payload_size: 256 * 1024 * 1024, # 256MB
     )
-    promise = resolvable_future
-    ws.on_open do
-      promise.fulfill(Puppeteer::WebSocketTransport.new(ws))
-    end
-    ws.on_error do |error_message|
-      promise.reject(Puppeteer::WebSocket::TransportError.new(error_message))
-    end
-    promise.value!
+    (resolvable_future do |future|
+      ws.on_open do
+        future.fulfill(Puppeteer::WebSocketTransport.new(ws))
+      end
+      ws.on_error do |error_message|
+        future.reject(Puppeteer::WebSocket::TransportError.new(error_message))
+      end
+    end).value!
   end
 
   # @param {!WebSocket::Driver} web_socket

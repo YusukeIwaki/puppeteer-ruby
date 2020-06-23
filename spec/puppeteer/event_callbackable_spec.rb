@@ -210,4 +210,42 @@ RSpec.describe Puppeteer::EventCallbackable do
       end
     end
   end
+
+  describe 'observe_once' do
+    class Pub
+      include Puppeteer::EventCallbackable
+    end
+
+    let!(:pub) { Pub.new }
+    let!(:sub1) { double(:sub) }
+    let!(:sub2) { double(:sub) }
+
+    it 'only 1st event is notified' do
+      pub.observe_first('Pub.Event.awesome') { sub1.ok }
+      expect(sub1).to receive(:ok).once
+      pub.emit_event('Pub.Event.awesome')
+
+      pub.observe_first('Pub.Event.awesome') { sub2.ok }
+      expect(sub2).to receive(:ok).once
+      pub.emit_event('Pub.Event.awesome')
+      pub.emit_event('Pub.Event.awesome')
+      pub.emit_event('Pub.Event.awesome')
+      pub.emit_event('Pub.Event.awesome')
+    end
+
+    it 'arguments are passed' do
+      pub.observe_first('Pub.Event.awesome') { |arg1, arg2| sub1.ok(arg1 + arg2) }
+      expect(sub1).to receive(:ok).with(3)
+      pub.emit_event('Pub.Event.awesome', 1, 2, 3)
+    end
+
+    it 'keyword arguments are passed' do
+      pub.observe_first('Pub.Event.awesome') do |name:, **kwargs|
+        sub2.name(name) ; kwargs.each { |k, v| sub2.kw(k, v) }
+      end
+      expect(sub2).to receive(:name).with('hoge')
+      expect(sub2).to receive(:kw).with(:type, 'piyo')
+      pub.emit_event('Pub.Event.awesome', name: "hoge", type: "piyo")
+    end
+  end
 end

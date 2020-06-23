@@ -39,6 +39,17 @@ module Puppeteer::EventCallbackable
     end
   end
 
+  def observe_first(event_name, &block)
+    listener_id = add_event_listener(event_name) do |*args, **kwargs|
+      if kwargs.empty?
+        block.call(*args)
+      else
+        block.call(*args, **kwargs)
+      end
+      remove_event_listener(listener_id)
+    end
+  end
+
   def on_event(event_name, &block)
     @event_callbackable_handlers ||= {}
     @event_callbackable_handlers[event_name] = block

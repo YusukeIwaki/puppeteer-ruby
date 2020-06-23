@@ -207,6 +207,11 @@ class Puppeteer::Browser
     targets.first { |target| target.type == 'browser' }
   end
 
+  # used only in Target#opener
+  private def find_target_by_id(target_id)
+    @targets[target_id]
+  end
+
   # @param {function(!Target):boolean} predicate
   # @param {{timeout?: number}=} options
   # @return {!Promise<!Target>}

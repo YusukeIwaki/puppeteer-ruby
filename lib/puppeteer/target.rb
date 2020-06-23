@@ -135,7 +135,7 @@ class Puppeteer::Target
   def opener
     opener_id = @target_info.opener_id
     return nil if opener_id.nil?
-    browser.targets[opener_id]
+    browser.send(:find_target_by_id, opener_id)
   end
 
   # @param {!Protocol.Target.TargetInfo} targetInfo

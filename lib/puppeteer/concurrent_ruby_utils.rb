@@ -29,8 +29,12 @@ module Puppeteer::ConcurrentRubyUtils
     Concurrent::Promises.future(&block)
   end
 
-  def resolvable_future
-    Concurrent::Promises.resolvable_future
+  def resolvable_future(&block)
+    future = Concurrent::Promises.resolvable_future
+    if block
+      block.call(future)
+    end
+    future
   end
 end
 
