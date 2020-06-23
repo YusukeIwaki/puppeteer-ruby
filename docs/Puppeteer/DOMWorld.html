@@ -607,6 +607,28 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#title-instance_method" title="#title (instance method)">#<strong>title</strong>  &#x21d2; String </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#type_text-instance_method" title="#type_text (instance method)">#<strong>type_text</strong>(selector, text, delay: nil)  &#x21d2; Object </a>
     
 
@@ -1917,6 +1939,58 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
 </div>
     
       <div class="method_details ">
+  <h3 class="signature " id="title-instance_method">
+  
+    #<strong>title</strong>  &#x21d2; <tt>String</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+415
+416
+417</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/dom_world.rb', line 415</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_title'>title</span>
+  <span class='id identifier rubyid_evaluate'>evaluate</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>() =&gt; document.title</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
   <h3 class="signature " id="type_text-instance_method">
   
     #<strong>type_text</strong>(selector, text, delay: nil)  &#x21d2; <tt>Object</tt> 
@@ -2209,7 +2283,7 @@ function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
 </div>
 
       <div id="footer">
-  Generated on Tue Jun 23 10:24:59 2020 by
+  Generated on Wed Jun 24 03:08:00 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
