@@ -1162,7 +1162,7 @@
 <span class='kw'>def</span> <span class='id identifier rubyid_opener'>opener</span>
   <span class='id identifier rubyid_opener_id'>opener_id</span> <span class='op'>=</span> <span class='ivar'>@target_info</span><span class='period'>.</span><span class='id identifier rubyid_opener_id'>opener_id</span>
   <span class='kw'>return</span> <span class='kw'>nil</span> <span class='kw'>if</span> <span class='id identifier rubyid_opener_id'>opener_id</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
-  <span class='id identifier rubyid_browser'>browser</span><span class='period'>.</span><span class='id identifier rubyid_targets'>targets</span><span class='lbracket'>[</span><span class='id identifier rubyid_opener_id'>opener_id</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_browser'>browser</span><span class='period'>.</span><span class='id identifier rubyid_send'>send</span><span class='lparen'>(</span><span class='symbol'>:find_target_by_id</span><span class='comma'>,</span> <span class='id identifier rubyid_opener_id'>opener_id</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1326,7 +1326,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Jun 21 16:52:12 2020 by
+  Generated on Tue Jun 23 10:24:59 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>

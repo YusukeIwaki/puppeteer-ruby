@@ -202,7 +202,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#resolvable_future-instance_method" title="#resolvable_future (instance method)">#<strong>resolvable_future</strong>  &#x21d2; Object </a>
+      <a href="#resolvable_future-instance_method" title="#resolvable_future (instance method)">#<strong>resolvable_future</strong>(&amp;block)  &#x21d2; Object </a>
     
 
     
@@ -388,7 +388,7 @@
       <div class="method_details ">
   <h3 class="signature " id="resolvable_future-instance_method">
   
-    #<strong>resolvable_future</strong>  &#x21d2; <tt>Object</tt> 
+    #<strong>resolvable_future</strong>(&amp;block)  &#x21d2; <tt>Object</tt> 
   
 
   
@@ -402,13 +402,21 @@
 
 32
 33
-34</pre>
+34
+35
+36
+37
+38</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/puppeteer/concurrent_ruby_utils.rb', line 32</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_resolvable_future'>resolvable_future</span>
-  <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Promises</span><span class='period'>.</span><span class='id identifier rubyid_resolvable_future'>resolvable_future</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_resolvable_future'>resolvable_future</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_future'><span class='object_link'><a href="#future-instance_method" title="Puppeteer::ConcurrentRubyUtils#future (method)">future</a></span></span> <span class='op'>=</span> <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Promises</span><span class='period'>.</span><span class='id identifier rubyid_resolvable_future'>resolvable_future</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_block'>block</span>
+    <span class='id identifier rubyid_block'>block</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_future'><span class='object_link'><a href="#future-instance_method" title="Puppeteer::ConcurrentRubyUtils#future (method)">future</a></span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_future'><span class='object_link'><a href="#future-instance_method" title="Puppeteer::ConcurrentRubyUtils#future (method)">future</a></span></span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -420,7 +428,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Jun 21 16:52:11 2020 by
+  Generated on Tue Jun 23 10:24:58 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>

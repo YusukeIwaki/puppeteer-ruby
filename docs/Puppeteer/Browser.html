@@ -683,7 +683,7 @@
   
   
   <h3 class="inherited">Methods included from <span class='object_link'><a href="EventCallbackable.html" title="Puppeteer::EventCallbackable (module)">EventCallbackable</a></span></h3>
-  <p class="inherited"><span class='object_link'><a href="EventCallbackable.html#add_event_listener-instance_method" title="Puppeteer::EventCallbackable#add_event_listener (method)">#add_event_listener</a></span>, <span class='object_link'><a href="EventCallbackable.html#emit_event-instance_method" title="Puppeteer::EventCallbackable#emit_event (method)">#emit_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#on_event-instance_method" title="Puppeteer::EventCallbackable#on_event (method)">#on_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#remove_event_listener-instance_method" title="Puppeteer::EventCallbackable#remove_event_listener (method)">#remove_event_listener</a></span></p>
+  <p class="inherited"><span class='object_link'><a href="EventCallbackable.html#add_event_listener-instance_method" title="Puppeteer::EventCallbackable#add_event_listener (method)">#add_event_listener</a></span>, <span class='object_link'><a href="EventCallbackable.html#emit_event-instance_method" title="Puppeteer::EventCallbackable#emit_event (method)">#emit_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#observe_first-instance_method" title="Puppeteer::EventCallbackable#observe_first (method)">#observe_first</a></span>, <span class='object_link'><a href="EventCallbackable.html#on_event-instance_method" title="Puppeteer::EventCallbackable#on_event (method)">#on_event</a></span>, <span class='object_link'><a href="EventCallbackable.html#remove_event_listener-instance_method" title="Puppeteer::EventCallbackable#remove_event_listener (method)">#remove_event_listener</a></span></p>
 
   
   
@@ -1030,13 +1030,13 @@
       <pre class="lines">
 
 
-259
-260
-261
-262</pre>
+264
+265
+266
+267</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 259</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 264</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_close'>close</span>
   <span class='ivar'>@close_callback</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span>
@@ -1084,12 +1084,12 @@
       <pre class="lines">
 
 
-268
-269
-270</pre>
+273
+274
+275</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 268</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 273</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connected?'>connected?</span>
   <span class='op'>!</span><span class='ivar'>@connection</span><span class='period'>.</span><span class='id identifier rubyid_closed?'>closed?</span>
@@ -1305,12 +1305,12 @@
       <pre class="lines">
 
 
-264
-265
-266</pre>
+269
+270
+271</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 264</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 269</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_disconnect'>disconnect</span>
   <span class='ivar'>@connection</span><span class='period'>.</span><span class='id identifier rubyid_dispose'>dispose</span>
@@ -1784,12 +1784,12 @@
       <pre class="lines">
 
 
-245
-246
-247</pre>
+250
+251
+252</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 245</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 250</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_pages'>pages</span>
   <span class='id identifier rubyid_browser_contexts'>browser_contexts</span><span class='period'>.</span><span class='id identifier rubyid_flat_map'>flat_map</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:pages</span><span class='rparen'>)</span>
@@ -1992,12 +1992,12 @@
       <pre class="lines">
 
 
-255
-256
-257</pre>
+260
+261
+262</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 255</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 260</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_user_agent'>user_agent</span>
   <span class='id identifier rubyid_get_version'>get_version</span><span class='period'>.</span><span class='id identifier rubyid_user_agent'>user_agent</span>
@@ -2044,12 +2044,12 @@
       <pre class="lines">
 
 
-250
-251
-252</pre>
+255
+256
+257</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 250</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 255</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_version'>version</span>
   <span class='id identifier rubyid_get_version'>get_version</span><span class='period'>.</span><span class='id identifier rubyid_product'>product</span>
@@ -2122,11 +2122,6 @@
       <pre class="lines">
 
 
-213
-214
-215
-216
-217
 218
 219
 220
@@ -2151,10 +2146,15 @@
 239
 240
 241
-242</pre>
+242
+243
+244
+245
+246
+247</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 213</span>
+      <pre class="code"><span class="info file"># File 'lib/puppeteer/browser.rb', line 218</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_wait_for_target'>wait_for_target</span><span class='lparen'>(</span><span class='label'>predicate:</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_timeout_in_sec'>timeout_in_sec</span> <span class='op'>=</span> <span class='lparen'>(</span><span class='id identifier rubyid_timeout'>timeout</span> <span class='op'>||</span> <span class='int'>30000</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_to_i'>to_i</span> <span class='op'>/</span> <span class='float'>1000.0</span>
@@ -2248,7 +2248,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Jun 21 16:52:12 2020 by
+  Generated on Tue Jun 23 10:24:59 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
