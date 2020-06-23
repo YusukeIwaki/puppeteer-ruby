@@ -258,6 +258,7 @@ class Puppeteer::Frame
     @main_world.wait_for_function(page_function, options, *args)
   end
 
+  # @return [String]
   def title
     @secondary_world.title
   end

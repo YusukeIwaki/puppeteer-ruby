@@ -411,12 +411,10 @@ class Puppeteer::DOMWorld
   #   return new WaitTask(this, pageFunction, 'function', polling, timeout, ...args).promise;
   # }
 
-  # /**
-  #  * @return {!Promise<string>}
-  #  */
-  # async title() {
-  #   return this.evaluate(() => document.title);
-  # }
+  # @return [String]
+  def title
+    evaluate('() => document.title')
+  end
 
   # @param selector_or_xpath [String]
   # @param is_xpath [Boolean]

@@ -845,9 +845,9 @@ class Puppeteer::Page
     @frame_manager.network_manager.cache_enabled = enabled
   end
 
-  # @return {!Promise<string>}
+  # @return [String]
   def title
-    @title
+    main_frame.title
   end
 
   # /**
