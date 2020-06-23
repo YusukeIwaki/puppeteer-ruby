@@ -139,6 +139,7 @@ module Puppeteer::Launcher
       end
     end
 
+    # @return [DefaultArgs]
     def default_args(options = nil)
       if options.nil?
         @default_args ||= DefaultArgs.new(@chrome_arg_options)
@@ -147,8 +148,7 @@ module Puppeteer::Launcher
       end
     end
 
-    # @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
-    # @return {!Promise<!Browser>}
+    # @return [Puppeteer::Browser]
     def connect(options = {})
       @browser_options = BrowserOptions.new(options)
       browser_ws_endpoint = options[:browser_ws_endpoint]
@@ -187,11 +187,13 @@ module Puppeteer::Launcher
 
     # @return [Puppeteer::Connection]
     private def connect_with_browser_url(browser_url)
-      raise NotImplementedError.new('Puppeteer#connect with browserUrl is not implemented yet.')
-      # const connectionURL = await getWSEndpoint(browserURL);
-      # const connectionTransport = await WebSocketTransport.create(
-      #   connectionURL
-      # );
+      require 'net/http'
+      uri = URI(browser_url)
+      uri.path = '/json/version'
+      response_body = Net::HTTP.get(uri)
+      json = JSON.parse(response_body)
+      connection_url = json['webSocketDebuggerUrl']
+      connect_with_browser_ws_endpoint(connection_url)
     end
 
     # @return [Puppeteer::Connection]
