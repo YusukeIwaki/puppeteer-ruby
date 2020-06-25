@@ -1,0 +1,46 @@
+name: update docs
+on:
+  push:
+    branches:
+      - master
+      - separate_docs_repo
+
+jobs:
+  update-docs:
+    name: update docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6
+
+      - name: Install dependencies
+        run: |
+          gem uninstall bundler
+          gem install bundler -v 1.17
+          bundle install
+
+      - name: Deploy Configuration
+        run: |
+          mkdir ~/.ssh
+          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+          echo "${{ secrets.DOCS_DEPLOY_SSH_RSA }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
+
+      - name: Build and Push
+        run: |
+          git clone git@github.com:YusukeIwaki/puppeteer-ruby-docs.git docs
+          rm -rf docs/*
+          bundle exec yardoc -o docs
+          cp puppeteer-ruby.png docs/
+          cd docs/
+          git add -A
+          git config user.name github
+          git config user.email github@example.com
+          git commit -m ${{ github.sha }}
+          git push origin master
