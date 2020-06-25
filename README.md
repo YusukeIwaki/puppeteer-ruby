@@ -49,7 +49,7 @@ More usage examples can be found [here](https://github.com/YusukeIwaki/puppeteer
 
 ## API
 
-https://yusukeiwaki.github.io/puppeteer-ruby/
+https://yusukeiwaki.github.io/puppeteer-ruby-docs/
 
 ## Contributing
 
