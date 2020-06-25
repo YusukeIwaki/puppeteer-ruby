@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - separate_docs_repo
 
 jobs:
   update-docs:
