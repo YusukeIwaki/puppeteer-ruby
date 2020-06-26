@@ -23,7 +23,6 @@ class Puppeteer::FrameManager
 
     # @type {!Map<number, !ExecutionContext>}
     @context_id_to_context = {}
-    @context_id_created = {}
 
     # @type {!Set<string>}
     @isolated_worlds = Set.new
@@ -281,7 +280,7 @@ class Puppeteer::FrameManager
   # @param url [String]
   def handle_frame_navigated_within_document(frame_id, url)
     frame = @frames[frame_id]
-    return if !frame
+    return unless frame
     frame.navigated_within_document(url)
     emit_event 'Events.FrameManager.FrameNavigatedWithinDocument', frame
     emit_event 'Events.FrameManager.FrameNavigated', frame
@@ -320,44 +319,29 @@ class Puppeteer::FrameManager
       world.context = context
     end
     @context_id_to_context[context_payload['id']] = context
-    @context_id_created[context_payload['id']] = Time.now
   end
 
   # @param {number} executionContextId
   def handle_execution_context_destroyed(execution_context_id)
     context = @context_id_to_context[execution_context_id]
-    return if !context
+    return unless context
     @context_id_to_context.delete(execution_context_id)
-    @context_id_created.delete(execution_context_id)
     if context.world
       context.world.delete_context(execution_context_id)
     end
   end
 
   def handle_execution_contexts_cleared
-    # executionContextsCleared is often notified after executionContextCreated.
-    #   D, [2020-04-06T01:47:03.101227 #13823] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>5, "origin"=>"https://github.com", "name"=>"", "auxData"=>{"isDefault"=>true, "type"=>"default", "frameId"=>"71C347B70848B89DDDEFAA8AB5B0BC92"}}}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
-    #   D, [2020-04-06T01:47:03.101439 #13823] DEBUG -- : RECV << {"method"=>"Page.frameNavigated", "params"=>{"frame"=>{"id"=>"71C347B70848B89DDDEFAA8AB5B0BC92", "loaderId"=>"80338225D035AC96BAE8F6D4E81C7D51", "url"=>"https://github.com/search?q=puppeteer", "securityOrigin"=>"https://github.com", "mimeType"=>"text/html"}}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
-    #   D, [2020-04-06T01:47:03.101325 #13823] DEBUG -- : RECV << {"method"=>"Target.targetInfoChanged", "params"=>{"targetInfo"=>{"targetId"=>"71C347B70848B89DDDEFAA8AB5B0BC92", "type"=>"page", "title"=>"https://github.com/search?q=puppeteer", "url"=>"https://github.com/search?q=puppeteer", "attached"=>true, "browserContextId"=>"AF37BC660284CE1552B4ECB147BE9305"}}}
-    #   D, [2020-04-06T01:47:03.101269 #13823] DEBUG -- : RECV << {"method"=>"Runtime.executionContextsCleared", "params"=>{}, "sessionId"=>"53F088EED260C28001D26A019F95D9E3"}
-    # it unexpectedly clears the created execution context.
-    # To avoid the problem, just skip recent created ids.
-    now = Time.now
-    context_ids_to_skip = @context_id_created.select { |k, v| now - v < 1 }.keys
-    @context_id_to_context.reject { |k, v| context_ids_to_skip.include?(k) }.each do |execution_context_id, context|
+    @context_id_to_context.each do |execution_context_id, context|
       if context.world
         context.world.delete_context(execution_context_id)
       end
     end
-    @context_id_to_context.select! { |k, v| context_ids_to_skip.include?(k) }
+    @context_id_to_context.clear
   end
 
   def execution_context_by_id(context_id)
-    context = @context_id_to_context[context_id]
-    if !context
-      raise "INTERNAL ERROR: missing context with id = #{context_id}"
-    end
-    context
+    @context_id_to_context[context_id] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
   end
 
   # @param {!Frame} frame
