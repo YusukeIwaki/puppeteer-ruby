@@ -24,4 +24,46 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
       expect(Fuga.new.fuga2).to eq('hoge')
     end
   end
+
+  describe 'await_all' do
+    it 'wait all futures' do
+      start = Time.now
+      await_all(
+        future { sleep 0.5 },
+        future { sleep 1.2 },
+        future { sleep 0.5 },
+      )
+      expect(Time.now - start).to be >= 1.2
+    end
+
+    it 'accept array of futures' do
+      start = Time.now
+      await_all([
+        future { sleep 0.5 },
+        future { sleep 1.2 },
+        future { sleep 0.5 },
+      ])
+      expect(Time.now - start).to be >= 1.2
+    end
+  end
+
+  describe 'await_any' do
+    it 'wait first future' do
+      start = Time.now
+      await_any(
+        future { sleep 1.2 },
+        future { sleep 0.1 },
+      )
+      expect(Time.now - start).to be < 1
+    end
+
+    it 'accept array of futures' do
+      start = Time.now
+      await_any([
+        future { sleep 1.2 },
+        future { sleep 0.1 },
+      ])
+      expect(Time.now - start).to be < 1
+    end
+  end
 end
