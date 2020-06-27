@@ -74,9 +74,7 @@ class Puppeteer::FrameManager
     @network_manager.init
   end
 
-  async def async_init
-    init
-  end
+  define_async_method_for :init
 
   attr_reader :network_manager
 

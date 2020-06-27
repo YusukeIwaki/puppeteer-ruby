@@ -44,13 +44,7 @@ class Puppeteer::Mouse
     end
   end
 
-  # @param x [number]
-  # @param y [number]
-  # @param steps [number]
-  # @return [Future]
-  async def async_move(x, y, steps: nil)
-    move(x, y, steps: steps)
-  end
+  define_async_method_for :move
 
   # @param x [number]
   # @param y [number]
@@ -70,13 +64,7 @@ class Puppeteer::Mouse
     up(button: button, click_count: click_count)
   end
 
-  # @param x [number]
-  # @param y [number]
-  # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-  # @return [Future]
-  async def async_click(x, y, delay: nil, button: nil, click_count: nil)
-    click(x, y, delay: delay, button: button, click_count: click_count)
-  end
+  define_async_method_for :click
 
   # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
   def down(button: nil, click_count: nil)
@@ -91,11 +79,7 @@ class Puppeteer::Mouse
     )
   end
 
-  # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
-  # @return [Future]
-  async def async_down(button: nil, click_count: nil)
-    down(button: button, click_count: click_count)
-  end
+  define_async_method_for :down
 
   # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
   def up(button: nil, click_count: nil)
@@ -110,9 +94,5 @@ class Puppeteer::Mouse
     )
   end
 
-  # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
-  # @return [Future]
-  async def async_up(button: nil, click_count: nil)
-    up(button: button, click_count: click_count)
-  end
+  define_async_method_for :up
 end

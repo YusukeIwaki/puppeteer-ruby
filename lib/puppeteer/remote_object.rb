@@ -111,10 +111,7 @@ class Puppeteer::RemoteObject
     nil
   end
 
-  # @param client [Puppeteer::CDPSession]
-  async def async_release(client)
-    release(client)
-  end
+  define_async_method_for :release
 
   def converted_arg
     # ported logic from ExecutionContext#convertArgument

@@ -210,9 +210,7 @@ class Puppeteer::Connection
     end
   end
 
-  private async def async_handle_message(message)
-    handle_message(message)
-  end
+  private define_async_method_for :handle_message
 
   private def handle_close
     return if @closed

@@ -34,10 +34,5 @@ class Puppeteer::TouchScreen
     )
   end
 
-  # @param x [number]
-  # @param y [number]
-  # @return [Future]
-  async def async_tap(x, y)
-    tap(x, y)
-  end
+  define_async_method_for :tap
 end

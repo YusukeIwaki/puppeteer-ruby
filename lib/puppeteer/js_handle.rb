@@ -46,11 +46,7 @@ class Puppeteer::JSHandle
     execution_context.evaluate(page_function, self, *args)
   end
 
-  # @param page_function [String]
-  # @return [Future<Object>]
-  async def async_evaluate(page_function, *args)
-    evaluate(page_function, *args)
-  end
+  define_async_method_for :evaluate
 
   # @param page_function [String]
   # @param args {Array<*>}
@@ -59,12 +55,7 @@ class Puppeteer::JSHandle
     execution_context.evaluate_handle(page_function, self, *args)
   end
 
-  # @param page_function [String]
-  # @param args {Array<*>}
-  # @return [Future<Puppeteer::JSHandle>]
-  async def async_evaluate_handle(page_function, *args)
-    evaluate_handle(page_function, *args)
-  end
+  define_async_method_for :evaluate_handle
 
   # /**
   #  * @param {string} propertyName
