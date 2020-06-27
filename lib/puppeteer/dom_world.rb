@@ -12,7 +12,6 @@ class Puppeteer::DOMWorld
     @frame = frame
     @timeout_settings = timeout_settings
     @context_promise = resolvable_future
-    @pending_destroy = []
     @wait_tasks = Set.new
     @detached = false
   end
@@ -24,22 +23,12 @@ class Puppeteer::DOMWorld
     @wait_tasks
   end
 
-  # @param {?Puppeteer.ExecutionContext} context
+  # @param context [Puppeteer::ExecutionContext]
   def context=(context)
-    # D, [2020-04-12T22:45:03.938754 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>3, "origin"=>"https://github.com", "name"=>"", "auxData"=>{"isDefault"=>true, "type"=>"default", "frameId"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB"}}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
-    # D, [2020-04-12T22:45:03.938856 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextCreated", "params"=>{"context"=>{"id"=>4, "origin"=>"://", "name"=>"__puppeteer_utility_world__", "auxData"=>{"isDefault"=>false, "type"=>"isolated", "frameId"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB"}}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
-    # D, [2020-04-12T22:45:03.938960 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextDestroyed", "params"=>{"executionContextId"=>1}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
-    # D, [2020-04-12T22:45:03.939110 #46154] DEBUG -- : RECV << {"method"=>"Page.frameNavigated", "params"=>{"frame"=>{"id"=>"3AD7F1E82BCBA88BFE31D03BC49FF6CB", "loaderId"=>"301B349884E582986C502CBE020966DF", "url"=>"https://github.com/", "securityOrigin"=>"https://github.com", "mimeType"=>"text/html"}}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
-    # D, [2020-04-12T22:45:03.939793 #46154] DEBUG -- : RECV << {"method"=>"Runtime.executionContextDestroyed", "params"=>{"executionContextId"=>2}, "sessionId"=>"636CEF0C4FEAFC4FE815E9E7B5F7BA68"}
-    # executionContextDestroyed is often notified after executionContextCreated.
-
     if context
-      if @context_promise.fulfilled?
-        @pending_destroy << context._context_id
-        @document = nil
-        @context_promise = resolvable_future
+      unless @context_promise.resolved?
+        @context_promise.fulfill(context)
       end
-      @context_promise.fulfill(context)
       @wait_tasks.each(&:async_rerun)
     else
       raise ArgumentError.new("context should now be nil. Use #delete_context for clearing document.")
@@ -47,12 +36,8 @@ class Puppeteer::DOMWorld
   end
 
   def delete_context(execution_context_id)
-    if @pending_destroy.include?(execution_context_id)
-      @pending_destroy.delete(execution_context_id)
-    else
-      @document = nil
-      @context_promise = resolvable_future
-    end
+    @document = nil
+    @context_promise = resolvable_future
   end
 
   def has_context?
