@@ -970,16 +970,18 @@ class Puppeteer::Page
   #   return await helper.readProtocolStream(this._client, result.stream, path);
   # }
 
-  # @param {!{runBeforeUnload: (boolean|undefined)}=} options
-  def close
-    # assert(!!this._client._connection, 'Protocol error: Connection closed. Most likely the page has been closed.');
-    # const runBeforeUnload = !!options.runBeforeUnload;
-    # if (runBeforeUnload) {
-    #   await this._client.send('Page.close');
-    # } else {
-    #   await this._client._connection.send('Target.closeTarget', { targetId: this._target._targetId });
-    #   await this._target._isClosedPromise;
-    # }
+  # @param run_before_unload [Boolean]
+  def close(run_before_unload: false)
+    unless @client.connection
+      raise 'Protocol error: Connection closed. Most likely the page has been closed.'
+    end
+
+    if run_before_unload
+      @client.send_message('Page.close')
+    else
+      @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
+      await @target.is_closed_promise
+    end
   end
 
   # @return [boolean]
