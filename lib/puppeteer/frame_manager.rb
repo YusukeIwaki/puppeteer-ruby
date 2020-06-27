@@ -341,11 +341,7 @@ class Puppeteer::FrameManager
   end
 
   def execution_context_by_id(context_id)
-    context = @context_id_to_context[context_id]
-    unless context
-      raise "INTERNAL ERROR: missing context with id = #{context_id}"
-    end
-    context
+    @context_id_to_context[context_id] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
   end
 
   # @param {!Frame} frame
