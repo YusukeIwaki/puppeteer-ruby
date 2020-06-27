@@ -5,7 +5,7 @@ require_relative './page/screenshot_options'
 class Puppeteer::Page
   include Puppeteer::EventCallbackable
   include Puppeteer::IfPresent
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Target} target

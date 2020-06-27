@@ -1,5 +1,5 @@
 class Puppeteer::TouchScreen
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {Puppeteer.CDPSession} client
   # @param keyboard [Puppeteer::Keyboard]

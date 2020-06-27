@@ -1,6 +1,6 @@
 class Puppeteer::ExecutionContext
   include Puppeteer::IfPresent
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__'
   SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m

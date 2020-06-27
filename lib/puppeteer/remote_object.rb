@@ -1,7 +1,7 @@
 # providing #valueFromRemoteObject, #releaseObject
 class Puppeteer::RemoteObject
   include Puppeteer::DebugPrint
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param payload [Hash]
   def initialize(payload)

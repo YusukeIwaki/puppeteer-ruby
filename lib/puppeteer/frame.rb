@@ -1,5 +1,5 @@
 class Puppeteer::Frame
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!FrameManager} frameManager
   # @param {!Puppeteer.CDPSession} client

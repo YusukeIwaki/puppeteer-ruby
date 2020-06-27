@@ -1,5 +1,5 @@
 class Puppeteer::JSHandle
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param context [Puppeteer::ExecutionContext]
   # @param remote_object [Puppeteer::RemoteObject]

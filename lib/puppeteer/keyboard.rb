@@ -2,7 +2,7 @@ require_relative './keyboard/key_description'
 require_relative './keyboard/us_keyboard_layout'
 
 class Puppeteer::Keyboard
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
   def initialize(client)

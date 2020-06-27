@@ -4,7 +4,7 @@ class Puppeteer::FrameManager
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
   include Puppeteer::EventCallbackable
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
 

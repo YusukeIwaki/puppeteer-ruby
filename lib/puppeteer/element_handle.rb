@@ -4,7 +4,7 @@ require_relative './element_handle/point'
 
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
   include Puppeteer::IfPresent
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param context [Puppeteer::ExecutionContext]
   # @param client [Puppeteer::CDPSession]

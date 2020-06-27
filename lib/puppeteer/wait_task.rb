@@ -1,5 +1,5 @@
 class Puppeteer::WaitTask
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   class TerminatedError < StandardError; end
 

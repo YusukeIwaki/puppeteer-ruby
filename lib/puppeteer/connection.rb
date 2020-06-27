@@ -3,7 +3,7 @@ require 'json'
 class Puppeteer::Connection
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   class ProtocolError < StandardError
     def initialize(method:, error_message:, error_data: nil)

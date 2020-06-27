@@ -1,5 +1,5 @@
 class Puppeteer::EmulationManager
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
   def initialize(client)

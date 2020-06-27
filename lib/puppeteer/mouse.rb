@@ -1,5 +1,5 @@
 class Puppeteer::Mouse
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   module Button
     NONE = 'none'

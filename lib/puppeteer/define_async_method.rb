@@ -1,4 +1,4 @@
-module Puppeteer::AsyncAwaitBehavior
+module Puppeteer::DefineAsyncMethod
   refine Class do
     def define_async_method_for(method_name)
       original_method = instance_method(method_name)
