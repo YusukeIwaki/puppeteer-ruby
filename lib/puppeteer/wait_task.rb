@@ -106,7 +106,7 @@ class Puppeteer::WaitTask
     @dom_world._wait_tasks.delete(self)
   end
 
-  private define_async_method_for :rerun
+  private define_async_method :async_rerun
 
   WAIT_FOR_PREDICATE_PAGE_FUNCTION = <<~JAVASCRIPT
   async function _(predicateBody, polling, timeout, ...args) {

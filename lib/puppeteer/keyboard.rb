@@ -38,7 +38,7 @@ class Puppeteer::Keyboard
     @client.send_message('Input.dispatchKeyEvent', params)
   end
 
-  define_async_method_for :down
+  define_async_method :async_down
 
   # @param {string} key
   # @return {number}
@@ -122,14 +122,14 @@ class Puppeteer::Keyboard
     )
   end
 
-  define_async_method_for :up
+  define_async_method :async_up
 
   # @param char [string]
   def send_character(char)
     @client.send_message('Input.insertText', text: char)
   end
 
-  define_async_method_for :send_character
+  define_async_method :async_send_character
 
   # @param text [String]
   # @return [Future]
@@ -146,7 +146,7 @@ class Puppeteer::Keyboard
     end
   end
 
-  define_async_method_for :type_text
+  define_async_method :async_type_text
 
   # @param key [String]
   # @return [Future]
@@ -158,5 +158,5 @@ class Puppeteer::Keyboard
     up(key)
   end
 
-  define_async_method_for :press
+  define_async_method :async_press
 end

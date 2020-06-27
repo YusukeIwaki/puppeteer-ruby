@@ -8,12 +8,12 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
       private def fuga
         '-> fuga'
       end
-      define_async_method_for :fuga
+      define_async_method :async_fuga
 
       def piyo
         '-> piyo'
       end
-      private define_async_method_for :piyo
+      private define_async_method :async_piyo
     end
 
     it 'defined async method wrapped with Concurrent::Promises::Future' do
@@ -39,7 +39,7 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
           def ex
             "ex"
           end
-          define_async_method_for :ex
+          define_async_method :async_ex
         end
       }.to raise_error(ArgumentError)
 
@@ -54,7 +54,7 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
           def ex
             "ex"
           end
-          define_async_method_for :ex
+          define_async_method :async_ex
         end
       }.to raise_error(ArgumentError)
     end

@@ -205,7 +205,7 @@ class Puppeteer::Page
     end
   end
 
-  define_async_method_for :wait_for_file_chooser
+  define_async_method :async_wait_for_file_chooser
 
   # /**
   #  * @param {!{longitude: number, latitude: number, accuracy: (number|undefined)}} options
@@ -300,7 +300,7 @@ class Puppeteer::Page
     main_frame.S(selector)
   end
 
-  define_async_method_for :S
+  define_async_method :async_S
 
   # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
@@ -309,7 +309,7 @@ class Puppeteer::Page
     main_frame.SS(selector)
   end
 
-  define_async_method_for :SS
+  define_async_method :async_SS
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -319,7 +319,7 @@ class Puppeteer::Page
     context.evaluate_handle(page_function, *args)
   end
 
-  define_async_method_for :evaluate_handle
+  define_async_method :async_evaluate_handle
 
   # @param {!Puppeteer.JSHandle} prototypeHandle
   # @return {!Promise<!Puppeteer.JSHandle>}
@@ -336,7 +336,7 @@ class Puppeteer::Page
     main_frame.Seval(selector, page_function, *args)
   end
 
-  define_async_method_for :Seval
+  define_async_method :async_Seval
 
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
@@ -346,7 +346,7 @@ class Puppeteer::Page
     main_frame.SSeval(selector, page_function, *args)
   end
 
-  define_async_method_for :SSeval
+  define_async_method :async_SSeval
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} expression
@@ -355,7 +355,7 @@ class Puppeteer::Page
     main_frame.Sx(expression)
   end
 
-  define_async_method_for :Sx
+  define_async_method :async_Sx
 
   # /**
   #  * @param {!Array<string>} urls
@@ -684,7 +684,7 @@ class Puppeteer::Page
     main_frame.send(:wait_for_navigation, timeout: timeout, wait_until: wait_until)
   end
 
-  define_async_method_for :wait_for_navigation
+  define_async_method :async_wait_for_navigation
 
   # /**
   #  * @param {(string|Function)} urlOrPredicate
@@ -817,7 +817,7 @@ class Puppeteer::Page
     main_frame.evaluate(page_function, *args)
   end
 
-  define_async_method_for :evaluate
+  define_async_method :async_evaluate
 
   # /**
   #  * @param {Function|string} pageFunction
@@ -997,14 +997,14 @@ class Puppeteer::Page
     main_frame.click(selector, delay: delay, button: button, click_count: click_count)
   end
 
-  define_async_method_for :click
+  define_async_method :async_click
 
   # @param {string} selector
   def focus(selector)
     main_frame.focus(selector)
   end
 
-  define_async_method_for :focus
+  define_async_method :async_focus
 
   # @param {string} selector
   def hover(selector)
@@ -1018,14 +1018,14 @@ class Puppeteer::Page
     main_frame.select(selector, *values)
   end
 
-  define_async_method_for :select
+  define_async_method :async_select
 
   # @param selector [String]
   def tap(selector)
     main_frame.tap(selector)
   end
 
-  define_async_method_for :tap
+  define_async_method :async_tap
 
   # @param selector [String]
   # @param text [String]
@@ -1034,7 +1034,7 @@ class Puppeteer::Page
     main_frame.type_text(selector, text, delay: delay)
   end
 
-  define_async_method_for :type_text
+  define_async_method :async_type_text
 
   # /**
   #  * @param {(string|number|Function)} selectorOrFunctionOrTimeout
@@ -1054,7 +1054,7 @@ class Puppeteer::Page
     main_frame.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
   end
 
-  define_async_method_for :wait_for_selector
+  define_async_method :async_wait_for_selector
 
   # @param xpath [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
@@ -1064,7 +1064,7 @@ class Puppeteer::Page
     main_frame.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
   end
 
-  define_async_method_for :wait_for_xpath
+  define_async_method :async_wait_for_xpath
 
   # @param {Function|string} pageFunction
   # @param {!{polling?: string|number, timeout?: number}=} options
@@ -1074,5 +1074,5 @@ class Puppeteer::Page
     main_frame.wait_for_function(page_function, options, *args)
   end
 
-  define_async_method_for :wait_for_function
+  define_async_method :async_wait_for_function
 end

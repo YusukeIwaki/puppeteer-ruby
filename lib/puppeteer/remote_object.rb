@@ -111,7 +111,7 @@ class Puppeteer::RemoteObject
     nil
   end
 
-  define_async_method_for :release
+  define_async_method :async_release
 
   def converted_arg
     # ported logic from ExecutionContext#convertArgument

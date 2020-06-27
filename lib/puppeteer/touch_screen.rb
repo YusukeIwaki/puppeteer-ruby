@@ -34,5 +34,5 @@ class Puppeteer::TouchScreen
     )
   end
 
-  define_async_method_for :tap
+  define_async_method :async_tap
 end

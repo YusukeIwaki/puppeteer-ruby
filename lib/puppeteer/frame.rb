@@ -39,7 +39,7 @@ class Puppeteer::Frame
     @frame_manager.wait_for_frame_navigation(self, timeout: timeout, wait_until: wait_until)
   end
 
-  define_async_method_for :wait_for_navigation
+  define_async_method :async_wait_for_navigation
 
   def execution_context
     @main_world.execution_context
@@ -51,7 +51,7 @@ class Puppeteer::Frame
     @main_world.evaluate_handle(page_function, *args)
   end
 
-  define_async_method_for :evaluate_handle
+  define_async_method :async_evaluate_handle
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -59,7 +59,7 @@ class Puppeteer::Frame
     @main_world.evaluate(page_function, *args)
   end
 
-  define_async_method_for :evaluate
+  define_async_method :async_evaluate
 
   # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
@@ -68,7 +68,7 @@ class Puppeteer::Frame
     @main_world.S(selector)
   end
 
-  define_async_method_for :S
+  define_async_method :async_S
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} expression
@@ -77,7 +77,7 @@ class Puppeteer::Frame
     @main_world.Sx(expression)
   end
 
-  define_async_method_for :Sx
+  define_async_method :async_Sx
 
   # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
@@ -88,7 +88,7 @@ class Puppeteer::Frame
     @main_world.Seval(selector, page_function, *args)
   end
 
-  define_async_method_for :Seval
+  define_async_method :async_Seval
 
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
@@ -99,7 +99,7 @@ class Puppeteer::Frame
     @main_world.SSeval(selector, page_function, *args)
   end
 
-  define_async_method_for :SSeval
+  define_async_method :async_SSeval
 
   # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
@@ -108,7 +108,7 @@ class Puppeteer::Frame
     @main_world.SS(selector)
   end
 
-  define_async_method_for :SS
+  define_async_method :async_SS
 
   def content
     @secondary_world.content
@@ -167,14 +167,14 @@ class Puppeteer::Frame
     @secondary_world.click(selector, delay: delay, button: button, click_count: click_count)
   end
 
-  define_async_method_for :click
+  define_async_method :async_click
 
   # @param {string} selector
   def focus(selector)
     @secondary_world.focus(selector)
   end
 
-  define_async_method_for :focus
+  define_async_method :async_focus
 
   # @param {string} selector
   def hover(selector)
@@ -188,14 +188,14 @@ class Puppeteer::Frame
     @secondary_world.select(selector, *values)
   end
 
-  define_async_method_for :select
+  define_async_method :async_select
 
   # @param {string} selector
   def tap(selector)
     @secondary_world.tap(selector)
   end
 
-  define_async_method_for :tap
+  define_async_method :async_tap
 
   # @param selector [String]
   # @param text [String]
@@ -204,7 +204,7 @@ class Puppeteer::Frame
     @main_world.type_text(selector, text, delay: delay)
   end
 
-  define_async_method_for :type_text
+  define_async_method :async_type_text
 
   # /**
   #  * @param {(string|number|Function)} selectorOrFunctionOrTimeout
@@ -243,7 +243,7 @@ class Puppeteer::Frame
     result
   end
 
-  define_async_method_for :wait_for_selector
+  define_async_method :async_wait_for_selector
 
   # @param xpath [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
@@ -260,7 +260,7 @@ class Puppeteer::Frame
     result
   end
 
-  define_async_method_for :wait_for_xpath
+  define_async_method :async_wait_for_xpath
 
   # @param {Function|string} pageFunction
   # @param {!{polling?: string|number, timeout?: number}=} options
@@ -270,7 +270,7 @@ class Puppeteer::Frame
     @main_world.wait_for_function(page_function, options, *args)
   end
 
-  define_async_method_for :wait_for_function
+  define_async_method :async_wait_for_function
 
   # @return [String]
   def title

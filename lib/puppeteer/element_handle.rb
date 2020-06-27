@@ -120,7 +120,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count)
   end
 
-  define_async_method_for :click
+  define_async_method :async_click
 
   # @return [Array<String>]
   def select(*values)
@@ -190,13 +190,13 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.touchscreen.tap(point.x, point.y)
   end
 
-  define_async_method_for :tap
+  define_async_method :async_tap
 
   def focus
     evaluate('element => element.focus()')
   end
 
-  define_async_method_for :focus
+  define_async_method :async_focus
 
   # @param text [String]
   # @param delay [number|nil]
@@ -205,7 +205,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.keyboard.type_text(text, delay: delay)
   end
 
-  define_async_method_for :type_text
+  define_async_method :async_type_text
 
   # @param key [String]
   # @param delay [number|nil]
@@ -214,7 +214,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.keyboard.press(key, delay: delay)
   end
 
-  define_async_method_for :press
+  define_async_method :async_press
 
   # @return [BoundingBox|nil]
   def bounding_box
@@ -337,7 +337,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     result
   end
 
-  define_async_method_for :Seval
+  define_async_method :async_Seval
 
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
@@ -354,7 +354,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     result
   end
 
-  define_async_method_for :SSeval
+  define_async_method :async_SSeval
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param expression [String]
@@ -377,7 +377,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     properties.values.map(&:as_element).compact
   end
 
-  define_async_method_for :Sx
+  define_async_method :async_Sx
 
   #  /**
   #   * @returns {!Promise<boolean>}

@@ -38,5 +38,5 @@ class Puppeteer::EmulationManager
     reload_needed
   end
 
-  define_async_method_for :emulate_viewport
+  define_async_method :async_emulate_viewport
 end
