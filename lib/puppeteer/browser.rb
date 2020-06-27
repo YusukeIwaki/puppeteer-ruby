@@ -155,7 +155,10 @@ class Puppeteer::Browser
   # @param {!Protocol.Target.targetInfoChangedPayload} event
   def handle_target_info_changed(event)
     target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
-    target = @targets[target_info.target_id] or raise TargetNotExistError.new
+    target = @targets[target_info.target_id]
+    unless target
+      raise TargetNotExistError.new
+    end
     previous_url = target.url
     was_initialized = target.initialized?
     target.handle_target_info_changed(target_info)
