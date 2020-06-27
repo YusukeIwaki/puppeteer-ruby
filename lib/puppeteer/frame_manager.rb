@@ -4,7 +4,7 @@ class Puppeteer::FrameManager
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
   include Puppeteer::EventCallbackable
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
 
@@ -73,9 +73,7 @@ class Puppeteer::FrameManager
     @network_manager.init
   end
 
-  async def async_init
-    init
-  end
+  define_async_method :async_init
 
   attr_reader :network_manager
 

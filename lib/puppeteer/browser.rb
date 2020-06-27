@@ -5,7 +5,7 @@ class Puppeteer::Browser
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
   include Puppeteer::IfPresent
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds

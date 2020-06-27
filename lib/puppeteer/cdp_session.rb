@@ -1,7 +1,7 @@
 class Puppeteer::CDPSession
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   class Error < StandardError; end
 

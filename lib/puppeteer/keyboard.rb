@@ -2,7 +2,7 @@ require_relative './keyboard/key_description'
 require_relative './keyboard/us_keyboard_layout'
 
 class Puppeteer::Keyboard
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
   def initialize(client)
@@ -38,12 +38,7 @@ class Puppeteer::Keyboard
     @client.send_message('Input.dispatchKeyEvent', params)
   end
 
-  # @param key [String]
-  # @param text [String]
-  # @return [Future]
-  async def async_down(key, text: nil)
-    down(key, text)
-  end
+  define_async_method :async_down
 
   # @param {string} key
   # @return {number}
@@ -127,22 +122,14 @@ class Puppeteer::Keyboard
     )
   end
 
-  # @param key [String]
-  # @return [Future]
-  async def async_up(key)
-    up(key)
-  end
+  define_async_method :async_up
 
   # @param char [string]
   def send_character(char)
     @client.send_message('Input.insertText', text: char)
   end
 
-  # @param char [string]
-  # @return [Future]
-  async def async_send_character(char)
-    send_character(char)
-  end
+  define_async_method :async_send_character
 
   # @param text [String]
   # @return [Future]
@@ -159,11 +146,7 @@ class Puppeteer::Keyboard
     end
   end
 
-  # @param text [String]
-  # @return [Future]
-  async def async_type_text(text, delay: nil)
-    type_text(text, delay)
-  end
+  define_async_method :async_type_text
 
   # @param key [String]
   # @return [Future]
@@ -175,9 +158,5 @@ class Puppeteer::Keyboard
     up(key)
   end
 
-  # @param key [String]
-  # @return [Future]
-  async def async_press(key, delay: nil)
-    press(key, delay: delay)
-  end
+  define_async_method :async_press
 end

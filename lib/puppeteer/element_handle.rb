@@ -4,7 +4,7 @@ require_relative './element_handle/point'
 
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
   include Puppeteer::IfPresent
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param context [Puppeteer::ExecutionContext]
   # @param client [Puppeteer::CDPSession]
@@ -105,11 +105,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  #  async hover() {
-  #    await this._scrollIntoViewIfNeeded();
-  #    const {x, y} = await this._clickablePoint();
-  #    await this._page.mouse.move(x, y);
-  #  }
+  def hover
+    scroll_into_view_if_needed
+    point = clickable_point
+    @page.mouse.move(point.x, point.y)
+  end
 
   # @param delay [Number]
   # @param button [String] "left"|"right"|"middle"
@@ -120,12 +120,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count)
   end
 
-  # @param delay [Number]
-  # @param button [String] "left"|"right"|"middle"
-  # @param click_count [Number]
-  async def async_click(delay: nil, button: nil, click_count: nil)
-    click(delay: delay, button: button, click_count: click_count)
-  end
+  define_async_method :async_click
 
   # @return [Array<String>]
   def select(*values)
@@ -195,17 +190,13 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.touchscreen.tap(point.x, point.y)
   end
 
-  async def async_tap
-    tap
-  end
+  define_async_method :async_tap
 
   def focus
     evaluate('element => element.focus()')
   end
 
-  async def async_focus
-    focus
-  end
+  define_async_method :async_focus
 
   # @param text [String]
   # @param delay [number|nil]
@@ -214,12 +205,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.keyboard.type_text(text, delay: delay)
   end
 
-  # @param text [String]
-  # @param delay [number|nil]
-  # @return [Future]
-  async def async_type_text(text, delay: nil)
-    type_text(text, delay: delay)
-  end
+  define_async_method :async_type_text
 
   # @param key [String]
   # @param delay [number|nil]
@@ -228,12 +214,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.keyboard.press(key, delay: delay)
   end
 
-  # @param key [String]
-  # @param delay [number|nil]
-  # @return [Future]
-  async def async_press(key, delay: nil)
-    press(key, delay: delay)
-  end
+  define_async_method :async_press
 
   # @return [BoundingBox|nil]
   def bounding_box
@@ -356,13 +337,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     result
   end
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @param selector [String]
-  # @param page_function [String]
-  # @return [Object]
-  async def async_Seval(selector, page_function, *args)
-    Seval(selector, page_function, *args)
-  end
+  define_async_method :async_Seval
 
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
@@ -379,13 +354,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     result
   end
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @param selector [String]
-  # @param page_function [String]
-  # @return [Object]
-  async def async_SSeval(selector, page_function, *args)
-    SSeval(selector, page_function, *args)
-  end
+  define_async_method :async_SSeval
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param expression [String]
@@ -407,6 +376,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     handles.dispose
     properties.values.map(&:as_element).compact
   end
+
+  define_async_method :async_Sx
 
   #  /**
   #   * @returns {!Promise<boolean>}

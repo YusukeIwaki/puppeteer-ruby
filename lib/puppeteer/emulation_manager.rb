@@ -1,5 +1,5 @@
 class Puppeteer::EmulationManager
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
   def initialize(client)
@@ -38,9 +38,5 @@ class Puppeteer::EmulationManager
     reload_needed
   end
 
-  # @param viewport [Puppeteer::Viewport]
-  # @return [Future<true|false>]
-  async def async_emulate_viewport(viewport)
-    emulate_viewport(viewport)
-  end
+  define_async_method :async_emulate_viewport
 end

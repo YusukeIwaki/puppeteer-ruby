@@ -3,7 +3,7 @@ require 'json'
 class Puppeteer::Connection
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   class ProtocolError < StandardError
     def initialize(method:, error_message:, error_data: nil)
@@ -210,9 +210,7 @@ class Puppeteer::Connection
     end
   end
 
-  private async def async_handle_message(message)
-    handle_message(message)
-  end
+  private define_async_method :async_handle_message
 
   private def handle_close
     return if @closed

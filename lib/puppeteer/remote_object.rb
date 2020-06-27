@@ -1,7 +1,7 @@
 # providing #valueFromRemoteObject, #releaseObject
 class Puppeteer::RemoteObject
   include Puppeteer::DebugPrint
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param payload [Hash]
   def initialize(payload)
@@ -111,10 +111,7 @@ class Puppeteer::RemoteObject
     nil
   end
 
-  # @param client [Puppeteer::CDPSession]
-  async def async_release(client)
-    release(client)
-  end
+  define_async_method :async_release
 
   def converted_arg
     # ported logic from ExecutionContext#convertArgument

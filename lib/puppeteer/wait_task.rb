@@ -1,5 +1,5 @@
 class Puppeteer::WaitTask
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   class TerminatedError < StandardError; end
 
@@ -106,9 +106,7 @@ class Puppeteer::WaitTask
     @dom_world._wait_tasks.delete(self)
   end
 
-  private async def async_rerun
-    rerun
-  end
+  private define_async_method :async_rerun
 
   WAIT_FOR_PREDICATE_PAGE_FUNCTION = <<~JAVASCRIPT
   async function _(predicateBody, polling, timeout, ...args) {

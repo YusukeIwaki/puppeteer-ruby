@@ -2,7 +2,7 @@ require 'thread'
 
 # https://github.com/puppeteer/puppeteer/blob/master/src/DOMWorld.js
 class Puppeteer::DOMWorld
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.FrameManager} frameManager
   # @param {!Puppeteer.Frame} frame

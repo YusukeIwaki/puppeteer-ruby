@@ -1,5 +1,5 @@
 class Puppeteer::TouchScreen
-  using Puppeteer::AsyncAwaitBehavior
+  using Puppeteer::DefineAsyncMethod
 
   # @param {Puppeteer.CDPSession} client
   # @param keyboard [Puppeteer::Keyboard]
@@ -34,10 +34,5 @@ class Puppeteer::TouchScreen
     )
   end
 
-  # @param x [number]
-  # @param y [number]
-  # @return [Future]
-  async def async_tap(x, y)
-    tap(x, y)
-  end
+  define_async_method :async_tap
 end
