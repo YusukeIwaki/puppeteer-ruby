@@ -18,17 +18,6 @@ jobs:
               --out test_results/rspec.xml \
               --format progress
 
-  rubocop:
-    docker:
-      - image: circleci/ruby:2.6.3-stretch-node
-    executor: ruby/default
-    steps:
-      - checkout
-      - ruby/bundle-install
-      - run:
-          name: rubocop
-          command: bundle exec rubocop
-
   deploy:
     docker:
       - image: circleci/ruby:2.6.3-stretch-node
@@ -60,7 +49,6 @@ workflows:
   ci:
     jobs:
       - rspec
-      - rubocop
   rubygems-deploy:
     jobs:
       - deploy:
