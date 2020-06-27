@@ -27,6 +27,19 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
       expect(DefineAsyncMethodExample.method_defined?(:async_piyo)).to eq(false)
     end
 
+    it 'raises exception when async method name does not start with async_' do
+      expect {
+        class DefineAsyncMethodExample1
+          using Puppeteer::DefineAsyncMethod
+
+          def ex
+            'ex'
+          end
+          define_async_method :ex
+        end
+      }.to raise_error(ArgumentError)
+    end
+
     it 'raises exception when async method is already defined' do
       expect {
         class DefineAsyncMethodExample2
