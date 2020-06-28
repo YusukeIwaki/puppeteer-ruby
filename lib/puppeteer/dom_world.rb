@@ -132,45 +132,48 @@ class Puppeteer::DOMWorld
     document.SS(selector)
   end
 
-  # /**
-  #  * @return {!Promise<String>}
-  #  */
-  # async content() {
-  #   return await this.evaluate(() => {
-  #     let retVal = '';
-  #     if (document.doctype)
-  #       retVal = new XMLSerializer().serializeToString(document.doctype);
-  #     if (document.documentElement)
-  #       retVal += document.documentElement.outerHTML;
-  #     return retVal;
-  #   });
-  # }
+  # @return [String]
+  def content
+    evaluate <<-JAVASCRIPT
+    () => {
+      let retVal = '';
+      if (document.doctype)
+        retVal = new XMLSerializer().serializeToString(document.doctype);
+      if (document.documentElement)
+        retVal += document.documentElement.outerHTML;
+      return retVal;
+    }
+    JAVASCRIPT
+  end
 
-  # /**
-  #  * @param {string} html
-  #  * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-  #  */
-  # async setContent(html, options = {}) {
-  #   const {
-  #     waitUntil = ['load'],
-  #     timeout = this._timeoutSettings.navigationTimeout(),
-  #   } = options;
-  #   // We rely upon the fact that document.open() will reset frame lifecycle with "init"
-  #   // lifecycle event. @see https://crrev.com/608658
-  #   await this.evaluate(html => {
-  #     document.open();
-  #     document.write(html);
-  #     document.close();
-  #   }, html);
-  #   const watcher = new LifecycleWatcher(this._frameManager, this._frame, waitUntil, timeout);
-  #   const error = await Promise.race([
-  #     watcher.timeoutOrTerminationPromise(),
-  #     watcher.lifecyclePromise(),
-  #   ]);
-  #   watcher.dispose();
-  #   if (error)
-  #     throw error;
-  # }
+  # @param html [String]
+  # @param timeout [Integer]
+  # @param wait_until [String|Array<String>]
+  def set_content(html, timeout: nil, wait_until: nil)
+    option_wait_until = [wait_until || 'load'].flatten
+    option_timeout = @timeout_settings.navigation_timeout
+
+    # We rely upon the fact that document.open() will reset frame lifecycle with "init"
+    # lifecycle event. @see https://crrev.com/608658
+    js = <<-JAVASCRIPT
+    (html) => {
+      document.open();
+      document.write(html);
+      document.close();
+    }
+    JAVASCRIPT
+    evaluate(js, html)
+
+    watcher = Puppeteer::LifecycleWatcher.new(@frame_manager, @frame, option_wait_until, option_timeout)
+    begin
+      await_any(
+        watcher.timeout_or_termination_promise,
+        watcher.lifecycle_promise,
+      )
+    ensure
+      watcher.dispose
+    end
+  end
 
   # /**
   #  * @param {!{url?: string, path?: string, content?: string, type?: string}} options

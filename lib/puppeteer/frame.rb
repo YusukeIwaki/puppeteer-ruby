@@ -110,12 +110,14 @@ class Puppeteer::Frame
 
   define_async_method :async_SS
 
+  # @return [String]
   def content
     @secondary_world.content
   end
 
-  # @param {string} html
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @param html [String]
+  # @param timeout [Integer]
+  # @param wait_until [String|Array<String>]
   def set_content(html, timeout: nil, wait_until: nil)
     @secondary_world.set_content(html, timeout: timeout, wait_until: wait_until)
   end

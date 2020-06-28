@@ -1,5 +1,7 @@
 require 'base64'
+require "stringio"
 
+require_relative './page/pdf_options'
 require_relative './page/screenshot_options'
 
 class Puppeteer::Page
@@ -649,13 +651,14 @@ class Puppeteer::Page
     main_frame.content
   end
 
-  # @param {string} html
-  # @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @param html [String]
+  # @param timeout [Integer]
+  # @param wait_until [String|Array<String>]
   def set_content(html, timeout: nil, wait_until: nil)
     main_frame.set_content(html, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param {string} html
+  # @param html [String]
   def content=(html)
     main_frame.set_content(html)
   end
@@ -915,60 +918,53 @@ class Puppeteer::Page
     buffer
   end
 
-  # /**
-  #  * @param {!PDFOptions=} options
-  #  * @return {!Promise<!Buffer>}
-  #  */
-  # async pdf(options = {}) {
-  #   const {
-  #     scale = 1,
-  #     displayHeaderFooter = false,
-  #     headerTemplate = '',
-  #     footerTemplate = '',
-  #     printBackground = false,
-  #     landscape = false,
-  #     pageRanges = '',
-  #     preferCSSPageSize = false,
-  #     margin = {},
-  #     path = null
-  #   } = options;
+  class ProtocolStreamReader
+    def initialize(client:, handle:, path:)
+      @client = client
+      @handle = handle
+      @path = path
+    end
 
-  #   let paperWidth = 8.5;
-  #   let paperHeight = 11;
-  #   if (options.format) {
-  #     const format = Page.PaperFormats[options.format.toLowerCase()];
-  #     assert(format, 'Unknown paper format: ' + options.format);
-  #     paperWidth = format.width;
-  #     paperHeight = format.height;
-  #   } else {
-  #     paperWidth = convertPrintParameterToInches(options.width) || paperWidth;
-  #     paperHeight = convertPrintParameterToInches(options.height) || paperHeight;
-  #   }
+    def read
+      out = StringIO.new
+      File.open(@path, 'w') do |file|
+        eof = false
+        until eof
+          response = @client.send_message('IO.read', handle: @handle)
+          eof = response['eof']
+          data =
+            if response['base64Encoded']
+              Base64.decode64(response['data'])
+            else
+              response['data']
+            end
+          out.write(data)
+          file.write(data)
+        end
+      end
+      @client.send_message('IO.close', handle: @handle)
+      out.read
+    end
+  end
 
-  #   const marginTop = convertPrintParameterToInches(margin.top) || 0;
-  #   const marginLeft = convertPrintParameterToInches(margin.left) || 0;
-  #   const marginBottom = convertPrintParameterToInches(margin.bottom) || 0;
-  #   const marginRight = convertPrintParameterToInches(margin.right) || 0;
+  class PrintToPdfIsNotImplementedError < StandardError
+    def initialize
+      super('pdf() is only available in headless mode. See https://github.com/puppeteer/puppeteer/issues/1829')
+    end
+  end
 
-  #   const result = await this._client.send('Page.printToPDF', {
-  #     transferMode: 'ReturnAsStream',
-  #     landscape,
-  #     displayHeaderFooter,
-  #     headerTemplate,
-  #     footerTemplate,
-  #     printBackground,
-  #     scale,
-  #     paperWidth,
-  #     paperHeight,
-  #     marginTop,
-  #     marginBottom,
-  #     marginLeft,
-  #     marginRight,
-  #     pageRanges,
-  #     preferCSSPageSize
-  #   });
-  #   return await helper.readProtocolStream(this._client, result.stream, path);
-  # }
+  # @return [String]
+  def pdf(options = {})
+    pdf_options = PDFOptions.new(options)
+    result = @client.send_message('Page.printToPDF', pdf_options.page_print_args)
+    ProtocolStreamReader.new(client: @client, handle: result['stream'], path: pdf_options.path).read
+  rescue => err
+    if err.message.include?('PrintToPDF is not implemented')
+      raise PrintToPdfIsNotImplementedError.new
+    else
+      raise
+    end
+  end
 
   # @param run_before_unload [Boolean]
   def close(run_before_unload: false)
