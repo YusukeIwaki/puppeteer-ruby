@@ -208,28 +208,6 @@ class Puppeteer::Frame
 
   define_async_method :async_type_text
 
-  # /**
-  #  * @param {(string|number|Function)} selectorOrFunctionOrTimeout
-  #  * @param {!Object=} options
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<?Puppeteer.JSHandle>}
-  #  */
-  # waitFor(selectorOrFunctionOrTimeout, options = {}, ...args) {
-  #   const xPathPattern = '//';
-
-  #   if (helper.isString(selectorOrFunctionOrTimeout)) {
-  #     const string = /** @type {string} */ (selectorOrFunctionOrTimeout);
-  #     if (string.startsWith(xPathPattern))
-  #       return this.waitForXPath(string, options);
-  #     return this.waitForSelector(string, options);
-  #   }
-  #   if (helper.isNumber(selectorOrFunctionOrTimeout))
-  #     return new Promise(fulfill => setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)));
-  #   if (typeof selectorOrFunctionOrTimeout === 'function')
-  #     return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
-  #   return Promise.reject(new Error('Unsupported target type: ' + (typeof selectorOrFunctionOrTimeout)));
-  # }
-
   # @param selector [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.

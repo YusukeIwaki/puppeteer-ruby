@@ -1034,16 +1034,6 @@ class Puppeteer::Page
 
   define_async_method :async_type_text
 
-  # /**
-  #  * @param {(string|number|Function)} selectorOrFunctionOrTimeout
-  #  * @param {!{visible?: boolean, hidden?: boolean, timeout?: number, polling?: string|number}=} options
-  #  * @param {!Array<*>} args
-  #  * @return {!Promise<!Puppeteer.JSHandle>}
-  #  */
-  # waitFor(selectorOrFunctionOrTimeout, options = {}, ...args) {
-  #   return this.mainFrame().waitFor(selectorOrFunctionOrTimeout, options, ...args);
-  # }
-
   # @param selector [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
