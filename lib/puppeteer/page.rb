@@ -762,20 +762,19 @@ class Puppeteer::Page
     @client.send_message('Emulation.setScriptExecutionDisabled', value: !enabled)
   end
 
-  # /**
-  #  * @param {boolean} enabled
-  #  */
-  # async setBypassCSP(enabled) {
-  #   await this._client.send('Page.setBypassCSP', { enabled });
-  # }
+  # @param enabled [Boolean]
+  def bypass_csp=(enabled)
+    @client.send_message('Page.setBypassCSP', enabled: enabled)
+  end
 
-  # /**
-  #  * @param {?string} type
-  #  */
-  # async emulateMediaType(type) {
-  #   assert(type === 'screen' || type === 'print' || type === null, 'Unsupported media type: ' + type);
-  #   await this._client.send('Emulation.setEmulatedMedia', {media: type || ''});
-  # }
+  # @param media_type [String|Symbol|nil] either of (media, print, nil)
+  def emulate_media_type(media_type)
+    media_type_str = media_type.to_s
+    unless ['screen', 'print', ''].include?(media_type_str)
+      raise ArgumentError.new("Unsupported media type: #{media_type}")
+    end
+    @client.send_message('Emulation.setEmulatedMedia', media: media_type_str)
+  end
 
   # /**
   #  * @param {?Array<MediaFeature>} features
@@ -795,7 +794,7 @@ class Puppeteer::Page
 
   # @param timezone_id [String?]
   def emulate_timezone(timezone_id)
-    @client.send_message('Emulation.setTimezoneOverride', timezoneId: timezoneId || '')
+    @client.send_message('Emulation.setTimezoneOverride', timezoneId: timezone_id || '')
   rescue => err
     if err.message.include?('Invalid timezone')
       raise ArgumentError.new("Invalid timezone ID: #{timezone_id}")
