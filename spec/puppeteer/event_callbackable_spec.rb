@@ -211,7 +211,7 @@ RSpec.describe Puppeteer::EventCallbackable do
     end
   end
 
-  describe 'observe_once' do
+  describe 'observe_first' do
     class Pub
       include Puppeteer::EventCallbackable
     end
