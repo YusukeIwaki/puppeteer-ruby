@@ -102,6 +102,22 @@ class Puppeteer::Request
     end
   end
 
+  # proceed request on request interception.
+  #
+  # Example:
+  #
+  # ````
+  # page.on 'request' do |req|
+  #   # Override headers
+  #   headers = req.headers.merge(
+  #     foo: 'bar', # set "foo" header
+  #     origin: nil, # remove "origin" header
+  #   )
+  #   req.continue(headers: headers)
+  # end
+  # ```
+  #`
+  # @param error_code [String|Symbol]
   def continue(url: nil, method: nil, post_data: nil, headers: nil)
     # Request interception is not supported for data: urls.
     return if @url.start_with?('data:')
@@ -132,6 +148,24 @@ class Puppeteer::Request
     end
   end
 
+  # Mocking response.
+  #
+  # Example:
+  #
+  # ```
+  # page.on 'request' do |req|
+  #   req.respond(
+  #     status: 404,
+  #     content_type: 'text/plain',
+  #     body: 'Not Found!'
+  #   )
+  # end
+  # ````
+  #
+  # @param status [Integer]
+  # @param headers [Hash<String, String>]
+  # @param content_type [String]
+  # @param body [String]
   def respond(status: nil, headers: nil, content_type: nil, body: nil)
     # Mocking responses for dataURL requests is not currently supported.
     return if @url.start_with?('data:')
@@ -143,8 +177,6 @@ class Puppeteer::Request
       raise AlreadyHandledError.new
     end
     @interception_handled = true
-
-    #   const responseBody: Buffer | null = response.body && helper.isString(response.body) ? Buffer.from(response.body) : response.body as Buffer || null;
 
     mock_response_headers = {}
     headers&.each do |key, value|
@@ -175,6 +207,21 @@ class Puppeteer::Request
     end
   end
 
+  # abort request on request interception.
+  #
+  # Example:
+  #
+  # ````
+  # page.on 'request' do |req|
+  #   if req.url.include?("porn")
+  #     req.abort
+  #   else
+  #     req.continue
+  #   end
+  # end
+  # ```
+  #`
+  # @param error_code [String|Symbol]
   def abort(error_code: :failed)
     # Request interception is not supported for data: urls.
     return if @url.start_with?('data:')
