@@ -1,5 +1,6 @@
 class Puppeteer::Request
   include Puppeteer::DebugPrint
+  include Puppeteer::IfPresent
 
   # defines some methods used only in NetworkManager, Response
   class InternalAccessor
@@ -89,16 +90,27 @@ class Puppeteer::Request
     end
   end
 
+  class InterceptionNotEnabledError < StandardError
+    def initialize
+      super('Request Interception is not enabled!')
+    end
+  end
+
+  class AlreadyHandledError < StandardError
+    def initialize
+      super('Request is already handled!')
+    end
+  end
 
   def continue(url: nil, method: nil, post_data: nil, headers: nil)
     # Request interception is not supported for data: urls.
     return if @url.start_with?('data:')
 
     unless @allow_interception
-      raise 'Request Interception is not enabled!'
+      raise InterceptionNotEnabledError.new
     end
     if @interception_handled
-      raise 'Request is already handled!'
+      raise AlreadyHandledError.new
     end
     @interception_handled = true
 
@@ -120,44 +132,47 @@ class Puppeteer::Request
     end
   end
 
-  def respond
-    # async respond(response: {
-    #   status: number;
-    #   headers: Record<string, string>;
-    #   contentType: string;
-    #   body: string|Buffer;
-    # }): Promise<void> {
-    #   // Mocking responses for dataURL requests is not currently supported.
-    #   if (this._url.startsWith('data:'))
-    #     return;
-    #   assert(this._allowInterception, 'Request Interception is not enabled!');
-    #   assert(!this._interceptionHandled, 'Request is already handled!');
-    #   this._interceptionHandled = true;
+  def respond(status: nil, headers: nil, content_type: nil, body: nil)
+    # Mocking responses for dataURL requests is not currently supported.
+    return if @url.start_with?('data:')
+
+    unless @allow_interception
+      raise InterceptionNotEnabledError.new
+    end
+    if @interception_handled
+      raise AlreadyHandledError.new
+    end
+    @interception_handled = true
 
     #   const responseBody: Buffer | null = response.body && helper.isString(response.body) ? Buffer.from(response.body) : response.body as Buffer || null;
 
-    #   const responseHeaders: Record<string, string> = {};
-    #   if (response.headers) {
-    #     for (const header of Object.keys(response.headers))
-    #       responseHeaders[header.toLowerCase()] = response.headers[header];
-    #   }
-    #   if (response.contentType)
-    #     responseHeaders['content-type'] = response.contentType;
-    #   if (responseBody && !('content-length' in responseHeaders))
-    #     responseHeaders['content-length'] = String(Buffer.byteLength(responseBody));
+    mock_response_headers = {}
+    headers&.each do |key, value|
+      mock_response_headers[key.downcase] = value
+    end
+    if content_type
+      mock_response_headers['content-type'] = content_type
+    end
+    if body
+      mock_response_headers['content-length'] = body.length
+    end
 
-    #   await this._client.send('Fetch.fulfillRequest', {
-    #     requestId: this._interceptionId,
-    #     responseCode: response.status || 200,
-    #     responsePhrase: STATUS_TEXTS[response.status || 200],
-    #     responseHeaders: headersArray(responseHeaders),
-    #     body: responseBody ? responseBody.toString('base64') : undefined,
-    #   }).catch(error => {
-    #     // In certain cases, protocol will return error if the request was already canceled
-    #     // or the page was closed. We should tolerate these errors.
-    #     debugError(error);
-    #   });
-    # }
+    mock_response = {
+      responseCode: status || 200,
+      responsePhrase: STATUS_TEXTS[(status || 200).to_s],
+      responseHeaders: headers_to_array(mock_response_headers),
+      body: if_present(body) { |mock_body| Base64.strict_encode64(mock_body) },
+    }.compact
+    begin
+      @client.send_message('Fetch.fulfillRequest',
+        requestId: @interception_id,
+        **mock_response,
+      )
+    rescue => err
+      # In certain cases, protocol will return error if the request was already canceled
+      # or the page was closed. We should tolerate these errors.
+      debug_puts(err)
+    end
   end
 
   def abort(error_code: :failed)
@@ -169,10 +184,10 @@ class Puppeteer::Request
       raise ArgumentError.new("Unknown error code: #{error_code}")
     end
     unless @allow_interception
-      raise 'Request Interception is not enabled!'
+      raise InterceptionNotEnabledError.new
     end
     if @interception_handled
-      raise 'Request is already handled!'
+      raise AlreadyHandledError.new
     end
     @interception_handled = true
 
@@ -203,5 +218,72 @@ class Puppeteer::Request
     'namenotresolved' => 'NameNotResolved',
     'timedout' => 'TimedOut',
     'failed' => 'Failed',
+  }.freeze
+
+  # List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
+  STATUS_TEXTS = {
+    '100' => 'Continue',
+    '101' => 'Switching Protocols',
+    '102' => 'Processing',
+    '103' => 'Early Hints',
+    '200' => 'OK',
+    '201' => 'Created',
+    '202' => 'Accepted',
+    '203' => 'Non-Authoritative Information',
+    '204' => 'No Content',
+    '205' => 'Reset Content',
+    '206' => 'Partial Content',
+    '207' => 'Multi-Status',
+    '208' => 'Already Reported',
+    '226' => 'IM Used',
+    '300' => 'Multiple Choices',
+    '301' => 'Moved Permanently',
+    '302' => 'Found',
+    '303' => 'See Other',
+    '304' => 'Not Modified',
+    '305' => 'Use Proxy',
+    '306' => 'Switch Proxy',
+    '307' => 'Temporary Redirect',
+    '308' => 'Permanent Redirect',
+    '400' => 'Bad Request',
+    '401' => 'Unauthorized',
+    '402' => 'Payment Required',
+    '403' => 'Forbidden',
+    '404' => 'Not Found',
+    '405' => 'Method Not Allowed',
+    '406' => 'Not Acceptable',
+    '407' => 'Proxy Authentication Required',
+    '408' => 'Request Timeout',
+    '409' => 'Conflict',
+    '410' => 'Gone',
+    '411' => 'Length Required',
+    '412' => 'Precondition Failed',
+    '413' => 'Payload Too Large',
+    '414' => 'URI Too Long',
+    '415' => 'Unsupported Media Type',
+    '416' => 'Range Not Satisfiable',
+    '417' => 'Expectation Failed',
+    '418' => 'I\'m a teapot',
+    '421' => 'Misdirected Request',
+    '422' => 'Unprocessable Entity',
+    '423' => 'Locked',
+    '424' => 'Failed Dependency',
+    '425' => 'Too Early',
+    '426' => 'Upgrade Required',
+    '428' => 'Precondition Required',
+    '429' => 'Too Many Requests',
+    '431' => 'Request Header Fields Too Large',
+    '451' => 'Unavailable For Legal Reasons',
+    '500' => 'Internal Server Error',
+    '501' => 'Not Implemented',
+    '502' => 'Bad Gateway',
+    '503' => 'Service Unavailable',
+    '504' => 'Gateway Timeout',
+    '505' => 'HTTP Version Not Supported',
+    '506' => 'Variant Also Negotiates',
+    '507' => 'Insufficient Storage',
+    '508' => 'Loop Detected',
+    '510' => 'Not Extended',
+    '511' => 'Network Authentication Required',
   }.freeze
 end
