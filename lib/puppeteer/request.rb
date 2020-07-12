@@ -1,4 +1,6 @@
 class Puppeteer::Request
+  include Puppeteer::DebugPrint
+
   # defines some methods used only in NetworkManager, Response
   class InternalAccessor
     def initialize(request)
@@ -79,32 +81,43 @@ class Puppeteer::Request
     end
   end
 
-  def continue(url:, method:, post_data:, headers:)
-    # async continue(overrides: {url?: string; method?: string; postData?: string; headers?: Record<string, string>} = {}): Promise<void> {
-    #   // Request interception is not supported for data: urls.
-    #   if (this._url.startsWith('data:'))
-    #     return;
-    #   assert(this._allowInterception, 'Request Interception is not enabled!');
-    #   assert(!this._interceptionHandled, 'Request is already handled!');
-    #   const {
-    #     url,
-    #     method,
-    #     postData,
-    #     headers
-    #   } = overrides;
-    #   this._interceptionHandled = true;
-    #   await this._client.send('Fetch.continueRequest', {
-    #     requestId: this._interceptionId,
-    #     url,
-    #     method,
-    #     postData,
-    #     headers: headers ? headersArray(headers) : undefined,
-    #   }).catch(error => {
-    #     // In certain cases, protocol will return error if the request was already canceled
-    #     // or the page was closed. We should tolerate these errors.
-    #     debugError(error);
-    #   });
-    # }
+  private def headers_to_array(headers)
+    return nil unless headers
+
+    headers.map do |key, value|
+      { name: key, value: value.to_s }
+    end
+  end
+
+
+  def continue(url: nil, method: nil, post_data: nil, headers: nil)
+    # Request interception is not supported for data: urls.
+    return if @url.start_with?('data:')
+
+    unless @allow_interception
+      raise 'Request Interception is not enabled!'
+    end
+    if @interception_handled
+      raise 'Request is already handled!'
+    end
+    @interception_handled = true
+
+    overrides = {
+      url: url,
+      method: method,
+      post_data: post_data,
+      headers: headers_to_array(headers),
+    }.compact
+    begin
+      @client.send_message('Fetch.continueRequest',
+        requestId: @interception_id,
+        **overrides,
+      )
+    rescue => err
+      # In certain cases, protocol will return error if the request was already canceled
+      # or the page was closed. We should tolerate these errors.
+      debug_puts(err)
+    end
   end
 
   def respond
@@ -147,24 +160,48 @@ class Puppeteer::Request
     # }
   end
 
-  def abort
-    # async abort(errorCode: ErrorCode = 'failed'): Promise<void> {
-    #   // Request interception is not supported for data: urls.
-    #   if (this._url.startsWith('data:'))
-    #     return;
-    #   const errorReason = errorReasons[errorCode];
-    #   assert(errorReason, 'Unknown error code: ' + errorCode);
-    #   assert(this._allowInterception, 'Request Interception is not enabled!');
-    #   assert(!this._interceptionHandled, 'Request is already handled!');
-    #   this._interceptionHandled = true;
-    #   await this._client.send('Fetch.failRequest', {
-    #     requestId: this._interceptionId,
-    #     errorReason
-    #   }).catch(error => {
-    #     // In certain cases, protocol will return error if the request was already canceled
-    #     // or the page was closed. We should tolerate these errors.
-    #     debugError(error);
-    #   });
-    # }
+  def abort(error_code: :failed)
+    # Request interception is not supported for data: urls.
+    return if @url.start_with?('data:')
+
+    error_reason = ERROR_REASONS[error_code.to_s]
+    unless error_reason
+      raise ArgumentError.new("Unknown error code: #{error_code}")
+    end
+    unless @allow_interception
+      raise 'Request Interception is not enabled!'
+    end
+    if @interception_handled
+      raise 'Request is already handled!'
+    end
+    @interception_handled = true
+
+    begin
+      @client.send_message('Fetch.failRequest',
+        requestId: @interception_id,
+        errorReason: error_reason,
+      )
+    rescue => err
+      # In certain cases, protocol will return error if the request was already canceled
+      # or the page was closed. We should tolerate these errors.
+      debug_puts(err)
+    end
   end
+
+  ERROR_REASONS = {
+    'aborted' => 'Aborted',
+    'accessdenied' => 'AccessDenied',
+    'addressunreachable' => 'AddressUnreachable',
+    'blockedbyclient' => 'BlockedByClient',
+    'blockedbyresponse' => 'BlockedByResponse',
+    'connectionaborted' => 'ConnectionAborted',
+    'connectionclosed' => 'ConnectionClosed',
+    'connectionfailed' => 'ConnectionFailed',
+    'connectionrefused' => 'ConnectionRefused',
+    'connectionreset' => 'ConnectionReset',
+    'internetdisconnected' => 'InternetDisconnected',
+    'namenotresolved' => 'NameNotResolved',
+    'timedout' => 'TimedOut',
+    'failed' => 'Failed',
+  }.freeze
 end
