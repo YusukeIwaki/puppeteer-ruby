@@ -689,41 +689,94 @@ class Puppeteer::Page
 
   define_async_method :async_wait_for_navigation
 
-  # /**
-  #  * @param {(string|Function)} urlOrPredicate
-  #  * @param {!{timeout?: number}=} options
-  #  * @return {!Promise<!Puppeteer.Request>}
-  #  */
-  # async waitForRequest(urlOrPredicate, options = {}) {
-  #   const {
-  #     timeout = this._timeoutSettings.timeout(),
-  #   } = options;
-  #   return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, request => {
-  #     if (helper.isString(urlOrPredicate))
-  #       return (urlOrPredicate === request.url());
-  #     if (typeof urlOrPredicate === 'function')
-  #       return !!(urlOrPredicate(request));
-  #     return false;
-  #   }, timeout, this._sessionClosePromise());
-  # }
+  private def wait_for_network_manager_event(event_name, predicate:, timeout:)
+    option_timeout = timeout || @timeout_settings.timeout
 
-  # /**
-  #  * @param {(string|Function)} urlOrPredicate
-  #  * @param {!{timeout?: number}=} options
-  #  * @return {!Promise<!Puppeteer.Response>}
-  #  */
-  # async waitForResponse(urlOrPredicate, options = {}) {
-  #   const {
-  #     timeout = this._timeoutSettings.timeout(),
-  #   } = options;
-  #   return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, response => {
-  #     if (helper.isString(urlOrPredicate))
-  #       return (urlOrPredicate === response.url());
-  #     if (typeof urlOrPredicate === 'function')
-  #       return !!(urlOrPredicate(response));
-  #     return false;
-  #   }, timeout, this._sessionClosePromise());
-  # }
+    @wait_for_network_manager_event_listener_ids ||= {}
+    if_present(@wait_for_network_manager_event_listener_ids[event_name]) do |listener_id|
+      @frame_manager.network_manager.remove_event_listener(listener_id)
+    end
+
+    promise = resolvable_future
+
+    @wait_for_network_manager_event_listener_ids[event_name] =
+      @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
+        if predicate.call(event_target)
+          promise.fulfill(nil)
+        end
+      end
+
+    begin
+      Timeout.timeout(option_timeout / 1000.0) do
+        await_any(promise, session_close_promise)
+      end
+    rescue Timeout::Error
+      raise Puppeteer::TimeoutError.new("waiting for #{event_name} failed: timeout #{timeout}ms exceeded")
+    ensure
+      @frame_manager.network_manager.remove_event_listener(@wait_for_network_manager_event_listener_ids[event_name])
+    end
+  end
+
+  private def session_close_promise
+    @disconnect_promise ||= resolvable_future do |future|
+      @client.observe_first('Events.CDPSession.Disconnected') do
+        future.reject(Puppeteer::CDPSession::Error.new('Target Closed'))
+      end
+    end
+  end
+
+  # - Waits until request URL matches
+  #  `wait_for_request(url: 'https://example.com/awesome')`
+  # - Waits until request matches the given predicate
+  #  `wait_for_request(predicate: -> (req){ req.url.start_with?('https://example.com/search') })`
+  #
+  # @param url [String]
+  # @param predicate [Proc(Puppeteer::Request -> Boolean)]
+  private def wait_for_request(url: nil, predicate: nil, timeout: nil)
+    if !url && !predicate
+      raise ArgumentError.new('url or predicate must be specified')
+    end
+    if predicate && !predicate.is_a?(Proc)
+      raise ArgumentError.new('predicate must be a proc.')
+    end
+    request_predicate =
+      if url
+        -> (request) { request.url == url }
+      else
+        -> (request) { predicate.call(request) }
+      end
+
+    wait_for_network_manager_event('Events.NetworkManager.Request',
+      predicate: request_predicate,
+      timeout: timeout,
+    )
+  end
+
+  define_async_method :async_wait_for_request
+
+  # @param url [String]
+  # @param predicate [Proc(Puppeteer::Request -> Boolean)]
+  private def wait_for_response(url: nil, predicate: nil, timeout: nil)
+    if !url && !predicate
+      raise ArgumentError.new('url or predicate must be specified')
+    end
+    if predicate && !predicate.is_a?(Proc)
+      raise ArgumentError.new('predicate must be a proc.')
+    end
+    response_predicate =
+      if url
+        -> (response) { response.url == url }
+      else
+        -> (response) { predicate.call(response) }
+      end
+
+    wait_for_network_manager_event('Events.NetworkManager.Response',
+      predicate: response_predicate,
+      timeout: timeout,
+    )
+  end
+
+  define_async_method :async_wait_for_response
 
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
