@@ -681,12 +681,14 @@ class Puppeteer::Page
     ).first
   end
 
-  # @param timeout [number|nil]
-  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   private def wait_for_navigation(timeout: nil, wait_until: nil)
     main_frame.send(:wait_for_navigation, timeout: timeout, wait_until: wait_until)
   end
 
+  # @!method async_wait_for_navigation(timeout: nil, wait_until: nil)
+  #
+  # @param timeout [number|nil]
+  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   define_async_method :async_wait_for_navigation
 
   private def wait_for_network_manager_event(event_name, predicate:, timeout:)
@@ -725,13 +727,6 @@ class Puppeteer::Page
     end
   end
 
-  # - Waits until request URL matches
-  #  `wait_for_request(url: 'https://example.com/awesome')`
-  # - Waits until request matches the given predicate
-  #  `wait_for_request(predicate: -> (req){ req.url.start_with?('https://example.com/search') })`
-  #
-  # @param url [String]
-  # @param predicate [Proc(Puppeteer::Request -> Boolean)]
   private def wait_for_request(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
@@ -752,10 +747,20 @@ class Puppeteer::Page
     )
   end
 
-  define_async_method :async_wait_for_request
-
+  # @!method async_wait_for_request(url: nil, predicate: nil, timeout: nil)
+  #
+  # Waits until request URL matches or request matches the given predicate.
+  #
+  # Waits until request URL matches
+  #  wait_for_request(url: 'https://example.com/awesome')
+  #
+  # Waits until request matches the given predicate
+  #  wait_for_request(predicate: -> (req){ req.url.start_with?('https://example.com/search') })
+  #
   # @param url [String]
   # @param predicate [Proc(Puppeteer::Request -> Boolean)]
+  define_async_method :async_wait_for_request
+
   private def wait_for_response(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
@@ -776,6 +781,10 @@ class Puppeteer::Page
     )
   end
 
+  # @!method async_wait_for_response(url: nil, predicate: nil, timeout: nil)
+  #
+  # @param url [String]
+  # @param predicate [Proc(Puppeteer::Request -> Boolean)]
   define_async_method :async_wait_for_response
 
   # @param timeout [number|nil]

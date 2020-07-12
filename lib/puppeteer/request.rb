@@ -106,17 +106,15 @@ class Puppeteer::Request
   #
   # Example:
   #
-  # ````
-  # page.on 'request' do |req|
-  #   # Override headers
-  #   headers = req.headers.merge(
-  #     foo: 'bar', # set "foo" header
-  #     origin: nil, # remove "origin" header
-  #   )
-  #   req.continue(headers: headers)
-  # end
-  # ```
-  #`
+  #   page.on 'request' do |req|
+  #     # Override headers
+  #     headers = req.headers.merge(
+  #       foo: 'bar', # set "foo" header
+  #       origin: nil, # remove "origin" header
+  #     )
+  #     req.continue(headers: headers)
+  #   end
+  #
   # @param error_code [String|Symbol]
   def continue(url: nil, method: nil, post_data: nil, headers: nil)
     # Request interception is not supported for data: urls.
@@ -152,15 +150,13 @@ class Puppeteer::Request
   #
   # Example:
   #
-  # ```
-  # page.on 'request' do |req|
-  #   req.respond(
-  #     status: 404,
-  #     content_type: 'text/plain',
-  #     body: 'Not Found!'
-  #   )
-  # end
-  # ````
+  #   page.on 'request' do |req|
+  #     req.respond(
+  #       status: 404,
+  #       content_type: 'text/plain',
+  #       body: 'Not Found!'
+  #     )
+  #   end
   #
   # @param status [Integer]
   # @param headers [Hash<String, String>]
@@ -211,16 +207,14 @@ class Puppeteer::Request
   #
   # Example:
   #
-  # ````
-  # page.on 'request' do |req|
-  #   if req.url.include?("porn")
-  #     req.abort
-  #   else
-  #     req.continue
+  #   page.on 'request' do |req|
+  #     if req.url.include?("porn")
+  #       req.abort
+  #     else
+  #       req.continue
+  #     end
   #   end
-  # end
-  # ```
-  #`
+  #
   # @param error_code [String|Symbol]
   def abort(error_code: :failed)
     # Request interception is not supported for data: urls.
