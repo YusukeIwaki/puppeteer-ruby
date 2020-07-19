@@ -1,6 +1,34 @@
 require 'bundler/setup'
 require 'puppeteer'
 
+module SinatraRouting
+  def sinatra(port: 4567, &block)
+    require 'net/http'
+    require 'sinatra/base'
+    require 'timeout'
+
+    sinatra_app = Sinatra.new(&block)
+
+    around do |example|
+      Thread.new { sinatra_app.run!(port: port) }
+      Timeout.timeout(3) do
+        loop do
+          begin
+            Net::HTTP.get(URI("http://localhost:#{port}/"))
+            break
+          rescue Errno::ECONNREFUSED
+            sleep 0.1
+          end
+        end
+      end
+      example.run
+      sinatra_app.quit!
+    end
+  end
+end
+
+RSpec::Core::ExampleGroup.extend(SinatraRouting)
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'
