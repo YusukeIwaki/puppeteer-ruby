@@ -16,7 +16,7 @@ RSpec.describe Puppeteer::Page do
     end
 
     it "can browser html page" do
-      page.goto("http://localhost:4567/")
+      page.goto("http://127.0.0.1:4567/")
       expect(page.title).to include("Hello World")
       expect(page.evaluate('() => document.body.innerText')).to eq("My Sinatra")
     end

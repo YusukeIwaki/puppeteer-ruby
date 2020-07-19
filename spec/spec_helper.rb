@@ -14,7 +14,7 @@ module SinatraRouting
       Timeout.timeout(3) do
         loop do
           begin
-            Net::HTTP.get(URI("http://localhost:#{port}/"))
+            Net::HTTP.get(URI("http://127.0.0.1:#{port}/"))
             break
           rescue Errno::ECONNREFUSED
             sleep 0.1
