@@ -196,7 +196,7 @@ class Puppeteer::Browser
 
   # @return {!Target}
   def target
-    targets.first { |target| target.type == 'browser' }
+    targets.find { |target| target.type == 'browser' }
   end
 
   # used only in Target#opener
@@ -266,7 +266,19 @@ class Puppeteer::Browser
     !@connection.closed?
   end
 
+  class Version
+    def initialize(hash)
+      @protocol_version = hash['protocolVersion']
+      @product = hash['product']
+      @revision = hash['revision']
+      @user_agent = hash['userAgent']
+      @js_version = hash['jsVersion']
+    end
+
+    attr_reader :protocol_version, :product, :revision, :user_agent, :js_version
+  end
+
   private def get_version
-    @connection.send_message('Browser.getVersion')
+    Version.new(@connection.send_message('Browser.getVersion'))
   end
 end
