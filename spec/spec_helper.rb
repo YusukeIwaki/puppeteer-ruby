@@ -13,12 +13,10 @@ module SinatraRouting
       Thread.new { sinatra_app.run!(port: port) }
       Timeout.timeout(3) do
         loop do
-          begin
-            Net::HTTP.get(URI("http://127.0.0.1:#{port}/"))
-            break
-          rescue Errno::ECONNREFUSED
-            sleep 0.1
-          end
+          Net::HTTP.get(URI("http://127.0.0.1:#{port}/"))
+          break
+        rescue Errno::ECONNREFUSED
+          sleep 0.1
         end
       end
       example.run
