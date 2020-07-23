@@ -56,6 +56,11 @@ class Puppeteer::Connection
     @closed = false
   end
 
+  # used only in Browser#connected?
+  def closed?
+    @closed
+  end
+
   private def sleep_before_handling_message(message)
     # Puppeteer doesn't handle any Network monitoring responses.
     # So we don't have to sleep.

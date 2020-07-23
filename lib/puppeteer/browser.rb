@@ -166,7 +166,7 @@ class Puppeteer::Browser
   end
 
   # @return [String]
-  def websocket_endpoint
+  def ws_endpoint
     @connection.url
   end
 
