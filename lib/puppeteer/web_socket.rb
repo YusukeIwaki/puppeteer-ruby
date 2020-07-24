@@ -16,10 +16,14 @@ class Puppeteer::WebSocket
 
     def write(data)
       @socket.write(data)
+    rescue Errno::EPIPE
+      raise EOFError.new('already closed')
     end
 
     def readpartial(maxlen = 1024)
       @socket.readpartial(maxlen)
+    rescue Errno::ECONNRESET
+      raise EOFError.new('closed by remote')
     end
   end
 
@@ -40,6 +44,9 @@ class Puppeteer::WebSocket
     rescue EOFError
       # Google Chrome was gone.
       # We have nothing todo. Just finish polling.
+      if @ready_state < STATE_CLOSING
+        handle_on_close(reason: 'Going Away', code: 1001)
+      end
     end
   end
 

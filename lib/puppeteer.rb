@@ -168,7 +168,11 @@ class Puppeteer
     }.compact
     browser = launcher.connect(options)
     if block_given?
-      yield(browser)
+      begin
+        yield(browser)
+      ensure
+        browser.disconnect
+      end
     else
       browser
     end

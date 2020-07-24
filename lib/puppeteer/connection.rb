@@ -49,11 +49,16 @@ class Puppeteer::Connection
       async_handle_message(message)
     end
     @transport.on_close do |reason, code|
-      handle_close(reason, code)
+      handle_close
     end
 
     @sessions = {}
     @closed = false
+  end
+
+  # used only in Browser#connected?
+  def closed?
+    @closed
   end
 
   private def sleep_before_handling_message(message)

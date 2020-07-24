@@ -1080,8 +1080,19 @@ class Puppeteer::Page
   define_async_method :async_select
 
   # @param selector [String]
-  def tap(selector)
-    main_frame.tap(selector)
+  def tap(selector: nil, &block)
+    # resolves double meaning of tap.
+    if selector.nil? && block
+      # Original usage of Object#tap.
+      #
+      # browser.new_page.tap do |page|
+      #   ...
+      # end
+      super(&block)
+    else
+      # Puppeteer's Page#tap.
+      main_frame.tap(selector)
+    end
   end
 
   define_async_method :async_tap
