@@ -1081,9 +1081,16 @@ class Puppeteer::Page
 
   # @param selector [String]
   def tap(selector: nil, &block)
+    # resolves double meaning of tap.
     if selector.nil? && block
+      # Original usage of Object#tap.
+      #
+      # browser.new_page.tap do |page|
+      #   ...
+      # end
       super(&block)
     else
+      # Puppeteer's Page#tap.
       main_frame.tap(selector)
     end
   end
