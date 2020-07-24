@@ -30,7 +30,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       expect(browser.pages.length).to eq(1)
 
       context = browser.create_incognito_browser_context
-      page = context.new_page
+      context.new_page
       expect(browser.pages.length).to eq(2)
       expect(context.pages.length).to eq(1)
 
@@ -45,7 +45,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
       popup_target = await_all(
         resolvable_future { |f| browser.once('targetcreated') { |target| f.fulfill(target) } },
-        page.async_evaluate('url => { window.open(url); return null }', 'about:blank')
+        page.async_evaluate('url => { window.open(url); return null }', 'about:blank'),
       ).first
       expect(popup_target.browser_context).to eq(context)
       context.close
