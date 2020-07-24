@@ -49,7 +49,7 @@ class Puppeteer::Connection
       async_handle_message(message)
     end
     @transport.on_close do |reason, code|
-      handle_close(reason, code)
+      handle_close
     end
 
     @sessions = {}

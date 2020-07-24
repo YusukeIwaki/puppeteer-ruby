@@ -23,10 +23,10 @@ RSpec.describe Puppeteer::Browser, puppeteer: :browser do
     it 'should return the browser connected state' do
       ws_endpoint = browser.ws_endpoint
       new_browser = Puppeteer.connect(browser_ws_endpoint: ws_endpoint)
-      expect(new_browser.connected?).to eq(true)
+      expect(new_browser).to be_connected
       new_browser.disconnect
-      expect(new_browser.connected?).to eq(false)
-      expect(browser.connected?).to eq(true)
+      expect(new_browser).not_to be_connected
+      expect(browser).to be_connected
     end
   end
 end

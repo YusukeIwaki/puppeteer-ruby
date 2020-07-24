@@ -1,5 +1,6 @@
 class Puppeteer::BrowserContext
   include Puppeteer::EventCallbackable
+  using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.Connection} connection
   # @param {!Browser} browser
@@ -10,14 +11,38 @@ class Puppeteer::BrowserContext
     @id = context_id
   end
 
+  EVENT_MAPPINGS = {
+    disconnected: 'Events.BrowserContext.Disconnected',
+    targetcreated: 'Events.BrowserContext.TargetCreated',
+    targetchanged: 'Events.BrowserContext.TargetChanged',
+    targetdestroyed: 'Events.BrowserContext.TargetDestroyed',
+  }
+
+  # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
+  def on(event_name, &block)
+    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    end
+
+    add_event_listener(EVENT_MAPPINGS[event_name.to_sym], &block)
+  end
+
+  # @param event_name [Symbol]
+  def once(event_name, &block)
+    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    end
+
+    observe_first(EVENT_MAPPINGS[event_name.to_sym], &block)
+  end
+
   # @return {!Array<!Target>} target
   def targets
     @browser.targets.select { |target| target.browser_context == self }
   end
 
-  # @param {function(!Target):boolean} predicate
-  # @param {{timeout?: number}=} options
-  # @return {!Promise<!Target>}
+  # @param predicate [Proc(Puppeteer::Target -> Boolean)]
+  # @return [Puppeteer::Target]
   def wait_for_target(predicate:, timeout: nil)
     @browser.wait_for_target(
       predicate: ->(target) { target.browser_context == self && predicate.call(target) },
@@ -25,13 +50,18 @@ class Puppeteer::BrowserContext
     )
   end
 
+  # @!method async_wait_for_target(predicate:, timeout: nil)
+  #
+  # @param predicate [Proc(Puppeteer::Target -> Boolean)]
+  define_async_method :async_wait_for_target
+
   # @return {!Promise<!Array<!Puppeteer.Page>>}
   def pages
     targets.select { |target| target.type == 'page' }.map(&:page).reject { |page| !page }
   end
 
   def incognito?
-    !@id
+    !!@id
   end
 
   # /**
@@ -82,7 +112,7 @@ class Puppeteer::BrowserContext
   end
 
   def close
-    if !@id
+    unless @id
       raise 'Non-incognito profiles cannot be closed!'
     end
     @browser.dispose_context(@id)

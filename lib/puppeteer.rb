@@ -171,7 +171,7 @@ class Puppeteer
       begin
         yield(browser)
       ensure
-        browser.close
+        browser.disconnect
       end
     else
       browser

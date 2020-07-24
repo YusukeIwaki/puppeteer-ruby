@@ -43,7 +43,7 @@ class Puppeteer::Browser
     @default_context = Puppeteer::BrowserContext.new(@connection, self, nil)
     @contexts = {}
     context_ids.each do |context_id|
-      @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self. context_id)
+      @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self, context_id)
     end
     @targets = {}
     @connection.on_event 'Events.Connection.Disconnected' do
@@ -70,6 +70,15 @@ class Puppeteer::Browser
     add_event_listener(EVENT_MAPPINGS[event_name.to_sym], &block)
   end
 
+  # @param event_name [Symbol]
+  def once(event_name, &block)
+    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    end
+
+    observe_first(EVENT_MAPPINGS[event_name.to_sym], &block)
+  end
+
   # @return [Puppeteer::BrowserRunner::BrowserProcess]
   def process
     @process
@@ -94,7 +103,7 @@ class Puppeteer::Browser
   # @param context_id [String]
   def dispose_context(context_id)
     @connection.send_message('Target.disposeBrowserContext', browserContextId: context_id)
-    @contexts.remove(context_id)
+    @contexts.delete(context_id)
   end
 
   class TargetAlreadyExistError < StandardError
@@ -204,12 +213,11 @@ class Puppeteer::Browser
     @targets[target_id]
   end
 
-  # @param {function(!Target):boolean} predicate
-  # @param {{timeout?: number}=} options
-  # @return {!Promise<!Target>}
+  # @param predicate [Proc(Puppeteer::Target -> Boolean)]
+  # @return [Puppeteer::Target]
   def wait_for_target(predicate:, timeout: nil)
     timeout_in_sec = (timeout || 30000).to_i / 1000.0
-    existing_target = targets.first { |target| predicate.call(target) }
+    existing_target = targets.find { |target| predicate.call(target) }
     return existing_target if existing_target
 
     event_listening_ids = []
@@ -233,10 +241,17 @@ class Puppeteer::Browser
       else
         target_promise.value!
       end
+    rescue Timeout::Error
+      raise Puppeteer::TimeoutError.new("waiting for target failed: timeout #{timeout}ms exceeded")
     ensure
       remove_event_listener(*event_listening_ids)
     end
   end
+
+  # @!method async_wait_for_target(predicate:, timeout: nil)
+  #
+  # @param predicate [Proc(Puppeteer::Target -> Boolean)]
+  define_async_method :async_wait_for_target
 
   # @return {!Promise<!Array<!Puppeteer.Page>>}
   def pages
