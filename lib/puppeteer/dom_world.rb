@@ -314,25 +314,28 @@ class Puppeteer::DOMWorld
   #   }
   # }
 
+  class ElementNotFoundError < StandardError
+    def initialize(selector)
+      super("No node found for selector: #{selector}")
+    end
+  end
+
   # @param selector [String]
   # @param delay [Number]
   # @param button [String] "left"|"right"|"middle"
   # @param click_count [Number]
   def click(selector, delay: nil, button: nil, click_count: nil)
-    handle = S(selector)
+    handle = S(selector) or raise ElementNotFoundError.new(selector)
     handle.click(delay: delay, button: button, click_count: click_count)
     handle.dispose
   end
 
-  # /**
-  #  * @param {string} selector
-  #  */
-  # async focus(selector) {
-  #   const handle = await this.$(selector);
-  #   assert(handle, 'No node found for selector: ' + selector);
-  #   await handle.focus();
-  #   await handle.dispose();
-  # }
+  # @param selector [String]
+  def focus(selector)
+    handle = S(selector) or raise ElementNotFoundError.new(selector)
+    handle.focus
+    handle.dispose
+  end
 
   # /**
   #  * @param {string} selector
@@ -347,7 +350,7 @@ class Puppeteer::DOMWorld
   # @param selector [String]
   # @return [Array<String>]
   def select(selector, *values)
-    handle = S(selector)
+    handle = S(selector) or raise ElementNotFoundError.new(selector)
     result = handle.select(*values)
     handle.dispose
 
@@ -356,7 +359,7 @@ class Puppeteer::DOMWorld
 
   # @param selector [String]
   def tap(selector)
-    handle = S(selector)
+    handle = S(selector) or raise ElementNotFoundError.new(selector)
     handle.tap
     handle.dispose
   end
@@ -365,7 +368,7 @@ class Puppeteer::DOMWorld
   # @param text [String]
   # @param delay [Number]
   def type_text(selector, text, delay: nil)
-    handle = S(selector)
+    handle = S(selector) or raise ElementNotFoundError.new(selector)
     handle.type_text(text, delay: delay)
     handle.dispose
   end

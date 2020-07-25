@@ -23,7 +23,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   def content_frame
-    node_info = @remote_object.node_info
+    node_info = @remote_object.node_info(@client)
     frame_id = node_info['node']['frameId']
     if frame_id.is_a?(String)
       @frame_manager.frame(frame_id)

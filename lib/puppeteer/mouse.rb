@@ -94,5 +94,21 @@ class Puppeteer::Mouse
     )
   end
 
+  # Dispatches a `mousewheel` event.
+  #
+  # @param delta_x [Integer]
+  # @param delta_y [Integer]
+  def wheel(delta_x: 0, delta_y: 0)
+    @client.send_message('Input.dispatchMouseEvent',
+      type: 'mouseWheel',
+      x: @x,
+      y: @y,
+      deltaX: delta_x,
+      deltaY: delta_y,
+      modifiers: @keyboard.modifiers,
+      pointerType: 'mouse',
+    )
+  end
+
   define_async_method :async_up
 end
