@@ -2,6 +2,8 @@ require 'concurrent'
 
 class Puppeteer; end
 
+require 'puppeteer/env'
+
 # Custom data types.
 require 'puppeteer/device'
 require 'puppeteer/errors'
