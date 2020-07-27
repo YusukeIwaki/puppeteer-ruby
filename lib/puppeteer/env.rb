@@ -3,7 +3,11 @@ class Puppeteer::Env
   #
   # @return [Boolean]
   def debug?
-    ['1', 'true'].include?(ENV['DEBUG'])
+    ['1', 'true'].include?(ENV['DEBUG'].to_s)
+  end
+
+  def ci?
+    ['1', 'true'].include?(ENV['CI'].to_s)
   end
 end
 

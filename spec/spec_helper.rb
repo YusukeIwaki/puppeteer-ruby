@@ -38,14 +38,19 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  launch_options = {}
+  if Puppeteer.env.debug? && !Puppeteer.env.ci?
+    launch_options[:headless] = false
+  end
+
   config.around(:each, type: :puppeteer) do |example|
     if example.metadata[:puppeteer].to_s == 'browser'
-      Puppeteer.launch do |browser|
+      Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
         example.run
       end
     else
-      Puppeteer.launch do |browser|
+      Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_page = browser.pages.first || browser.new_page
         example.run
       end
