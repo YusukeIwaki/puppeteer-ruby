@@ -149,9 +149,10 @@ class Puppeteer::Keyboard
   define_async_method :async_type_text
 
   # @param key [String]
+  # @param text [String]
   # @return [Future]
-  def press(key, delay: nil)
-    down(key)
+  def press(key, delay: nil, text: nil)
+    down(key, text: text)
     if delay
       sleep(delay.to_i / 1000.0)
     end

@@ -72,3 +72,5 @@ RSpec.configure do |config|
   end
   config.include PuppeteerMethods, type: :puppeteer
 end
+
+require_relative './utils'

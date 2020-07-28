@@ -175,7 +175,6 @@ RSpec.describe Puppeteer::Page do
           </head>
           <body>
             <textarea></textarea>
-            <script src='mouse-helper.js'></script>
             <script>
               globalThis.result = '';
               globalThis.textarea = document.querySelector('textarea');
@@ -425,7 +424,6 @@ RSpec.describe Puppeteer::Page do
             <title>Scrollable test</title>
           </head>
           <body>
-            <script src='mouse-helper.js'></script>
             <script>
                 for (let i = 0; i < 100; i++) {
                     let button = document.createElement('button');
@@ -539,7 +537,6 @@ RSpec.describe Puppeteer::Page do
             <title>Rotated button test</title>
           </head>
           <body>
-            <script src="mouse-helper.js"></script>
             <button onclick="clicked();">Click target</button>
             <style>
               button {
@@ -583,19 +580,6 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  def attach_frame(page, frame_id, url)
-    js = <<~JAVASCRIPT
-    async function attachFrame(frameId, url) {
-      const frame = document.createElement('iframe');
-      frame.src = url;
-      frame.id = frameId;
-      document.body.appendChild(frame);
-      await new Promise((x) => (frame.onload = x));
-      return frame;
-    }
-    JAVASCRIPT
-    page.evaluate_handle(js, frame_id, url).as_element.content_frame
-  end
 
   context 'with button inside an iframe' do
     sinatra do
@@ -624,6 +608,8 @@ RSpec.describe Puppeteer::Page do
     end
 
     context 'without device scale factor' do
+      include Utils::AttachFrame
+
       before {
         page.goto('http://127.0.0.1:4567/')
         attach_frame(page, 'button-test', '/button')
@@ -637,6 +623,8 @@ RSpec.describe Puppeteer::Page do
     end
 
     context 'with device scale factor' do
+      include Utils::AttachFrame
+
       before {
         page.viewport = Puppeteer::Viewport.new(width: 400, height: 400, device_scale_factor: 5)
         unless page.evaluate('() => window.devicePixelRatio') == 5
