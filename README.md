@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/puppeteer-ruby.svg)](https://badge.fury.io/rb/puppeteer-ruby)
+
 # Puppeteer in Ruby [UNDER HEAVY DEVELOPMENT]
 
 A Ruby port of [puppeteer](https://pptr.dev/).
