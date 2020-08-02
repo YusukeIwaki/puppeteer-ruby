@@ -1116,6 +1116,11 @@ class Puppeteer::Page
 
   define_async_method :async_wait_for_selector
 
+  # @param milliseconds [Integer] the number of milliseconds to wait.
+  def wait_for_timeout(milliseconds)
+    main_frame.wait_for_timeout(milliseconds)
+  end
+
   # @param xpath [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
@@ -1126,12 +1131,13 @@ class Puppeteer::Page
 
   define_async_method :async_wait_for_xpath
 
-  # @param {Function|string} pageFunction
-  # @param {!{polling?: string|number, timeout?: number}=} options
-  # @param {!Array<*>} args
-  # @return {!Promise<!Puppeteer.JSHandle>}
-  def wait_for_function(page_function, options = {}, *args)
-    main_frame.wait_for_function(page_function, options, *args)
+  # @param page_function [String]
+  # @param args [Integer|Array]
+  # @param polling [String]
+  # @param timeout [Integer]
+  # @return [Puppeteer::JSHandle]
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
+    main_frame.wait_for_function(page_function, args: args, polling: polling, timeout: timeout)
   end
 
   define_async_method :async_wait_for_function

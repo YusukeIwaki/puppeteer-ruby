@@ -402,6 +402,26 @@ class Puppeteer::DOMWorld
   #   return new WaitTask(this, pageFunction, 'function', polling, timeout, ...args).promise;
   # }
 
+  # @param page_function [String]
+  # @param args [Array]
+  # @param polling [Integer|String]
+  # @param timeout [Integer]
+  # @return [Puppeteer::JSHandle]
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
+    option_polling = polling || 'raf'
+    option_timeout = timeout || @timeout_settings.timeout
+
+    Puppeteer::WaitTask.new(
+      dom_world: self,
+      predicate_body: page_function,
+      title: 'function',
+      polling: option_polling,
+      timeout: option_timeout,
+      args: args,
+    ).await_promise
+  end
+
+
   # @return [String]
   def title
     evaluate('() => document.title')
@@ -427,7 +447,7 @@ class Puppeteer::DOMWorld
 
     wait_task = Puppeteer::WaitTask.new(
       dom_world: self,
-      predicate_body: "return (#{PREDICATE})(...args)",
+      predicate_body: PREDICATE,
       title: title,
       polling: polling,
       timeout: option_timeout,
