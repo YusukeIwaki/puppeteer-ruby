@@ -25,7 +25,7 @@ class Puppeteer::WaitTask
     @dom_world = dom_world
     @polling = polling
     @timeout = timeout
-    @predicate_body = predicate_body
+    @predicate_body = "return (#{predicate_body})(...args);"
     @args = args
     @run_count = 0
     @dom_world._wait_tasks.add(self)
