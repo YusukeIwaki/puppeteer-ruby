@@ -6,6 +6,7 @@ class Puppeteer::RemoteObject
   # @param payload [Hash]
   def initialize(payload)
     @object_id = payload['objectId']
+    @type = payload['type']
     @sub_type = payload['subtype']
     @unserializable_value = payload['unserializableValue']
     @value = payload['value']
@@ -37,6 +38,21 @@ class Puppeteer::RemoteObject
       }
       response = client.send_message('Runtime.callFunctionOn', params)
       Puppeteer::RemoteObject.new(response['result'])
+    else
+      nil
+    end
+  end
+
+  # @return [String]
+  def type_str
+    # used in JSHandle#to_s
+    # original logic:
+    #   if (this._remoteObject.objectId) {
+    #     const type =  this._remoteObject.subtype || this._remoteObject.type;
+    #     return 'JSHandle@' + type;
+    #   }
+    if @object_id
+      @sub_type || @type
     else
       nil
     end
