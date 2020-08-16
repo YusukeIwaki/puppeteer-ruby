@@ -49,7 +49,7 @@ end
 
 More usage examples can be found [here](https://github.com/YusukeIwaki/puppeteer-ruby-example)
 
-## Collaboration with Selenium or Capybara
+## :bulb: Collaboration with Selenium or Capybara
 
 It is really remarkable that we can use puppeteer functions in existing Selenium or Capybara codes, with a few configuration in advance.
 
