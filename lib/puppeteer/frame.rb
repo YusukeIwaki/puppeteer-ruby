@@ -142,7 +142,7 @@ class Puppeteer::Frame
   end
 
   def child_frames
-    @child_frames.dup
+    @child_frames.to_a
   end
 
   def detached?
