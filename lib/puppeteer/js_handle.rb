@@ -1,5 +1,6 @@
 class Puppeteer::JSHandle
   using Puppeteer::DefineAsyncMethod
+  include Puppeteer::IfPresent
 
   # @param context [Puppeteer::ExecutionContext]
   # @param remote_object [Puppeteer::RemoteObject]
@@ -57,21 +58,29 @@ class Puppeteer::JSHandle
 
   define_async_method :async_evaluate_handle
 
-  # /**
-  #  * @param {string} propertyName
-  #  * @return {!Promise<?JSHandle>}
-  #  */
-  # async getProperty(propertyName) {
-  #   const objectHandle = await this.evaluateHandle((object, propertyName) => {
-  #     const result = {__proto__: null};
-  #     result[propertyName] = object[propertyName];
-  #     return result;
-  #   }, propertyName);
-  #   const properties = await objectHandle.getProperties();
-  #   const result = properties.get(propertyName) || null;
-  #   await objectHandle.dispose();
-  #   return result;
-  # }
+  # getProperty(propertyName) in JavaScript
+  # @param name [String]
+  # @return [Puppeteer::JSHandle]
+  def property(name)
+    js = <<~JAVASCRIPT
+    (object, propertyName) => {
+      const result = {__proto__: null};
+      result[propertyName] = object[propertyName];
+      return result;
+    }
+    JAVASCRIPT
+    object_handle = evaluate_handle(js, name)
+    properties = object_handle.properties
+    result = properties[name]
+    object_handle.dispose
+    result
+  end
+
+  # @param name [String]
+  # @return [Puppeteer::JSHandle]
+  def [](name)
+    property(name)
+  end
 
   # getProperties in JavaScript.
   # @return [Hash<String, JSHandle>]
@@ -101,7 +110,7 @@ class Puppeteer::JSHandle
     #
     # However it would be better that RemoteObject is responsible for
     # the logic `if (this._remoteObject.objectId) { ... }`.
-    @remote_object.evaluate_self(@client) || @remote_object.value
+    @remote_object.evaluate_self(@client)&.value || @remote_object.value
   end
 
   def as_element
@@ -119,15 +128,16 @@ class Puppeteer::JSHandle
     @disposed
   end
 
-  # /**
-  #  * @override
-  #  * @return {string}
-  #  */
-  # toString() {
-  #   if (this._remoteObject.objectId) {
-  #     const type =  this._remoteObject.subtype || this._remoteObject.type;
-  #     return 'JSHandle@' + type;
-  #   }
-  #   return 'JSHandle:' + helper.valueFromRemoteObject(this._remoteObject);
-  # }
+  def to_s
+    # original logic was:
+    #   if (this._remoteObject.objectId) {
+    #     const type =  this._remoteObject.subtype || this._remoteObject.type;
+    #     return 'JSHandle@' + type;
+    #   }
+    #   return 'JSHandle:' + helper.valueFromRemoteObject(this._remoteObject);
+    #
+    # However it would be better that RemoteObject is responsible for
+    # the logic `if (this._remoteObject.objectId) { ... }`.
+    if_present(@remote_object.type_str) { |type_str| "JSHandle@#{type_str}" } || "JSHandle:#{@remote_object.value || 'undefined'}"
+  end
 end
