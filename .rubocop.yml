@@ -146,17 +146,47 @@ Lint/AmbiguousOperator:
 Lint/AmbiguousRegexpLiteral:
   Enabled: true
 
+Lint/BinaryOperatorWithIdenticalOperands:
+  Enabled: true
+
+Lint/DeprecatedClassMethods:
+  Enabled: true
+
+Lint/DuplicateRescueException:
+  Enabled: true
+
 Lint/ErbNewArguments:
+  Enabled: true
+
+Lint/EmptyConditionalBody:
+  Enabled: true
+
+Lint/FloatComparison:
+  Enabled: true
+
+Lint/MissingSuper:
+  Enabled: true
+
+Lint/OutOfRangeRegexpRef:
+  Enabled: true
+
+Lint/RedundantStringCoercion:
   Enabled: true
 
 # Use my_method(my_arg) not my_method( my_arg ) or my_method my_arg.
 Lint/RequireParentheses:
   Enabled: true
 
+Lint/SelfAssignment:
+  Enabled: true
+
 Lint/ShadowingOuterLocalVariable:
   Enabled: true
 
-Lint/RedundantStringCoercion:
+Lint/TopLevelReturnWithArgument:
+  Enabled: true
+
+Lint/UnreachableLoop:
   Enabled: true
 
 Lint/UriEscapeUnescape:
@@ -165,14 +195,17 @@ Lint/UriEscapeUnescape:
 Lint/UselessAssignment:
   Enabled: true
 
-Lint/DeprecatedClassMethods:
+Style/ParenthesesAroundCondition:
   Enabled: true
 
-Style/ParenthesesAroundCondition:
+Style/ExplicitBlockArgument:
   Enabled: true
 
 Style/FrozenStringLiteralComment:
   Enabled: false
+
+Style/GlobalStdStream:
+  Enabled: true
 
 Style/HashEachMethods:
   Enabled: true
@@ -197,6 +230,9 @@ Style/RedundantReturn:
 Style/Semicolon:
   Enabled: true
   AllowAsExpressionSeparator: true
+
+Style/StringConcatenation:
+  Enabled: true
 
 # Prefer Foo.method over Foo::method
 Style/ColonMethodCall:
