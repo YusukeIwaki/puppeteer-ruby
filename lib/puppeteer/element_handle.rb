@@ -3,6 +3,7 @@ require_relative './element_handle/box_model'
 require_relative './element_handle/point'
 
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
+  include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
 
@@ -62,7 +63,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   def clickable_point
-    result = @remote_object.content_quads(@client)
+    result =
+      begin
+        @remote_object.content_quads(@client)
+      rescue => err
+        debug_puts(err)
+        nil
+      end
+
     if !result || result["quads"].empty?
       raise ElementNotVisibleError.new
     end
@@ -380,21 +388,24 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_Sx
 
-  #  /**
-  #   * @returns {!Promise<boolean>}
-  #   */
-  #  isIntersectingViewport() {
-  #    return this.evaluate(async element => {
-  #      const visibleRatio = await new Promise(resolve => {
-  #        const observer = new IntersectionObserver(entries => {
-  #          resolve(entries[0].intersectionRatio);
-  #          observer.disconnect();
-  #        });
-  #        observer.observe(element);
-  #      });
-  #      return visibleRatio > 0;
-  #    });
-  #  }
+  # in JS, #isIntersectingViewport.
+  # @return [Boolean]
+  def intersecting_viewport?
+    js = <<~JAVASCRIPT
+    async element => {
+      const visibleRatio = await new Promise(resolve => {
+        const observer = new IntersectionObserver(entries => {
+          resolve(entries[0].intersectionRatio);
+          observer.disconnect();
+        });
+        observer.observe(element);
+      });
+      return visibleRatio > 0;
+    }
+    JAVASCRIPT
+
+    evaluate(js)
+  end
 
   # @param quad [Array<Point>]
   private def compute_quad_area(quad)
