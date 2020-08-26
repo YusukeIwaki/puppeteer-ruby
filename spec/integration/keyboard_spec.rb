@@ -389,4 +389,32 @@ RSpec.describe Puppeteer::Keyboard do
       expect(meta_key).to eq(true)
     end
   end
+
+  describe 'block' do
+    before {
+      page.content = '<html><body><input id="editor" type="text" /></body></html>'
+    }
+
+    it 'can use press, send_text with block' do
+      page.click('input')
+      page.keyboard {
+        type_text '123456789'
+        down 'Shift'
+        5.times { press 'ArrowLeft' }
+        up 'Shift'
+        send_character 'a'
+      }
+      expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
+    end
+
+    it 'can use press, send_text without block' do
+      page.click('input')
+      page.keyboard.type_text '123456789'
+      page.keyboard.down 'Shift'
+      5.times { page.keyboard.press 'ArrowLeft' }
+      page.keyboard.up 'Shift'
+      page.keyboard.send_character 'a'
+      expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
+    end
+  end
 end

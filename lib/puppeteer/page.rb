@@ -266,7 +266,13 @@ class Puppeteer::Page
     @frame_manager.main_frame
   end
 
-  attr_reader :keyboard, :touch_screen, :coverage, :accessibility
+  attr_reader :touch_screen, :coverage, :accessibility
+
+  def keyboard(&block)
+    @keyboard.instance_eval(&block) unless block.nil?
+
+    @keyboard
+  end
 
   def frames
     @frame_manager.frames
