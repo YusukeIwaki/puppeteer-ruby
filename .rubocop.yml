@@ -35,6 +35,9 @@ Layout/EndAlignment:
 Layout/EmptyLineAfterMagicComment:
   Enabled: true
 
+Layout/EmptyLineAfterMultilineCondition:
+  Enabled: true
+
 Layout/EmptyLinesAroundAccessModifier:
   Enabled: true
   EnforcedStyle: only_before
@@ -102,6 +105,10 @@ Layout/SpaceBeforeComment:
 Layout/SpaceBeforeFirstArg:
   Enabled: true
 
+Style/ClassMethodsDefinitions:
+  Enabled: true
+  EnforcedStyle: def_self
+
 Style/DefWithParentheses:
   Enabled: true
 
@@ -110,6 +117,12 @@ Style/MethodDefParentheses:
   Enabled: true
 
 Style/RedundantFreeze:
+  Enabled: true
+
+Style/RedundantSelf:
+  Enabled: true
+
+Style/RedundantSelfAssignment:
   Enabled: true
 
 # Use `foo {}` not `foo{}`.
@@ -162,9 +175,6 @@ Lint/EmptyConditionalBody:
   Enabled: true
 
 Lint/FloatComparison:
-  Enabled: true
-
-Lint/MissingSuper:
   Enabled: true
 
 Lint/OutOfRangeRegexpRef:
