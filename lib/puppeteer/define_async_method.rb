@@ -14,7 +14,7 @@ module Puppeteer::DefineAsyncMethod
         Concurrent::Promises.future do
           original_method.bind(self).call(*args)
         rescue => err
-          Logger.new(STDERR).warn(err)
+          Logger.new($stderr).warn(err)
           raise err
         end
       end

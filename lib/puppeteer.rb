@@ -53,18 +53,14 @@ require 'puppeteer/element_handle'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 class Puppeteer
-  class << self
-    def method_missing(method, *args, **kwargs, &block)
-      instance.send(method, *args, **kwargs, &block)
-    end
+  def self.method_missing(method, *args, **kwargs, &block)
+    @puppeteer ||= Puppeteer.new(
+      project_root: __dir__,
+      preferred_revision: '706915',
+      is_puppeteer_core: true,
+    )
 
-    def instance
-      @instance ||= Puppeteer.new(
-        project_root: __dir__,
-        preferred_revision: '706915',
-        is_puppeteer_core: true,
-      )
-    end
+    @puppeteer.send(method, *args, **kwargs, &block)
   end
 
   # @param project_root [String]
