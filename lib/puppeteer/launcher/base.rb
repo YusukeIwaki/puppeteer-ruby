@@ -20,15 +20,25 @@ module Puppeteer::Launcher
           return executable_path
         end
         raise ExecutablePathNotFound.new(
-          "Tried to use PUPPETEER_EXECUTABLE_PATH env variable to launch browser but did not find any executable at: #{executablePath}",
+          "Tried to use PUPPETEER_EXECUTABLE_PATH env variable to launch browser but did not find any executable at: #{executable_path}",
         )
       end
 
       # temporal logic.
       if RUBY_PLATFORM.include?('darwin') # MacOS
-        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        case self
+        when Chrome
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        when Firefox
+          '/Applications/Firefox Nightly.app/Contents/MacOS/firefox'
+        end
       else
-        '/usr/bin/google-chrome'
+        case self
+        when Chrome
+          '/usr/bin/google-chrome'
+        when Firefox
+          '/usr/bin/firefox'
+        end
       end
 
       # const browserFetcher = new BrowserFetcher(launcher._projectRoot);
