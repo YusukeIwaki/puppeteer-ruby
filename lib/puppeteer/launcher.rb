@@ -14,7 +14,7 @@ module Puppeteer::Launcher
   # @return [Puppeteer::Launcher::Chrome]
   module_function def new(project_root:, preferred_revision:, is_puppeteer_core:, product:)
     unless is_puppeteer_core
-      product ||= ENV['PUPPETEER_PRODUCT']
+      product ||= Puppeteer.env.product
     end
 
     if product == 'firefox'

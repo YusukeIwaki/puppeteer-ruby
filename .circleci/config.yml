@@ -5,7 +5,7 @@ orbs:
 jobs:
   rspec:
     docker:
-      - image: circleci/ruby:2.6.3-stretch-node-browsers
+      - image: circleci/ruby:2.6.6-buster-node-browsers
     executor: ruby/default
     steps:
       - checkout
@@ -17,6 +17,28 @@ jobs:
               --format RspecJunitFormatter \
               --out test_results/rspec.xml \
               --format documentation
+
+  rspec_firefox:
+    docker:
+      - image: circleci/ruby:2.6.6-buster-node-browsers
+    executor: ruby/default
+    steps:
+      - checkout
+      - ruby/bundle-install
+      - run:
+          name: install firefox-nightly
+          command: |
+            wget -O nightly.tar.bz2 "https://download.mozilla.org/?product=firefox-nightly-latest-ssl&os=linux64&lang=en-US"
+            tar xf nightly.tar.bz2
+      - run:
+          name: rspec
+          command: |
+            DEBUG=1 PUPPETEER_PRODUCT=firefox \
+            PUPPETEER_EXECUTABLE_PATH=${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}/firefox/firefox \
+            bundle exec rspec --profile 10 \
+              --format RspecJunitFormatter \
+              --out test_results/rspec.xml \
+              --format documentation spec/integration/
 
   deploy:
     docker:
@@ -49,6 +71,7 @@ workflows:
   ci:
     jobs:
       - rspec
+      - rspec_firefox
   rubygems-deploy:
     jobs:
       - deploy:

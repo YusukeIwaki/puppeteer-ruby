@@ -9,6 +9,11 @@ class Puppeteer::Env
   def ci?
     ['1', 'true'].include?(ENV['CI'].to_s)
   end
+
+  # @return [String|NilClass] chrome, firefox, nil
+  def product
+    (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT']]).first
+  end
 end
 
 class Puppeteer

@@ -38,7 +38,10 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  launch_options = {}
+  launch_options = {
+    product: Puppeteer.env.product || 'chrome',
+    executable_path: ENV['PUPPETEER_EXECUTABLE_PATH'],
+  }.compact
   if Puppeteer.env.debug? && !Puppeteer.env.ci?
     launch_options[:headless] = false
   end
