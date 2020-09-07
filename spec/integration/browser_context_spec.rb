@@ -38,7 +38,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       expect(browser.pages.length).to eq(1)
     end
 
-    it_fails_firefox 'window.open should use parent tab context' do
+    it 'window.open should use parent tab context' do
       context = browser.create_incognito_browser_context
       page = context.new_page
       page.goto('about:blank')

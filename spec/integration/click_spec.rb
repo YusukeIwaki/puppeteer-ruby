@@ -260,7 +260,7 @@ RSpec.describe Puppeteer::Page do
       page.goto("http://127.0.0.1:4567/offscreenbuttons")
     }
 
-    it_fails_firefox 'should click offscreen buttons' do
+    it 'should click offscreen buttons' do
       11.times do |i|
         # We might've scrolled to click a button - reset to (0, 0).
         page.evaluate('() => window.scrollTo(0, 0)')
@@ -382,7 +382,7 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate('() => globalThis.result.check')).to eq(false)
     end
 
-    it_fails_firefox 'should click on checkbox label and toggle' do
+    it 'should click on checkbox label and toggle' do
       expect(page.evaluate('() => globalThis.result.check')).to be_nil
 
       page.click('label[for="agree"]')
@@ -615,7 +615,7 @@ RSpec.describe Puppeteer::Page do
         attach_frame(page, 'button-test', '/button')
       }
 
-      it_fails_firefox 'should click the button inside an iframe' do
+      it 'should click the button inside an iframe' do
         frame = page.frames.last
         frame.S('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
@@ -635,7 +635,7 @@ RSpec.describe Puppeteer::Page do
         attach_frame(page, 'button-test', '/button')
       }
 
-      it_fails_firefox 'should click the button inside an iframe' do
+      it 'should click the button inside an iframe' do
         frame = page.frames.last
         frame.S('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
