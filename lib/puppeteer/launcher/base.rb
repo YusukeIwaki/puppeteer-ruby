@@ -25,7 +25,7 @@ module Puppeteer::Launcher
       end
 
       # temporal logic.
-      if RUBY_PLATFORM.include?('darwin') # MacOS
+      if Puppeteer.env.darwin?
         case self
         when Chrome
           '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'

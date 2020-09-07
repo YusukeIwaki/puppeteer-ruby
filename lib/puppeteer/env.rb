@@ -10,6 +10,11 @@ class Puppeteer::Env
     ['1', 'true'].include?(ENV['CI'].to_s)
   end
 
+  # check if running on macOS
+  def darwin?
+    RUBY_PLATFORM.include?('darwin')
+  end
+
   # @return [String|NilClass] chrome, firefox, nil
   def product
     (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT']]).first
