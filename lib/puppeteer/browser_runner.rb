@@ -156,6 +156,6 @@ class Puppeteer::BrowserRunner
       end
     end
   rescue Timeout::Error
-    raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferredRevision} is guaranteed to work.")
+    raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
   end
 end

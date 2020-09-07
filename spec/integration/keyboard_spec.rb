@@ -87,13 +87,13 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('a')
     end
 
-    it 'ElementHandle.press should support |text| option' do
+    it_fails_firefox 'ElementHandle.press should support |text| option' do
       textarea = page.S('textarea')
       textarea.press('a', text: 'ё')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('ё')
     end
 
-    it 'should send a character with sendCharacter' do
+    it_fails_firefox 'should send a character with sendCharacter' do
       page.focus('textarea')
       page.keyboard.send_character('嗨')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('嗨')
@@ -123,7 +123,7 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('He Wrd!')
     end
 
-    it 'should specify repeat property' do
+    it_fails_firefox 'should specify repeat property' do
       page.focus('textarea')
       page.evaluate <<~JAVASCRIPT
       () => document.querySelector('textarea').addEventListener('keydown', (e) => (globalThis.lastEvent = e), true)
@@ -144,14 +144,14 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate('() => globalThis.lastEvent.repeat')).to eq(false)
     end
 
-    it 'should type all kinds of characters' do
+    it_fails_firefox 'should type all kinds of characters' do
       page.focus('textarea')
       text = 'This text goes onto two lines.\nThis character is 嗨.'
       page.keyboard.type_text(text)
       expect(page.evaluate('result')).to eq(text)
     end
 
-    it 'should specify location' do
+    it_fails_firefox 'should specify location' do
       page.evaluate <<~JAVASCRIPT
       () => {
         window.addEventListener(
@@ -175,7 +175,7 @@ RSpec.describe Puppeteer::Keyboard do
       end
     end
 
-    it 'should type emoji' do
+    it_fails_firefox 'should type emoji' do
       page.type_text('textarea', '👹 Tokyo street Japan 🇯🇵')
       expect(page.Seval('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
@@ -235,12 +235,12 @@ RSpec.describe Puppeteer::Keyboard do
       page.goto("http://127.0.0.1:4567/keyboard")
     }
 
-    it 'should report shiftKey' do
-      {
-        'Shift' => 16,
-        'Alt' => 18,
-        'Control' => 17,
-      }.each do |modifier_key, modifier_code|
+    {
+      'Shift' => 16,
+      'Alt' => 18,
+      'Control' => 17,
+    }.each do |modifier_key, modifier_code|
+      it "should report shiftKey  [modifier_key: #{modifier_key}]" do
         page.keyboard.down(modifier_key)
         result = page.evaluate('() => globalThis.getResult()')
         expect(result).to eq("Keydown: #{modifier_key} #{modifier_key}Left #{modifier_code} [#{modifier_key}]")
@@ -249,6 +249,8 @@ RSpec.describe Puppeteer::Keyboard do
         result = page.evaluate('() => globalThis.getResult()')
         # Shift+! will generate a keypress
         if modifier_key == 'Shift'
+          expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]\nKeypress: ! Digit1 33 33 [#{modifier_key}]")
+        elsif modifier_key == 'Alt' && Puppeteer.env.firefox? && Puppeteer.env.darwin?
           expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]\nKeypress: ! Digit1 33 33 [#{modifier_key}]")
         else
           expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]")
@@ -360,7 +362,7 @@ RSpec.describe Puppeteer::Keyboard do
       attach_frame(page, 'emoji-test', '/textarea')
     }
 
-    it 'should type emoji into an iframe' do
+    it_fails_firefox 'should type emoji into an iframe' do
       frame = page.frames.last
       textarea = frame.S('textarea')
       textarea.type_text('👹 Tokyo street Japan 🇯🇵')
@@ -385,7 +387,15 @@ RSpec.describe Puppeteer::Keyboard do
 
       key, code, meta_key = page.evaluate('result')
       expect(key).to eq('Meta')
-      expect(code).to eq('MetaLeft')
+      if Puppeteer.env.firefox?
+        if Puppeteer.env.darwin?
+          expect(code).to eq('OSLeft')
+        else
+          expect(code).to eq('AltLeft')
+        end
+      else
+        expect(code).to eq('MetaLeft')
+      end
       expect(meta_key).to eq(true)
     end
   end
@@ -402,7 +412,11 @@ RSpec.describe Puppeteer::Keyboard do
         down 'Shift'
         5.times { press 'ArrowLeft' }
         up 'Shift'
-        send_character 'a'
+        if Puppeteer.env.firefox?
+          press 'a'
+        else
+          send_character 'a'
+        end
       }
       expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
     end
@@ -413,7 +427,11 @@ RSpec.describe Puppeteer::Keyboard do
       page.keyboard.down 'Shift'
       5.times { page.keyboard.press 'ArrowLeft' }
       page.keyboard.up 'Shift'
-      page.keyboard.send_character 'a'
+      if Puppeteer.env.firefox?
+        page.keyboard.press 'a'
+      else
+        page.keyboard.send_character 'a'
+      end
       expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
     end
   end

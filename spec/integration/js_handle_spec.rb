@@ -44,7 +44,7 @@ RSpec.describe Puppeteer::JSHandle do
       expect(json).to eq({ 'foo' => 'bar' })
     end
 
-    it 'should not work with dates' do
+    it_fails_firefox 'should not work with dates' do
       date_handle = page.evaluate_handle("() => new Date('2017-09-26T00:00:00.000Z')")
       json = date_handle.json_value
       expect(json).to eq({})
@@ -52,7 +52,11 @@ RSpec.describe Puppeteer::JSHandle do
 
     it 'should throw for circular objects' do
       window_handle = page.evaluate_handle('window')
-      expect { window_handle.json_value }.to raise_error(/Object reference chain is too long/)
+      if Puppeteer.env.chrome?
+        expect { window_handle.json_value }.to raise_error(/Object reference chain is too long/)
+      elsif Puppeteer.env.firefox?
+        expect { window_handle.json_value }.to raise_error(/Object is not serializable/)
+      end
     end
   end
 

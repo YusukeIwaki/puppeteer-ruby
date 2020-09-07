@@ -59,7 +59,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       end
     end
 
-    it 'should fire target events' do
+    it_fails_firefox 'should fire target events' do
       context = browser.create_incognito_browser_context
       events = []
       context.on('targetcreated') do |target|
@@ -92,7 +92,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       end
     end
 
-    it 'should wait for a target' do
+    it_fails_firefox 'should wait for a target' do
       context = browser.create_incognito_browser_context
       resolved = false
       target_promise = context.async_wait_for_target(predicate: -> (target) { target.url == 'http://127.0.0.1:4567/test' })
@@ -160,7 +160,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       expect(browser.browser_contexts.length).to eq(1)
     end
 
-    it 'should work across sessions' do
+    it_fails_firefox 'should work across sessions' do
       expect(browser.browser_contexts.length).to eq(1)
       context = browser.create_incognito_browser_context
       expect(browser.browser_contexts.length).to eq(2)

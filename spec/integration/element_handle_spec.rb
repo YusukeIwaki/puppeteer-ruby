@@ -57,6 +57,10 @@ RSpec.describe Puppeteer::ElementHandle do
           ::-webkit-scrollbar {
               display: none;
           }
+          html { /* for Firefox */
+            scrollbar-width: none;
+          }
+
           </style>
           HTML
         end
@@ -91,6 +95,9 @@ RSpec.describe Puppeteer::ElementHandle do
           ::-webkit-scrollbar{
               display: none;
           }
+          html { /* for Firefox */
+            scrollbar-width: none;
+          }
           </style>
           <script>
           async function attachFrame(frameId, url) {
@@ -117,6 +124,10 @@ RSpec.describe Puppeteer::ElementHandle do
           body iframe {
               flex-grow: 1;
               flex-shrink: 1;
+          }
+
+          html { /* for Firefox */
+            scrollbar-width: none;
           }
           </style>
           <iframe src='./frame.html' name='uno'></iframe>

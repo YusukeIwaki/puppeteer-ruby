@@ -9,6 +9,11 @@ class Puppeteer::Env
   def ci?
     ['1', 'true'].include?(ENV['CI'].to_s)
   end
+
+  # check if running on macOS
+  def darwin?
+    RUBY_PLATFORM.include?('darwin')
+  end
 end
 
 class Puppeteer

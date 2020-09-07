@@ -27,6 +27,23 @@ end
 
 RSpec::Core::ExampleGroup.extend(SinatraRouting)
 
+module PuppeteerEnvExtension
+  # @return [String] chrome, firefox
+  def product
+    (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT_RSPEC']]).first || 'chrome'
+  end
+
+  def chrome?
+    product == 'chrome'
+  end
+
+  def firefox?
+    product == 'firefox'
+  end
+end
+
+Puppeteer::Env.include(PuppeteerEnvExtension)
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'
@@ -38,7 +55,10 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  launch_options = {}
+  launch_options = {
+    product: Puppeteer.env.product,
+    executable_path: ENV['PUPPETEER_EXECUTABLE_PATH_RSPEC'],
+  }.compact
   if Puppeteer.env.debug? && !Puppeteer.env.ci?
     launch_options[:headless] = false
   end
@@ -50,9 +70,19 @@ RSpec.configure do |config|
         example.run
       end
     else
-      Puppeteer.launch(**launch_options) do |browser|
-        @puppeteer_page = browser.pages.first || browser.new_page
-        example.run
+      if Puppeteer.env.firefox?
+        Puppeteer.launch(**launch_options) do |browser|
+          # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
+          # So create new page for each spec.
+          @puppeteer_page = browser.new_page
+          example.run
+          @puppeteer_page.close
+        end
+      else
+        Puppeteer.launch(**launch_options) do |browser|
+          @puppeteer_page = browser.pages.first || new_page
+          example.run
+        end
       end
     end
   end
@@ -72,5 +102,17 @@ RSpec.configure do |config|
   end
   config.include PuppeteerMethods, type: :puppeteer
 end
+
+module ItFailsFirefox
+  def it_fails_firefox(*args, **kwargs, &block)
+    if Puppeteer.env.firefox?
+      pending(*args, **kwargs, &block)
+    else
+      it(*args, **kwargs, &block)
+    end
+  end
+end
+
+RSpec::Core::ExampleGroup.extend(ItFailsFirefox)
 
 require_relative './utils'

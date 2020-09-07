@@ -80,7 +80,18 @@ class Puppeteer::RemoteObject
 
   # used in ElementHandle#_box_model
   def box_model(client)
-    client.send_message('DOM.getBoxModel', objectId: @object_id)
+    result = client.send_message('DOM.getBoxModel', objectId: @object_id)
+
+    # Firefox returns width/height = 0, content/padding/border/margin = [nil, nil, nil, nil, nil, nil, nil, nil]
+    # while Chrome throws Error(Could not compute box model)
+    model = result['model']
+    if model['width'] == 0 && model['height'] == 0 &&
+      %w(content padding border margin).all? { |key| model[key].all?(&:nil?) }
+
+      debug_puts('Could not compute box model in Firefox.')
+      return nil
+    end
+    result
   rescue => err
     debug_puts(err)
     nil

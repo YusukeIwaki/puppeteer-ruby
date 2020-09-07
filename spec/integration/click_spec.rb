@@ -38,7 +38,7 @@ RSpec.describe Puppeteer::Page do
         page.evaluate('() => delete window.Node')
       }
 
-      it 'should click button' do
+      it_fails_firefox 'should click button' do
         page.click('button')
         expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
       end
@@ -136,7 +136,7 @@ RSpec.describe Puppeteer::Page do
       page.goto("http://127.0.0.1:4567/wrappedlink")
     }
 
-    it 'should click with disabled javascript' do
+    it_fails_firefox 'should click with disabled javascript' do
       await_all(
         page.async_wait_for_navigation,
         page.async_click('a'),
