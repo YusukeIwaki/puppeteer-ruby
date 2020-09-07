@@ -8,8 +8,14 @@ RSpec.describe Puppeteer::Browser, puppeteer: :browser do
   end
 
   describe 'user_agent' do
-    it 'should include WebKit' do
-      expect(browser.user_agent).to include('WebKit')
+    if Puppeteer.env.firefox?
+      it 'should include Gecko' do
+        expect(browser.user_agent).to include('Gecko')
+      end
+    else
+      it 'should include WebKit' do
+        expect(browser.user_agent).to include('WebKit')
+      end
     end
   end
 
