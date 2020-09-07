@@ -53,9 +53,19 @@ RSpec.configure do |config|
         example.run
       end
     else
-      Puppeteer.launch(**launch_options) do |browser|
-        @puppeteer_page = browser.pages.first || browser.new_page
-        example.run
+      if Puppeteer.env.firefox?
+        Puppeteer.launch(**launch_options) do |browser|
+          # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
+          # So create new page for each spec.
+          @puppeteer_page = browser.new_page
+          example.run
+          @puppeteer_page.close
+        end
+      else
+        Puppeteer.launch(**launch_options) do |browser|
+          @puppeteer_page = browser.pages.first || new_page
+          example.run
+        end
       end
     end
   end
