@@ -27,6 +27,23 @@ end
 
 RSpec::Core::ExampleGroup.extend(SinatraRouting)
 
+module PuppeteerEnvExtension
+  # @return [String] chrome, firefox
+  def product
+    (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT_RSPEC']]).first || 'chrome'
+  end
+
+  def chrome?
+    product == 'chrome'
+  end
+
+  def firefox?
+    product == 'firefox'
+  end
+end
+
+Puppeteer::Env.include(PuppeteerEnvExtension)
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'
@@ -39,8 +56,8 @@ RSpec.configure do |config|
   end
 
   launch_options = {
-    product: Puppeteer.env.product || 'chrome',
-    executable_path: ENV['PUPPETEER_EXECUTABLE_PATH'],
+    product: Puppeteer.env.product,
+    executable_path: ENV['PUPPETEER_EXECUTABLE_PATH_RSPEC'],
   }.compact
   if Puppeteer.env.debug? && !Puppeteer.env.ci?
     launch_options[:headless] = false
