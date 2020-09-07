@@ -38,7 +38,7 @@ RSpec.describe Puppeteer::Page do
         page.evaluate('() => delete window.Node')
       }
 
-      it 'should click button' do
+      it_fails_firefox 'should click button' do
         page.click('button')
         expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
       end
@@ -136,7 +136,7 @@ RSpec.describe Puppeteer::Page do
       page.goto("http://127.0.0.1:4567/wrappedlink")
     }
 
-    it 'should click with disabled javascript' do
+    it_fails_firefox 'should click with disabled javascript' do
       await_all(
         page.async_wait_for_navigation,
         page.async_click('a'),
@@ -260,7 +260,7 @@ RSpec.describe Puppeteer::Page do
       page.goto("http://127.0.0.1:4567/offscreenbuttons")
     }
 
-    it 'should click offscreen buttons' do
+    it_fails_firefox 'should click offscreen buttons' do
       11.times do |i|
         # We might've scrolled to click a button - reset to (0, 0).
         page.evaluate('() => window.scrollTo(0, 0)')
@@ -382,7 +382,7 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate('() => globalThis.result.check')).to eq(false)
     end
 
-    it 'should click on checkbox label and toggle' do
+    it_fails_firefox 'should click on checkbox label and toggle' do
       expect(page.evaluate('() => globalThis.result.check')).to be_nil
 
       page.click('label[for="agree"]')
@@ -615,7 +615,7 @@ RSpec.describe Puppeteer::Page do
         attach_frame(page, 'button-test', '/button')
       }
 
-      it 'should click the button inside an iframe' do
+      it_fails_firefox 'should click the button inside an iframe' do
         frame = page.frames.last
         frame.S('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
@@ -635,7 +635,7 @@ RSpec.describe Puppeteer::Page do
         attach_frame(page, 'button-test', '/button')
       }
 
-      it 'should click the button inside an iframe' do
+      it_fails_firefox 'should click the button inside an iframe' do
         frame = page.frames.last
         frame.S('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')

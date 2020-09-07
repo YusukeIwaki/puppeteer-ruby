@@ -14,6 +14,14 @@ class Puppeteer::Env
   def product
     (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT']]).first
   end
+
+  def chrome?
+    product == 'chrome'
+  end
+
+  def firefox?
+    product == 'firefox'
+  end
 end
 
 class Puppeteer

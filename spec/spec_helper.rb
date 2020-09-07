@@ -76,4 +76,16 @@ RSpec.configure do |config|
   config.include PuppeteerMethods, type: :puppeteer
 end
 
+module ItFailsFirefox
+  def it_fails_firefox(*args, **kwargs, &block)
+    if Puppeteer.env.firefox?
+      xit(*args, **kwargs, &block)
+    else
+      it(*args, **kwargs, &block)
+    end
+  end
+end
+
+RSpec::Core::ExampleGroup.extend(ItFailsFirefox)
+
 require_relative './utils'
