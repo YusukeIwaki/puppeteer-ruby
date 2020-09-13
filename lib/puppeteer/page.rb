@@ -101,7 +101,9 @@ class Puppeteer::Page
     end
     # client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
-    # client.on('Page.javascriptDialogOpening', event => this._onDialog(event));
+    @client.on_event 'Page.javascriptDialogOpening' do |event|
+      handle_dialog_opening(event)
+    end
     # client.on('Runtime.exceptionThrown', exception => this._handleException(exception.exceptionDetails));
     # client.on('Inspector.targetCrashed', event => this._onTargetCrashed());
     # client.on('Performance.metrics', event => this._emitMetrics(event));
@@ -129,7 +131,7 @@ class Puppeteer::Page
   EVENT_MAPPINGS = {
     close: 'Events.Page.Close',
     # console: 'Events.Page.Console',
-    # dialog: 'Events.Page.Dialog',
+    dialog: 'Events.Page.Dialog',
     domcontentloaded: 'Events.Page.DOMContentLoaded',
     # error:
     frameattached: 'Events.Page.FrameAttached',
@@ -632,20 +634,14 @@ class Puppeteer::Page
   #   this.emit(Events.Page.Console, message);
   # }
 
-  # _onDialog(event) {
-  #   let dialogType = null;
-  #   if (event.type === 'alert')
-  #     dialogType = Dialog.Type.Alert;
-  #   else if (event.type === 'confirm')
-  #     dialogType = Dialog.Type.Confirm;
-  #   else if (event.type === 'prompt')
-  #     dialogType = Dialog.Type.Prompt;
-  #   else if (event.type === 'beforeunload')
-  #     dialogType = Dialog.Type.BeforeUnload;
-  #   assert(dialogType, 'Unknown javascript dialog type: ' + event.type);
-  #   const dialog = new Dialog(this._client, dialogType, event.message, event.defaultPrompt);
-  #   this.emit(Events.Page.Dialog, dialog);
-  # }
+  private def handle_dialog_opening(event)
+    dialog_type = event['type']
+    unless %w(alert confirm prompt beforeunload).include?(dialog_type)
+      raise ArgumentError.new("Unknown javascript dialog type: #{dialog_type}")
+    end
+    dialog = Puppeteer::Dialog.new(@client, dialog_type, event['message'], event['defaultPrompt'])
+    emit_event('Events.Page.Dialog', dialog)
+  end
 
   # @return [String]
   def url
