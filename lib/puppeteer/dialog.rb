@@ -1,5 +1,5 @@
 class Puppeteer::Dialog
-  def initialize(client, type, message, default_value)
+  def initialize(client, type:, message:, default_value:)
     @client = client
     @type = type
     @message = message
