@@ -47,6 +47,29 @@ Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=
 end
 ```
 
+### Evaluate JavaScript
+
+```ruby
+Puppeteer.launch do |browser|
+  page = browser.pages.last || browser.new_page
+  page.goto 'https://github.com/YusukeIwaki'
+
+  # Get the "viewport" of the page, as reported by the page.
+  dimensions = page.evaluate(<<~JAVASCRIPT)
+  () => {
+    return {
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+      deviceScaleFactor: window.devicePixelRatio
+    };
+  }
+  JAVASCRIPT
+
+  puts "dimensions: #{dimensions}"
+  # => dimensions: {"width"=>800, "height"=>600, "deviceScaleFactor"=>1}
+end
+```
+
 More usage examples can be found [here](https://github.com/YusukeIwaki/puppeteer-ruby-example)
 
 ## :bulb: Collaboration with Selenium or Capybara
