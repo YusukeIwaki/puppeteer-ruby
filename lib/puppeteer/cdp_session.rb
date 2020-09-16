@@ -81,4 +81,14 @@ class Puppeteer::CDPSession
     @connection = nil
     emit_event 'Events.CDPSession.Disconnected'
   end
+
+  # @param event_name [String]
+  def on(event_name, &block)
+    add_event_listener(event_name, &block)
+  end
+
+  # @param event_name [String]
+  def once(event_name, &block)
+    observe_first(event_name, &block)
+  end
 end
