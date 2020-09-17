@@ -204,8 +204,8 @@ class Puppeteer::Connection
           callback.reject(
             ProtocolError.new(
               method: callback.method,
-              error_message: response['error']['message'],
-              error_data: response['error']['data']))
+              error_message: message['error']['message'],
+              error_data: message['error']['data']))
         else
           callback.resolve(message['result'])
         end
