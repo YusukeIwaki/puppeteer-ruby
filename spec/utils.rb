@@ -15,3 +15,40 @@ module Utils::AttachFrame
     page.evaluate_handle(js, frame_id, url).as_element.content_frame
   end
 end
+
+module Utils::DetachFrame
+  def detach_frame(page, frame_id)
+    js = <<~JAVASCRIPT
+    function detachFrame(frameId) {
+      const frame = document.getElementById(frameId);
+      frame.remove();
+    }
+    JAVASCRIPT
+    page.evaluate(js, frame_id)
+  end
+end
+
+module Utils::NavigateFrame
+  def navigate_frame(page, frame_id, url)
+    js = <<~JAVASCRIPT
+    function navigateFrame(frameId, url) {
+      const frame = document.getElementById(frameId);
+      frame.src = url;
+      return new Promise((x) => (frame.onload = x));
+    }
+    JAVASCRIPT
+    page.evaluate(js, frame_id, url)
+  end
+end
+
+module Utils::DumpFrames
+  def dump_frames(frame, indentation = '')
+    description = frame.url.gsub(/:\d{4}\//, ':<PORT>/')
+    if frame.name && frame.name.length > 0
+      description = "#{description} (#{frame.name})"
+    end
+    ["#{indentation}#{description}"] + frame.child_frames.flat_map do |child|
+      dump_frames(child, "    #{indentation}")
+    end
+  end
+end

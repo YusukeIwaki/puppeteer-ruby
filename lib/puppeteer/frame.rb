@@ -266,9 +266,7 @@ class Puppeteer::Frame
   # @param frame_payload [Hash]
   def navigated(frame_payload)
     @name = frame_payload['name']
-    # TODO(lushnikov): remove this once requestInterception has loaderId exposed.
-    @navigation_url = frame_payload['url']
-    @url = frame_payload['url']
+    @url = "#{frame_payload['url']}#{frame_payload['urlFragment']}"
 
     # Ensure loaderId updated.
     # The order of [Page.lifecycleEvent name="init"] and [Page.frameNavigated] is random... for some reason...
