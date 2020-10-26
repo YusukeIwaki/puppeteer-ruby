@@ -17,6 +17,21 @@ RSpec.describe Puppeteer::Keyboard do
       page.keyboard.type_text(text)
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
     end
+
+    it 'should input ( by type_text method' do
+      text = '(puppeteer)'
+      page.keyboard.type_text(text)
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
+    end
+
+    it 'should input ( by pressing Shift + 9' do
+      page.keyboard do
+        down('Shift')
+        press('Digit9')
+        up('Shift')
+      end
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('(')
+    end
   end
 
   context 'with key event listener content' do
