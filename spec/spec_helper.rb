@@ -9,18 +9,20 @@ module SinatraRouting
 
     sinatra_app = Sinatra.new(&block)
 
+    let(:sinatra) { sinatra_app }
     around do |example|
+      sinatra_app.get('/_ping') { '_pong' }
       Thread.new { sinatra_app.run!(port: port) }
       Timeout.timeout(3) do
         loop do
-          Net::HTTP.get(URI("http://127.0.0.1:#{port}/"))
+          Net::HTTP.get(URI("http://127.0.0.1:#{port}/_ping"))
           break
         rescue Errno::ECONNREFUSED
           sleep 0.1
         end
       end
       example.run
-      sinatra_app.quit!
+      sinatra.quit!
     end
   end
 end
@@ -64,6 +66,8 @@ RSpec.configure do |config|
   end
 
   config.around(:each, type: :puppeteer) do |example|
+    @default_launch_options = launch_options
+
     if example.metadata[:puppeteer].to_s == 'browser'
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
@@ -98,6 +102,10 @@ RSpec.configure do |config|
 
     def page
       @puppeteer_page or raise NoMethodError.new('undefined method "page"')
+    end
+
+    def default_launch_options
+      @default_launch_options or raise NoMethodError.new('undefined method "default_launch_options"')
     end
   end
   config.include PuppeteerMethods, type: :puppeteer

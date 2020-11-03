@@ -131,7 +131,7 @@ class Puppeteer
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
-    }.compact
+    }
 
     @product_name ||= product
     browser = launcher.launch(options)
