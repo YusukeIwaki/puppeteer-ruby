@@ -206,7 +206,7 @@ module Puppeteer::Launcher
       resolve_executable_path
     end
 
-    private def product
+    def product
       'chrome'
     end
   end

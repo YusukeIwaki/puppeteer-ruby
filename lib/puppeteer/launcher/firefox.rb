@@ -127,7 +127,7 @@ module Puppeteer::Launcher
       resolve_executable_path
     end
 
-    private def product
+    def product
       'firefox'
     end
 

@@ -23,7 +23,6 @@ module Puppeteer::Launcher
         preferred_revision: preferred_revision,
         is_puppeteer_core: is_puppeteer_core,
       )
-      raise NotImplementedError.new('FirefoxLauncher is not implemented yet.')
     end
 
     Chrome.new(
