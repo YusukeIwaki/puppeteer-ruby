@@ -32,7 +32,12 @@ module Puppeteer::ConcurrentRubyUtils
   end
 
   def future(&block)
-    Concurrent::Promises.future(&block)
+    Concurrent::Promises.future do
+      block.call
+    rescue => err
+      Logger.new($stderr).warn(err)
+      raise err
+    end
   end
 
   def resolvable_future(&block)

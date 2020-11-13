@@ -66,4 +66,13 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
       expect(Time.now - start).to be < 1
     end
   end
+
+  describe 'future' do
+    let(:invalid_future) { future { undefined_variable_is_me } }
+
+    it 'warns error' do
+      expect { invalid_future ; sleep 1 }.to output(include("NameError").and(include("undefined_variable_is_me"))).to_stderr
+      expect { await invalid_future }.to raise_error(NameError)
+    end
+  end
 end
