@@ -12,9 +12,9 @@ module Puppeteer::Launcher
 
       firefox_arguments =
         if !@launch_options.ignore_default_args
-          default_args.to_a
+          default_args(options).to_a
         elsif @launch_options.ignore_default_args.is_a?(Enumerable)
-          default_args.reject do |arg|
+          default_args(options).reject do |arg|
             @launch_options.ignore_default_args.include?(arg)
           end.to_a
         else
@@ -127,7 +127,7 @@ module Puppeteer::Launcher
       resolve_executable_path
     end
 
-    private def product
+    def product
       'firefox'
     end
 
@@ -173,11 +173,7 @@ module Puppeteer::Launcher
 
     # @return [DefaultArgs]
     def default_args(options = nil)
-      if options.nil?
-        @default_args ||= DefaultArgs.new(@chrome_arg_options)
-      else
-        DefaultArgs.new(ChromeArgOptions.new(options))
-      end
+      DefaultArgs.new(ChromeArgOptions.new(options || {}))
     end
 
     private def create_profile(extra_prefs = {})

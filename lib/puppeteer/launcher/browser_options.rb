@@ -28,7 +28,8 @@ module Puppeteer::Launcher
     # @property {number=} slowMo
     def initialize(options)
       @ignore_https_errors = options[:ignore_https_errors] || false
-      @default_viewport = options[:default_viewport] || Puppeteer::Viewport.new(width: 800, height: 600)
+      # `default_viewport: nil` must be respected here.
+      @default_viewport = options.key?(:default_viewport) ? options[:default_viewport] : Puppeteer::Viewport.new(width: 800, height: 600)
       @slow_mo = options[:slow_mo] || 0
     end
 

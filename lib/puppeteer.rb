@@ -61,7 +61,11 @@ class Puppeteer
       is_puppeteer_core: true,
     )
 
-    @puppeteer.send(method, *args, **kwargs, &block)
+    if kwargs.empty? # for Ruby < 2.7
+      @puppeteer.public_send(method, *args, &block)
+    else
+      @puppeteer.public_send(method, *args, **kwargs, &block)
+    end
   end
 
   # @param project_root [String]
@@ -127,7 +131,7 @@ class Puppeteer
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
-    }.compact
+    }
 
     @product_name ||= product
     browser = launcher.launch(options)

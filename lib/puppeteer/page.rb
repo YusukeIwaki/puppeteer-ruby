@@ -939,16 +939,16 @@ class Puppeteer::Page
       clip = { x: 0, y: 0, width: width, height: height, scale: 1 }
 
       screen_orientation =
-        if @viewport.landscape?
+        if @viewport&.landscape?
           { angle: 90, type: 'landscapePrimary' }
         else
           { angle: 0, type: 'portraitPrimary' }
         end
       @client.send_message('Emulation.setDeviceMetricsOverride',
-        mobile: @viewport.mobile?,
+        mobile: @viewport&.mobile? || false,
         width: width,
         height: height,
-        deviceScaleFactor: @viewport.device_scale_factor,
+        deviceScaleFactor: @viewport&.device_scale_factor || 1,
         screenOrientation: screen_orientation)
     end
 

@@ -4,9 +4,13 @@ module Puppeteer::ConcurrentRubyUtils
   # REMARK: This method doesn't assure the order of calling.
   # for example, await_all(async1, async2) calls calls2 -> calls1 often.
   def await_all(*args)
-    if args.length == 1 && args[0].is_a?(Enumerable)
-      Concurrent::Promises.zip(*(args[0])).value!
+    if args.length == 1 && args.first.is_a?(Enumerable)
+      await_all(*args.first)
     else
+      if args.any? { |arg| !arg.is_a?(Concurrent::Promises::Future) }
+        raise ArgumentError.new("All argument must be a Future: #{args}")
+      end
+
       Concurrent::Promises.zip(*args).value!
     end
   end
@@ -15,9 +19,13 @@ module Puppeteer::ConcurrentRubyUtils
   # REMARK: This method doesn't assure the order of calling.
   # for example, await_all(async1, async2) calls calls2 -> calls1 often.
   def await_any(*args)
-    if args.length == 1 && args[0].is_a?(Enumerable)
-      Concurrent::Promises.any(*(args[0])).value!
+    if args.length == 1 && args.first.is_a?(Enumerable)
+      await_any(*args.first)
     else
+      if args.any? { |arg| !arg.is_a?(Concurrent::Promises::Future) }
+        raise ArgumentError.new("All argument must be a Future: #{args}")
+      end
+
       Concurrent::Promises.any(*args).value!
     end
   end
