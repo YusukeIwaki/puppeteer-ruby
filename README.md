@@ -72,6 +72,21 @@ end
 
 More usage examples can be found [here](https://github.com/YusukeIwaki/puppeteer-ruby-example)
 
+## :whale: Running in Docker
+
+Following packages are required.
+
+* Google Chrome or Chromium
+  * In Debian-based images, `google-chrome-stable`
+  * In Alpine-based images, `chromium`
+
+Also, CJK font will be required for Chinese, Japanese, Korean sites.
+
+### References
+
+* Puppeteer official README: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-in-docker
+* puppeteer-ruby example: https://github.com/YusukeIwaki/puppeteer-ruby-example/tree/master/docker_chromium
+
 ## :bulb: Collaboration with Selenium or Capybara
 
 It is really remarkable that we can use puppeteer functions in existing Selenium or Capybara codes, with a few configuration in advance.
