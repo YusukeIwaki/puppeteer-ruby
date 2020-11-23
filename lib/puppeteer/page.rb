@@ -104,8 +104,12 @@ class Puppeteer::Page
     @client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
     end
-    # client.on('Runtime.exceptionThrown', exception => this._handleException(exception.exceptionDetails));
-    # client.on('Inspector.targetCrashed', event => this._onTargetCrashed());
+    @client.on_event('Runtime.exceptionThrown') do |exception|
+      handle_exception(exception['exceptionDetails'])
+    end
+    @client.on_event('Inspector.targetCrashed') do |event|
+      handle_target_crashed
+    end
     # client.on('Performance.metrics', event => this._emitMetrics(event));
     @client.on_event('Log.entryAdded') do |event|
       handle_log_entry_added(event)
@@ -208,7 +212,7 @@ class Puppeteer::Page
   class TargetCrashedError < StandardError; end
 
   private def handle_target_crashed
-    emit_event('error', TargetCrashedError.new('Page crashed!'))
+    emit_event(PageEmittedEvents::Error, TargetCrashedError.new('Page crashed!'))
   end
 
   private def handle_log_entry_added(event)
@@ -491,15 +495,14 @@ class Puppeteer::Page
   #   return result;
   # }
 
-  # /**
-  #  * @param {!Protocol.Runtime.ExceptionDetails} exceptionDetails
-  #  */
-  # _handleException(exceptionDetails) {
-  #   const message = helper.getExceptionMessage(exceptionDetails);
-  #   const err = new Error(message);
-  #   err.stack = ''; // Don't report clientside error with a node stack attached
-  #   this.emit(PageEmittedEvents::PageError, err);
-  # }
+  class PageError < StandardError ; end
+
+  private def handle_exception(exception_details)
+    message = Puppeteer::ExceptionDetails.new(exception_details).message
+    err = PageError.new(message)
+    #   err.stack = ''; // Don't report clientside error with a node stack attached
+    emit_event(PageEmittedEvents::PageError, err)
+  end
 
   # /**
   #  * @param {!Protocol.Runtime.consoleAPICalledPayload} event
@@ -1013,6 +1016,12 @@ class Puppeteer::Page
     else
       @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
       await @target.is_closed_promise
+
+      # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
+      25.times do
+        break if @closed
+        sleep 0.004
+      end
     end
   end
 
