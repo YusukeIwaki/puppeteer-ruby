@@ -68,10 +68,10 @@ class Puppeteer::Target
     if opener_page.nil? || type != 'page'
       return true
     end
-    #      if (!openerPage.listenerCount(Events::Page::Popup))
+    #      if (!openerPage.listenerCount(PageEmittedEvents::Popup))
     #        return true;
     popup_page = page
-    opener_page.emit_event(Events::Page::Popup, popup_page)
+    opener_page.emit_event(PageEmittedEvents::Popup, popup_page)
 
     true
   end

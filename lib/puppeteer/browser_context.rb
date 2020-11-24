@@ -13,8 +13,8 @@ class Puppeteer::BrowserContext
 
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
   def on(event_name, &block)
-    unless Events::BrowserContext.values.include?(event_name.to_s)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{Events::BrowserContext.values.to_a.join(", ")}")
+    unless BrowserContextEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{BrowserContextEmittedEvents.values.to_a.join(", ")}")
     end
 
     super(event_name.to_s, &block)
@@ -22,8 +22,8 @@ class Puppeteer::BrowserContext
 
   # @param event_name [Symbol]
   def once(event_name, &block)
-    unless Events::BrowserContext.values.include?(event_name.to_s)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{Events::BrowserContext.values.to_a.join(", ")}")
+    unless BrowserContextEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{BrowserContextEmittedEvents.values.to_a.join(", ")}")
     end
 
     super(event_name.to_s, &block)

@@ -56,48 +56,48 @@ class Puppeteer::Page
       session = Puppeteer::Connection.from_session(@client).session(event['sessionId']) # rubocop:disable Lint/UselessAssignment
       #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
       #   this._workers.set(event.sessionId, worker);
-      #   this.emit(Events::Page::WorkerCreated, worker);
+      #   this.emit(PageEmittedEvents::WorkerCreated, worker);
     end
     @client.on_event('Target.detachedFromTarget') do |event|
       session_id = event['sessionId']
       worker = @workers[session_id]
       next unless worker
 
-      emit_event(Events::Page::WorkerDestroyed, worker)
+      emit_event(PageEmittedEvents::WorkerDestroyed, worker)
       @workers.delete(session_id)
     end
 
     @frame_manager.on_event(FrameManagerEmittedEvents::FrameAttached) do |event|
-      emit_event(Events::Page::FrameAttached, event)
+      emit_event(PageEmittedEvents::FrameAttached, event)
     end
     @frame_manager.on_event(FrameManagerEmittedEvents::FrameDetached) do |event|
-      emit_event(Events::Page::FrameDetached, event)
+      emit_event(PageEmittedEvents::FrameDetached, event)
     end
     @frame_manager.on_event(FrameManagerEmittedEvents::FrameNavigated) do |event|
-      emit_event(Events::Page::FrameNavigated, event)
+      emit_event(PageEmittedEvents::FrameNavigated, event)
     end
 
     network_manager = @frame_manager.network_manager
     network_manager.on_event(NetworkManagerEmittedEvents::Request) do |event|
-      emit_event(Events::Page::Request, event)
+      emit_event(PageEmittedEvents::Request, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::Response) do |event|
-      emit_event(Events::Page::Response, event)
+      emit_event(PageEmittedEvents::Response, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::RequestFailed) do |event|
-      emit_event(Events::Page::RequestFailed, event)
+      emit_event(PageEmittedEvents::RequestFailed, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::RequestFinished) do |event|
-      emit_event(Events::Page::RequestFinished, event)
+      emit_event(PageEmittedEvents::RequestFinished, event)
     end
     @file_chooser_interception_is_disabled = false
     @file_chooser_interceptors = Set.new
 
     @client.on_event('Page.domContentEventFired') do |event|
-      emit_event(Events::Page::DOMContentLoaded)
+      emit_event(PageEmittedEvents::DOMContentLoaded)
     end
     @client.on_event('Page.loadEventFired') do |event|
-      emit_event(Events::Page::Load)
+      emit_event(PageEmittedEvents::Load)
     end
     # client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
@@ -114,7 +114,7 @@ class Puppeteer::Page
       handle_file_chooser(event)
     end
     @target.is_closed_promise.then do
-      emit_event(Events::Page::Close)
+      emit_event(PageEmittedEvents::Close)
       @closed = true
     end
   end
@@ -130,8 +130,8 @@ class Puppeteer::Page
 
   # @param event_name [Symbol]
   def on(event_name, &block)
-    unless Events::Page.values.include?(event_name.to_s)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{Events::Page.values.to_a.join(", ")}")
+    unless PageEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
     end
 
     super(event_name.to_s, &block)
@@ -139,8 +139,8 @@ class Puppeteer::Page
 
   # @param event_name [Symbol]
   def once(event_name, &block)
-    unless Events::Page.values.include?(event_name.to_s)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{Events::Page.values.to_a.join(", ")}")
+    unless PageEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
     end
 
     super(event_name.to_s, &block)
@@ -238,7 +238,7 @@ class Puppeteer::Page
         url: url,
         line_number: line_number,
       )
-      emit_event(Events::Page::Console,
+      emit_event(PageEmittedEvents::Console,
         Puppeteer::ConsoleMessage.new(level, text, [], console_message_location))
     end
   end
@@ -481,7 +481,7 @@ class Puppeteer::Page
   #  * @param {!Protocol.Performance.metricsPayload} event
   #  */
   # _emitMetrics(event) {
-  #   this.emit(Events::Page::Metrics, {
+  #   this.emit(PageEmittedEvents::Metrics, {
   #     title: event.title,
   #     metrics: this._buildMetricsObject(event.metrics)
   #   });
@@ -507,7 +507,7 @@ class Puppeteer::Page
   #   const message = helper.getExceptionMessage(exceptionDetails);
   #   const err = new Error(message);
   #   err.stack = ''; // Don't report clientside error with a node stack attached
-  #   this.emit(Events::Page::PageError, err);
+  #   this.emit(PageEmittedEvents::PageError, err);
   # }
 
   # /**
@@ -592,7 +592,7 @@ class Puppeteer::Page
   #  * @param {Protocol.Runtime.StackTrace=} stackTrace
   #  */
   # _addConsoleMessage(type, args, stackTrace) {
-  #   if (!this.listenerCount(Events::Page::Console)) {
+  #   if (!this.listenerCount(PageEmittedEvents::Console)) {
   #     args.forEach(arg => arg.dispose());
   #     return;
   #   }
@@ -610,7 +610,7 @@ class Puppeteer::Page
   #     columnNumber: stackTrace.callFrames[0].columnNumber,
   #   } : {};
   #   const message = new ConsoleMessage(type, textTokens.join(' '), args, location);
-  #   this.emit(Events::Page::Console, message);
+  #   this.emit(PageEmittedEvents::Console, message);
   # }
 
   private def handle_dialog_opening(event)
@@ -622,7 +622,7 @@ class Puppeteer::Page
               type: dialog_type,
               message: event['message'],
               default_value: event['defaultPrompt'])
-    emit_event(Events::Page::Dialog, dialog)
+    emit_event(PageEmittedEvents::Dialog, dialog)
   end
 
   # @return [String]

@@ -24,52 +24,6 @@ end
 
 using EventsDefinitionUtils
 
-module Events ; end
-
-# @see https://github.com/puppeteer/puppeteer/blob/main/src/common/Events.ts
-{
-  Page: {
-    Close: 'close',
-    Console: 'console',
-    Dialog: 'dialog',
-    DOMContentLoaded: 'domcontentloaded',
-    Error: 'error',
-    PageError: 'pageerror',
-    Request: 'request',
-    Response: 'response',
-    RequestFailed: 'requestfailed',
-    RequestFinished: 'requestfinished',
-    FrameAttached: 'frameattached',
-    FrameDetached: 'framedetached',
-    FrameNavigated: 'framenavigated',
-    Load: 'load',
-    Metrics: 'metrics',
-    Popup: 'popup',
-    WorkerCreated: 'workercreated',
-    WorkerDestroyed: 'workerdestroyed',
-  },
-
-  Browser: {
-    TargetCreated: 'targetcreated',
-    TargetDestroyed: 'targetdestroyed',
-    TargetChanged: 'targetchanged',
-    Disconnected: 'disconnected',
-  },
-
-  BrowserContext: {
-    TargetCreated: 'targetcreated',
-    TargetDestroyed: 'targetdestroyed',
-    TargetChanged: 'targetchanged',
-  },
-
-}.each do |subtree, values|
-  new_module = Module.new
-  values.define_const_into(new_module)
-  Events.const_set(subtree, new_module)
-  Events.define_singleton_method(subtree) { new_module }
-end
-
-
 # Internal events that the Connection class emits.
 module ConnectionEmittedEvents ; end
 
@@ -150,3 +104,83 @@ module FrameManagerEmittedEvents ; end
   ExecutionContextCreated: Symbol('FrameManager.ExecutionContextCreated'),
   ExecutionContextDestroyed: Symbol('FrameManager.ExecutionContextDestroyed'),
 }.define_const_into(FrameManagerEmittedEvents)
+
+# All the events that a page instance may emit.
+module PageEmittedEvents ; end
+
+{
+  # Emitted when the page closes.
+  Close: 'close',
+
+  # Emitted when JavaScript within the page calls one of console API methods,
+  # e.g. `console.log` or `console.dir`. Also emitted if the page throws an
+  # error or a warning.
+  Console: 'console',
+
+  # Emitted when a JavaScript dialog appears, such as `alert`, `prompt`,
+  # `confirm` or `beforeunload`. Puppeteer can respond to the dialog via
+  # Dialog#accept or Dialog#dismiss.
+  Dialog: 'dialog',
+
+  # Emitted when the JavaScript
+  # {https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded DOMContentLoaded} event is dispatched.
+  DOMContentLoaded: 'domcontentloaded',
+
+  # Emitted when the page crashes. Will contain an `Error`.
+  Error: 'error',
+
+  # Emitted when a frame is attached. Will contain a Frame.
+  FrameAttached: 'frameattached',
+  # Emitted when a frame is detached. Will contain a Frame.
+  FrameDetached: 'framedetached',
+  # Emitted when a frame is navigated to a new URL. Will contain a {@link Frame}.
+  FrameNavigated: 'framenavigated',
+
+  # Emitted when the JavaScript
+  # {https://developer.mozilla.org/en-US/docs/Web/Events/load | load} event is dispatched.
+  Load: 'load',
+
+  # Emitted when the JavaScript code makes a call to `console.timeStamp`. For
+  # the list of metrics see {@link Page.metrics | page.metrics}.
+  #
+  # Contains an object with two properties:
+  # - `title`: the title passed to `console.timeStamp`
+  # - `metrics`: objec containing metrics as key/value pairs. The values will be `number`s.
+  Metrics: 'metrics',
+
+  # Emitted when an uncaught exception happens within the page.
+  # Contains an `Error`.
+  PageError: 'pageerror',
+
+  # Emitted when the page opens a new tab or window.
+  # Contains a Page corresponding to the popup window.
+  Popup: 'popup',
+
+  # Emitted when a page issues a request and contains a HTTPRequest.
+  #
+  # The object is readonly. See Page#setRequestInterception for intercepting and mutating requests.
+  Request: 'request',
+
+  # Emitted when a request fails, for example by timing out.
+  #
+  # Contains a HTTPRequest.
+  #
+  # NOTE: HTTP Error responses, such as 404 or 503, are still successful
+  # responses from HTTP standpoint, so request will complete with
+  # `requestfinished` event and not with `requestfailed`.
+  RequestFailed: 'requestfailed',
+
+  # Emitted when a request finishes successfully. Contains a HTTPRequest.
+  RequestFinished: 'requestfinished',
+
+  # Emitted when a response is received. Contains a HTTPResponse.
+  Response: 'response',
+
+  # Emitted when a dedicated
+  # {https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API WebWorker} is spawned by the page.
+  WorkerCreated: 'workercreated',
+
+  # Emitted when a dedicated
+  # {https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API WebWorker} is destroyed by the page.
+  WorkerDestroyed: 'workerdestroyed',
+}.define_const_into(PageEmittedEvents)
