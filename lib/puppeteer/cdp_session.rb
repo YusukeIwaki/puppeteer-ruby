@@ -79,7 +79,7 @@ class Puppeteer::CDPSession
     end
     @callbacks.clear
     @connection = nil
-    emit_event('Events.CDPSession.Disconnected')
+    emit_event(CDPSessionEmittedEvents::Disconnected)
   end
 
   # @param event_name [String]

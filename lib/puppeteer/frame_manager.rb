@@ -155,7 +155,7 @@ class Puppeteer::FrameManager
     frame = @frames[event['frameId']]
     return if !frame
     frame.handle_lifecycle_event(event['loaderId'], event['name'])
-    emit_event('Events.FrameManager.LifecycleEvent', frame)
+    emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
   end
 
   # @param {string} frameId
@@ -163,7 +163,7 @@ class Puppeteer::FrameManager
     frame = @frames[frame_id]
     return if !frame
     frame.handle_loading_stopped
-    emit_event('Events.FrameManager.LifecycleEvent', frame)
+    emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
   end
 
   # @param frame_tree [Hash]
@@ -211,7 +211,7 @@ class Puppeteer::FrameManager
     frame = Puppeteer::Frame.new(self, @client, parent_frame, frame_id)
     @frames[frame_id] = frame
 
-    emit_event('Events.FrameManager.FrameAttached', frame)
+    emit_event(FrameManagerEmittedEvents::FrameAttached, frame)
   end
 
   # @param frame_payload [Hash]
@@ -252,7 +252,7 @@ class Puppeteer::FrameManager
     # Update frame payload.
     frame.navigated(frame_payload)
 
-    emit_event('Events.FrameManager.FrameNavigated', frame)
+    emit_event(FrameManagerEmittedEvents::FrameNavigated, frame)
   end
 
   # @param name [String]
@@ -280,8 +280,8 @@ class Puppeteer::FrameManager
     frame = @frames[frame_id]
     return unless frame
     frame.navigated_within_document(url)
-    emit_event('Events.FrameManager.FrameNavigatedWithinDocument', frame)
-    emit_event('Events.FrameManager.FrameNavigated', frame)
+    emit_event(FrameManagerEmittedEvents::FrameNavigatedWithinDocument, frame)
+    emit_event(FrameManagerEmittedEvents::FrameNavigated, frame)
   end
 
   # @param frame_id [String]
@@ -349,7 +349,7 @@ class Puppeteer::FrameManager
     end
     frame.detach
     @frames.delete(frame.id)
-    emit_event('Events.FrameManager.FrameDetached', frame)
+    emit_event(FrameManagerEmittedEvents::FrameDetached, frame)
   end
 
   private def assert_no_legacy_navigation_options(wait_until:)

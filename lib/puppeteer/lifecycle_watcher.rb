@@ -69,17 +69,17 @@ class Puppeteer::LifecycleWatcher
     @timeout = timeout
 
     @listener_ids = {}
-    @listener_ids['client'] = @frame_manager.client.add_event_listener('Events.CDPSession.Disconnected') do
+    @listener_ids['client'] = @frame_manager.client.add_event_listener(CDPSessionEmittedEvents::Disconnected) do
       terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
     end
     @listener_ids['frame_manager'] = [
-      @frame_manager.add_event_listener('Events.FrameManager.LifecycleEvent') do |_|
+      @frame_manager.add_event_listener(FrameManagerEmittedEvents::LifecycleEvent) do |_|
         check_lifecycle_complete
       end,
-      @frame_manager.add_event_listener('Events.FrameManager.FrameNavigatedWithinDocument', &method(:navigated_within_document)),
-      @frame_manager.add_event_listener('Events.FrameManager.FrameDetached', &method(:handle_frame_detached)),
+      @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameNavigatedWithinDocument, &method(:navigated_within_document)),
+      @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameDetached, &method(:handle_frame_detached)),
     ]
-    @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener('Events.NetworkManager.Request', &method(:handle_request))
+    @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Request, &method(:handle_request))
 
     @same_document_navigation_promise = resolvable_future
     @lifecycle_promise = resolvable_future

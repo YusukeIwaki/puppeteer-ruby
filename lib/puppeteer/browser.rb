@@ -46,8 +46,8 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self, context_id)
     end
     @targets = {}
-    @connection.on_event('Events.Connection.Disconnected') do
-      emit_event 'Events.Browser.Disconnected'
+    @connection.on_event(ConnectionEmittedEvents::Disconnected) do
+      emit_event(BrowserEmittedEvents::Disconnected)
     end
     @connection.on_event('Target.targetCreated', &method(:handle_target_created))
     @connection.on_event('Target.targetDestroyed', &method(:handle_target_destroyed))
@@ -55,10 +55,10 @@ class Puppeteer::Browser
   end
 
   EVENT_MAPPINGS = {
-    disconnected: 'Events.Browser.Disconnected',
-    targetcreated: 'Events.Browser.TargetCreated',
-    targetchanged: 'Events.Browser.TargetChanged',
-    targetdestroyed: 'Events.Browser.TargetDestroyed',
+    disconnected: BrowserEmittedEvents::Disconnected,
+    targetcreated: BrowserEmittedEvents::TargetCreated,
+    targetchanged: BrowserEmittedEvents::TargetChanged,
+    targetdestroyed: BrowserEmittedEvents::TargetDestroyed,
   }
 
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
@@ -137,8 +137,8 @@ class Puppeteer::Browser
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
     @targets[target_info.target_id] = target
     if await target.initialized_promise
-      emit_event('Events.Browser.TargetCreated', target)
-      context.emit_event('Events.BrowserContext.TargetCreated', target)
+      emit_event(BrowserEmittedEvents::TargetCreated, target)
+      context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
     end
   end
 
@@ -150,8 +150,8 @@ class Puppeteer::Browser
     @targets.delete(target_id)
     target.closed_callback
     if await target.initialized_promise
-      emit_event('Events.Browser.TargetDestroyed', target)
-      target.browser_context.emit_event('Events.BrowserContext.TargetDestroyed', target)
+      emit_event(BrowserEmittedEvents::TargetDestroyed, target)
+      target.browser_context.emit_event(BrowserContextEmittedEvents::TargetDestroyed, target)
     end
   end
 
@@ -169,8 +169,8 @@ class Puppeteer::Browser
     was_initialized = target.initialized?
     target.handle_target_info_changed(target_info)
     if was_initialized && previous_url != target.url
-      emit_event('Events.Browser.TargetChanged', target)
-      target.browser_context.emit_event('Events.BrowserContext.TargetChanged', target)
+      emit_event(BrowserEmittedEvents::TargetChanged, target)
+      target.browser_context.emit_event(BrowserContextEmittedEvents::TargetChanged, target)
     end
   end
 
@@ -222,12 +222,12 @@ class Puppeteer::Browser
 
     event_listening_ids = []
     target_promise = resolvable_future
-    event_listening_ids << add_event_listener('Events.Browser.TargetCreated') do |target|
+    event_listening_ids << add_event_listener(BrowserEmittedEvents::TargetCreated) do |target|
       if predicate.call(target)
         target_promise.fulfill(target)
       end
     end
-    event_listening_ids << add_event_listener('Events.Browser.TargetChanged') do |target|
+    event_listening_ids << add_event_listener(BrowserEmittedEvents::TargetChanged) do |target|
       if predicate.call(target)
         target_promise.fulfill(target)
       end

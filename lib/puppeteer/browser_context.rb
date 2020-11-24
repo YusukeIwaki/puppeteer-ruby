@@ -12,10 +12,9 @@ class Puppeteer::BrowserContext
   end
 
   EVENT_MAPPINGS = {
-    disconnected: 'Events.BrowserContext.Disconnected',
-    targetcreated: 'Events.BrowserContext.TargetCreated',
-    targetchanged: 'Events.BrowserContext.TargetChanged',
-    targetdestroyed: 'Events.BrowserContext.TargetDestroyed',
+    targetcreated: BrowserContextEmittedEvents::TargetCreated,
+    targetchanged: BrowserContextEmittedEvents::TargetChanged,
+    targetdestroyed: BrowserContextEmittedEvents::TargetDestroyed,
   }
 
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed

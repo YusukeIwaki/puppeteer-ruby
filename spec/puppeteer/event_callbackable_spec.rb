@@ -150,7 +150,7 @@ RSpec.describe Puppeteer::EventCallbackable do
         parent.on_event('Parent.awesome') do
           on_parent_awesome
           @me = 'awesome child'
-          emit_event 'Child.awesome'
+          emit_event('Child.awesome')
         end
 
         parent.on_event('Child.awesome') do

@@ -233,7 +233,7 @@ class Puppeteer::Connection
       session.handle_closed
     end
     @sessions.clear
-    emit_event('Events.Connection.Disconnected')
+    emit_event(ConnectionEmittedEvents::Disconnected)
   end
 
   def on_close(&block)
