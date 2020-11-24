@@ -46,7 +46,7 @@ class Puppeteer::Page
     @screenshot_task_queue = screenshot_task_queue
 
     @workers = {}
-    @client.on_event 'Target.attachedToTarget' do |event|
+    @client.on_event('Target.attachedToTarget') do |event|
       if event['targetInfo']['type'] != 'worker'
         # If we don't detach from service workers, they will never die.
         await @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
@@ -58,7 +58,7 @@ class Puppeteer::Page
       #   this._workers.set(event.sessionId, worker);
       #   this.emit(Events.Page.WorkerCreated, worker);
     end
-    @client.on_event 'Target.detachedFromTarget' do |event|
+    @client.on_event('Target.detachedFromTarget') do |event|
       session_id = event['sessionId']
       worker = @workers[session_id]
       next unless worker
@@ -67,50 +67,50 @@ class Puppeteer::Page
       @workers.delete(session_id)
     end
 
-    @frame_manager.on_event 'Events.FrameManager.FrameAttached' do |event|
+    @frame_manager.on_event('Events.FrameManager.FrameAttached') do |event|
       emit_event 'Events.Page.FrameAttached', event
     end
-    @frame_manager.on_event 'Events.FrameManager.FrameDetached' do |event|
+    @frame_manager.on_event('Events.FrameManager.FrameDetached') do |event|
       emit_event 'Events.Page.FrameDetached', event
     end
-    @frame_manager.on_event 'Events.FrameManager.FrameNavigated' do |event|
+    @frame_manager.on_event('Events.FrameManager.FrameNavigated') do |event|
       emit_event 'Events.Page.FrameNavigated', event
     end
 
     network_manager = @frame_manager.network_manager
-    network_manager.on_event 'Events.NetworkManager.Request' do |event|
+    network_manager.on_event('Events.NetworkManager.Request') do |event|
       emit_event 'Events.Page.Request', event
     end
-    network_manager.on_event 'Events.NetworkManager.Response' do |event|
+    network_manager.on_event('Events.NetworkManager.Response') do |event|
       emit_event 'Events.Page.Response', event
     end
-    network_manager.on_event 'Events.NetworkManager.RequestFailed' do |event|
+    network_manager.on_event('Events.NetworkManager.RequestFailed') do |event|
       emit_event 'Events.Page.RequestFailed', event
     end
-    network_manager.on_event 'Events.NetworkManager.RequestFinished' do |event|
+    network_manager.on_event('Events.NetworkManager.RequestFinished') do |event|
       emit_event 'Events.Page.RequestFinished', event
     end
     @file_chooser_interception_is_disabled = false
     @file_chooser_interceptors = Set.new
 
-    @client.on_event 'Page.domContentEventFired' do |event|
+    @client.on_event('Page.domContentEventFired') do |event|
       emit_event 'Events.Page.DOMContentLoaded'
     end
-    @client.on_event 'Page.loadEventFired' do |event|
+    @client.on_event('Page.loadEventFired') do |event|
       emit_event 'Events.Page.Load'
     end
     # client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
-    @client.on_event 'Page.javascriptDialogOpening' do |event|
+    @client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
     end
     # client.on('Runtime.exceptionThrown', exception => this._handleException(exception.exceptionDetails));
     # client.on('Inspector.targetCrashed', event => this._onTargetCrashed());
     # client.on('Performance.metrics', event => this._emitMetrics(event));
-    @client.on_event 'Log.entryAdded' do |event|
+    @client.on_event('Log.entryAdded') do |event|
       handle_log_entry_added(event)
     end
-    @client.on_event 'Page.fileChooserOpened' do |event|
+    @client.on_event('Page.fileChooserOpened') do |event|
       handle_file_chooser(event)
     end
     @target.is_closed_promise.then do
@@ -238,7 +238,7 @@ class Puppeteer::Page
   class TargetCrashedError < StandardError; end
 
   private def handle_target_crashed
-    emit_event 'error', TargetCrashedError.new('Page crashed!')
+    emit_event('error', TargetCrashedError.new('Page crashed!'))
   end
 
   private def handle_log_entry_added(event)

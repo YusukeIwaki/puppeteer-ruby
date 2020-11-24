@@ -46,12 +46,12 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self, context_id)
     end
     @targets = {}
-    @connection.on_event 'Events.Connection.Disconnected' do
+    @connection.on_event('Events.Connection.Disconnected') do
       emit_event 'Events.Browser.Disconnected'
     end
-    @connection.on_event 'Target.targetCreated', &method(:handle_target_created)
-    @connection.on_event 'Target.targetDestroyed', &method(:handle_target_destroyed)
-    @connection.on_event 'Target.targetInfoChanged', &method(:handle_target_info_changed)
+    @connection.on_event('Target.targetCreated', &method(:handle_target_created))
+    @connection.on_event('Target.targetDestroyed', &method(:handle_target_destroyed))
+    @connection.on_event('Target.targetInfoChanged', &method(:handle_target_info_changed))
   end
 
   EVENT_MAPPINGS = {
@@ -137,8 +137,8 @@ class Puppeteer::Browser
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
     @targets[target_info.target_id] = target
     if await target.initialized_promise
-      emit_event 'Events.Browser.TargetCreated', target
-      context.emit_event 'Events.BrowserContext.TargetCreated', target
+      emit_event('Events.Browser.TargetCreated', target)
+      context.emit_event('Events.BrowserContext.TargetCreated', target)
     end
   end
 
@@ -150,8 +150,8 @@ class Puppeteer::Browser
     @targets.delete(target_id)
     target.closed_callback
     if await target.initialized_promise
-      emit_event 'Events.Browser.TargetDestroyed', target
-      target.browser_context.emit_event 'Events.BrowserContext.TargetDestroyed', target
+      emit_event('Events.Browser.TargetDestroyed', target)
+      target.browser_context.emit_event('Events.BrowserContext.TargetDestroyed', target)
     end
   end
 
@@ -169,8 +169,8 @@ class Puppeteer::Browser
     was_initialized = target.initialized?
     target.handle_target_info_changed(target_info)
     if was_initialized && previous_url != target.url
-      emit_event 'Events.Browser.TargetChanged', target
-      target.browser_context.emit_event 'Events.BrowserContext.TargetChanged', target
+      emit_event('Events.Browser.TargetChanged', target)
+      target.browser_context.emit_event('Events.BrowserContext.TargetChanged', target)
     end
   end
 

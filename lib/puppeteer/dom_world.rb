@@ -134,7 +134,7 @@ class Puppeteer::DOMWorld
 
   # @return [String]
   def content
-    evaluate <<-JAVASCRIPT
+    evaluate(<<-JAVASCRIPT)
     () => {
       let retVal = '';
       if (document.doctype)

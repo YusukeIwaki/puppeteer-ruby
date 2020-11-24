@@ -198,7 +198,7 @@ RSpec.describe Puppeteer::Page do
       page.click('textarea', click_count: 2)
       page.click('textarea', click_count: 3)
 
-      selected_text = page.evaluate <<~JAVASCRIPT
+      selected_text = page.evaluate(<<~JAVASCRIPT)
       () => {
         const textarea = document.querySelector('textarea');
         return textarea.value.substring(
@@ -490,7 +490,7 @@ RSpec.describe Puppeteer::Page do
 
     context 'with double click listener' do
       before {
-        page.evaluate <<~JAVASCRIPT
+        page.evaluate(<<~JAVASCRIPT)
         () => {
           globalThis.double = false;
           const button = document.querySelector('button');
@@ -510,7 +510,7 @@ RSpec.describe Puppeteer::Page do
 
     context 'even if the button is partially obscured' do
       before {
-        page.evaluate <<~JAVASCRIPT
+        page.evaluate(<<~JAVASCRIPT)
         () => {
           const button = document.querySelector('button');
           button.textContent = 'Some really long text that will go offscreen';

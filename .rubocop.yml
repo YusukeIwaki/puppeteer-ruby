@@ -116,6 +116,43 @@ Style/DefWithParentheses:
 Style/MethodDefParentheses:
   Enabled: true
 
+Style/MethodCallWithArgsParentheses:
+  Enabled: true
+  IgnoredMethods:
+    # Gemfile, gemspec
+    - source
+    - add_dependency
+    - add_development_dependency
+
+    # include/require
+    - require
+    - require_relative
+    - include
+
+    # fundamental methods
+    - raise
+    - sleep
+
+    # RSpec
+    - describe
+    - it
+    - to
+    - not_to
+    - be
+    - eq
+
+    # async/await
+    - define_async_method
+    - await
+    - future
+
+    # utils
+    - debug_print
+    - debug_puts
+
+Style/MethodCallWithoutArgsParentheses:
+  Enabled: true
+
 Style/RedundantFreeze:
   Enabled: true
 

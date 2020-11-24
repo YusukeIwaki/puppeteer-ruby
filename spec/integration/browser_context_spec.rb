@@ -139,7 +139,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       pages = contexts.map.with_index do |context, index|
         context.new_page.tap do |page|
           page.goto('http://127.0.0.1:4567/isolation')
-          page.evaluate <<~JAVASCRIPT
+          page.evaluate(<<~JAVASCRIPT)
           () => {
             localStorage.setItem('name', 'page#{index}');
             document.cookie = 'name=page#{index}';
