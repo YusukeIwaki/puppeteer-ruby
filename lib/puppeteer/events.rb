@@ -14,6 +14,10 @@ module EventsDefinitionUtils
         target_module.const_set(key, value)
         target_module.define_singleton_method(key) { value }
       end
+      keyset = Set.new(self.keys)
+      valueset = Set.new(self.values)
+      target_module.define_singleton_method(:keys) { keyset }
+      target_module.define_singleton_method(:values) { valueset }
     end
   end
 end
