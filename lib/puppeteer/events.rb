@@ -10,12 +10,12 @@ module EventsDefinitionUtils
 
   refine Hash do
     def define_const_into(target_module)
-      self.each do |key, value|
+      each do |key, value|
         target_module.const_set(key, value)
         target_module.define_singleton_method(key) { value }
       end
-      keyset = Set.new(self.keys)
-      valueset = Set.new(self.values)
+      keyset = Set.new(keys)
+      valueset = Set.new(values)
       target_module.define_singleton_method(:keys) { keyset }
       target_module.define_singleton_method(:values) { valueset }
     end
@@ -98,9 +98,7 @@ module FrameManagerEmittedEvents ; end
   FrameNavigated: Symbol('FrameManager.FrameNavigated'),
   FrameDetached: Symbol('FrameManager.FrameDetached'),
   LifecycleEvent: Symbol('FrameManager.LifecycleEvent'),
-  FrameNavigatedWithinDocument: Symbol(
-    'FrameManager.FrameNavigatedWithinDocument'
-  ),
+  FrameNavigatedWithinDocument: Symbol('FrameManager.FrameNavigatedWithinDocument'),
   ExecutionContextCreated: Symbol('FrameManager.ExecutionContextCreated'),
   ExecutionContextDestroyed: Symbol('FrameManager.ExecutionContextDestroyed'),
 }.define_const_into(FrameManagerEmittedEvents)
