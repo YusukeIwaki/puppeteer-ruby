@@ -31,6 +31,8 @@ module Puppeteer::EventCallbackable
     (@event_listeners[event_name] ||= EventListeners.new).add(&block)
   end
 
+  alias_method :on, :add_event_listener
+
   def remove_event_listener(*id_args)
     (@event_listeners ||= {}).each do |event_name, listeners|
       id_args.each do |id|
@@ -49,6 +51,8 @@ module Puppeteer::EventCallbackable
       remove_event_listener(listener_id)
     end
   end
+
+  alias_method :once, :observe_first
 
   def on_event(event_name, &block)
     @event_callbackable_handlers ||= {}

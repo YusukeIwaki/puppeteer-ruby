@@ -11,29 +11,22 @@ class Puppeteer::BrowserContext
     @id = context_id
   end
 
-  EVENT_MAPPINGS = {
-    disconnected: 'Events.BrowserContext.Disconnected',
-    targetcreated: 'Events.BrowserContext.TargetCreated',
-    targetchanged: 'Events.BrowserContext.TargetChanged',
-    targetdestroyed: 'Events.BrowserContext.TargetDestroyed',
-  }
-
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
   def on(event_name, &block)
-    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    unless BrowserContextEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{BrowserContextEmittedEvents.values.to_a.join(", ")}")
     end
 
-    add_event_listener(EVENT_MAPPINGS[event_name.to_sym], &block)
+    super(event_name.to_s, &block)
   end
 
   # @param event_name [Symbol]
   def once(event_name, &block)
-    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    unless BrowserContextEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{BrowserContextEmittedEvents.values.to_a.join(", ")}")
     end
 
-    observe_first(EVENT_MAPPINGS[event_name.to_sym], &block)
+    super(event_name.to_s, &block)
   end
 
   # @return {!Array<!Target>} target

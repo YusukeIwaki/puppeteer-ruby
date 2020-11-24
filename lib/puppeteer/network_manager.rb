@@ -212,7 +212,7 @@ class Puppeteer::NetworkManager
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
     request = Puppeteer::Request.new(@client, frame, interception_id, @user_request_interception_enabled, event, redirect_chain)
     @request_id_to_request[event['requestId']] = request
-    emit_event 'Events.NetworkManager.Request', request
+    emit_event(NetworkManagerEmittedEvents::Request, request)
   end
 
   private def handle_request_served_from_cache(event)
@@ -230,8 +230,8 @@ class Puppeteer::NetworkManager
     response.internal.body_loaded_promise.reject(Puppeteer::Response::Redirected.new)
     @request_id_to_request.delete(request.internal.request_id)
     @attempted_authentications.delete(request.internal.interception_id)
-    emit_event 'Events.NetworkManager.Response', response
-    emit_event 'Events.NetworkManager.RequestFinished', request
+    emit_event(NetworkManagerEmittedEvents::Response, response)
+    emit_event(NetworkManagerEmittedEvents::RequestFinished, request)
   end
 
   # @param event [Hash]
@@ -242,7 +242,7 @@ class Puppeteer::NetworkManager
 
     response = Puppeteer::Response.new(@client, request, event['response'])
     request.internal.response = response
-    emit_event 'Events.NetworkManager.Response', response
+    emit_event(NetworkManagerEmittedEvents::Response, response)
   end
 
   private def handle_loading_finished(event)
@@ -260,7 +260,7 @@ class Puppeteer::NetworkManager
 
     @request_id_to_request.delete(request.internal.request_id)
     @attempted_authentications.delete(request.internal.interception_id)
-    emit_event 'Events.NetworkManager.RequestFinished', request
+    emit_event(NetworkManagerEmittedEvents::RequestFinished, request)
   end
 
   private def handle_loading_failed(event)
@@ -275,6 +275,6 @@ class Puppeteer::NetworkManager
     end
     @request_id_to_request.delete(request.internal.request_id)
     @attempted_authentications.delete(request.internal.interception_id)
-    emit_event 'Events.NetworkManager.RequestFailed', request
+    emit_event(NetworkManagerEmittedEvents::RequestFailed, request)
   end
 end

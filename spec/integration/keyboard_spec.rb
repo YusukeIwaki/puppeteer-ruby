@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe Puppeteer::Keyboard do
   context 'with textarea content' do
     before {
-      page.evaluate <<~JAVASCRIPT
+      page.evaluate(<<~JAVASCRIPT)
       () => {
         const textarea = document.createElement('textarea');
         document.body.appendChild(textarea);
@@ -36,7 +36,7 @@ RSpec.describe Puppeteer::Keyboard do
 
   context 'with key event listener content' do
     before {
-      page.evaluate <<~JAVASCRIPT
+      page.evaluate(<<~JAVASCRIPT)
       () => {
         window.keyPromise = new Promise((resolve) =>
           document.addEventListener('keydown', (event) => resolve(event.key))
@@ -120,7 +120,7 @@ RSpec.describe Puppeteer::Keyboard do
 
     it 'should not type canceled events' do
       page.focus('textarea')
-      page.evaluate <<~JAVASCRIPT
+      page.evaluate(<<~JAVASCRIPT)
       () => {
         window.addEventListener(
           'keydown',
@@ -140,7 +140,7 @@ RSpec.describe Puppeteer::Keyboard do
 
     it_fails_firefox 'should specify repeat property' do
       page.focus('textarea')
-      page.evaluate <<~JAVASCRIPT
+      page.evaluate(<<~JAVASCRIPT)
       () => document.querySelector('textarea').addEventListener('keydown', (e) => (globalThis.lastEvent = e), true)
       JAVASCRIPT
 
@@ -167,7 +167,7 @@ RSpec.describe Puppeteer::Keyboard do
     end
 
     it_fails_firefox 'should specify location' do
-      page.evaluate <<~JAVASCRIPT
+      page.evaluate(<<~JAVASCRIPT)
       () => {
         window.addEventListener(
           'keydown',
@@ -387,7 +387,7 @@ RSpec.describe Puppeteer::Keyboard do
 
   context 'with keydown event listener' do
     before {
-      page.evaluate <<~JAVASCRIPT
+      page.evaluate(<<~JAVASCRIPT)
       () => {
         globalThis.result = null;
         document.addEventListener('keydown', (event) => {
@@ -428,9 +428,9 @@ RSpec.describe Puppeteer::Keyboard do
         5.times { press 'ArrowLeft' }
         up 'Shift'
         if Puppeteer.env.firefox?
-          press 'a'
+          press('a')
         else
-          send_character 'a'
+          send_character('a')
         end
       }
       expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
@@ -438,14 +438,14 @@ RSpec.describe Puppeteer::Keyboard do
 
     it 'can use press, send_text without block' do
       page.click('input')
-      page.keyboard.type_text '123456789'
-      page.keyboard.down 'Shift'
-      5.times { page.keyboard.press 'ArrowLeft' }
-      page.keyboard.up 'Shift'
+      page.keyboard.type_text('123456789')
+      page.keyboard.down('Shift')
+      5.times { page.keyboard.press('ArrowLeft') }
+      page.keyboard.up('Shift')
       if Puppeteer.env.firefox?
-        page.keyboard.press 'a'
+        page.keyboard.press('a')
       else
-        page.keyboard.send_character 'a'
+        page.keyboard.send_character('a')
       end
       expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
     end

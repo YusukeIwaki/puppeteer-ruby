@@ -6,6 +6,7 @@ require 'puppeteer/env'
 
 # Custom data types.
 require 'puppeteer/device'
+require 'puppeteer/events'
 require 'puppeteer/errors'
 require 'puppeteer/viewport'
 

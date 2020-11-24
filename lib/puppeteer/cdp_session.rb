@@ -47,7 +47,7 @@ class Puppeteer::CDPSession
         raise Error.new("unknown id: #{id}")
       end
     else
-      emit_event message['method'], message['params']
+      emit_event(message['method'], message['params'])
     end
   end
 
@@ -79,7 +79,7 @@ class Puppeteer::CDPSession
     end
     @callbacks.clear
     @connection = nil
-    emit_event 'Events.CDPSession.Disconnected'
+    emit_event(CDPSessionEmittedEvents::Disconnected)
   end
 
   # @param event_name [String]

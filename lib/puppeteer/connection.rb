@@ -211,7 +211,7 @@ class Puppeteer::Connection
         end
       end
     else
-      emit_event message['method'], message['params']
+      emit_event(message['method'], message['params'])
     end
   end
 
@@ -233,7 +233,7 @@ class Puppeteer::Connection
       session.handle_closed
     end
     @sessions.clear
-    emit_event 'Events.Connection.Disconnected'
+    emit_event(ConnectionEmittedEvents::Disconnected)
   end
 
   def on_close(&block)

@@ -11,10 +11,10 @@ RSpec.describe Puppeteer::EventCallbackable do
 
     context 'with no parameter' do
       before do
-        pub.on_event 'Pub.Event.awesome' do
+        pub.on_event('Pub.Event.awesome') do
           sub.awesome
         end
-        pub.on_event 'Pub.Event.strange' do
+        pub.on_event('Pub.Event.strange') do
           sub.strange
         end
       end
@@ -22,27 +22,27 @@ RSpec.describe Puppeteer::EventCallbackable do
       it 'receives callback' do
         expect(sub).to receive(:awesome)
         expect(sub).not_to receive(:strange)
-        pub.emit_event 'Pub.Event.awesome'
-        pub.emit_event 'Pub.Event.strange.strange'
+        pub.emit_event('Pub.Event.awesome')
+        pub.emit_event('Pub.Event.strange.strange')
       end
     end
 
     context 'with parameters' do
       before do
-        pub.on_event 'Pub.Event.awesome' do |arg1, arg2|
+        pub.on_event('Pub.Event.awesome') do |arg1, arg2|
           sub.awesome(arg1, arg2)
         end
       end
 
       it 'can receive arguments' do
         expect(sub).to receive(:awesome).with(:error, 'none')
-        pub.emit_event 'Pub.Event.awesome', :error, 'none'
+        pub.emit_event('Pub.Event.awesome', :error, 'none')
       end
     end
 
     context 'with keyword parameters' do
       before do
-        pub.on_event 'Pub.Event.awesome' do |error: nil|
+        pub.on_event('Pub.Event.awesome') do |error: nil|
           if error
             sub.on_error(error)
           else
@@ -53,13 +53,13 @@ RSpec.describe Puppeteer::EventCallbackable do
 
       it 'can receive with keyword arguments' do
         expect(sub).to receive(:on_error).with('not awesome')
-        pub.emit_event 'Pub.Event.awesome', error: 'not awesome'
+        pub.emit_event('Pub.Event.awesome', error: 'not awesome')
       end
 
       it 'can omit optional keyword arguments' do
         expect(sub).not_to receive(:on_error)
         expect(sub).to receive(:awesome)
-        pub.emit_event 'Pub.Event.awesome'
+        pub.emit_event('Pub.Event.awesome')
       end
     end
   end
@@ -74,7 +74,7 @@ RSpec.describe Puppeteer::EventCallbackable do
     context 'with no parameters' do
       class Sub0
         def initialize(pub)
-          pub.on_event 'Pub.Event.awesome', &method(:handle_awesome)
+          pub.on_event('Pub.Event.awesome', &method(:handle_awesome))
         end
 
         def handle_awesome
@@ -88,14 +88,14 @@ RSpec.describe Puppeteer::EventCallbackable do
 
       it 'receive callback with no arguments' do
         expect(sub).to receive(:ok)
-        pub.emit_event 'Pub.Event.awesome'
+        pub.emit_event('Pub.Event.awesome')
       end
     end
 
     context 'with parameters' do
       class Sub1
         def initialize(pub)
-          pub.on_event 'Pub.Event.awesome', &method(:handle_awesome)
+          pub.on_event('Pub.Event.awesome', &method(:handle_awesome))
         end
 
         def handle_awesome(arg1, arg2)
@@ -109,14 +109,14 @@ RSpec.describe Puppeteer::EventCallbackable do
 
       it 'receive callback with arguments' do
         expect(sub).to receive(:ok).with(:error, 'none')
-        pub.emit_event 'Pub.Event.awesome', :error, 'none'
+        pub.emit_event('Pub.Event.awesome', :error, 'none')
       end
     end
 
     context 'with keyword parameters' do
       class Sub2
         def initialize(pub)
-          pub.on_event 'Pub.Event.awesome', &method(:handle_awesome)
+          pub.on_event('Pub.Event.awesome', &method(:handle_awesome))
         end
 
         def handle_awesome(error: nil, reason: nil)
@@ -132,7 +132,7 @@ RSpec.describe Puppeteer::EventCallbackable do
 
       it 'receive callback with keyword arguments' do
         expect(sub).to receive(:ok).with(404, 'Not Found')
-        pub.emit_event 'Pub.Event.awesome', error: 404, reason: 'Not Found'
+        pub.emit_event('Pub.Event.awesome', error: 404, reason: 'Not Found')
       end
     end
   end
@@ -147,13 +147,13 @@ RSpec.describe Puppeteer::EventCallbackable do
 
       def initialize(parent)
         @me = 'child'
-        parent.on_event 'Parent.awesome' do
+        parent.on_event('Parent.awesome') do
           on_parent_awesome
           @me = 'awesome child'
-          emit_event 'Child.awesome'
+          emit_event('Child.awesome')
         end
 
-        parent.on_event 'Child.awesome' do
+        parent.on_event('Child.awesome') do
           raise StandardError.new('invalid')
         end
       end
@@ -169,15 +169,15 @@ RSpec.describe Puppeteer::EventCallbackable do
 
     it 'receives callback' do
       expect(child).to receive(:on_parent_awesome)
-      expect { parent.emit_event 'Parent.awesome' }.to change { child.me }.from('child').to('awesome child')
+      expect { parent.emit_event('Parent.awesome') }.to change { child.me }.from('child').to('awesome child')
     end
 
     it 'can handle nested callback' do
       called = false
-      child.on_event 'Child.awesome' do
+      child.on_event('Child.awesome') do
         called = true
       end
-      expect { parent.emit_event 'Parent.awesome' }.to change { called }.from(false).to(true)
+      expect { parent.emit_event('Parent.awesome') }.to change { called }.from(false).to(true)
     end
   end
 
@@ -195,7 +195,7 @@ RSpec.describe Puppeteer::EventCallbackable do
     it 'notify event callbacks for all listeners' do
       expect(sub1).to receive(:ok)
       expect(sub2).to receive(:yes)
-      pub.emit_event 'Pub.Event.awesome'
+      pub.emit_event('Pub.Event.awesome')
     end
 
     context 'after removing a listener' do
@@ -206,7 +206,7 @@ RSpec.describe Puppeteer::EventCallbackable do
       it 'notify event callbacks only for listeners which keep listening' do
         expect(sub1).not_to receive(:ok)
         expect(sub2).to receive(:yes)
-        pub.emit_event 'Pub.Event.awesome'
+        pub.emit_event('Pub.Event.awesome')
       end
     end
   end

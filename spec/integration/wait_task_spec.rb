@@ -104,7 +104,7 @@ RSpec.describe Puppeteer::WaitTask do
   end
 
   it 'should work with multiline body' do
-    result = page.wait_for_function <<~JAVASCRIPT
+    result = page.wait_for_function(<<~JAVASCRIPT)
 
     () => true
 

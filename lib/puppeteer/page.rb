@@ -46,7 +46,7 @@ class Puppeteer::Page
     @screenshot_task_queue = screenshot_task_queue
 
     @workers = {}
-    @client.on_event 'Target.attachedToTarget' do |event|
+    @client.on_event('Target.attachedToTarget') do |event|
       if event['targetInfo']['type'] != 'worker'
         # If we don't detach from service workers, they will never die.
         await @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
@@ -56,65 +56,65 @@ class Puppeteer::Page
       session = Puppeteer::Connection.from_session(@client).session(event['sessionId']) # rubocop:disable Lint/UselessAssignment
       #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
       #   this._workers.set(event.sessionId, worker);
-      #   this.emit(Events.Page.WorkerCreated, worker);
+      #   this.emit(PageEmittedEvents::WorkerCreated, worker);
     end
-    @client.on_event 'Target.detachedFromTarget' do |event|
+    @client.on_event('Target.detachedFromTarget') do |event|
       session_id = event['sessionId']
       worker = @workers[session_id]
       next unless worker
 
-      emit_event('Events.Page.WorkerDestroyed', worker)
+      emit_event(PageEmittedEvents::WorkerDestroyed, worker)
       @workers.delete(session_id)
     end
 
-    @frame_manager.on_event 'Events.FrameManager.FrameAttached' do |event|
-      emit_event 'Events.Page.FrameAttached', event
+    @frame_manager.on_event(FrameManagerEmittedEvents::FrameAttached) do |event|
+      emit_event(PageEmittedEvents::FrameAttached, event)
     end
-    @frame_manager.on_event 'Events.FrameManager.FrameDetached' do |event|
-      emit_event 'Events.Page.FrameDetached', event
+    @frame_manager.on_event(FrameManagerEmittedEvents::FrameDetached) do |event|
+      emit_event(PageEmittedEvents::FrameDetached, event)
     end
-    @frame_manager.on_event 'Events.FrameManager.FrameNavigated' do |event|
-      emit_event 'Events.Page.FrameNavigated', event
+    @frame_manager.on_event(FrameManagerEmittedEvents::FrameNavigated) do |event|
+      emit_event(PageEmittedEvents::FrameNavigated, event)
     end
 
     network_manager = @frame_manager.network_manager
-    network_manager.on_event 'Events.NetworkManager.Request' do |event|
-      emit_event 'Events.Page.Request', event
+    network_manager.on_event(NetworkManagerEmittedEvents::Request) do |event|
+      emit_event(PageEmittedEvents::Request, event)
     end
-    network_manager.on_event 'Events.NetworkManager.Response' do |event|
-      emit_event 'Events.Page.Response', event
+    network_manager.on_event(NetworkManagerEmittedEvents::Response) do |event|
+      emit_event(PageEmittedEvents::Response, event)
     end
-    network_manager.on_event 'Events.NetworkManager.RequestFailed' do |event|
-      emit_event 'Events.Page.RequestFailed', event
+    network_manager.on_event(NetworkManagerEmittedEvents::RequestFailed) do |event|
+      emit_event(PageEmittedEvents::RequestFailed, event)
     end
-    network_manager.on_event 'Events.NetworkManager.RequestFinished' do |event|
-      emit_event 'Events.Page.RequestFinished', event
+    network_manager.on_event(NetworkManagerEmittedEvents::RequestFinished) do |event|
+      emit_event(PageEmittedEvents::RequestFinished, event)
     end
     @file_chooser_interception_is_disabled = false
     @file_chooser_interceptors = Set.new
 
-    @client.on_event 'Page.domContentEventFired' do |event|
-      emit_event 'Events.Page.DOMContentLoaded'
+    @client.on_event('Page.domContentEventFired') do |event|
+      emit_event(PageEmittedEvents::DOMContentLoaded)
     end
-    @client.on_event 'Page.loadEventFired' do |event|
-      emit_event 'Events.Page.Load'
+    @client.on_event('Page.loadEventFired') do |event|
+      emit_event(PageEmittedEvents::Load)
     end
     # client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
-    @client.on_event 'Page.javascriptDialogOpening' do |event|
+    @client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
     end
     # client.on('Runtime.exceptionThrown', exception => this._handleException(exception.exceptionDetails));
     # client.on('Inspector.targetCrashed', event => this._onTargetCrashed());
     # client.on('Performance.metrics', event => this._emitMetrics(event));
-    @client.on_event 'Log.entryAdded' do |event|
+    @client.on_event('Log.entryAdded') do |event|
       handle_log_entry_added(event)
     end
-    @client.on_event 'Page.fileChooserOpened' do |event|
+    @client.on_event('Page.fileChooserOpened') do |event|
       handle_file_chooser(event)
     end
     @target.is_closed_promise.then do
-      emit_event 'Events.Page.Close'
+      emit_event(PageEmittedEvents::Close)
       @closed = true
     end
   end
@@ -128,43 +128,22 @@ class Puppeteer::Page
     )
   end
 
-  EVENT_MAPPINGS = {
-    close: 'Events.Page.Close',
-    # console: 'Events.Page.Console',
-    dialog: 'Events.Page.Dialog',
-    domcontentloaded: 'Events.Page.DOMContentLoaded',
-    # error:
-    frameattached: 'Events.Page.FrameAttached',
-    framedetached: 'Events.Page.FrameDetached',
-    framenavigated: 'Events.Page.FrameNavigated',
-    load: 'Events.Page.Load',
-    # metrics: 'Events.Page.Metrics',
-    # pageerror: 'Events.Page.PageError',
-    popup: 'Events.Page.Popup',
-    request: 'Events.Page.Request',
-    requestfailed: 'Events.Page.RequestFailed',
-    requestfinished: 'Events.Page.RequestFinished',
-    response: 'Events.Page.Response',
-    # workercreated: 'Events.Page.WorkerCreated',
-    # workerdestroyed: 'Events.Page.WorkerDestroyed',
-  }
-
   # @param event_name [Symbol]
   def on(event_name, &block)
-    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    unless PageEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
     end
 
-    add_event_listener(EVENT_MAPPINGS[event_name.to_sym], &block)
+    super(event_name.to_s, &block)
   end
 
   # @param event_name [Symbol]
   def once(event_name, &block)
-    unless EVENT_MAPPINGS.has_key?(event_name.to_sym)
-      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{EVENT_MAPPINGS.keys.join(", ")}")
+    unless PageEmittedEvents.values.include?(event_name.to_s)
+      raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
     end
 
-    observe_first(EVENT_MAPPINGS[event_name.to_sym], &block)
+    super(event_name.to_s, &block)
   end
 
   def handle_file_chooser(event)
@@ -238,7 +217,7 @@ class Puppeteer::Page
   class TargetCrashedError < StandardError; end
 
   private def handle_target_crashed
-    emit_event 'error', TargetCrashedError.new('Page crashed!')
+    emit_event('error', TargetCrashedError.new('Page crashed!'))
   end
 
   private def handle_log_entry_added(event)
@@ -259,7 +238,7 @@ class Puppeteer::Page
         url: url,
         line_number: line_number,
       )
-      emit_event('Events.Page.Console',
+      emit_event(PageEmittedEvents::Console,
         Puppeteer::ConsoleMessage.new(level, text, [], console_message_location))
     end
   end
@@ -502,7 +481,7 @@ class Puppeteer::Page
   #  * @param {!Protocol.Performance.metricsPayload} event
   #  */
   # _emitMetrics(event) {
-  #   this.emit(Events.Page.Metrics, {
+  #   this.emit(PageEmittedEvents::Metrics, {
   #     title: event.title,
   #     metrics: this._buildMetricsObject(event.metrics)
   #   });
@@ -528,7 +507,7 @@ class Puppeteer::Page
   #   const message = helper.getExceptionMessage(exceptionDetails);
   #   const err = new Error(message);
   #   err.stack = ''; // Don't report clientside error with a node stack attached
-  #   this.emit(Events.Page.PageError, err);
+  #   this.emit(PageEmittedEvents::PageError, err);
   # }
 
   # /**
@@ -613,7 +592,7 @@ class Puppeteer::Page
   #  * @param {Protocol.Runtime.StackTrace=} stackTrace
   #  */
   # _addConsoleMessage(type, args, stackTrace) {
-  #   if (!this.listenerCount(Events.Page.Console)) {
+  #   if (!this.listenerCount(PageEmittedEvents::Console)) {
   #     args.forEach(arg => arg.dispose());
   #     return;
   #   }
@@ -631,7 +610,7 @@ class Puppeteer::Page
   #     columnNumber: stackTrace.callFrames[0].columnNumber,
   #   } : {};
   #   const message = new ConsoleMessage(type, textTokens.join(' '), args, location);
-  #   this.emit(Events.Page.Console, message);
+  #   this.emit(PageEmittedEvents::Console, message);
   # }
 
   private def handle_dialog_opening(event)
@@ -643,7 +622,7 @@ class Puppeteer::Page
               type: dialog_type,
               message: event['message'],
               default_value: event['defaultPrompt'])
-    emit_event('Events.Page.Dialog', dialog)
+    emit_event(PageEmittedEvents::Dialog, dialog)
   end
 
   # @return [String]
@@ -726,7 +705,7 @@ class Puppeteer::Page
 
   private def session_close_promise
     @disconnect_promise ||= resolvable_future do |future|
-      @client.observe_first('Events.CDPSession.Disconnected') do
+      @client.observe_first(CDPSessionEmittedEvents::Disconnected) do
         future.reject(Puppeteer::CDPSession::Error.new('Target Closed'))
       end
     end
@@ -746,7 +725,7 @@ class Puppeteer::Page
         -> (request) { predicate.call(request) }
       end
 
-    wait_for_network_manager_event('Events.NetworkManager.Request',
+    wait_for_network_manager_event(NetworkManagerEmittedEvents::Request,
       predicate: request_predicate,
       timeout: timeout,
     )
@@ -780,7 +759,7 @@ class Puppeteer::Page
         -> (response) { predicate.call(response) }
       end
 
-    wait_for_network_manager_event('Events.NetworkManager.Response',
+    wait_for_network_manager_event(NetworkManagerEmittedEvents::Response,
       predicate: response_predicate,
       timeout: timeout,
     )
