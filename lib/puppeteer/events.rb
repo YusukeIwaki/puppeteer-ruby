@@ -58,36 +58,6 @@ module Events ; end
     TargetChanged: 'targetchanged',
   },
 
-  NetworkManager: {
-    Request: Symbol('Events.NetworkManager.Request'),
-    Response: Symbol('Events.NetworkManager.Response'),
-    RequestFailed: Symbol('Events.NetworkManager.RequestFailed'),
-    RequestFinished: Symbol('Events.NetworkManager.RequestFinished'),
-  },
-
-  FrameManager: {
-    FrameAttached: Symbol('Events.FrameManager.FrameAttached'),
-    FrameNavigated: Symbol('Events.FrameManager.FrameNavigated'),
-    FrameDetached: Symbol('Events.FrameManager.FrameDetached'),
-    LifecycleEvent: Symbol('Events.FrameManager.LifecycleEvent'),
-    FrameNavigatedWithinDocument: Symbol(
-      'Events.FrameManager.FrameNavigatedWithinDocument'
-    ),
-    ExecutionContextCreated: Symbol(
-      'Events.FrameManager.ExecutionContextCreated'
-    ),
-    ExecutionContextDestroyed: Symbol(
-      'Events.FrameManager.ExecutionContextDestroyed'
-    ),
-  },
-
-  Connection: {
-    Disconnected: Symbol('Events.Connection.Disconnected'),
-  },
-
-  CDPSession: {
-    Disconnected: Symbol('Events.CDPSession.Disconnected'),
-  },
 }.each do |subtree, values|
   new_module = Module.new
   values.define_const_into(new_module)
