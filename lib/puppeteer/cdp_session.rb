@@ -52,8 +52,10 @@ class Puppeteer::CDPSession
       else
         debug_puts "unknown id: #{id}. Store it into pending message"
 
-        # RECV is often notified before SEND.
-        # Wait about 10 frames before throwing an error.
+        # RECV is sometimes notified before SEND.
+        # Something is wrong (thread-unsafe)...
+        # As a Workaround,
+        # wait about 10 frames before throwing an error.
         message_id = message['id']
         @pending_messages[message_id] = message
         Concurrent::Promises.schedule(0.16, message_id) do |id|
