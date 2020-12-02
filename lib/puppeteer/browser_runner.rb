@@ -14,7 +14,6 @@ class Puppeteer::BrowserRunner
     @proc = nil
     @connection = nil
     @closed = true
-    @listeners = []
   end
 
   attr_reader :proc, :connection

@@ -9,7 +9,7 @@ class Puppeteer::CDPSession
   # @param {string} targetType
   # @param {string} sessionId
   def initialize(connection, target_type, session_id)
-    @callbacks = {}
+    @callbacks = Concurrent::Hash.new
     @connection = connection
     @target_type = target_type
     @session_id = session_id
@@ -31,10 +31,14 @@ class Puppeteer::CDPSession
     if !@connection
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
     end
-    id = @connection.raw_send(message: { sessionId: @session_id, method: method, params: params })
+
     promise = resolvable_future
-    callback = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
-    @callbacks[id] = callback
+
+    @connection.generate_id do |id|
+      @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
+      @connection.raw_send(id: id, message: { sessionId: @session_id, method: method, params: params })
+    end
+
     promise
   end
 
@@ -44,7 +48,7 @@ class Puppeteer::CDPSession
       if callback = @callbacks.delete(message['id'])
         callback_with_message(callback, message)
       else
-        raise Error.new("unknown id: #{id}")
+        raise Error.new("unknown id: #{message['id']}")
       end
     else
       emit_event(message['method'], message['params'])
