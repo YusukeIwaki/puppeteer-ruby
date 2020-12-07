@@ -151,7 +151,7 @@ class Puppeteer::DOMWorld
   # @param wait_until [String|Array<String>]
   def set_content(html, timeout: nil, wait_until: nil)
     option_wait_until = [wait_until || 'load'].flatten
-    option_timeout = @timeout_settings.navigation_timeout
+    option_timeout = timeout || @timeout_settings.navigation_timeout
 
     # We rely upon the fact that document.open() will reset frame lifecycle with "init"
     # lifecycle event. @see https://crrev.com/608658
