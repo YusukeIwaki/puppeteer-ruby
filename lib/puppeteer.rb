@@ -8,6 +8,7 @@ require 'puppeteer/env'
 require 'puppeteer/device'
 require 'puppeteer/events'
 require 'puppeteer/errors'
+require 'puppeteer/geolocation'
 require 'puppeteer/viewport'
 
 # Modules
