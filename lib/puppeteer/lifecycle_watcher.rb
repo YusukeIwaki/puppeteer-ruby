@@ -128,7 +128,7 @@ class Puppeteer::LifecycleWatcher
           @termination_promise.value!
         end
       rescue Timeout::Error
-        raise Puppeteer::FrameManager::NavigationError.new("Navigation timeout of #{@timeout}ms exceeded")
+        raise Puppeteer::TimeoutError.new("Navigation timeout of #{@timeout}ms exceeded")
       end
     else
       @termination_promise

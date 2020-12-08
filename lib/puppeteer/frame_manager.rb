@@ -121,6 +121,8 @@ class Puppeteer::FrameManager
         document_navigation_promise,
         watcher.timeout_or_termination_promise,
       )
+    rescue Puppeteer::TimeoutError => err
+      raise NavigationError.new(err)
     ensure
       watcher.dispose
     end
@@ -143,6 +145,8 @@ class Puppeteer::FrameManager
         watcher.same_document_navigation_promise,
         watcher.new_document_navigation_promise,
       )
+    rescue Puppeteer::TimeoutError => err
+      raise NavigationError.new(err)
     ensure
       watcher.dispose
     end
