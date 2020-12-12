@@ -341,47 +341,34 @@ class Puppeteer::Page
 
   define_async_method :async_Sx
 
-  # /**
-  #  * @param {!Array<string>} urls
-  #  * @return {!Promise<!Array<Network.Cookie>>}
-  #  */
-  # async cookies(...urls) {
-  #   return (await this._client.send('Network.getCookies', {
-  #     urls: urls.length ? urls : [this.url()]
-  #   })).cookies;
-  # }
+  # @return [Array<Hash>]
+  def cookies(*urls)
+    @client.send_message('Network.getCookies', urls: (urls.empty? ? [url] : urls))['cookies']
+  end
 
-  # /**
-  #  * @param {Array<Protocol.Network.deleteCookiesParameters>} cookies
-  #  */
-  # async deleteCookie(...cookies) {
-  #   const pageURL = this.url();
-  #   for (const cookie of cookies) {
-  #     const item = Object.assign({}, cookie);
-  #     if (!cookie.url && pageURL.startsWith('http'))
-  #       item.url = pageURL;
-  #     await this._client.send('Network.deleteCookies', item);
-  #   }
-  # }
+  def delete_cookie(*cookies)
+    page_url = url
+    starts_with_http = page_url.start_with?("http")
+    cookies.each do |cookie|
+      item = (starts_with_http ? { url: page_url } : {}).merge(cookie)
+      @client.send_message("Network.deleteCookies", item)
+    end
+  end
 
-  # /**
-  #  * @param {Array<Network.CookieParam>} cookies
-  #  */
-  # async setCookie(...cookies) {
-  #   const pageURL = this.url();
-  #   const startsWithHTTP = pageURL.startsWith('http');
-  #   const items = cookies.map(cookie => {
-  #     const item = Object.assign({}, cookie);
-  #     if (!item.url && startsWithHTTP)
-  #       item.url = pageURL;
-  #     assert(item.url !== 'about:blank', `Blank page can not have cookie "${item.name}"`);
-  #     assert(!String.prototype.startsWith.call(item.url || '', 'data:'), `Data URL page can not have cookie "${item.name}"`);
-  #     return item;
-  #   });
-  #   await this.deleteCookie(...items);
-  #   if (items.length)
-  #     await this._client.send('Network.setCookies', { cookies: items });
-  # }
+  def set_cookie(*cookies)
+    page_url = url
+    starts_with_http = page_url.start_with?("http")
+    items = cookies.map do |cookie|
+      (starts_with_http ? { url: page_url } : {}).merge(cookie).tap do |item|
+        raise ArgumentError.new("Blank page can not have cookie \"#{item[:name]}\"") if item[:url] == "about:blank"
+        raise ArgumetnError.new("Data URL page can not have cookie \"#{item[:name]}\"") if item[:url]&.start_with?("data:")
+      end
+    end
+    delete_cookie(*items)
+    unless items.empty?
+      @client.send_message("Network.setCookies", cookies: items)
+    end
+  end
 
   class ScriptTag
     # @param {!{content?: string, path?: string, type?: string, url?: string}} options
