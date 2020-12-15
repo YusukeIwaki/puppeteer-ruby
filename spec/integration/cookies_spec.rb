@@ -16,17 +16,17 @@ RSpec.describe 'cookies' do
     it 'should get a cookie' do
       page.goto("http://127.0.0.1:4567/empty.html")
       page.evaluate("() => { document.cookie = 'username=John Doe'; }")
-      expect(page.cookies).to contain_exactly(include({
-        "name" => 'username',
-        "value" => 'John Doe',
-        "domain" => '127.0.0.1',
-        "path" => '/',
-        "expires" => -1,
-        "size" => 16,
-        "httpOnly" => false,
-        "secure" => false,
-        "session" => true,
-      }))
+      expect(page.cookies).to contain_exactly(include(
+        name: 'username',
+        value: 'John Doe',
+        domain: '127.0.0.1',
+        path: '/',
+        expires: -1,
+        size: 16,
+        http_only: false,
+        secure: false,
+        session: true,
+      ))
     end
 
     it 'should properly report httpOnly cookie' do
@@ -38,7 +38,7 @@ RSpec.describe 'cookies' do
       page.goto('http://127.0.0.1:4567/empty_httponly.html')
       cookies = page.cookies
       expect(cookies.size).to eq(1)
-      expect(cookies.first["httpOnly"]).to eq(true)
+      expect(cookies.first).to be_http_only
     end
 
     it 'should properly report "Strict" sameSite cookie' do
@@ -50,7 +50,7 @@ RSpec.describe 'cookies' do
       page.goto('http://127.0.0.1:4567/empty_samesite_strict.html')
       cookies = page.cookies
       expect(cookies.size).to eq(1)
-      expect(cookies.first["sameSite"]).to eq("Strict")
+      expect(cookies.first.same_site).to eq("Strict")
     end
 
     it 'should properly report "Lax" sameSite cookie' do
@@ -62,36 +62,36 @@ RSpec.describe 'cookies' do
       page.goto('http://127.0.0.1:4567/empty_samesite_lax.html')
       cookies = page.cookies
       expect(cookies.size).to eq(1)
-      expect(cookies.first["sameSite"]).to eq("Lax")
+      expect(cookies.first.same_site).to eq("Lax")
     end
 
     it 'should get multiple cookies' do
       page.goto('http://127.0.0.1:4567/empty.html')
       page.evaluate("() => { document.cookie = 'username=John Doe'; document.cookie = 'password=1234'; }")
-      expect(page.cookies).to match_array([
-        include({
-          'name' => 'password',
-          'value' => '1234',
-          'domain' => '127.0.0.1',
-          'path' => '/',
-          'expires' => -1,
-          'size' => 12,
-          'httpOnly' => false,
-          'secure' => false,
-          'session' => true,
-        }),
-        include({
-          'name' => 'username',
-          'value' => 'John Doe',
-          'domain' => '127.0.0.1',
-          'path' => '/',
-          'expires' => -1,
-          'size' => 16,
-          'httpOnly' => false,
-          'secure' => false,
-          'session' => true,
-        }),
-      ])
+      expect(page.cookies).to contain_exactly(
+        include(
+          name: 'password',
+          value: '1234',
+          domain: '127.0.0.1',
+          path: '/',
+          expires: -1,
+          size: 12,
+          http_only: false,
+          secure: false,
+          session: true,
+        ),
+        include(
+          name: 'username',
+          value: 'John Doe',
+          domain: '127.0.0.1',
+          path: '/',
+          expires: -1,
+          size: 16,
+          http_only: false,
+          secure: false,
+          session: true,
+        ),
+      )
     end
 
     it 'should get cookies from multiple urls' do
@@ -115,26 +115,26 @@ RSpec.describe 'cookies' do
 
       expect(page.cookies('https://foo.com', 'https://baz.com')).to contain_exactly(
         include({
-          'name' => 'birdo',
-          'value' => 'tweets',
-          'domain' => 'baz.com',
-          'path' => '/',
-          'expires' => -1,
-          'size' => 11,
-          'httpOnly' => false,
-          'secure' => true,
-          'session' => true,
+          name:  'birdo',
+          value:  'tweets',
+          domain:  'baz.com',
+          path:  '/',
+          expires:  -1,
+          size:  11,
+          http_only:  false,
+          secure:  true,
+          session:  true,
         }),
         include({
-          'name' => 'doggo',
-          'value' => 'woofs',
-          'domain' => 'foo.com',
-          'path' => '/',
-          'expires' => -1,
-          'size' => 10,
-          'httpOnly' => false,
-          'secure' => true,
-          'session' => true,
+          name: 'doggo',
+          value: 'woofs',
+          domain: 'foo.com',
+          path: '/',
+          expires: -1,
+          size: 10,
+          http_only: false,
+          secure: true,
+          session: true,
         }),
       )
     end
@@ -160,8 +160,8 @@ RSpec.describe 'cookies' do
 
         cookies1 = page.cookies
         cookies2 = another_page.cookies
-        expect(cookies1).to contain_exactly(include("name" => "page1cookie", "value" => "page1value"))
-        expect(cookies2).to contain_exactly(include("name" => "page2cookie", "value" => "page2value"))
+        expect(cookies1).to contain_exactly(include(name: "page1cookie", value: "page1value"))
+        expect(cookies2).to contain_exactly(include(name: "page2cookie", value: "page2value"))
       ensure
         another_context.close
       end
@@ -188,22 +188,22 @@ RSpec.describe 'cookies' do
     it 'should have |expires| set to |-1| for session cookies' do
       page.goto('http://127.0.0.1:4567/empty.html')
       page.set_cookie(name: "password", value: "123456")
-      expect(page.cookies).to contain_exactly(include("session" => true, "expires" => -1))
+      expect(page.cookies).to contain_exactly(include(session: true, expires: -1))
     end
 
     it 'should set cookie with reasonable defaults' do
       page.goto('http://127.0.0.1:4567/empty.html')
       page.set_cookie(name: "password", value: "123456")
       expect(page.cookies).to contain_exactly(include(
-        'name' => 'password',
-        'value' => '123456',
-        'domain' => '127.0.0.1',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 14,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+        name: 'password',
+        value: '123456',
+        domain: '127.0.0.1',
+        path: '/',
+        expires: -1,
+        size: 14,
+        http_only: false,
+        secure: false,
+        session: true,
       ))
     end
 
@@ -213,15 +213,15 @@ RSpec.describe 'cookies' do
       page.goto("http://127.0.0.1:4567/grid.html")
       page.set_cookie(name: "gridcookie", value: "GRID", path: "/grid.html")
       expect(page.cookies).to contain_exactly(include(
-        'name' => 'gridcookie',
-        'value' => 'GRID',
-        'domain' => '127.0.0.1',
-        'path' => '/grid.html',
-        'expires' => -1,
-        'size' => 14,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+        name: 'gridcookie',
+        value: 'GRID',
+        domain: '127.0.0.1',
+        path: '/grid.html',
+        expires: -1,
+        size: 14,
+        http_only: false,
+        secure: false,
+        session: true,
       ))
       expect(page.evaluate("document.cookie")).to eq("gridcookie=GRID")
 
@@ -256,14 +256,14 @@ RSpec.describe 'cookies' do
       page.goto('http://127.0.0.1:4567/empty.html')
       secure_url = 'https://example.com'
       page.set_cookie(url: secure_url, name: "foo", value: "bar")
-      expect(page.cookies(secure_url)).to contain_exactly(include("secure" => true))
+      expect(page.cookies(secure_url)).to contain_exactly(be_secure)
     end
 
     it 'should be able to set unsecure cookie for HTTP website' do
       page.goto('http://127.0.0.1:4567/empty.html')
       http_url = 'http://example.com'
       page.set_cookie(url: http_url, name: "foo", value: "bar")
-      expect(page.cookies(http_url)).to contain_exactly(include("secure" => false))
+      expect(page.cookies(http_url)).to contain_exactly(include(secure: false))
     end
 
     it 'should set a cookie on a different domain' do
@@ -276,15 +276,15 @@ RSpec.describe 'cookies' do
       expect(page.evaluate('document.cookie')).to eq("")
       expect(page.cookies).to be_empty
       expect(page.cookies('https://www.example.com')).to contain_exactly(include(
-        'name' => 'example-cookie',
-        'value' => 'best',
-        'domain' => 'www.example.com',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 18,
-        'httpOnly' => false,
-        'secure' => true,
-        'session' => true,
+        name: 'example-cookie',
+        value: 'best',
+        domain: 'www.example.com',
+        path: '/',
+        expires: -1,
+        size: 18,
+        http_only: false,
+        secure: true,
+        session: true,
       ))
     end
 
@@ -300,26 +300,26 @@ RSpec.describe 'cookies' do
       expect(page.evaluate("document.cookie")).to eq('localhost-cookie=best')
       expect(page.frames[1].evaluate("document.cookie")).to eq('')
       expect(page.cookies).to contain_exactly(include(
-        'name' => 'localhost-cookie',
-        'value' => 'best',
-        'domain' => 'localhost',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 20,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+        name: 'localhost-cookie',
+        value: 'best',
+        domain: 'localhost',
+        path: '/',
+        expires: -1,
+        size: 20,
+        http_only: false,
+        secure: false,
+        session: true,
       ))
       expect(page.cookies("http://127.0.0.1:4567/empty.html")).to contain_exactly(include(
-        'name' => '127-cookie',
-        'value' => 'worst',
-        'domain' => '127.0.0.1',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 15,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+        name: '127-cookie',
+        value: 'worst',
+        domain: '127.0.0.1',
+        path: '/',
+        expires: -1,
+        size: 15,
+        http_only: false,
+        secure: false,
+        session: true,
       ))
     end
 
@@ -398,7 +398,7 @@ RSpec.describe 'cookies' do
         {
           name: 'cookie3',
           value: '3',
-        }
+        },
       )
       expect(page.evaluate("document.cookie")).to eq("cookie1=1; cookie2=2; cookie3=3")
       page.delete_cookie(name: "cookie2")

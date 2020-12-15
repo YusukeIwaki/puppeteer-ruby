@@ -1,6 +1,7 @@
 require 'base64'
 require "stringio"
 
+require_relative './page/cookie_data'
 require_relative './page/pdf_options'
 require_relative './page/screenshot_options'
 
@@ -343,7 +344,20 @@ class Puppeteer::Page
 
   # @return [Array<Hash>]
   def cookies(*urls)
-    @client.send_message('Network.getCookies', urls: (urls.empty? ? [url] : urls))['cookies']
+    @client.send_message('Network.getCookies', urls: (urls.empty? ? [url] : urls))['cookies'].map do |cookie|
+      CookieData.new(
+        name: cookie['name'],
+        value: cookie['value'],
+        domain: cookie['domain'],
+        path: cookie['path'],
+        expires: cookie['expires'],
+        size: cookie['size'],
+        http_only: cookie['httpOnly'],
+        secure: cookie['secure'],
+        session: cookie['session'],
+        same_site: cookie['sameSite'],
+      )
+    end
   end
 
   def delete_cookie(*cookies)
