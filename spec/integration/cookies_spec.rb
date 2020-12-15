@@ -94,7 +94,7 @@ RSpec.describe 'cookies' do
       )
     end
 
-    it 'should get cookies from multiple urls' do
+    it_fails_firefox 'should get cookies from multiple urls' do
       page.set_cookie(
         {
           url: 'https://foo.com',
@@ -147,7 +147,7 @@ RSpec.describe 'cookies' do
       expect(page.evaluate('document.cookie')).to eq('password=123456')
     end
 
-    it 'should isolate cookies in browser contexts' do
+    it_fails_firefox 'should isolate cookies in browser contexts' do
       another_context = page.browser.create_incognito_browser_context
       another_page = another_context.new_page
 
@@ -252,21 +252,21 @@ RSpec.describe 'cookies' do
       expect { page.set_cookie(name: 'example-cookie', value: 'best') }.to raise_error(/At least one of the url and domain needs to be specified/)
     end
 
-    it 'should default to setting secure cookie for HTTPS websites' do
+    it_fails_firefox 'should default to setting secure cookie for HTTPS websites' do
       page.goto('http://127.0.0.1:4567/empty.html')
       secure_url = 'https://example.com'
       page.set_cookie(url: secure_url, name: "foo", value: "bar")
       expect(page.cookies(secure_url)).to contain_exactly(be_secure)
     end
 
-    it 'should be able to set unsecure cookie for HTTP website' do
+    it_fails_firefox 'should be able to set unsecure cookie for HTTP website' do
       page.goto('http://127.0.0.1:4567/empty.html')
       http_url = 'http://example.com'
       page.set_cookie(url: http_url, name: "foo", value: "bar")
       expect(page.cookies(http_url)).to contain_exactly(include(secure: false))
     end
 
-    it 'should set a cookie on a different domain' do
+    it_fails_firefox 'should set a cookie on a different domain' do
       page.goto('http://127.0.0.1:4567/empty.html')
       page.set_cookie(
         url: 'https://www.example.com',
@@ -288,7 +288,7 @@ RSpec.describe 'cookies' do
       ))
     end
 
-    it 'should set cookies from a frame' do
+    it_fails_firefox 'should set cookies from a frame' do
       sinatra.get('/empty-frame.html') { "<iframe src='http://127.0.0.1:4567/empty.html'>" }
       page.goto('http://localhost:4567/empty-frame.html')
       page.set_cookie(name: 'localhost-cookie', value: 'best')
