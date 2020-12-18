@@ -27,31 +27,31 @@ class Puppeteer::FrameManager
     # @type {!Set<string>}
     @isolated_worlds = Set.new
 
-    @client.on_event('Page.frameAttached') do |event|
+    @client.on_event 'Page.frameAttached' do |event|
       handle_frame_attached(event['frameId'], event['parentFrameId'])
     end
-    @client.on_event('Page.frameNavigated') do |event|
+    @client.on_event 'Page.frameNavigated' do |event|
       handle_frame_navigated(event['frame'])
     end
-    @client.on_event('Page.navigatedWithinDocument') do |event|
+    @client.on_event 'Page.navigatedWithinDocument' do |event|
       handle_frame_navigated_within_document(event['frameId'], event['url'])
     end
-    @client.on_event('Page.frameDetached') do |event|
+    @client.on_event 'Page.frameDetached' do |event|
       handle_frame_detached(event['frameId'])
     end
-    @client.on_event('Page.frameStoppedLoading') do |event|
+    @client.on_event 'Page.frameStoppedLoading' do |event|
       handle_frame_stopped_loading(event['frameId'])
     end
-    @client.on_event('Runtime.executionContextCreated') do |event|
+    @client.on_event 'Runtime.executionContextCreated' do |event|
       handle_execution_context_created(event['context'])
     end
-    @client.on_event('Runtime.executionContextDestroyed') do |event|
+    @client.on_event 'Runtime.executionContextDestroyed' do |event|
       handle_execution_context_destroyed(event['executionContextId'])
     end
-    @client.on_event('Runtime.executionContextsCleared') do |event|
+    @client.on_event 'Runtime.executionContextsCleared' do |event|
       handle_execution_contexts_cleared
     end
-    @client.on_event('Page.lifecycleEvent') do |event|
+    @client.on_event 'Page.lifecycleEvent' do |event|
       handle_lifecycle_event(event)
     end
   end
@@ -65,8 +65,17 @@ class Puppeteer::FrameManager
     )
     frame_tree = results.last['frameTree']
     handle_frame_tree(frame_tree)
+    downloads_folder = ENV.fetch 'PUPPETEER_DOWNLOADS_FOLDER', '/tmp'
     await_all(
-      @client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
+      @client.async_send_message(
+        'Page.setLifecycleEventsEnabled',
+        enabled: true
+      ),
+      @client.async_send_message(
+        'Page.setDownloadBehavior',
+        behavior: 'allow',
+        downloadPath: downloads_folder
+      ),
       @client.async_send_message('Runtime.enable'),
     )
     ensure_isolated_world(UTILITY_WORLD_NAME)
@@ -121,8 +130,6 @@ class Puppeteer::FrameManager
         document_navigation_promise,
         watcher.timeout_or_termination_promise,
       )
-    rescue Puppeteer::TimeoutError => err
-      raise NavigationError.new(err)
     ensure
       watcher.dispose
     end
@@ -145,8 +152,6 @@ class Puppeteer::FrameManager
         watcher.same_document_navigation_promise,
         watcher.new_document_navigation_promise,
       )
-    rescue Puppeteer::TimeoutError => err
-      raise NavigationError.new(err)
     ensure
       watcher.dispose
     end
@@ -159,7 +164,7 @@ class Puppeteer::FrameManager
     frame = @frames[event['frameId']]
     return if !frame
     frame.handle_lifecycle_event(event['loaderId'], event['name'])
-    emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
+    emit_event 'Events.FrameManager.LifecycleEvent', frame
   end
 
   # @param {string} frameId
@@ -167,7 +172,7 @@ class Puppeteer::FrameManager
     frame = @frames[frame_id]
     return if !frame
     frame.handle_loading_stopped
-    emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
+    emit_event 'Events.FrameManager.LifecycleEvent', frame
   end
 
   # @param frame_tree [Hash]
@@ -215,7 +220,7 @@ class Puppeteer::FrameManager
     frame = Puppeteer::Frame.new(self, @client, parent_frame, frame_id)
     @frames[frame_id] = frame
 
-    emit_event(FrameManagerEmittedEvents::FrameAttached, frame)
+    emit_event 'Events.FrameManager.FrameAttached', frame
   end
 
   # @param frame_payload [Hash]
@@ -256,7 +261,7 @@ class Puppeteer::FrameManager
     # Update frame payload.
     frame.navigated(frame_payload)
 
-    emit_event(FrameManagerEmittedEvents::FrameNavigated, frame)
+    emit_event 'Events.FrameManager.FrameNavigated', frame
   end
 
   # @param name [String]
@@ -284,8 +289,8 @@ class Puppeteer::FrameManager
     frame = @frames[frame_id]
     return unless frame
     frame.navigated_within_document(url)
-    emit_event(FrameManagerEmittedEvents::FrameNavigatedWithinDocument, frame)
-    emit_event(FrameManagerEmittedEvents::FrameNavigated, frame)
+    emit_event 'Events.FrameManager.FrameNavigatedWithinDocument', frame
+    emit_event 'Events.FrameManager.FrameNavigated', frame
   end
 
   # @param frame_id [String]
@@ -353,7 +358,7 @@ class Puppeteer::FrameManager
     end
     frame.detach
     @frames.delete(frame.id)
-    emit_event(FrameManagerEmittedEvents::FrameDetached, frame)
+    emit_event 'Events.FrameManager.FrameDetached', frame
   end
 
   private def assert_no_legacy_navigation_options(wait_until:)
