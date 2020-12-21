@@ -52,3 +52,25 @@ module Utils::DumpFrames
     end
   end
 end
+
+module Utils::Golden
+  def image_from(blob)
+    image = ChunkyPNG::Image.from_blob(blob)
+
+    {
+      width: image.width,
+      height: image.height,
+      pixels: image.pixels,
+    }
+  end
+
+  def golden(file_path)
+    image = ChunkyPNG::Image.from_file("spec/integration/golden-chromium/#{file_path}")
+
+    {
+      width: image.width,
+      height: image.height,
+      pixels: image.pixels,
+    }
+  end
+end

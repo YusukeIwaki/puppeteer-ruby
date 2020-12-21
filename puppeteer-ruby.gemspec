@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'websocket-driver', '>= 0.6.0'
   spec.add_dependency 'mime-types', '>= 3.0'
   spec.add_development_dependency 'bundler', '~> 1.17'
+  spec.add_development_dependency 'chunky_png'
   spec.add_development_dependency 'pry-byebug'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.0'

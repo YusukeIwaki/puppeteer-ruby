@@ -1,4 +1,5 @@
 require 'bundler/setup'
+require 'chunky_png'
 require 'puppeteer'
 
 module SinatraRouting

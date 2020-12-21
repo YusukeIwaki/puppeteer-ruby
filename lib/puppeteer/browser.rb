@@ -36,7 +36,6 @@ class Puppeteer::Browser
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
     @process = process
-    # @screenshot_task_queue = TaskQueue.new
     @connection = connection
     @close_callback = close_callback
 
@@ -125,7 +124,6 @@ class Puppeteer::Browser
       session_factory: -> { @connection.create_session(target_info) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
-      screenshot_task_queue: @screenshot_task_queue,
     )
     #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
     @targets[target_info.target_id] = target

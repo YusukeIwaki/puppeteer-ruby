@@ -39,9 +39,9 @@ module Puppeteer::ConcurrentRubyUtils
     end
   end
 
-  def future(&block)
-    Concurrent::Promises.future do
-      block.call
+  def future(*args, &block)
+    Concurrent::Promises.future(*args) do |*block_args|
+      block.call(*block_args)
     rescue => err
       Logger.new($stderr).warn(err)
       raise err
