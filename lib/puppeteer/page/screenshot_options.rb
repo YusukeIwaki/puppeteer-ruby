@@ -32,14 +32,14 @@ class Puppeteer::Page
       @type ||= 'png'
 
       if options[:quality]
-        unless @type == 'png'
+        unless @type == 'jpeg'
           raise ArgumentError.new("options.quality is unsupported for the #{@type} screenshots")
         end
         unless options[:quality].is_a?(Numeric)
           raise ArgumentError.new("Expected options.quality to be a number but found #{options[:quality].class}")
         end
         quality = options[:quality].to_i
-        unless (0..100).include?(qualizy)
+        unless (0..100).include?(quality)
           raise ArgumentError.new("Expected options.quality to be between 0 and 100 (inclusive), got #{quality}")
         end
         @quality = quality
