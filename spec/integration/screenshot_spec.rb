@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Screenshots' do
-  describe 'Page#screenshot' do
+  describe 'Page#screenshot', skip: ENV['CI'] do
     include Utils::Golden
 
     sinatra do
