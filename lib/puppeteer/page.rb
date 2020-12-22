@@ -3,6 +3,7 @@ require "stringio"
 
 require_relative './page/pdf_options'
 require_relative './page/screenshot_options'
+require_relative './page/screenshot_task_queue'
 
 class Puppeteer::Page
   include Puppeteer::EventCallbackable
@@ -13,10 +14,9 @@ class Puppeteer::Page
   # @param {!Puppeteer.Target} target
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
-  # @param {!Puppeteer.TaskQueue} screenshotTaskQueue
   # @return {!Promise<!Page>}
-  def self.create(client, target, ignore_https_errors, default_viewport, screenshot_task_queue)
-    page = Puppeteer::Page.new(client, target, ignore_https_errors, screenshot_task_queue)
+  def self.create(client, target, ignore_https_errors, default_viewport)
+    page = Puppeteer::Page.new(client, target, ignore_https_errors)
     page.init
     if default_viewport
       page.viewport = default_viewport
@@ -27,8 +27,7 @@ class Puppeteer::Page
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Target} target
   # @param {boolean} ignoreHTTPSErrors
-  # @param {!Puppeteer.TaskQueue} screenshotTaskQueue
-  def initialize(client, target, ignore_https_errors, screenshot_task_queue)
+  def initialize(client, target, ignore_https_errors)
     @closed = false
     @client = client
     @target = target
@@ -43,7 +42,7 @@ class Puppeteer::Page
     @page_bindings = {}
     # @coverage = Coverage.new(client)
     @javascript_enabled = true
-    @screenshot_task_queue = screenshot_task_queue
+    @screenshot_task_queue = ScreenshotTaskQueue.new
 
     @workers = {}
     @client.on_event('Target.attachedToTarget') do |event|
@@ -867,15 +866,28 @@ class Puppeteer::Page
     main_frame.title
   end
 
-  # /**
-  #  * @param {!ScreenshotOptions=} options
-  #  * @return {!Promise<!Buffer|!String>}
-  #  */
-  def screenshot(options = {})
+  # @param type [String] "png"|"jpeg"
+  # @param path [String]
+  # @param full_page [Boolean]
+  # @param clip [Hash]
+  # @param quality [Integer]
+  # @param omit_background [Boolean]
+  # @param encoding [String]
+  def screenshot(type: nil, path: nil, full_page: nil, clip: nil, quality: nil, omit_background: nil, encoding: nil)
+    options = {
+      type: type,
+      path: path,
+      full_page: full_page,
+      clip: clip,
+      quality:  quality,
+      omit_background: omit_background,
+      encoding: encoding,
+    }.compact
     screenshot_options = ScreenshotOptions.new(options)
 
-    # @screenshot_task_queue.post_task(-> { screenshot_task(screenshot_options.type, screenshot_options) })
-    screenshot_task(screenshot_options.type, screenshot_options)
+    @screenshot_task_queue.post_task do
+      screenshot_task(screenshot_options.type, screenshot_options)
+    end
   end
 
   # @param {"png"|"jpeg"} format

@@ -18,15 +18,13 @@ class Puppeteer::Target
   # @param {!function():!Promise<!Puppeteer.CDPSession>} sessionFactory
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
-  # @param {!Puppeteer.TaskQueue} screenshotTaskQueue
-  def initialize(target_info:, browser_context:, session_factory:, ignore_https_errors:, default_viewport:, screenshot_task_queue:)
+  def initialize(target_info:, browser_context:, session_factory:, ignore_https_errors:, default_viewport:)
     @target_info = target_info
     @browser_context = browser_context
     @target_id = target_info.target_id
     @session_factory = session_factory
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
-    @screenshot_task_queue = screenshot_task_queue
 
 
     #    /** @type {?Promise<!Puppeteer.Page>} */
@@ -87,7 +85,7 @@ class Puppeteer::Target
   def page
     if ['page', 'background_page', 'webview'].include?(@target_info.type) && @page.nil?
       client = @session_factory.call
-      @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport, @screenshot_task_queue)
+      @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport)
     end
     @page
   end
