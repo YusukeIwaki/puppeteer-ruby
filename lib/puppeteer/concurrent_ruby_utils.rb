@@ -42,6 +42,9 @@ module Puppeteer::ConcurrentRubyUtils
   def future(*args, &block)
     Concurrent::Promises.future(*args) do |*block_args|
       block.call(*block_args)
+    rescue Puppeteer::TimeoutError
+      # suppress error logging
+      raise
     rescue => err
       Logger.new($stderr).warn(err)
       raise err
