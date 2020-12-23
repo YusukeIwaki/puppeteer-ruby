@@ -8,7 +8,10 @@ RSpec.describe Puppeteer::CDPSession do
   describe '#send_message' do
     before {
       allow(connection).to receive(:generate_id) { |&block| block.call(SecureRandom.hex(16)) }
-      allow(connection).to receive(:raw_send) do |id:, message:|
+      allow(connection).to receive(:raw_send) do |kwargs|
+        id = kwargs[:id]
+        message = kwargs[:message]
+
         Thread.new(id) do |message_id|
           resp = {
             'sessionId' => cdp_session_id,

@@ -181,7 +181,7 @@ RSpec.describe Puppeteer::Launcher do
         args: ['--headless'], # without --headless, test is blocked by welcome dialog
       )
 
-      Puppeteer.launch(options) do |browser|
+      Puppeteer.launch(**options) do |browser|
         page = browser.new_page
         expect(page.evaluate('11 * 11')).to eq(121)
         page.close
@@ -197,7 +197,7 @@ RSpec.describe Puppeteer::Launcher do
         args: ['--headless'],
       )
 
-      Puppeteer.launch(options) do |browser|
+      Puppeteer.launch(**options) do |browser|
         args = browser.process.spawnargs
         expect(args).not_to include(default_args[0])
         expect(args).to include(default_args[1])
@@ -206,7 +206,7 @@ RSpec.describe Puppeteer::Launcher do
     end
 
     it 'should have default URL when launching browser' do
-      Puppeteer.launch(default_launch_options) do |browser|
+      Puppeteer.launch(**default_launch_options) do |browser|
         pages = browser.pages.map(&:url)
         expect(pages).to contain_exactly('about:blank')
       end
@@ -217,7 +217,7 @@ RSpec.describe Puppeteer::Launcher do
       options[:args] ||= []
       options[:args] += ['http://example.com/empty.html']
 
-      Puppeteer.launch(options) do |browser|
+      Puppeteer.launch(**options) do |browser|
         expect(browser.pages.size).to eq(1)
 
         page = browser.pages.first
@@ -237,7 +237,7 @@ RSpec.describe Puppeteer::Launcher do
         ),
       )
 
-      Puppeteer.launch(options) do |browser|
+      Puppeteer.launch(**options) do |browser|
         page = browser.new_page
         expect(page.evaluate('window.innerWidth')).to eq(456)
         expect(page.evaluate('window.innerHeight')).to eq(789)
@@ -249,7 +249,7 @@ RSpec.describe Puppeteer::Launcher do
         default_viewport: nil,
       )
 
-      Puppeteer.launch(options) do |browser|
+      Puppeteer.launch(**options) do |browser|
         page = browser.new_page
         expect(page.viewport).to be_nil
       end
@@ -267,7 +267,7 @@ RSpec.describe Puppeteer::Launcher do
           default_viewport: nil,
         )
 
-        Puppeteer.launch(options) do |browser|
+        Puppeteer.launch(**options) do |browser|
           page = browser.new_page
           page.goto('http://127.0.0.1:4567/longlong.html')
           screenshot = page.screenshot(full_page: true)
