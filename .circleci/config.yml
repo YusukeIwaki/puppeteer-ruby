@@ -1,30 +1,41 @@
 version: 2.1
-orbs:
-  ruby: circleci/ruby@0.1.2
+
+rspec_chrome_job: &rspec_chrome_job
+  steps:
+    - checkout
+    - run:
+        command: gem install bundler:2.2.3 && bundle install
+    - run:
+        name: rspec
+        command: |
+          DEBUG=1 bundle exec rspec --profile 10 \
+            --format RspecJunitFormatter \
+            --out test_results/rspec.xml \
+            --format documentation
 
 jobs:
-  rspec:
+  rspec_chrome_ruby2_6:
     docker:
       - image: circleci/ruby:2.6.6-buster-node-browsers
-    executor: ruby/default
-    steps:
-      - checkout
-      - ruby/bundle-install
-      - run:
-          name: rspec
-          command: |
-            DEBUG=1 bundle exec rspec --profile 10 \
-              --format RspecJunitFormatter \
-              --out test_results/rspec.xml \
-              --format documentation
+    <<: *rspec_chrome_job
+
+  rspec_chrome_ruby2_7:
+    docker:
+      - image: circleci/ruby:2.7.2-buster-node-browsers
+    <<: *rspec_chrome_job
+
+  rspec_chrome_ruby3_0:
+    docker:
+      - image: circleci/ruby:3.0.0-rc1-buster-node-browsers
+    <<: *rspec_chrome_job
 
   rspec_firefox:
     docker:
-      - image: circleci/ruby:2.6.6-buster-node-browsers
-    executor: ruby/default
+      - image: circleci/ruby:2.7.2-buster-node-browsers
     steps:
       - checkout
-      - ruby/bundle-install
+      - run:
+          command: gem install bundler:2.2.3 && bundle install
       - run:
           name: install firefox-nightly
           command: |
@@ -43,13 +54,10 @@ jobs:
   deploy:
     docker:
       - image: circleci/ruby:2.6.3-stretch-node
-    executor: ruby/default
     steps:
       - checkout
       - run:
-          name: Which bundler?
-          command: bundle -v
-      - ruby/bundle-install
+          command: gem install bundler:2.2.3 && bundle install
       - run:
           name: rake build
           command: rake build
@@ -70,7 +78,9 @@ jobs:
 workflows:
   ci:
     jobs:
-      - rspec
+      - rspec_chrome_ruby2_6
+      - rspec_chrome_ruby2_7
+      - rspec_chrome_ruby3_0
       - rspec_firefox
   rubygems-deploy:
     jobs:
