@@ -10,12 +10,21 @@ module Puppeteer::DefineAsyncMethod
       end
 
       original_method = instance_method(async_method_name[6..-1])
-      define_method(async_method_name) do |*args|
-        Concurrent::Promises.future do
-          original_method.bind(self).call(*args)
-        rescue => err
-          Logger.new($stderr).warn(err)
-          raise err
+      define_method(async_method_name) do |*args, **kwargs|
+        if kwargs.empty? # for Ruby < 2.7
+          Concurrent::Promises.future do
+            original_method.bind(self).call(*args)
+          rescue => err
+            Logger.new($stderr).warn(err)
+            raise err
+          end
+        else
+          Concurrent::Promises.future do
+            original_method.bind(self).call(*args, **kwargs)
+          rescue => err
+            Logger.new($stderr).warn(err)
+            raise err
+          end
         end
       end
     end

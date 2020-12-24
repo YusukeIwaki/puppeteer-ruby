@@ -14,6 +14,16 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
         '-> piyo'
       end
       private define_async_method :async_piyo
+
+      def args_example(arg1, arg2 = nil)
+        "-> #{arg1},#{arg2}"
+      end
+      define_async_method :async_args_example
+
+      def keyword_args_example(arg1:, arg2: nil)
+        "-> #{arg1},#{arg2}"
+      end
+      define_async_method :async_keyword_args_example
     end
 
     it 'defined async method wrapped with Concurrent::Promises::Future' do
@@ -25,6 +35,20 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
     it 'can be used with private' do
       expect(DefineAsyncMethodExample.private_method_defined?(:async_piyo)).to eq(true)
       expect(DefineAsyncMethodExample.method_defined?(:async_piyo)).to eq(false)
+    end
+
+    it 'works with arguments' do
+      instance = DefineAsyncMethodExample.new
+      expect(instance.async_args_example(:hoge)).to be_a(Concurrent::Promises::Future)
+      expect(instance.async_args_example(:hoge).value!).to eq('-> hoge,')
+      expect(instance.async_args_example(:hoge, :fuga).value!).to eq('-> hoge,fuga')
+    end
+
+    it 'works with keyword arguments' do
+      instance = DefineAsyncMethodExample.new
+      expect(instance.async_keyword_args_example(arg1: :hoge)).to be_a(Concurrent::Promises::Future)
+      expect(instance.async_keyword_args_example(arg1: :hoge).value!).to eq('-> hoge,')
+      expect(instance.async_keyword_args_example(arg1: :hoge, arg2: :fuga).value!).to eq('-> hoge,fuga')
     end
 
     it 'raises exception when async method name does not start with async_' do
