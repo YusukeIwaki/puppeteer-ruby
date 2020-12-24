@@ -928,7 +928,7 @@ RSpec.describe Puppeteer::Page do
       end
     end
 
-    it_fails_firefox 'should fire' do
+    it 'should fire' do
       Timeout.timeout(5) do
         error_promise = resolvable_future { |f| page.once('pageerror') { |err| f.fulfill(err) } }
         page.goto('http://127.0.0.1:4567/error.html')
