@@ -1,6 +1,18 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.25...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...master)]
 
 * xxx
+
+### 0.0.27 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.26...0.0.27)]
+
+New features:
+
+* Now puppeteer-ruby is Ruby 3.0 compatible!
+
+### 0.0.26 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.25...0.0.26)]
+
+Bugfix:
+
+* Fix `Page#screenshot` working correctly with `quality` parameter.
 
 ### 0.0.25 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.23...0.0.25)]
 
