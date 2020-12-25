@@ -1429,12 +1429,15 @@ RSpec.describe Puppeteer::Page do
     it 'should enable or disable the cache based on the state passed' do
       request_count = 0
       response_count = 0
+      last_modified_timestamp = Time.now.iso8601
+      sleep 1
+
       sinatra.get('/cached/one-style.html') do
         request_count += 1
 
         # ref: https://github.com/puppeteer/puppeteer/blob/main/utils/testserver/index.js
         cache_control :public, max_age: 31536000
-        last_modified Time.now.iso8601
+        last_modified last_modified_timestamp
 
         response_count += 1
         "<link rel='stylesheet' href='./one-style.css'><div>hello, world!</div>"
@@ -1457,12 +1460,15 @@ RSpec.describe Puppeteer::Page do
     it_fails_firefox 'should stay disabled when toggling request interception on/off' do
       request_count = 0
       response_count = 0
+      last_modified_timestamp = Time.now.iso8601
+      sleep 1
+
       sinatra.get('/cached/one-style2.html') do
         request_count += 1
 
         # ref: https://github.com/puppeteer/puppeteer/blob/main/utils/testserver/index.js
         cache_control :public, max_age: 31536000
-        last_modified Time.now.iso8601
+        last_modified last_modified_timestamp
 
         response_count += 1
         "<link rel='stylesheet' href='./one-style.css'><div>hello, world!</div>"
