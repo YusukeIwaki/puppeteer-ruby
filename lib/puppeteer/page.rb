@@ -829,6 +829,21 @@ class Puppeteer::Page
     end
   end
 
+  # @param is_user_active [Boolean]
+  # @param is_screen_unlocked [Boolean]
+  def emulate_idle_state(is_user_active: nil, is_screen_unlocked: nil)
+    overrides = {
+      isUserActive: is_user_active,
+      isScreenUnlocked: is_screen_unlocked,
+    }.compact
+
+    if overrides.empty?
+      @client.send_message('Emulation.clearIdleOverride')
+    else
+      @client.send_message('Emulation.setIdleOverride', overrides)
+    end
+  end
+
   # @param viewport [Viewport]
   def viewport=(viewport)
     needs_reload = @emulation_manager.emulate_viewport(viewport)

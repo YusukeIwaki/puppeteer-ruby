@@ -105,6 +105,9 @@ module Puppeteer::Launcher
           '--enable-automation',
           '--password-store=basic',
           '--use-mock-keychain',
+          # TODO(sadym): remove '--enable-blink-features=IdleDetection'
+          # once IdleDetection is turned on by default.
+          '--enable-blink-features=IdleDetection',
         ]
 
         if chrome_arg_options.user_data_dir
