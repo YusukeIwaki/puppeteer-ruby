@@ -16,12 +16,12 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6
+          ruby-version: 2.7
 
       - name: Install dependencies
         run: |
           gem uninstall bundler
-          gem install bundler -v 1.17
+          gem install bundler -v 2.2.3
           bundle install
 
       - name: Deploy Configuration
