@@ -327,57 +327,63 @@ RSpec.describe Puppeteer::Launcher do
     end
   end
 
-#   describe('Puppeteer.launch', function () {
-#     let productName;
+  describe 'Puppeteer.launch', puppeteer: :browser do
+    #     let productName;
 
-#     before(async () => {
-#       const { puppeteer } = getTestState();
-#       productName = puppeteer._productName;
-#     });
+    #     before(async () => {
+    #       const { puppeteer } = getTestState();
+    #       productName = puppeteer._productName;
+    #     });
 
-#     after(async () => {
-#       const { puppeteer } = getTestState();
-#       // @ts-expect-error launcher is a private property that users can't
-#       // touch, but for testing purposes we need to reset it.
-#       puppeteer._lazyLauncher = undefined;
-#       puppeteer._productName = productName;
-#     });
+    #     after(async () => {
+    #       const { puppeteer } = getTestState();
+    #       // @ts-expect-error launcher is a private property that users can't
+    #       // touch, but for testing purposes we need to reset it.
+    #       puppeteer._lazyLauncher = undefined;
+    #       puppeteer._productName = productName;
+    #     });
 
-#     itOnlyRegularInstall('should be able to launch Chrome', async () => {
-#       const { puppeteer } = getTestState();
-#       const browser = await puppeteer.launch({ product: 'chrome' });
-#       const userAgent = await browser.userAgent();
-#       await browser.close();
-#       expect(userAgent).toContain('Chrome');
-#     });
+    #     itOnlyRegularInstall('should be able to launch Chrome', async () => {
+    #       const { puppeteer } = getTestState();
+    #       const browser = await puppeteer.launch({ product: 'chrome' });
+    #       const userAgent = await browser.userAgent();
+    #       await browser.close();
+    #       expect(userAgent).toContain('Chrome');
+    #     });
 
-#     it('falls back to launching chrome if there is an unknown product but logs a warning', async () => {
-#       const { puppeteer } = getTestState();
-#       const consoleStub = sinon.stub(console, 'warn');
-#       // @ts-expect-error purposeful bad input
-#       const browser = await puppeteer.launch({ product: 'SO_NOT_A_PRODUCT' });
-#       const userAgent = await browser.userAgent();
-#       await browser.close();
-#       expect(userAgent).toContain('Chrome');
-#       expect(consoleStub.callCount).toEqual(1);
-#       expect(consoleStub.firstCall.args).toEqual([
-#         'Warning: unknown product name SO_NOT_A_PRODUCT. Falling back to chrome.',
-#       ]);
-#     });
+    #     it('falls back to launching chrome if there is an unknown product but logs a warning', async () => {
+    #       const { puppeteer } = getTestState();
+    #       const consoleStub = sinon.stub(console, 'warn');
+    #       // @ts-expect-error purposeful bad input
+    #       const browser = await puppeteer.launch({ product: 'SO_NOT_A_PRODUCT' });
+    #       const userAgent = await browser.userAgent();
+    #       await browser.close();
+    #       expect(userAgent).toContain('Chrome');
+    #       expect(consoleStub.callCount).toEqual(1);
+    #       expect(consoleStub.firstCall.args).toEqual([
+    #         'Warning: unknown product name SO_NOT_A_PRODUCT. Falling back to chrome.',
+    #       ]);
+    #     });
 
-#     /* We think there's a bug in the FF Windows launcher, or some
-#      * combo of that plus it running on CI, but it's hard to track down.
-#      * See comment here: https://github.com/puppeteer/puppeteer/issues/5673#issuecomment-670141377.
-#      */
-#     itFailsWindows('should be able to launch Firefox', async function () {
-#       this.timeout(FIREFOX_TIMEOUT);
-#       const { puppeteer } = getTestState();
-#       const browser = await puppeteer.launch({ product: 'firefox' });
-#       const userAgent = await browser.userAgent();
-#       await browser.close();
-#       expect(userAgent).toContain('Firefox');
-#     });
-#   });
+    #     /* We think there's a bug in the FF Windows launcher, or some
+    #      * combo of that plus it running on CI, but it's hard to track down.
+    #      * See comment here: https://github.com/puppeteer/puppeteer/issues/5673#issuecomment-670141377.
+    #      */
+    #     itFailsWindows('should be able to launch Firefox', async function () {
+    #       this.timeout(FIREFOX_TIMEOUT);
+    #       const { puppeteer } = getTestState();
+    #       const browser = await puppeteer.launch({ product: 'firefox' });
+    #       const userAgent = await browser.userAgent();
+    #       await browser.close();
+    #       expect(userAgent).toContain('Firefox');
+    #     });
+    #   });
+
+    it_fails_firefox 'should not create pages automatically on headful mode' do
+      skip if headless?
+      expect(browser.pages.length).to eq(0)
+    end
+  end
 
   describe 'Puppeteer.connect', puppeteer: :browser do
     it 'should be able to connect multiple times to the same browser' do

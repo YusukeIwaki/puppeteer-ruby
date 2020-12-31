@@ -102,7 +102,7 @@ RSpec.configure do |config|
         end
       else
         Puppeteer.launch(**launch_options) do |browser|
-          @puppeteer_page = browser.pages.first || new_page
+          @puppeteer_page = browser.pages.first || browser.new_page
           example.run
         end
       end
