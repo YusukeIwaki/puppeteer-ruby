@@ -1,6 +1,13 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.28.0...master)]
 
 * xxx
+
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...0.28.0)]
+
+New features:
+
+* No default window when launching in headful mode.
+* Change versioning rule.
 
 ### 0.0.27 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.26...0.0.27)]
 
