@@ -67,9 +67,7 @@ module Puppeteer::Launcher
           close_callback: -> { runner.close },
         )
 
-        unless browser.pages.empty?
-          browser.wait_for_target(predicate: ->(target) { target.type == 'page' })
-        end
+        browser.wait_for_target(predicate: ->(target) { target.type == 'page' })
 
         browser
       rescue
@@ -94,7 +92,7 @@ module Puppeteer::Launcher
           '--disable-default-apps',
           '--disable-dev-shm-usage',
           '--disable-extensions',
-          '--disable-features=Translate',
+          '--disable-features=TranslateUI',
           '--disable-hang-monitor',
           '--disable-ipc-flooding-protection',
           '--disable-popup-blocking',
@@ -129,11 +127,7 @@ module Puppeteer::Launcher
         end
 
         if chrome_arg_options.args.all? { |arg| arg.start_with?('-') }
-          if chrome_arg_options.headless?
-            chrome_arguments << 'about:blank'
-          else
-            chrome_arguments << '--no-startup-window'
-          end
+          chrome_arguments << 'about:blank'
         end
 
         chrome_arguments.concat(chrome_arg_options.args)
