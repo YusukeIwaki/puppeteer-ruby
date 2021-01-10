@@ -1,12 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.28.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.28.1...master)]
 
 * xxx
 
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...0.28.0)]
+### 0.28.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...0.28.1)]
 
 New features:
 
-* No default window when launching in headful mode.
+* Add `Page#emulate_idle_state`
 * Change versioning rule.
 
 ### 0.0.27 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.26...0.0.27)]
