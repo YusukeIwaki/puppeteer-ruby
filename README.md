@@ -10,6 +10,22 @@ REMARK: This Gem is NOT production-ready!!
 
 ## Getting Started
 
+### Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'puppeteer-ruby'
+```
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install puppeteer-ruby
+
 ### Capture a site
 
 ```ruby
