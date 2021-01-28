@@ -1,12 +1,12 @@
 [![Gem Version](https://badge.fury.io/rb/puppeteer-ruby.svg)](https://badge.fury.io/rb/puppeteer-ruby)
 
-# Puppeteer in Ruby [UNDER HEAVY DEVELOPMENT]
+# Puppeteer in Ruby
 
 A Ruby port of [puppeteer](https://pptr.dev/).
 
 ![logo](puppeteer-ruby.png)
 
-REMARK: This Gem is NOT production-ready!!
+REMARK: This Gem covers just a part of Puppeteer APIs. Feedbacks and feature requests are welcome :)
 
 ## Getting Started
 
