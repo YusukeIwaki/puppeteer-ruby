@@ -115,8 +115,10 @@ RSpec.configure do |config|
   end
 
   # Every browser automation test case should spend less than 15sec.
-  config.around(:each, type: :puppeteer) do |example|
-    Timeout.timeout(15) { example.run }
+  if Puppeteer.env.ci?
+    config.around(:each, type: :puppeteer) do |example|
+      Timeout.timeout(15) { example.run }
+    end
   end
 
   config.define_derived_metadata(file_path: %r(/spec/integration/)) do |metadata|
