@@ -196,6 +196,18 @@ RSpec.describe Puppeteer::Page do
         popup = await popup_promise
 
         expect(page.evaluate("() => !!window.opener")).to eq(false)
+        expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
+      end
+
+      it_fails_firefox 'should work with clicking target=_blank and rel=opener' do
+        page.goto('http://127.0.0.1:4567/')
+        page.content = '<a target=_blank rel=opener href="/hello.html">yo</a>'
+
+        popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+        page.click("a")
+        popup = await popup_promise
+
+        expect(page.evaluate("() => !!window.opener")).to eq(false)
         expect(popup.evaluate("() => !!window.opener")).to eq(true)
       end
 
