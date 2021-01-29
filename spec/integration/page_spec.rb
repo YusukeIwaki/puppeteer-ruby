@@ -196,7 +196,7 @@ RSpec.describe Puppeteer::Page do
         popup = await popup_promise
 
         expect(page.evaluate("() => !!window.opener")).to eq(false)
-        expect(popup.evaluate("() => !!window.opener")).to eq(true)
+        expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
       end
 
       it_fails_firefox 'should work with fake-clicking target=_blank and rel=noopener' do

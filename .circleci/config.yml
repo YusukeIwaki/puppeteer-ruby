@@ -26,7 +26,7 @@ jobs:
 
   rspec_chrome_ruby3_0:
     docker:
-      - image: circleci/ruby:3.0.0-rc1-buster-node-browsers
+      - image: circleci/ruby:3.0.0-buster-node-browsers
     <<: *rspec_chrome_job
 
   rspec_firefox:
