@@ -12,9 +12,20 @@ class Puppeteer::ExecutionContext
     @client = client
     @world = world
     @context_id = context_payload['id']
+    @context_name = context_payload['name']
   end
 
   attr_reader :client, :world
+
+  # only used in DOMWorld
+  private def _context_id
+    @context_id
+  end
+
+  # only used in DOMWorld::BindingFunction#add_binding_to_context
+  private def _context_name
+    @context_name
+  end
 
   # @return [Puppeteer::Frame]
   def frame

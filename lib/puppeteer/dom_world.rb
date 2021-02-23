@@ -4,6 +4,47 @@ require 'thread'
 class Puppeteer::DOMWorld
   using Puppeteer::DefineAsyncMethod
 
+  class BindingFunction
+    def initialize(name:, proc:)
+      @name = name
+      @proc = proc
+    end
+
+    def call(*args)
+      @proc.call(*args)
+    end
+
+    attr_reader :name
+
+    def page_binding_init_string
+      <<~JAVASCRIPT
+      (type, bindingName) => {
+        /* Cast window to any here as we're about to add properties to it
+         * via win[bindingName] which TypeScript doesn't like.
+         */
+        const win = window;
+        const binding = win[bindingName];
+
+        win[bindingName] = (...args) => {
+          const me = window[bindingName];
+          let callbacks = me.callbacks;
+          if (!callbacks) {
+            callbacks = new Map();
+            me.callbacks = callbacks;
+          }
+          const seq = (me.lastSeq || 0) + 1;
+          me.lastSeq = seq;
+          const promise = new Promise((resolve, reject) =>
+            callbacks.set(seq, { resolve, reject })
+          );
+          binding(JSON.stringify({ type, name: bindingName, seq, args }));
+          return promise;
+        };
+      }
+      JAVASCRIPT
+    end
+  end
+
   # @param {!Puppeteer.FrameManager} frameManager
   # @param {!Puppeteer.Frame} frame
   # @param {!Puppeteer.TimeoutSettings} timeoutSettings
@@ -13,19 +54,29 @@ class Puppeteer::DOMWorld
     @timeout_settings = timeout_settings
     @context_promise = resolvable_future
     @wait_tasks = Set.new
+    @bound_functions = {}
+    @ctx_bindings = Set.new
     @detached = false
+
+    frame_manager.client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
   attr_reader :frame
 
   # only used in Puppeteer::WaitTask#initialize
-  def _wait_tasks
+  private def _wait_tasks
     @wait_tasks
+  end
+
+  # only used in Puppeteer::WaitTask#initialize
+  private def _bound_functions
+    @bound_functions
   end
 
   # @param context [Puppeteer::ExecutionContext]
   def context=(context)
     if context
+      @ctx_bindings.clear
       unless @context_promise.resolved?
         @context_promise.fulfill(context)
       end
@@ -383,12 +434,78 @@ class Puppeteer::DOMWorld
     query_selector_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
   end
 
+  private def binding_identifier(name, context)
+    "#{name}_#{context.send(:_context_id)}"
+  end
+
+
+  def add_binding_to_context(context, binding_function)
+    return if @ctx_bindings.include?(binding_identifier(binding_function.name, context))
+
+    expression = binding_function.page_binding_init_string
+    begin
+      context.client.send_message('Runtime.addBinding',
+        name: binding_function.name,
+        executionContextName: context.send(:_context_name))
+      context.evaluate(expression, 'internal', binding_function.name)
+    rescue => err
+      # We could have tried to evaluate in a context which was already
+      # destroyed. This happens, for example, if the page is navigated while
+      # we are trying to add the binding
+      allowed = [
+        'Execution context was destroyed',
+        'Cannot find context with specified id',
+      ]
+      if allowed.any? { |msg| err.message.include?(msg) }
+        # ignore
+      else
+        raise
+      end
+    end
+    @ctx_bindings << binding_identifier(binding_function.name, context)
+  end
+
+  private def handle_binding_called(event)
+    return unless has_context?
+    payload = JSON.parse(event['payload']) rescue nil
+    name = payload['name']
+    args = payload['args']
+
+    # The binding was either called by something in the page or it was
+    # called before our wrapper was initialized.
+    return unless payload
+    return unless payload['type'] == 'internal'
+    context = execution_context
+    return unless @ctx_bindings.include?(binding_identifier(name, context))
+    return unless context.send(:_context_id) == event['executionContextId']
+
+    result = @bound_functions[name].call(*args)
+    deliver_result_js = <<~JAVASCRIPT
+    (name, seq, result) => {
+      globalThis[name].callbacks.get(seq).resolve(result);
+      globalThis[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+
+    begin
+      context.evaluate(deliver_result_js, name, payload['seq'], result)
+    rescue => err
+      # The WaitTask may already have been resolved by timing out, or the
+      # exection context may have been destroyed.
+      # In both caes, the promises above are rejected with a protocol error.
+      # We can safely ignores these, as the WaitTask is re-installed in
+      # the next execution context if needed.
+      return if err.message.include?('Protocol error')
+      raise
+    end
+  end
+
   # @param query_one [String] JS function (element: Element | Document, selector: string) => Element | null;
   # @param selector [String]
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  private def wait_for_selector_in_page(query_one, selector, visible: nil, hidden: nil, timeout: nil)
+  private def wait_for_selector_in_page(query_one, selector, visible: nil, hidden: nil, timeout: nil, binding_function: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
     option_timeout = timeout || @timeout_settings.timeout
@@ -418,6 +535,7 @@ class Puppeteer::DOMWorld
       polling: polling,
       timeout: option_timeout,
       args: [selector, option_wait_for_visible, option_wait_for_hidden],
+      binding_function: binding_function,
     )
     handle = wait_task.await_promise
     unless handle.as_element
