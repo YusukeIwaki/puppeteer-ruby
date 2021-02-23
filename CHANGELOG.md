@@ -1,6 +1,13 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.28.1...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.29.0...master)]
 
 * xxx
+
+### 0.29.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.28.1...0.29.0)]
+
+New features:
+
+* Add `AriaQueryHandler`. Now we can use "aria/...." for selectors.
+
 
 ### 0.28.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...0.28.1)]
 
