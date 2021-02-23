@@ -97,6 +97,18 @@ class Puppeteer::RemoteObject
     nil
   end
 
+  # used in ElementHandle#query_ax_tree
+  def query_ax_tree(client, accessible_name: nil, role: nil)
+    result = client.send_message('Accessibility.queryAXTree', {
+      objectId: @object_id,
+      accessibleName: accessible_name,
+      role: role,
+    }.compact)
+
+    result['nodes'].reject do |node|
+      node['role']['value'] == 'text'
+    end
+  end
 
   # helper#valueFromRemoteObject
   def value
