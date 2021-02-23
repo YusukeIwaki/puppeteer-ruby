@@ -314,32 +314,20 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
+  private def query_handler_manager
+    Puppeteer::QueryHandlerManager.instance
+  end
+
   # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
   def S(selector)
-    handle = evaluate_handle(
-      '(element, selector) => element.querySelector(selector)',
-      selector,
-    )
-    element = handle.as_element
-
-    if element
-      return element
-    end
-    handle.dispose
-    nil
+    query_handler_manager.detect_query_handler(selector).query_one(self)
   end
 
   # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
   def SS(selector)
-    handles = evaluate_handle(
-      '(element, selector) => element.querySelectorAll(selector)',
-      selector,
-    )
-    properties = handles.properties
-    handles.dispose
-    properties.values.map(&:as_element).compact
+    query_handler_manager.detect_query_handler(selector).query_all(self)
   end
 
   class ElementNotFoundError < StandardError
@@ -370,10 +358,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param page_function [String]
   # @return [Object]
   def SSeval(selector, page_function, *args)
-    handles = evaluate_handle(
-      '(element, selector) => Array.from(element.querySelectorAll(selector))',
-      selector,
-    )
+    handles = query_handler_manager.detect_query_handler(selector).query_all_array(self)
     result = handles.evaluate(page_function, *args)
     handles.dispose
 
@@ -429,5 +414,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     # Compute sum of all directed areas of adjacent triangles
     # https://en.wikipedia.org/wiki/Polygon#Simple_polygons
     quad.zip(quad.rotate).map { |p1, p2| (p1.x * p2.y - p2.x * p1.y) / 2 }.reduce(:+).abs
+  end
+
+  # used in AriaQueryHandler
+  def query_ax_tree(accessible_name: nil, role: nil)
+    @remote_object.query_ax_tree(@client,
+    accessible_name: accessible_name, role: role)
   end
 end

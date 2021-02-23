@@ -54,6 +54,7 @@ class Puppeteer::WaitTask
   def rerun
     run_count = (@run_count += 1)
     begin
+      puts @predicate_body, @args
       success = @dom_world.execution_context.evaluate_handle(
         WAIT_FOR_PREDICATE_PAGE_FUNCTION,
         @predicate_body,

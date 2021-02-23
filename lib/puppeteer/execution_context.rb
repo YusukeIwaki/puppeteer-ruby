@@ -223,6 +223,7 @@ class Puppeteer::ExecutionContext
       remote_object: Puppeteer::RemoteObject.new(response["object"]),
     )
   end
+  private define_async_method :async_adopt_backend_node_id
 
   # @param element_handle [Puppeteer::ElementHandle]
   # @return [Puppeteer::ElementHandle]

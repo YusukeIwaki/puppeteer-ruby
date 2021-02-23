@@ -378,7 +378,53 @@ class Puppeteer::DOMWorld
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    wait_for_selector_or_xpath(selector, false, visible: visible, hidden: hidden, timeout: timeout)
+    # call wait_for_selector_in_page with custom query selector.
+    query_selector_manager = Puppeteer::QueryHandlerManager.instance
+    query_selector_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
+  end
+
+  # @param query_one [String] JS function (element: Element | Document, selector: string) => Element | null;
+  # @param selector [String]
+  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
+  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
+  # @param timeout [Integer]
+  private def wait_for_selector_in_page(query_one, selector, visible: nil, hidden: nil, timeout: nil)
+    option_wait_for_visible = visible || false
+    option_wait_for_hidden = hidden || false
+    option_timeout = timeout || @timeout_settings.timeout
+
+    polling =
+      if option_wait_for_visible || option_wait_for_hidden
+        'raf'
+      else
+        'mutation'
+      end
+    title = "selector #{selector}#{option_wait_for_hidden ? 'to be hidden' : ''}"
+
+    selector_predicate = make_predicate_string(
+      predicate_arg_def: '(selector, waitForVisible, waitForHidden)',
+      predicate_query_handler: query_one,
+      async: true,
+      predicate_body: <<~JAVASCRIPT
+        const node = await predicateQueryHandler(document, selector)
+        return checkWaitForOptions(node, waitForVisible, waitForHidden);
+      JAVASCRIPT
+    )
+
+    wait_task = Puppeteer::WaitTask.new(
+      dom_world: self,
+      predicate_body: selector_predicate,
+      title: title,
+      polling: polling,
+      timeout: option_timeout,
+      args: [selector, option_wait_for_visible, option_wait_for_hidden],
+    )
+    handle = wait_task.await_promise
+    unless handle.as_element
+      handle.dispose
+      return nil
+    end
+    handle.as_element
   end
 
   # @param xpath [String]
@@ -386,21 +432,41 @@ class Puppeteer::DOMWorld
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
-    wait_for_selector_or_xpath(xpath, true, visible: visible, hidden: hidden, timeout: timeout)
-  end
+    option_wait_for_visible = visible || false
+    option_wait_for_hidden = hidden || false
+    option_timeout = timeout || @timeout_settings.timeout
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!{polling?: string|number, timeout?: number}=} options
-  #  * @return {!Promise<!Puppeteer.JSHandle>}
-  #  */
-  # waitForFunction(pageFunction, options = {}, ...args) {
-  #   const {
-  #     polling = 'raf',
-  #     timeout = this._timeoutSettings.timeout(),
-  #   } = options;
-  #   return new WaitTask(this, pageFunction, 'function', polling, timeout, ...args).promise;
-  # }
+    polling =
+      if option_wait_for_visible || option_wait_for_hidden
+        'raf'
+      else
+        'mutation'
+      end
+    title = "XPath #{xpath}#{option_wait_for_hidden ? 'to be hidden' : ''}"
+
+    xpath_predicate = make_predicate_string(
+      predicate_arg_def: '(selector, waitForVisible, waitForHidden)',
+      predicate_body: <<~JAVASCRIPT
+        const node = document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        return checkWaitForOptions(node, waitForVisible, waitForHidden);
+      JAVASCRIPT
+    )
+
+    wait_task = Puppeteer::WaitTask.new(
+      dom_world: self,
+      predicate_body: xpath_predicate,
+      title: title,
+      polling: polling,
+      timeout: option_timeout,
+      args: [xpath, option_wait_for_visible, option_wait_for_hidden],
+    )
+    handle = wait_task.await_promise
+    unless handle.as_element
+      handle.dispose
+      return nil
+    end
+    handle.as_element
+  end
 
   # @param page_function [String]
   # @param args [Array]
@@ -427,68 +493,41 @@ class Puppeteer::DOMWorld
     evaluate('() => document.title')
   end
 
-  # @param selector_or_xpath [String]
-  # @param is_xpath [Boolean]
-  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
-  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
-  # @param timeout [Integer]
-  private def wait_for_selector_or_xpath(selector_or_xpath, is_xpath, visible: nil, hidden: nil, timeout: nil)
-    option_wait_for_visible = visible || false
-    option_wait_for_hidden = hidden || false
-    option_timeout = timeout || @timeout_settings.timeout
-
-    polling =
-      if option_wait_for_visible || option_wait_for_hidden
-        'raf'
+  private def make_predicate_string(predicate_arg_def:, predicate_body:, predicate_query_handler: nil, async: false)
+    predicate_query_handler_string =
+      if predicate_query_handler
+        "const predicateQueryHandler = #{predicate_query_handler}"
       else
-        'mutation'
+        ""
       end
-    title = "#{is_xpath ? :XPath : :selector} #{selector_or_xpath}#{option_wait_for_hidden ? 'to be hidden' : ''}"
 
-    wait_task = Puppeteer::WaitTask.new(
-      dom_world: self,
-      predicate_body: PREDICATE,
-      title: title,
-      polling: polling,
-      timeout: option_timeout,
-      args: [selector_or_xpath, is_xpath, option_wait_for_visible, option_wait_for_hidden],
-    )
-    handle = wait_task.await_promise
-    unless handle.as_element
-      handle.dispose
-      return nil
-    end
-    handle.as_element
+    <<~JAVASCRIPT
+    #{async ? 'async ' : ''}function _#{predicate_arg_def} {
+        #{predicate_query_handler_string}
+        #{predicate_body}
+
+        function checkWaitForOptions(node, waitForVisible, waitForHidden) {
+          if (!node) return waitForHidden;
+          if (!waitForVisible && !waitForHidden) return node;
+          const element =
+            node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+
+          const style = window.getComputedStyle(element);
+          const isVisible =
+            style && style.visibility !== 'hidden' && hasVisibleBoundingBox();
+          const success =
+            waitForVisible === isVisible || waitForHidden === !isVisible;
+          return success ? node : null;
+
+          /**
+          * @return {boolean}
+          */
+          function hasVisibleBoundingBox() {
+            const rect = element.getBoundingClientRect();
+            return !!(rect.top || rect.bottom || rect.width || rect.height);
+          }
+        }
+    }
+    JAVASCRIPT
   end
-
-  PREDICATE = <<~JAVASCRIPT
-  /**
-    * @param {string} selectorOrXPath
-    * @param {boolean} isXPath
-    * @param {boolean} waitForVisible
-    * @param {boolean} waitForHidden
-    * @return {?Node|boolean}
-    */
-  function _(selectorOrXPath, isXPath, waitForVisible, waitForHidden) {
-      const node = isXPath
-          ? document.evaluate(selectorOrXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-          : document.querySelector(selectorOrXPath);
-      if (!node)
-          return waitForHidden;
-      if (!waitForVisible && !waitForHidden)
-          return node;
-      const element = /** @type {Element} */ (node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
-      const style = window.getComputedStyle(element);
-      const isVisible = style && style.visibility !== 'hidden' && hasVisibleBoundingBox();
-      const success = (waitForVisible === isVisible || waitForHidden === !isVisible);
-      return success ? node : null;
-      /**
-        * @return {boolean}
-        */
-      function hasVisibleBoundingBox() {
-          const rect = element.getBoundingClientRect();
-          return !!(rect.top || rect.bottom || rect.width || rect.height);
-      }
-  }
-  JAVASCRIPT
 end
