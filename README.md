@@ -46,18 +46,18 @@ Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=
   page.viewport = Puppeteer::Viewport.new(width: 1280, height: 800)
   page.goto("https://github.com/", wait_until: 'domcontentloaded')
 
-  form = page.S("form.js-site-search-form")
-  searchInput = form.S("input.header-search-input")
+  form = page.query_selector("form.js-site-search-form")
+  searchInput = form.query_selector("input.header-search-input")
   searchInput.type_text("puppeteer")
   await_all(
     page.async_wait_for_navigation,
     searchInput.async_press("Enter"),
   )
 
-  list = page.S("ul.repo-list")
-  items = list.SS("div.f4")
+  list = page.query_selector("ul.repo-list")
+  items = list.query_selector_all("div.f4")
   items.each do |item|
-    title = item.Seval("a", "a => a.innerText")
+    title = item.eval_on_selector("a", "a => a.innerText")
     puts("==> #{title}")
   end
 end
@@ -130,7 +130,7 @@ RSpec.describe 'hotel.testplanisphere.dev', type: :feature do
     puppeteer_page = @browser.pages.first
     puppeteer_page.wait_for_selector('li.nav-item')
 
-    reservation_link = puppeteer_page.SS('li.nav-item')[1]
+    reservation_link = puppeteer_page.query_selector_all('li.nav-item')[1]
 
     await_all(
       puppeteer_page.async_wait_for_navigation,
@@ -147,7 +147,7 @@ RSpec.describe 'hotel.testplanisphere.dev', type: :feature do
 
     # expectation with puppeteer
     puppeteer_page = @browser.pages.first
-    body_text = puppeteer_page.Seval('body', '(el) => el.textContent')
+    body_text = puppeteer_page.eval_on_selector('body', '(el) => el.textContent')
     expect(body_text).to include('宿泊プラン一覧')
   end
 ```

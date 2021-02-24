@@ -318,17 +318,19 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     Puppeteer::QueryHandlerManager.instance
   end
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param selector [String]
-  def S(selector)
+  def query_selector(selector)
     query_handler_manager.detect_query_handler(selector).query_one(self)
   end
+  alias_method :S, :query_selector
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param selector [String]
-  def SS(selector)
+  def query_selector_all(selector)
     query_handler_manager.detect_query_handler(selector).query_all(self)
   end
+  alias_method :SS, :query_selector_all
 
   class ElementNotFoundError < StandardError
     def initialize(selector)
@@ -336,12 +338,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def Seval(selector, page_function, *args)
-    element_handle = S(selector)
+  def eval_on_selector(selector, page_function, *args)
+    element_handle = query_selector(selector)
     unless element_handle
       raise ElementNotFoundError.new(selector)
     end
@@ -350,22 +352,24 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
     result
   end
+  alias_method :Seval, :eval_on_selector
 
-  define_async_method :async_Seval
+  define_async_method :async_eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def SSeval(selector, page_function, *args)
+  def eval_on_selector_all(selector, page_function, *args)
     handles = query_handler_manager.detect_query_handler(selector).query_all_array(self)
     result = handles.evaluate(page_function, *args)
     handles.dispose
 
     result
   end
+  alias_method :SSeval, :eval_on_selector_all
 
-  define_async_method :async_SSeval
+  define_async_method :async_eval_on_selector_all
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param expression [String]

@@ -70,7 +70,7 @@ RSpec.describe Puppeteer::ElementHandle do
         page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
         page.goto('http://127.0.0.1:4567/grid.html')
 
-        element_handle = page.S('.box:nth-of-type(13)')
+        element_handle = page.query_selector('.box:nth-of-type(13)')
         box = element_handle.bounding_box
         expect(box.x).to eq(100)
         expect(box.y).to eq(50)
@@ -157,7 +157,7 @@ RSpec.describe Puppeteer::ElementHandle do
         page.goto('http://127.0.0.1:4567/nested-frames.html')
 
         nested_frame = page.frames[1].child_frames[1]
-        element_handle = nested_frame.S('div')
+        element_handle = nested_frame.query_selector('div')
         box = element_handle.bounding_box
 
         expect(box.x).to eq(28)
@@ -169,7 +169,7 @@ RSpec.describe Puppeteer::ElementHandle do
 
     it 'should return null for invisible elements' do
       page.content = '<div style="display:none">hi</div>'
-      element = page.S('div')
+      element = page.query_selector('div')
       expect(element.bounding_box).to be_nil
     end
 
@@ -177,7 +177,7 @@ RSpec.describe Puppeteer::ElementHandle do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
       page.content = '<div style="width: 100px; height: 100px">hello</div>'
 
-      element_handle = page.S('div')
+      element_handle = page.query_selector('div')
       page.evaluate("(element) => element.style.height = '200px'", element_handle)
       box = element_handle.bounding_box
       expect(box.width).to eq(100)
@@ -190,7 +190,7 @@ RSpec.describe Puppeteer::ElementHandle do
           <rect id="theRect" x="30" y="50" width="200" height="300"></rect>
         </svg>
       SVG
-      element = page.S('#therect')
+      element = page.query_selector('#therect')
       pptr_bounding_box = element.bounding_box
 
       js = <<~JAVASCRIPT
@@ -322,7 +322,7 @@ RSpec.describe Puppeteer::ElementHandle do
 
     it 'should return null for invisible elements' do
       page.content = '<div style="display:none">hi</div>'
-      element = page.S('div')
+      element = page.query_selector('div')
       expect(element.box_model).to be_nil
     end
   end
@@ -338,7 +338,7 @@ RSpec.describe Puppeteer::ElementHandle do
     it 'should work' do
       page.goto('http://127.0.0.1:4567/')
       attach_frame(page, 'frame1', '/')
-      element_handle = page.S('#frame1')
+      element_handle = page.query_selector('#frame1')
       frame = element_handle.content_frame
       expect(frame).to eq(page.frames()[1])
     end
@@ -404,7 +404,7 @@ RSpec.describe Puppeteer::ElementHandle do
       before { page.goto('http://127.0.0.1:4567/button') }
 
       it 'should work' do
-        page.S('button').click
+        page.query_selector('button').click
         expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
       end
 
@@ -414,19 +414,19 @@ RSpec.describe Puppeteer::ElementHandle do
       end
 
       it 'should throw for detached nodes' do
-        button = page.S('button')
+        button = page.query_selector('button')
         page.evaluate('(button) => button.remove()', button)
         expect { button.click }.to raise_error(/Node is detached from document/)
       end
 
       it 'should throw for hidden nodes' do
-        button = page.S('button')
+        button = page.query_selector('button')
         page.evaluate("(button) => (button.style.display = 'none')", button)
         expect { button.click }.to raise_error(/Node is either not visible or not an HTMLElement/)
       end
 
       it 'should throw for recursively hidden nodes' do
-        button = page.S('button')
+        button = page.query_selector('button')
         page.evaluate("(button) => (button.parentElement.style.display = 'none')", button)
         expect { button.click }.to raise_error(/Node is either not visible or not an HTMLElement/)
       end
@@ -434,7 +434,7 @@ RSpec.describe Puppeteer::ElementHandle do
 
     it 'should throw for <br> elements' do
       page.content = 'hello<br>goodbye'
-      br = page.S('br')
+      br = page.query_selector('br')
       expect { br.click }.to raise_error(/Node is either not visible or not an HTMLElement/)
     end
   end
@@ -474,7 +474,7 @@ RSpec.describe Puppeteer::ElementHandle do
       before { page.goto('http://127.0.0.1:4567/scrollable.html') }
 
       it 'should work' do
-        button = page.S('#button-6')
+        button = page.query_selector('#button-6')
         button.hover
         expect(page.evaluate("() => document.querySelector('button:hover').id")).to eq('button-6')
       end
@@ -530,11 +530,11 @@ RSpec.describe Puppeteer::ElementHandle do
 
       it 'should work' do
         10.times do |i|
-          button = page.S("#btn#{i}")
+          button = page.query_selector("#btn#{i}")
           # All but last button are visible.
           expect(button.intersecting_viewport?).to eq(true)
         end
-        button = page.S("#btn10")
+        button = page.query_selector("#btn10")
         expect(button.intersecting_viewport?).to eq(false)
       end
     end

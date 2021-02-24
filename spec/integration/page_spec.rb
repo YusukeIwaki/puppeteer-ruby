@@ -216,7 +216,7 @@ RSpec.describe Puppeteer::Page do
         page.content = '<a target=_blank rel=noopener href="/hello.html">yo</a>'
 
         popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
-        page.Seval("a", "(a) => a.click()")
+        page.eval_on_selector("a", "(a) => a.click()")
         popup = await popup_promise
 
         expect(page.evaluate("() => !!window.opener")).to eq(false)
@@ -1060,22 +1060,22 @@ RSpec.describe Puppeteer::Page do
 
     it 'should work with tricky content' do
       page.content = "<div>hello world</div>\x7F"
-      expect(page.Seval("div", "(div) => div.textContent")).to eq("hello world")
+      expect(page.eval_on_selector("div", "(div) => div.textContent")).to eq("hello world")
     end
 
     it 'should work with accents' do
       page.content = '<div>aberración</div>'
-      expect(page.Seval("div", "(div) => div.textContent")).to eq("aberración")
+      expect(page.eval_on_selector("div", "(div) => div.textContent")).to eq("aberración")
     end
 
     it 'should work with emojis' do
       page.content = '<div>🐥</div>'
-      expect(page.Seval("div", "(div) => div.textContent")).to eq("🐥")
+      expect(page.eval_on_selector("div", "(div) => div.textContent")).to eq("🐥")
     end
 
     it 'should work with newline' do
       page.content = "<div>\n</div>"
-      expect(page.Seval("div", "(div) => div.textContent")).to eq("\n")
+      expect(page.eval_on_selector("div", "(div) => div.textContent")).to eq("\n")
     end
   end
 

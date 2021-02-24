@@ -266,7 +266,7 @@ RSpec.describe Puppeteer::Page do
         page.evaluate('() => window.scrollTo(0, 0)')
         page.click("#btn#{i}")
       end
-      expect(page.Seval('#log', 'el => el.textContent')).to eq([
+      expect(page.eval_on_selector('#log', 'el => el.textContent')).to eq([
         'button #0 clicked',
         'button #1 clicked',
         'button #2 clicked',
@@ -617,7 +617,7 @@ RSpec.describe Puppeteer::Page do
 
       it 'should click the button inside an iframe' do
         frame = page.frames.last
-        frame.S('button').click
+        frame.query_selector('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
       end
     end
@@ -637,7 +637,7 @@ RSpec.describe Puppeteer::Page do
 
       it 'should click the button inside an iframe' do
         frame = page.frames.last
-        frame.S('button').click
+        frame.query_selector('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
       end
     end

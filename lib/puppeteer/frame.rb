@@ -61,14 +61,15 @@ class Puppeteer::Frame
 
   define_async_method :async_evaluate
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def S(selector)
-    @main_world.S(selector)
+  def query_selector(selector)
+    @main_world.query_selector(selector)
   end
+  alias_method :S, :query_selector
 
-  define_async_method :async_S
+  define_async_method :async_query_selector
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} expression
@@ -79,36 +80,39 @@ class Puppeteer::Frame
 
   define_async_method :async_Sx
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<(!Object|undefined)>}
-  def Seval(selector, page_function, *args)
-    @main_world.Seval(selector, page_function, *args)
+  def eval_on_selector(selector, page_function, *args)
+    @main_world.eval_on_selector(selector, page_function, *args)
   end
+  alias_method :Seval, :eval_on_selector
 
-  define_async_method :async_Seval
+  define_async_method :async_eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<(!Object|undefined)>}
-  def SSeval(selector, page_function, *args)
-    @main_world.SSeval(selector, page_function, *args)
+  def eval_on_selector_all(selector, page_function, *args)
+    @main_world.eval_on_selector_all(selector, page_function, *args)
   end
+  alias_method :SSeval, :eval_on_selector_all
 
-  define_async_method :async_SSeval
+  define_async_method :async_eval_on_selector_all
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  def SS(selector)
-    @main_world.SS(selector)
+  def query_selector_all(selector)
+    @main_world.query_selector_all(selector)
   end
+  alias_method :SS, :query_selector_all
 
-  define_async_method :async_SS
+  define_async_method :async_query_selector_all
 
   # @return [String]
   def content

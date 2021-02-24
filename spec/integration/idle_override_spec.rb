@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Emulate idle state' do
   def idle_state_for(page)
-    state_element = page.S('#state')
+    state_element = page.query_selector('#state')
     page.evaluate('(element) => element.innerText', state_element)
   end
 

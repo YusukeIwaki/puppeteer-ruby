@@ -93,7 +93,7 @@ RSpec.describe Puppeteer::Keyboard do
     end
 
     it 'should send a character with ElementHandle.press' do
-      textarea = page.S('textarea')
+      textarea = page.query_selector('textarea')
       textarea.press('a')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('a')
 
@@ -103,7 +103,7 @@ RSpec.describe Puppeteer::Keyboard do
     end
 
     it_fails_firefox 'ElementHandle.press should support |text| option' do
-      textarea = page.S('textarea')
+      textarea = page.query_selector('textarea')
       textarea.press('a', text: 'ё')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('ё')
     end
@@ -177,7 +177,7 @@ RSpec.describe Puppeteer::Keyboard do
       }
       JAVASCRIPT
 
-      textarea = page.S('textarea')
+      textarea = page.query_selector('textarea')
 
       {
         'Digit5' => 0,
@@ -192,7 +192,7 @@ RSpec.describe Puppeteer::Keyboard do
 
     it_fails_firefox 'should type emoji' do
       page.type_text('textarea', '👹 Tokyo street Japan 🇯🇵')
-      expect(page.Seval('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
+      expect(page.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
   end
 
@@ -379,9 +379,9 @@ RSpec.describe Puppeteer::Keyboard do
 
     it_fails_firefox 'should type emoji into an iframe' do
       frame = page.frames.last
-      textarea = frame.S('textarea')
+      textarea = frame.query_selector('textarea')
       textarea.type_text('👹 Tokyo street Japan 🇯🇵')
-      expect(frame.Seval('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
+      expect(frame.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
   end
 
@@ -433,7 +433,7 @@ RSpec.describe Puppeteer::Keyboard do
           send_character('a')
         end
       }
-      expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
+      expect(page.query_selector('input').evaluate('(el) => el.value')).to eq('1234a')
     end
 
     it 'can use press, send_text without block' do
@@ -447,7 +447,7 @@ RSpec.describe Puppeteer::Keyboard do
       else
         page.keyboard.send_character('a')
       end
-      expect(page.S('input').evaluate('(el) => el.value')).to eq('1234a')
+      expect(page.query_selector('input').evaluate('(el) => el.value')).to eq('1234a')
     end
   end
 end

@@ -6,7 +6,7 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
       page.content = '<button id="btn" role="button"> Submit  button   and some spaces  </button>'
     }
 
-    let(:button) { page.S(selector) }
+    let(:button) { page.query_selector(selector) }
     subject(:found) { button.evaluate('(button) => button.id') == 'btn' }
 
     [
@@ -32,27 +32,27 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
   describe 'query_one', puppeteer: :page do
     it 'should find button by role' do
       page.content = '<div id="div"><button id="btn" role="button">Submit</button></div>'
-      button = page.S('aria/[role="button"]')
+      button = page.query_selector('aria/[role="button"]')
       expect(button.evaluate('(button) => button.id')).to eq('btn')
     end
 
     it 'should find button by name and role' do
       page.content = '<div id="div"><button id="btn" role="button">Submit</button></div>'
-      button = page.S('aria/Submit[role="button"]')
+      button = page.query_selector('aria/Submit[role="button"]')
       expect(button.evaluate('(button) => button.id')).to eq('btn')
     end
 
     it 'should find first matching element' do
       page.content = 2.times.map { |i| "<div role=\"menu\" id=\"mnu#{i}\" aria-label=\"menu div\"></div>" }.join("")
-      div = page.S('aria/menu div')
+      div = page.query_selector('aria/menu div')
       expect(div.evaluate('(div) => div.id')).to eq('mnu0')
     end
 
     it 'should find by name' do
       page.content = 2.times.map { |i| "<div role=\"menu\" id=\"mnu#{i}\" aria-label=\"menu-label#{i}\"></div>" }.join("")
-      div = page.S('aria/menu-label1')
+      div = page.query_selector('aria/menu-label1')
       expect(div.evaluate('(div) => div.id')).to eq('mnu1')
-      div = page.S('aria/menu-label0')
+      div = page.query_selector('aria/menu-label0')
       expect(div.evaluate('(div) => div.id')).to eq('mnu0')
     end
   end
@@ -60,14 +60,14 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
   describe 'query_all' do
     it 'should find by name' do
       page.content = 2.times.map { |i| "<div role=\"menu\" id=\"mnu#{i}\" aria-label=\"menu div\"></div>" }.join("")
-      div = page.SS('aria/menu div')
+      div = page.query_selector_all('aria/menu div')
       expect(div[0].evaluate('(div) => div.id')).to eq('mnu0')
       expect(div[1].evaluate('(div) => div.id')).to eq('mnu1')
     end
   end
 
   describe 'query_all_array' do
-    it 'SSeval should handle many elements' do
+    it 'eval_on_selector_all should handle many elements' do
       page.content = ''
       js = <<~JAVASCRIPT
       for (var i = 0; i <= 100; i++) {
@@ -77,7 +77,7 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
       }
       JAVASCRIPT
       page.evaluate(js)
-      sum = page.SSeval('aria/[role="button"]', '(buttons) => buttons.reduce((acc, button) => acc + Number(button.textContent), 0)')
+      sum = page.eval_on_selector_all('aria/[role="button"]', '(buttons) => buttons.reduce((acc, button) => acc + Number(button.textContent), 0)')
       expect(sum).to eq((0..100).sum)
     end
   end

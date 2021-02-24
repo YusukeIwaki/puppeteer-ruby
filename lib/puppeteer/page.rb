@@ -276,23 +276,25 @@ class Puppeteer::Page
     @timeout_settings.default_timeout = timeout
   end
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def S(selector)
-    main_frame.S(selector)
+  def query_selector(selector)
+    main_frame.query_selector(selector)
   end
+  alias_method :S, :query_selector
 
-  define_async_method :async_S
+  define_async_method :async_query_selector
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  def SS(selector)
-    main_frame.SS(selector)
+  def query_selector_all(selector)
+    main_frame.query_selector_all(selector)
   end
+  alias_method :SS, :query_selector_all
 
-  define_async_method :async_SS
+  define_async_method :async_query_selector_all
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -311,25 +313,27 @@ class Puppeteer::Page
     context.query_objects(prototype_handle)
   end
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def Seval(selector, page_function, *args)
-    main_frame.Seval(selector, page_function, *args)
+  def eval_on_selector(selector, page_function, *args)
+    main_frame.eval_on_selector(selector, page_function, *args)
   end
+  alias_method :Seval, :eval_on_selector
 
-  define_async_method :async_Seval
+  define_async_method :async_eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def SSeval(selector, page_function, *args)
-    main_frame.SSeval(selector, page_function, *args)
+  def eval_on_selector_all(selector, page_function, *args)
+    main_frame.eval_on_selector_all(selector, page_function, *args)
   end
+  alias_method :SSeval, :eval_on_selector_all
 
-  define_async_method :async_SSeval
+  define_async_method :async_eval_on_selector_all
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} expression
