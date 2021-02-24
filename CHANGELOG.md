@@ -1,13 +1,18 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.29.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.30.0...master)]
 
 * xxx
+
+### 0.30.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.29.0...0.30.0)]
+
+New features:
+
+* S, SS, Seval, SSeval is renamed to query_selector, query_selector_all, eval_on_selector, eval_on_selector_all
 
 ### 0.29.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.28.1...0.29.0)]
 
 New features:
 
 * Add `AriaQueryHandler`. Now we can use "aria/...." for selectors.
-
 
 ### 0.28.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.0.27...0.28.1)]
 
