@@ -288,11 +288,12 @@ class Puppeteer::Page
   # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  def SS(selector)
-    main_frame.SS(selector)
+  def query_selector_all(selector)
+    main_frame.query_selector_all(selector)
   end
+  alias_method :SS, :query_selector_all
 
-  define_async_method :async_SS
+  define_async_method :async_query_selector_all
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args

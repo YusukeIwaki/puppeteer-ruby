@@ -181,9 +181,10 @@ class Puppeteer::DOMWorld
   # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  def SS(selector)
-    document.SS(selector)
+  def query_selector_all(selector)
+    document.query_selector_all(selector)
   end
+  alias_method :SS, :query_selector_all
 
   # @return [String]
   def content

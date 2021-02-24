@@ -324,11 +324,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     query_handler_manager.detect_query_handler(selector).query_one(self)
   end
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param selector [String]
-  def SS(selector)
+  def query_selector_all(selector)
     query_handler_manager.detect_query_handler(selector).query_all(self)
   end
+  alias_method :SS, :query_selector_all
 
   class ElementNotFoundError < StandardError
     def initialize(selector)

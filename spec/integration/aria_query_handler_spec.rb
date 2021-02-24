@@ -60,7 +60,7 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
   describe 'query_all' do
     it 'should find by name' do
       page.content = 2.times.map { |i| "<div role=\"menu\" id=\"mnu#{i}\" aria-label=\"menu div\"></div>" }.join("")
-      div = page.SS('aria/menu div')
+      div = page.query_selector_all('aria/menu div')
       expect(div[0].evaluate('(div) => div.id')).to eq('mnu0')
       expect(div[1].evaluate('(div) => div.id')).to eq('mnu1')
     end

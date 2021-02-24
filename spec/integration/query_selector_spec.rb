@@ -62,11 +62,11 @@ RSpec.describe 'querySelector' do
     end
   end
 
-  describe 'Page#SS' do
+  describe 'Page#query_selector_all' do
     it 'should query existing elements' do
       page.content = '<div>A</div><br/><div>B</div>'
 
-      elements = page.SS('div')
+      elements = page.query_selector_all('div')
       expect(elements).to be_a(Enumerable)
       expect(elements.size).to eq(2)
 
@@ -76,7 +76,7 @@ RSpec.describe 'querySelector' do
 
     it 'should return empty array if nothing is found' do
       page.content = '<span>A</span><br/><span>B</span>'
-      elements = page.SS('div')
+      elements = page.query_selector_all('div')
       expect(elements).to be_a(Enumerable)
       expect(elements).to be_empty
     end
@@ -202,12 +202,12 @@ RSpec.describe 'querySelector' do
     end
   end
 
-  describe 'ElementHandle#SS' do
+  describe 'ElementHandle#query_selector_all' do
     it 'should query existing elements' do
       page.content = '<html><body><div>A</div><br/><div>B</div></body></html>'
 
       html = page.S('html')
-      elements = html.SS('div')
+      elements = html.query_selector_all('div')
 
       expect(elements).to be_a(Enumerable)
       expect(elements.length).to eq(2)
@@ -218,7 +218,7 @@ RSpec.describe 'querySelector' do
       page.content = '<html><body><span>A</span><br/><span>B</span></body></html>'
 
       html = page.S('html')
-      elements = html.SS('div')
+      elements = html.query_selector_all('div')
 
       expect(elements).to be_a(Enumerable)
       expect(elements).to be_empty

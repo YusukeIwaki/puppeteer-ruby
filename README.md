@@ -55,7 +55,7 @@ Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=
   )
 
   list = page.S("ul.repo-list")
-  items = list.SS("div.f4")
+  items = list.query_selector_all("div.f4")
   items.each do |item|
     title = item.eval_on_selector("a", "a => a.innerText")
     puts("==> #{title}")
@@ -130,7 +130,7 @@ RSpec.describe 'hotel.testplanisphere.dev', type: :feature do
     puppeteer_page = @browser.pages.first
     puppeteer_page.wait_for_selector('li.nav-item')
 
-    reservation_link = puppeteer_page.SS('li.nav-item')[1]
+    reservation_link = puppeteer_page.query_selector_all('li.nav-item')[1]
 
     await_all(
       puppeteer_page.async_wait_for_navigation,
