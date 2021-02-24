@@ -1,4 +1,5 @@
 require 'base64'
+require 'json'
 require "stringio"
 
 require_relative './page/pdf_options'
@@ -866,14 +867,41 @@ class Puppeteer::Page
 
   define_async_method :async_evaluate
 
-  # /**
-  #  * @param {Function|string} pageFunction
-  #  * @param {!Array<*>} args
-  #  */
-  # async evaluateOnNewDocument(pageFunction, ...args) {
-  #   const source = helper.evaluationString(pageFunction, ...args);
-  #   await this._client.send('Page.addScriptToEvaluateOnNewDocument', { source });
-  # }
+  class JavaScriptFunction
+    def initialize(expression, args)
+      @expression = expression
+      @args = args
+    end
+
+    def source
+      "(#{@expression})(#{arguments})"
+    end
+
+    private def arguments
+      @args.map { |arg| arg.nil? ? nil : JSON.dump(arg) }.join(", ")
+    end
+  end
+
+  class JavaScriptExpression
+    def initialize(expression)
+      @expression = expression
+    end
+
+    def source
+      @expression
+    end
+  end
+
+  def evaluate_on_new_document(page_function, *args)
+    source =
+      if ['=>', 'async', 'function'].any? { |keyword| page_function.include?(keyword) }
+        JavaScriptFunction.new(page_function, args).source
+      else
+        JavaScriptExpression.new(page_function).source
+      end
+
+    @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
+  end
 
   # @param {boolean} enabled
   def cache_enabled=(enabled)
