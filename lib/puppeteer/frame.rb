@@ -61,14 +61,15 @@ class Puppeteer::Frame
 
   define_async_method :async_evaluate
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def S(selector)
-    @main_world.S(selector)
+  def query_selector(selector)
+    @main_world.query_selector(selector)
   end
+  alias_method :S, :query_selector
 
-  define_async_method :async_S
+  define_async_method :async_query_selector
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} expression
@@ -79,7 +80,7 @@ class Puppeteer::Frame
 
   define_async_method :async_Sx
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -91,7 +92,7 @@ class Puppeteer::Frame
 
   define_async_method :async_eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -103,7 +104,7 @@ class Puppeteer::Frame
 
   define_async_method :async_eval_on_selector_all
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
   def query_selector_all(selector)

@@ -126,12 +126,13 @@ class Puppeteer::DOMWorld
     execution_context.evaluate(page_function, *args)
   end
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def S(selector)
-    document.S(selector)
+  def query_selector(selector)
+    document.query_selector(selector)
   end
+  alias_method :S, :query_selector
 
   private def evaluate_document
     # sometimes execution_context.evaluate_handle('document') returns null object.
@@ -158,7 +159,7 @@ class Puppeteer::DOMWorld
     document.Sx(expression)
   end
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -168,7 +169,7 @@ class Puppeteer::DOMWorld
   end
   alias_method :Seval, :eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
@@ -178,7 +179,7 @@ class Puppeteer::DOMWorld
   end
   alias_method :SSeval, :eval_on_selector_all
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
   def query_selector_all(selector)
@@ -379,14 +380,14 @@ class Puppeteer::DOMWorld
   # @param button [String] "left"|"right"|"middle"
   # @param click_count [Number]
   def click(selector, delay: nil, button: nil, click_count: nil)
-    handle = S(selector) or raise ElementNotFoundError.new(selector)
+    handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
     handle.click(delay: delay, button: button, click_count: click_count)
     handle.dispose
   end
 
   # @param selector [String]
   def focus(selector)
-    handle = S(selector) or raise ElementNotFoundError.new(selector)
+    handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
     handle.focus
     handle.dispose
   end
@@ -404,7 +405,7 @@ class Puppeteer::DOMWorld
   # @param selector [String]
   # @return [Array<String>]
   def select(selector, *values)
-    handle = S(selector) or raise ElementNotFoundError.new(selector)
+    handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
     result = handle.select(*values)
     handle.dispose
 
@@ -413,7 +414,7 @@ class Puppeteer::DOMWorld
 
   # @param selector [String]
   def tap(selector)
-    handle = S(selector) or raise ElementNotFoundError.new(selector)
+    handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
     handle.tap
     handle.dispose
   end
@@ -422,7 +423,7 @@ class Puppeteer::DOMWorld
   # @param text [String]
   # @param delay [Number]
   def type_text(selector, text, delay: nil)
-    handle = S(selector) or raise ElementNotFoundError.new(selector)
+    handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
     handle.type_text(text, delay: delay)
     handle.dispose
   end

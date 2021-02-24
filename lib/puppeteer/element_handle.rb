@@ -318,11 +318,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     Puppeteer::QueryHandlerManager.instance
   end
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param selector [String]
-  def S(selector)
+  def query_selector(selector)
     query_handler_manager.detect_query_handler(selector).query_one(self)
   end
+  alias_method :S, :query_selector
 
   # `$$()` in JavaScript.
   # @param selector [String]
@@ -337,12 +338,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
   def eval_on_selector(selector, page_function, *args)
-    element_handle = S(selector)
+    element_handle = query_selector(selector)
     unless element_handle
       raise ElementNotFoundError.new(selector)
     end
@@ -355,7 +356,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]

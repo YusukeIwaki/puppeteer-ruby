@@ -617,7 +617,7 @@ RSpec.describe Puppeteer::Page do
 
       it 'should click the button inside an iframe' do
         frame = page.frames.last
-        frame.S('button').click
+        frame.query_selector('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
       end
     end
@@ -637,7 +637,7 @@ RSpec.describe Puppeteer::Page do
 
       it 'should click the button inside an iframe' do
         frame = page.frames.last
-        frame.S('button').click
+        frame.query_selector('button').click
         expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
       end
     end

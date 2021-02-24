@@ -20,7 +20,7 @@ RSpec.describe 'querySelector' do
 
     it 'should accept ElementHandles as arguments' do
       page.content = '<section>hello</section><div> world</div>'
-      div_handle = page.S('div')
+      div_handle = page.query_selector('div')
 
       text = page.eval_on_selector(
         'section',
@@ -46,18 +46,18 @@ RSpec.describe 'querySelector' do
     end
   end
 
-  describe 'Page#S' do
+  describe 'Page#query_selector' do
     it 'should query existing element' do
       page.content = '<section>test</section>'
 
-      element = page.S('section')
+      element = page.query_selector('section')
       expect(element).not_to be_nil
     end
 
     it 'should return null for non-existing element' do
       page.content = '<section>test</section>'
 
-      element = page.S('non-existing-element')
+      element = page.query_selector('non-existing-element')
       expect(element).to be_nil
     end
   end
@@ -108,13 +108,13 @@ RSpec.describe 'querySelector' do
     end
   end
 
-  describe 'ElementHandle#S' do
+  describe 'ElementHandle#query_selector' do
     it 'should query existing element' do
       page.content = '<html><body><div class="second"><div class="inner">A</div></div></body></html>'
 
-      html = page.S('html')
-      second = html.S('.second')
-      inner = second.S('.inner')
+      html = page.query_selector('html')
+      second = html.query_selector('.second')
+      inner = second.query_selector('.inner')
       content = page.evaluate('(e) => e.textContent', inner)
 
       expect(content).to eq('A')
@@ -123,8 +123,8 @@ RSpec.describe 'querySelector' do
     it 'should return null for non-existing element' do
       page.content = '<html><body><div class="second"><div class="inner">B</div></div></body></html>'
 
-      html = page.S('html')
-      second = html.S('.third')
+      html = page.query_selector('html')
+      second = html.query_selector('.third')
 
       expect(second).to be_nil
     end
@@ -134,7 +134,7 @@ RSpec.describe 'querySelector' do
     it 'should work' do
       page.content = '<html><body><div class="tweet"><div class="like">100</div><div class="retweets">10</div></div></body></html>'
 
-      tweet = page.S('.tweet')
+      tweet = page.query_selector('.tweet')
       content = tweet.eval_on_selector('.like', '(node) => node.innerText')
 
       expect(content).to eq('100')
@@ -144,7 +144,7 @@ RSpec.describe 'querySelector' do
       html_content = '<div class="a">not-a-child-div</div><div id="myId"><div class="a">a-child-div</div></div>'
       page.content = html_content
 
-      element_handle = page.S('#myId')
+      element_handle = page.query_selector('#myId')
       content = element_handle.eval_on_selector('.a', '(node) => node.innerText')
 
       expect(content).to eq('a-child-div')
@@ -154,7 +154,7 @@ RSpec.describe 'querySelector' do
       html_content = '<div class="a">not-a-child-div</div><div id="myId"></div>'
       page.content = html_content
 
-      element_handle = page.S('#myId')
+      element_handle = page.query_selector('#myId')
 
       expect {
         element_handle.eval_on_selector('.a', '(node) => node.innerText')
@@ -166,7 +166,7 @@ RSpec.describe 'querySelector' do
     it 'should work' do
       page.content = '<html><body><div class="tweet"><div class="like">100</div><div class="like">10</div></div></body></html>'
 
-      tweet = page.S('.tweet')
+      tweet = page.query_selector('.tweet')
       content = tweet.eval_on_selector_all(
         '.like',
         '(nodes) => nodes.map((n) => n.innerText)',
@@ -179,7 +179,7 @@ RSpec.describe 'querySelector' do
       html_content = '<div class="a">not-a-child-div</div><div id="myId"><div class="a">a1-child-div</div><div class="a">a2-child-div</div></div>'
       page.content = html_content
 
-      element_handle = page.S('#myId')
+      element_handle = page.query_selector('#myId')
       content = element_handle.eval_on_selector_all(
         '.a',
         '(nodes) => nodes.map((n) => n.innerText)',
@@ -192,7 +192,7 @@ RSpec.describe 'querySelector' do
       html_content = '<div class="a">not-a-child-div</div><div id="myId"></div>'
       page.content = html_content
 
-      element_handle = page.S('#myId')
+      element_handle = page.query_selector('#myId')
       nodes_length = element_handle.eval_on_selector_all(
         '.a',
         '(nodes) => nodes.length',
@@ -206,7 +206,7 @@ RSpec.describe 'querySelector' do
     it 'should query existing elements' do
       page.content = '<html><body><div>A</div><br/><div>B</div></body></html>'
 
-      html = page.S('html')
+      html = page.query_selector('html')
       elements = html.query_selector_all('div')
 
       expect(elements).to be_a(Enumerable)
@@ -217,7 +217,7 @@ RSpec.describe 'querySelector' do
     it 'should return empty array for non-existing elements' do
       page.content = '<html><body><span>A</span><br/><span>B</span></body></html>'
 
-      html = page.S('html')
+      html = page.query_selector('html')
       elements = html.query_selector_all('div')
 
       expect(elements).to be_a(Enumerable)
@@ -229,7 +229,7 @@ RSpec.describe 'querySelector' do
     it 'should query existing element' do
       page.content = '<html><body><div class="second"><div class="inner">A</div></div></body></html>'
 
-      html = page.S('html')
+      html = page.query_selector('html')
       second = html.Sx("./body/div[contains(@class, 'second')]")
       inner = second[0].Sx("./div[contains(@class, 'inner')]")
       content = page.evaluate(
@@ -243,7 +243,7 @@ RSpec.describe 'querySelector' do
     it 'should return null for non-existing element' do
       page.content = '<html><body><div class="second"><div class="inner">B</div></div></body></html>'
 
-      html = page.S('html')
+      html = page.query_selector('html')
       second = html.Sx("/div[contains(@class, 'third')]")
 
 

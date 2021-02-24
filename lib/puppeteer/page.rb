@@ -276,16 +276,17 @@ class Puppeteer::Page
     @timeout_settings.default_timeout = timeout
   end
 
-  # `$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<?Puppeteer.ElementHandle>}
-  def S(selector)
-    main_frame.S(selector)
+  def query_selector(selector)
+    main_frame.query_selector(selector)
   end
+  alias_method :S, :query_selector
 
-  define_async_method :async_S
+  define_async_method :async_query_selector
 
-  # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
   def query_selector_all(selector)
