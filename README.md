@@ -57,7 +57,7 @@ Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=
   list = page.S("ul.repo-list")
   items = list.SS("div.f4")
   items.each do |item|
-    title = item.Seval("a", "a => a.innerText")
+    title = item.eval_on_selector("a", "a => a.innerText")
     puts("==> #{title}")
   end
 end
@@ -147,7 +147,7 @@ RSpec.describe 'hotel.testplanisphere.dev', type: :feature do
 
     # expectation with puppeteer
     puppeteer_page = @browser.pages.first
-    body_text = puppeteer_page.Seval('body', '(el) => el.textContent')
+    body_text = puppeteer_page.eval_on_selector('body', '(el) => el.textContent')
     expect(body_text).to include('宿泊プラン一覧')
   end
 ```

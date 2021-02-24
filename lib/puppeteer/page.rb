@@ -311,25 +311,27 @@ class Puppeteer::Page
     context.query_objects(prototype_handle)
   end
 
-  # `$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def Seval(selector, page_function, *args)
-    main_frame.Seval(selector, page_function, *args)
+  def eval_on_selector(selector, page_function, *args)
+    main_frame.eval_on_selector(selector, page_function, *args)
   end
+  alias_method :Seval, :eval_on_selector
 
-  define_async_method :async_Seval
+  define_async_method :async_eval_on_selector
 
-  # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
+  # `$$eval()` in JavaScript.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def SSeval(selector, page_function, *args)
-    main_frame.SSeval(selector, page_function, *args)
+  def eval_on_selector_all(selector, page_function, *args)
+    main_frame.eval_on_selector_all(selector, page_function, *args)
   end
+  alias_method :SSeval, :eval_on_selector_all
 
-  define_async_method :async_SSeval
+  define_async_method :async_eval_on_selector_all
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} expression

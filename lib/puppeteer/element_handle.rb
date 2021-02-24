@@ -340,7 +340,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def Seval(selector, page_function, *args)
+  def eval_on_selector(selector, page_function, *args)
     element_handle = S(selector)
     unless element_handle
       raise ElementNotFoundError.new(selector)
@@ -350,22 +350,24 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
     result
   end
+  alias_method :Seval, :eval_on_selector
 
-  define_async_method :async_Seval
+  define_async_method :async_eval_on_selector
 
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param selector [String]
   # @param page_function [String]
   # @return [Object]
-  def SSeval(selector, page_function, *args)
+  def eval_on_selector_all(selector, page_function, *args)
     handles = query_handler_manager.detect_query_handler(selector).query_all_array(self)
     result = handles.evaluate(page_function, *args)
     handles.dispose
 
     result
   end
+  alias_method :SSeval, :eval_on_selector_all
 
-  define_async_method :async_SSeval
+  define_async_method :async_eval_on_selector_all
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param expression [String]

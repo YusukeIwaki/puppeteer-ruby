@@ -266,7 +266,7 @@ RSpec.describe Puppeteer::Page do
         page.evaluate('() => window.scrollTo(0, 0)')
         page.click("#btn#{i}")
       end
-      expect(page.Seval('#log', 'el => el.textContent')).to eq([
+      expect(page.eval_on_selector('#log', 'el => el.textContent')).to eq([
         'button #0 clicked',
         'button #1 clicked',
         'button #2 clicked',

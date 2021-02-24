@@ -192,7 +192,7 @@ RSpec.describe Puppeteer::Keyboard do
 
     it_fails_firefox 'should type emoji' do
       page.type_text('textarea', '👹 Tokyo street Japan 🇯🇵')
-      expect(page.Seval('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
+      expect(page.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
   end
 
@@ -381,7 +381,7 @@ RSpec.describe Puppeteer::Keyboard do
       frame = page.frames.last
       textarea = frame.S('textarea')
       textarea.type_text('👹 Tokyo street Japan 🇯🇵')
-      expect(frame.Seval('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
+      expect(frame.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
   end
 

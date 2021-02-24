@@ -163,18 +163,20 @@ class Puppeteer::DOMWorld
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<(!Object|undefined)>}
-  def Seval(selector, page_function, *args)
-    document.Seval(selector, page_function, *args)
+  def eval_on_selector(selector, page_function, *args)
+    document.eval_on_selector(selector, page_function, *args)
   end
+  alias_method :Seval, :eval_on_selector
 
   # `$$eval()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<(!Object|undefined)>}
-  def SSeval(selector, page_function, *args)
-    document.SSeval(selector, page_function, *args)
+  def eval_on_selector_all(selector, page_function, *args)
+    document.eval_on_selector_all(selector, page_function, *args)
   end
+  alias_method :SSeval, :eval_on_selector_all
 
   # `$$()` in JavaScript. $ is not allowed to use as a method name in Ruby.
   # @param {string} selector

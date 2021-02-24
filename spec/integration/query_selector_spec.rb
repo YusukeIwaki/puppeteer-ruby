@@ -1,16 +1,16 @@
 require 'spec_helper'
 
 RSpec.describe 'querySelector' do
-  describe 'Page#Seval' do
+  describe 'Page#eval_on_selector' do
     it 'should work' do
       page.content = '<section id="testAttribute">43543</section>'
-      id = page.Seval('section', '(e) => e.id')
+      id = page.eval_on_selector('section', '(e) => e.id')
       expect(id).to eq('testAttribute')
     end
 
     it 'should accept arguments' do
       page.content = '<section>hello</section>'
-      text = page.Seval(
+      text = page.eval_on_selector(
         'section',
         '(e, suffix) => e.textContent + suffix',
         ' world!',
@@ -22,7 +22,7 @@ RSpec.describe 'querySelector' do
       page.content = '<section>hello</section><div> world</div>'
       div_handle = page.S('div')
 
-      text = page.Seval(
+      text = page.eval_on_selector(
         'section',
         '(e, div) => e.textContent + div.textContent',
         div_handle,
@@ -32,16 +32,16 @@ RSpec.describe 'querySelector' do
 
     it 'should throw error if no element is found' do
       expect {
-        page.Seval('section', '(e) => e.id')
+        page.eval_on_selector('section', '(e) => e.id')
       }.to raise_error(/failed to find element matching selector "section"/)
     end
   end
 
-  describe 'Page#SSeval' do
+  describe 'Page#eval_on_selector_all' do
     it 'should work' do
       page.content = '<div>hello</div><div>beautiful</div><div>world!</div>'
 
-      divs_count = page.SSeval('div', '(divs) => divs.length')
+      divs_count = page.eval_on_selector_all('div', '(divs) => divs.length')
       expect(divs_count).to eq(3)
     end
   end
@@ -130,12 +130,12 @@ RSpec.describe 'querySelector' do
     end
   end
 
-  describe 'ElementHandle#Seval' do
+  describe 'ElementHandle#eval_on_selector' do
     it 'should work' do
       page.content = '<html><body><div class="tweet"><div class="like">100</div><div class="retweets">10</div></div></body></html>'
 
       tweet = page.S('.tweet')
-      content = tweet.Seval('.like', '(node) => node.innerText')
+      content = tweet.eval_on_selector('.like', '(node) => node.innerText')
 
       expect(content).to eq('100')
     end
@@ -145,7 +145,7 @@ RSpec.describe 'querySelector' do
       page.content = html_content
 
       element_handle = page.S('#myId')
-      content = element_handle.Seval('.a', '(node) => node.innerText')
+      content = element_handle.eval_on_selector('.a', '(node) => node.innerText')
 
       expect(content).to eq('a-child-div')
     end
@@ -157,17 +157,17 @@ RSpec.describe 'querySelector' do
       element_handle = page.S('#myId')
 
       expect {
-        element_handle.Seval('.a', '(node) => node.innerText')
+        element_handle.eval_on_selector('.a', '(node) => node.innerText')
       }.to raise_error(/failed to find element matching selector ".a"/)
     end
   end
 
-  describe 'ElementHandle#SSeval' do
+  describe 'ElementHandle#eval_on_selector_all' do
     it 'should work' do
       page.content = '<html><body><div class="tweet"><div class="like">100</div><div class="like">10</div></div></body></html>'
 
       tweet = page.S('.tweet')
-      content = tweet.SSeval(
+      content = tweet.eval_on_selector_all(
         '.like',
         '(nodes) => nodes.map((n) => n.innerText)',
       )
@@ -180,7 +180,7 @@ RSpec.describe 'querySelector' do
       page.content = html_content
 
       element_handle = page.S('#myId')
-      content = element_handle.SSeval(
+      content = element_handle.eval_on_selector_all(
         '.a',
         '(nodes) => nodes.map((n) => n.innerText)',
       )
@@ -193,7 +193,7 @@ RSpec.describe 'querySelector' do
       page.content = html_content
 
       element_handle = page.S('#myId')
-      nodes_length = element_handle.SSeval(
+      nodes_length = element_handle.eval_on_selector_all(
         '.a',
         '(nodes) => nodes.length',
       )

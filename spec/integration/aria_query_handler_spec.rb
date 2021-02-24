@@ -67,7 +67,7 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
   end
 
   describe 'query_all_array' do
-    it 'SSeval should handle many elements' do
+    it 'eval_on_selector_all should handle many elements' do
       page.content = ''
       js = <<~JAVASCRIPT
       for (var i = 0; i <= 100; i++) {
@@ -77,7 +77,7 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
       }
       JAVASCRIPT
       page.evaluate(js)
-      sum = page.SSeval('aria/[role="button"]', '(buttons) => buttons.reduce((acc, button) => acc + Number(button.textContent), 0)')
+      sum = page.eval_on_selector_all('aria/[role="button"]', '(buttons) => buttons.reduce((acc, button) => acc + Number(button.textContent), 0)')
       expect(sum).to eq((0..100).sum)
     end
   end
