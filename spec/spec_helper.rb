@@ -2,37 +2,6 @@ require 'bundler/setup'
 require 'chunky_png'
 require 'puppeteer'
 
-module SinatraRouting
-  def sinatra(port: 4567, &block)
-    require 'net/http'
-    require 'sinatra/base'
-    require 'timeout'
-
-    sinatra_app = Sinatra.new(&block)
-
-    let(:sinatra) { sinatra_app }
-    around do |example|
-      sinatra_app.get('/_ping') { '_pong' }
-      Thread.new { sinatra_app.run!(port: port) }
-      Timeout.timeout(3) do
-        loop do
-          Net::HTTP.get(URI("http://127.0.0.1:#{port}/_ping"))
-          break
-        rescue Errno::ECONNREFUSED
-          sleep 0.1
-        end
-      end
-      begin
-        example.run
-      ensure
-        sinatra.quit!
-      end
-    end
-  end
-end
-
-RSpec::Core::ExampleGroup.extend(SinatraRouting)
-
 module PuppeteerEnvExtension
   # @return [String] chrome, firefox
   def product
@@ -143,6 +112,46 @@ RSpec.configure do |config|
     end
   end
   config.include PuppeteerMethods, type: :puppeteer
+
+  test_with_sinatra = Module.new do
+    attr_reader :server_prefix, :server_cross_process_prefix, :server_empty_page, :sinatra
+  end
+  config.include(test_with_sinatra, sinatra: true)
+  config.around(sinatra: true) do |example|
+    require 'net/http'
+    require 'sinatra/base'
+    require 'timeout'
+
+    sinatra_app = Sinatra.new
+    sinatra_app.disable(:protection)
+    sinatra_app.set(:public_folder, File.join(__dir__, 'assets'))
+    @server_prefix = "http://localhost:4567"
+    @server_cross_process_prefix = "http://127.0.0.1:4567"
+    @server_empty_page = "#{@server_prefix}/empty.html"
+
+    sinatra_app.get('/_ping') { '_pong' }
+
+    # Start server and wait for server ready.
+    # FIXME should change port when Errno::EADDRINUSE
+    Thread.new { sinatra_app.run!(port: 4567) }
+    Timeout.timeout(3) do
+      loop do
+        Net::HTTP.get(URI("#{server_prefix}/_ping"))
+        break
+      rescue Errno::EADDRNOTAVAIL
+        sleep 1
+      rescue Errno::ECONNREFUSED
+        sleep 0.1
+      end
+    end
+
+    begin
+      @sinatra = sinatra_app
+      example.run
+    ensure
+      sinatra_app.quit!
+    end
+  end
 end
 
 module ItFailsFirefox
