@@ -11,10 +11,10 @@ RSpec.describe Puppeteer::CDPSession do
     expect(foo).to eq('bar')
   end
 
-  context 'with empty page' do
-    sinatra do
-      get('/') { 'Hello' }
-    end
+  context 'with empty page', sinatra: true do
+    before {
+      sinatra.get('/') { 'Hello' }
+    }
 
     it 'should send events' do
       client = page.target.create_cdp_session
@@ -25,7 +25,7 @@ RSpec.describe Puppeteer::CDPSession do
       client.on('Network.requestWillBeSent') do |event|
         events << event
       end
-      page.goto('http://127.0.0.1:4567/')
+      page.goto("#{server_prefix}/")
       expect(events.size).to eq(1)
     end
   end
