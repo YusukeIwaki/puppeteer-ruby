@@ -42,6 +42,15 @@ RSpec.configure do |config|
     @default_launch_options = launch_options
     @puppeteer_headless = launch_options[:headless] != false
 
+    # if example.metadata[:disable_web_security]
+    #   # Enable cross-origin access for cookies_spec
+    #   # ref: https://github.com/puppeteer/puppeteer/issues/4053
+    #   launch_options[:args] = [
+    #     '--disable-web-security',
+    #     '--disable-features=IsolateOrigins,site-per-process',
+    #   ]
+    # end
+
     if example.metadata[:puppeteer].to_s == 'browser'
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
