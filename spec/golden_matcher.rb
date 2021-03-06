@@ -24,14 +24,14 @@ module GoldenMatcher
 
         expected_image.height.times do |y|
           expected_image.row(y).each_with_index do |pixel, x|
-            unless pixel == actual_image[x,y]
+            unless pixel == actual_image[x, y]
               score = Math.sqrt(
-                (r(actual_image[x,y]) - r(pixel)) ** 2 +
-                (g(actual_image[x,y]) - g(pixel)) ** 2 +
-                (b(actual_image[x,y]) - b(pixel)) ** 2
+                (r(actual_image[x, y]) - r(pixel)) ** 2 +
+                (g(actual_image[x, y]) - g(pixel)) ** 2 +
+                (b(actual_image[x, y]) - b(pixel)) ** 2,
               ) / Math.sqrt(MAX ** 2 * 3)
 
-              diffimage[x,y] = grayscale(MAX - (score * 255).round)
+              diffimage[x, y] = grayscale(MAX - (score * 255).round)
               diff << score
             end
           end

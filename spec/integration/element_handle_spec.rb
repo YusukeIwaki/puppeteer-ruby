@@ -138,7 +138,7 @@ RSpec.describe Puppeteer::ElementHandle do
       attach_frame(page, 'frame1', server_empty_page)
       element_handle = page.query_selector('#frame1')
       frame = element_handle.content_frame
-      expect(frame).to eq(page.frames()[1])
+      expect(frame).to eq(page.frames[1])
     end
   end
 

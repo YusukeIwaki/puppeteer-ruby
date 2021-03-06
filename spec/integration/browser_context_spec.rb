@@ -54,7 +54,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
   describe 'target events', sinatra: true do
     before {
-      sinatra.get '/test' do
+      sinatra.get('/test') do
         'test'
       end
     }
@@ -87,7 +87,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
   describe 'wait for target', sinatra: true do
     before {
-      sinatra.get '/test' do
+      sinatra.get('/test') do
         'test'
       end
     }
@@ -123,7 +123,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
   describe 'isolation', sinatra: true do
     before {
-      sinatra.get '/isolation' do
+      sinatra.get('/isolation') do
         'test isolation'
       end
     }

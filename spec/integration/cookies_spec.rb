@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'cookies' do
-  describe 'Page#cookies', sinatra:true do
+  describe 'Page#cookies', sinatra: true do
     it 'should return no cookies in pristine browser context' do
       page.goto(server_empty_page)
       expect(page.cookies).to eq([])

@@ -376,7 +376,7 @@ RSpec.describe Puppeteer::Launcher do
       Timeout.timeout(3) do
         await_all(
           resolvable_future { |f| browser.once('disconnected') { f.fulfill(nil) } },
-          future { remote_browser.close }
+          future { remote_browser.close },
         )
       end
     end

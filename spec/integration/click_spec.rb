@@ -183,7 +183,7 @@ RSpec.describe Puppeteer::Page do
       Timeout.timeout(2) do
         page.mouse.down
         page.mouse.move(100, 10)
-        page.mouse.up()
+        page.mouse.up
       end
     }.not_to raise_error(Timeout::Error)
   end
