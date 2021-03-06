@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::ElementHandle do
   describe '#bounding_box' do
-    it 'should work', sinatra: true do
+    it 'should work', sinatra: true, pending: Puppeteer.env.ci? && Puppeteer.env.firefox? do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
       page.goto("#{server_prefix}/grid.html")
 
@@ -15,7 +15,7 @@ RSpec.describe Puppeteer::ElementHandle do
     end
 
 
-    it 'should handle nested frames', sinatra: true do
+    it 'should handle nested frames', sinatra: true, pending: Puppeteer.env.ci? && Puppeteer.env.firefox? do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
       page.goto("#{server_prefix}/frames/nested-frames.html")
 

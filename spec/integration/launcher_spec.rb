@@ -251,7 +251,7 @@ RSpec.describe Puppeteer::Launcher do
         screenshot = page.screenshot(full_page: true)
 
         # FIXME: It would be better to check the height of this screenshot here.
-        expect(screenshot.size).to be > 60000
+        expect(screenshot.size).to be > 50000
       end
     end
   end
