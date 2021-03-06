@@ -1,84 +1,15 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::WaitTask do
-  describe 'Page.waitFor' do
-    sinatra do
-      get('/') do
-        <<~HTML
-        <html>
-        <head>
-          <title>Top</title>
-        </head>
-        <body></body>
-        </html>
-        HTML
-      end
-      get('/grid.html') do
-        <<~HTML
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function generatePalette(amount) {
-                var result = [];
-                var hueStep = 360 / amount;
-                for (var i = 0; i < amount; ++i)
-                    result.push('hsl(' + (hueStep * i) + ', 100%, 90%)');
-                return result;
-            }
-
-            var palette = generatePalette(100);
-            for (var i = 0; i < 200; ++i) {
-                var box = document.createElement('div');
-                box.classList.add('box');
-                box.style.setProperty('background-color', palette[i % palette.length]);
-                var x = i;
-                do {
-                    var digit = x % 10;
-                    x = (x / 10)|0;
-                    var img = document.createElement('img');
-                    img.src = `./digits/${digit}.png`;
-                    box.insertBefore(img, box.firstChild);
-                } while (x);
-                document.body.appendChild(box);
-            }
-        });
-        </script>
-
-        <style>
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        .box {
-            font-family: arial;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 0;
-            width: 50px;
-            height: 50px;
-            box-sizing: border-box;
-            border: 1px solid darkgray;
-        }
-
-        ::-webkit-scrollbar {
-            display: none;
-        }
-        </style>
-        HTML
-      end
-    end
-
+  describe 'Page.waitFor', sinatra: true do
     it 'should wait for selector' do
       found = false
       wait_for = page.async_wait_for_selector('div').then { found = true }
 
-      page.goto('http://127.0.0.1:4567/')
+      page.goto(server_empty_page)
       expect(found).to eq(false)
 
-      page.goto('http://127.0.0.1:4567/grid.html')
+      page.goto("#{server_prefix}/grid.html")
       await wait_for
       expect(found).to eq(true)
     end
@@ -87,10 +18,10 @@ RSpec.describe Puppeteer::WaitTask do
       found = false
       wait_for = page.async_wait_for_xpath('//div').then { found = true }
 
-      page.goto('http://127.0.0.1:4567/')
+      page.goto(server_empty_page)
       expect(found).to eq(false)
 
-      page.goto('http://127.0.0.1:4567/grid.html')
+      page.goto("#{server_prefix}/grid.html")
       await wait_for
       expect(found).to eq(true)
     end

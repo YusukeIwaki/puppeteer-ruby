@@ -1,75 +1,16 @@
 require 'spec_helper'
 
 RSpec.describe 'Screenshots' do
-  describe 'Page#screenshot', skip: ENV['CI'] do
-    include Utils::Golden
+  include GoldenMatcher
 
-    sinatra do
-      get('/grid.html') do
-        <<~HTML
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function generatePalette(amount) {
-                var result = [];
-                var hueStep = 360 / amount;
-                for (var i = 0; i < amount; ++i)
-                    result.push('hsl(' + (hueStep * i) + ', 100%, 90%)');
-                return result;
-            }
-
-            var palette = generatePalette(100);
-            for (var i = 0; i < 200; ++i) {
-                var box = document.createElement('div');
-                box.classList.add('box');
-                box.style.setProperty('background-color', palette[i % palette.length]);
-                var x = i;
-                do {
-                    var digit = x % 10;
-                    x = (x / 10)|0;
-                    var span = document.createElement('span');
-                    span.innerText = digit;
-                    box.insertBefore(span, box.firstChild);
-                } while (x);
-                document.body.appendChild(box);
-            }
-        });
-        </script>
-
-        <style>
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        .box {
-            font-family: arial;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 0;
-            width: 50px;
-            height: 50px;
-            box-sizing: border-box;
-            border: 1px solid darkgray;
-        }
-
-        ::-webkit-scrollbar {
-            display: none;
-        }
-        </style>
-        HTML
-      end
-    end
-
+  describe 'Page#screenshot', skip: ENV['CI'], sinatra: true do
     before {
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
-      page.goto('http://127.0.0.1:4567/grid.html')
+      page.goto("#{server_prefix}/grid.html")
     }
 
     it 'should work' do
-      expect(image_from(page.screenshot)).to eq(golden('screenshot-sanity.png'))
+      expect(page.screenshot).to be_golden('screenshot-sanity.png')
     end
 
     it 'should clip rect' do
@@ -81,7 +22,7 @@ RSpec.describe 'Screenshots' do
           height: 100,
         },
       )
-      expect(image_from(screenshot)).to eq(golden('screenshot-clip-rect.png'))
+      expect(screenshot).to be_golden('screenshot-clip-rect.png')
     end
 
     it 'should clip elements to the viewport' do
@@ -93,7 +34,7 @@ RSpec.describe 'Screenshots' do
           height: 100,
         },
       )
-      expect(image_from(screenshot)).to eq(golden('screenshot-offscreen-clip.png'))
+      expect(screenshot).to be_golden('screenshot-offscreen-clip.png')
     end
 
     it 'should run in parallel' do
@@ -110,12 +51,12 @@ RSpec.describe 'Screenshots' do
         }
       end
       screenshots = await_all(*promises)
-      expect(image_from(screenshots[1])).to eq(golden('grid-cell-1.png'))
+      expect(screenshots[1]).to be_golden('grid-cell-1.png')
     end
 
     it 'should take fullPage screenshots' do
       screenshot = page.screenshot(full_page: true)
-      expect(image_from(screenshot)).to eq(golden('screenshot-grid-fullpage.png'))
+      expect(screenshot).to be_golden('screenshot-grid-fullpage.png')
     end
 
     # it('should run in parallel in multiple pages', async () => {

@@ -1,5 +1,4 @@
 require 'bundler/setup'
-require 'chunky_png'
 require 'puppeteer'
 
 module PuppeteerEnvExtension
@@ -175,4 +174,5 @@ end
 
 RSpec::Core::ExampleGroup.extend(ItFailsFirefox)
 
+require_relative './golden_matcher'
 require_relative './utils'
