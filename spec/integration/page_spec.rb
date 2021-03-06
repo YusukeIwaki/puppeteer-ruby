@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Page do
-  describe 'goto' do
-    sinatra do
-      get('/') {
+  describe 'goto', sinatra: true do
+    before {
+      sinatra.get('/hello') do
         <<~HTML
         <html>
           <head>
@@ -12,11 +12,11 @@ RSpec.describe Puppeteer::Page do
           <body>My Sinatra</body>
         </html>
         HTML
-      }
-    end
+      end
+    }
 
     it "can browser html page" do
-      page.goto("http://127.0.0.1:4567/")
+      page.goto("#{server_prefix}/hello")
       expect(page.title).to include("Hello World")
       expect(page.evaluate('() => document.body.innerText')).to eq("My Sinatra")
     end
@@ -39,75 +39,57 @@ RSpec.describe Puppeteer::Page do
       expect(browser.pages).not_to include(new_page)
     end
 
-    context 'with beforeunload page' do
-      sinatra do
-        get('/beforeunload.html') {
-          <<~HTML
-          <div>beforeunload demo.</div>
-          <script>
-          window.addEventListener('beforeunload', event => {
-            // Chrome way.
-            event.returnValue = 'Leave?';
-            // Firefox way.
-            event.preventDefault();
-          });
-          </script>
-          HTML
-        }
-      end
-
-      it_fails_firefox 'should run beforeunload if asked for' do
-        context = page.browser_context
-
-        new_page = context.new_page
-        new_page.goto('http://127.0.0.1:4567/beforeunload.html')
-        # We have to interact with a page so that 'beforeunload' handlers
-        # fire.
-        new_page.click('body')
-        dialog_promise = resolvable_future { |f| new_page.once('dialog') { |d| f.fulfill(d) } }
-        new_page.close(run_before_unload: true)
-        sleep 0.2
-        expect(dialog_promise).to be_fulfilled
-        dialog = await dialog_promise
-        expect(dialog.type).to eq("beforeunload")
-        expect(dialog.default_value).to eq("")
-        if Puppeteer.env.firefox?
-          expect(dialog.message).to eq('This page is asking you to confirm that you want to leave - data you have entered may not be saved.')
-        else
-          expect(dialog.message).to eq("")
-        end
-        dialog.accept
-      end
-
-      it_fails_firefox 'should *not* run beforeunload by default' do
-        context = page.browser_context
-
-        new_page = context.new_page
-        new_page.goto('http://127.0.0.1:4567/beforeunload.html')
-        # We have to interact with a page so that 'beforeunload' handlers
-        # fire.
-        new_page.click('body')
-        dialog_promise = resolvable_future { |f| new_page.once('dialog') { |d| f.fulfill(d) } }
-        new_page.close
-        sleep 0.2
-        expect(dialog_promise).not_to be_fulfilled
-      end
-
-      it 'should set the page close state' do
-        context = page.browser_context
-
-        new_page = context.new_page
-        expect(new_page).not_to be_closed
-        expect { new_page.close }.to change { new_page.closed? }.from(false).to(true)
-      end
-    end
-
-    it_fails_firefox 'should terminate network waiters' do
+    it_fails_firefox 'should run beforeunload if asked for', sinatra: true do
       context = page.browser_context
 
       new_page = context.new_page
-      req_promise = new_page.async_wait_for_request(url: "http://127.0.0.1:4567/empty")
-      res_promise = new_page.async_wait_for_response(url: "http://127.0.0.1:4567/empty")
+      new_page.goto("#{server_prefix}/beforeunload.html")
+      # We have to interact with a page so that 'beforeunload' handlers
+      # fire.
+      new_page.click('body')
+      dialog_promise = resolvable_future { |f| new_page.once('dialog') { |d| f.fulfill(d) } }
+      new_page.close(run_before_unload: true)
+      sleep 0.2
+      expect(dialog_promise).to be_fulfilled
+      dialog = await dialog_promise
+      expect(dialog.type).to eq("beforeunload")
+      expect(dialog.default_value).to eq("")
+      if Puppeteer.env.firefox?
+        expect(dialog.message).to eq('This page is asking you to confirm that you want to leave - data you have entered may not be saved.')
+      else
+        expect(dialog.message).to eq("")
+      end
+      dialog.accept
+    end
+
+    it_fails_firefox 'should *not* run beforeunload by default', sinatra: true do
+      context = page.browser_context
+
+      new_page = context.new_page
+      new_page.goto("#{server_prefix}/beforeunload.html")
+      # We have to interact with a page so that 'beforeunload' handlers
+      # fire.
+      new_page.click('body')
+      dialog_promise = resolvable_future { |f| new_page.once('dialog') { |d| f.fulfill(d) } }
+      new_page.close
+      sleep 0.2
+      expect(dialog_promise).not_to be_fulfilled
+    end
+
+    it 'should set the page close state' do
+      context = page.browser_context
+
+      new_page = context.new_page
+      expect(new_page).not_to be_closed
+      expect { new_page.close }.to change { new_page.closed? }.from(false).to(true)
+    end
+
+    it_fails_firefox 'should terminate network waiters', sinatra: true do
+      context = page.browser_context
+
+      new_page = context.new_page
+      req_promise = new_page.async_wait_for_request(url: server_empty_page)
+      res_promise = new_page.async_wait_for_response(url: server_empty_page)
       new_page.close
 
       expect { await req_promise }.to raise_error(/Target Closed/)
@@ -131,25 +113,21 @@ RSpec.describe Puppeteer::Page do
   # isn't fully done yet but raising an issue to ask the FF folks to have a
   # look at this.
   describe 'removing and adding event handlers' do
-    sinatra do
-      get ('/') { '' }
-    end
-
-    it 'should correctly fire event handlers as they are added and then removed', pending: 'Page#off is not implemented' do
+    it 'should correctly fire event handlers as they are added and then removed', pending: 'Page#off is not implemented', sinatra: true do
       handler = double('ResponseHandler')
       allow(handler).to receive(:on_response)
 
       page.on('response') { handler.on_response }
-      page.goto('http://127.0.0.1:4567/')
+      page.goto(server_empty_page)
       expect(handler).to have_received(:on_response).once
 
       page.off('response') { handler.on_response }
-      page.goto('http://127.0.0.1:4567/')
+      page.goto(server_empty_page)
       # Still one because we removed the handler.
       expect(handler).to have_received(:on_response).once
 
       page.on('response') { handler.on_response }
-      page.goto('http://127.0.0.1:4567/')
+      page.goto(server_empty_page)
       # Two now because we added the handler back.
       expect(handler).to have_received(:on_response).twice
     end
@@ -182,98 +160,87 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
     end
 
-    context 'with hello page' do
-      sinatra do
-        get("/") { '<a target=_blank href="/hello.html">yo</a>' }
-        get("/hello.html") { "hello" }
-      end
+    it_fails_firefox 'should work with clicking target=_blank', sinatra: true do
+      page.goto(server_empty_page)
+      page.content = '<a target=_blank href="/one-style.html">yo</a>'
 
-      it_fails_firefox 'should work with clicking target=_blank' do
-        page.goto('http://127.0.0.1:4567/')
+      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      page.click("a")
+      popup = await popup_promise
 
-        popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
-        page.click("a")
-        popup = await popup_promise
+      expect(page.evaluate("() => !!window.opener")).to eq(false)
+      expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
+    end
 
-        expect(page.evaluate("() => !!window.opener")).to eq(false)
-        expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
-      end
+    it_fails_firefox 'should work with clicking target=_blank and rel=opener', sinatra: true do
+      page.goto(server_empty_page)
+      page.content = '<a target=_blank rel=opener href="/one-style.html">yo</a>'
 
-      it_fails_firefox 'should work with clicking target=_blank and rel=opener' do
-        page.goto('http://127.0.0.1:4567/')
-        page.content = '<a target=_blank rel=opener href="/hello.html">yo</a>'
+      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      page.click("a")
+      popup = await popup_promise
 
-        popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
-        page.click("a")
-        popup = await popup_promise
+      expect(page.evaluate("() => !!window.opener")).to eq(false)
+      expect(popup.evaluate("() => !!window.opener")).to eq(true)
+    end
 
-        expect(page.evaluate("() => !!window.opener")).to eq(false)
-        expect(popup.evaluate("() => !!window.opener")).to eq(true)
-      end
+    it_fails_firefox 'should work with fake-clicking target=_blank and rel=noopener', sinatra: true do
+      page.goto(server_empty_page)
+      page.content = '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
 
-      it_fails_firefox 'should work with fake-clicking target=_blank and rel=noopener' do
-        page.goto('http://127.0.0.1:4567/')
-        page.content = '<a target=_blank rel=noopener href="/hello.html">yo</a>'
+      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      page.eval_on_selector("a", "(a) => a.click()")
+      popup = await popup_promise
 
-        popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
-        page.eval_on_selector("a", "(a) => a.click()")
-        popup = await popup_promise
+      expect(page.evaluate("() => !!window.opener")).to eq(false)
+      expect(popup.evaluate("() => !!window.opener")).to eq(false)
+    end
 
-        expect(page.evaluate("() => !!window.opener")).to eq(false)
-        expect(popup.evaluate("() => !!window.opener")).to eq(false)
-      end
+    it_fails_firefox 'should work with clicking target=_blank and rel=noopener', sinatra: true do
+      page.goto(server_empty_page)
+      page.content = '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
 
-      it_fails_firefox 'should work with clicking target=_blank and rel=noopener' do
-        page.goto('http://127.0.0.1:4567/')
-        page.content = '<a target=_blank rel=noopener href="/hello.html">yo</a>'
+      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      page.click("a")
+      popup = await popup_promise
 
-        popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
-        page.click("a")
-        popup = await popup_promise
-
-        expect(page.evaluate("() => !!window.opener")).to eq(false)
-        expect(popup.evaluate("() => !!window.opener")).to eq(false)
-      end
+      expect(page.evaluate("() => !!window.opener")).to eq(false)
+      expect(popup.evaluate("() => !!window.opener")).to eq(false)
     end
   end
 
-  describe 'BrowserContext#override_permissions', browser_context: :incognito do
-    sinatra do
-      get("/empty.html") { "" }
-    end
-
+  describe 'BrowserContext#override_permissions', browser_context: :incognito, sinatra: true do
     def get_permission_for(page, name)
       page.evaluate(
         "(name) => navigator.permissions.query({ name }).then((result) => result.state)",
         name)
     end
 
+    before {
+      page.goto(server_empty_page)
+    }
+
     it 'should be prompt by default' do
-      page.goto("http://127.0.0.1:4567/empty.html")
       expect(get_permission_for(page, "geolocation")).to eq("prompt")
     end
 
     it_fails_firefox 'should deny permission when not listed' do
-      page.goto("http://127.0.0.1:4567/empty.html")
-      page.browser_context.override_permissions("http://127.0.0.1:4567/", [])
+      page.browser_context.override_permissions(server_empty_page, [])
       expect(get_permission_for(page, "geolocation")).to eq("denied")
     end
 
     it 'should fail when bad permission is given' do
-      page.goto("http://127.0.0.1:4567/empty.html")
-      expect { page.browser_context.override_permissions("http://127.0.0.1:4567/", ['foo']) }.
+      expect { page.browser_context.override_permissions(server_empty_page, ['foo']) }.
         to raise_error(/Unknown permission: foo/)
     end
 
     it_fails_firefox 'should grant permission when listed' do
-      page.goto("http://127.0.0.1:4567/empty.html")
-      page.browser_context.override_permissions("http://127.0.0.1:4567/", ['geolocation'])
+      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
       expect(get_permission_for(page, "geolocation")).to eq("granted")
     end
 
     it_fails_firefox 'should reset permissions' do
-      page.goto("http://127.0.0.1:4567/empty.html")
-      page.browser_context.override_permissions("http://127.0.0.1:4567/", ['geolocation'])
+      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
 
       expect {
         page.browser_context.clear_permission_overrides
@@ -281,7 +248,6 @@ RSpec.describe Puppeteer::Page do
     end
 
     it_fails_firefox 'should trigger permission onchange' do
-      page.goto("http://127.0.0.1:4567/empty.html")
       js = <<~JAVASCRIPT
       () => {
         globalThis.events = [];
@@ -297,26 +263,24 @@ RSpec.describe Puppeteer::Page do
       JAVASCRIPT
       page.evaluate(js)
       expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt))
-      page.browser_context.override_permissions("http://127.0.0.1:4567/", [])
+      page.browser_context.override_permissions(server_empty_page, [])
       expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied))
-      page.browser_context.override_permissions("http://127.0.0.1:4567/", ['geolocation'])
+      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
       expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied granted))
       page.browser_context.clear_permission_overrides
       expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied granted prompt))
     end
 
     it_fails_firefox 'should isolate permissions between browser contexs' do
-      page.goto("http://127.0.0.1:4567/empty.html")
-
       other_context = page.browser.create_incognito_browser_context
       other_page = other_context.new_page
-      other_page.goto("http://127.0.0.1:4567/empty.html")
+      other_page.goto(server_empty_page)
 
       expect(get_permission_for(page, 'geolocation')).to eq("prompt")
       expect(get_permission_for(other_page, 'geolocation')).to eq("prompt")
 
-      page.browser_context.override_permissions("http://127.0.0.1:4567/", [])
-      other_context.override_permissions("http://127.0.0.1:4567/", ['geolocation'])
+      page.browser_context.override_permissions(server_empty_page, [])
+      other_context.override_permissions(server_empty_page, ['geolocation'])
 
       expect(get_permission_for(page, 'geolocation')).to eq("denied")
       expect(get_permission_for(other_page, 'geolocation')).to eq("granted")
@@ -331,46 +295,36 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe '#geolocation=' do
-    context 'with empty page' do
-      sinatra do
-        get('/empty.html') { "" }
-      end
+    it_fails_firefox 'should work', browser_context: :incognito, sinatra: true do
+      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
+      page.goto(server_empty_page)
+      page.geolocation = Puppeteer::Geolocation.new(latitude: 10, longitude: 20)
 
-      it_fails_firefox 'should work', browser_context: :incognito do
-        page.browser_context.override_permissions('http://127.0.0.1:4567/', ['geolocation'])
-        page.goto('http://127.0.0.1:4567/empty.html')
-        page.geolocation = Puppeteer::Geolocation.new(latitude: 10, longitude: 20)
+      js = <<~JAVASCRIPT
+      () =>
+      new Promise((resolve) =>
+        navigator.geolocation.getCurrentPosition((position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        })
+      )
+      JAVASCRIPT
 
-        js = <<~JAVASCRIPT
-        () =>
-        new Promise((resolve) =>
-          navigator.geolocation.getCurrentPosition((position) => {
-            resolve({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            });
-          })
-        )
-        JAVASCRIPT
+      geolocation = page.evaluate(js)
+      expect(geolocation).to eq({ "latitude" => 10, "longitude" => 20 })
+    end
 
-        geolocation = page.evaluate(js)
-        expect(geolocation).to eq({ "latitude" => 10, "longitude" => 20 })
-      end
-
-      it 'should throw when invalid longitude' do
-        expect { page.geolocation = Puppeteer::Geolocation.new(latitude: 10, longitude: 200) }.to raise_error(/Invalid longitude "200"/)
-      end
+    it 'should throw when invalid longitude' do
+      expect { page.geolocation = Puppeteer::Geolocation.new(latitude: 10, longitude: 200) }.to raise_error(/Invalid longitude "200"/)
     end
   end
 
   describe '#offline_mode=' do
-    sinatra do
-      get("/empty.html") { "" }
-    end
-
-    it_fails_firefox 'should work' do
+    it_fails_firefox 'should work', sinatra: true do
       page.offline_mode = true
-      expect { page.goto('http://127.0.0.1:4567/empty.html') }.to raise_error(/net::ERR_INTERNET_DISCONNECTED/)
+      expect { page.goto(server_empty_page) }.to raise_error(/net::ERR_INTERNET_DISCONNECTED/)
 
       page.offline_mode = false
       response = page.reload
@@ -918,62 +872,35 @@ RSpec.describe Puppeteer::Page do
   # });
 
   describe 'Page.Events.PageError' do
-    sinatra do
-      get('/error.html') do
-        <<~HTML
-        <script>
-        a();
-
-        function a() {
-            b();
-        }
-
-        function b() {
-            c();
-        }
-
-        function c() {
-            throw new Error('Fancy error!');
-        }
-        </script>
-        HTML
-      end
-    end
-
-    it 'should fire' do
+    it 'should fire', sinatra: true do
       Timeout.timeout(5) do
         error_promise = resolvable_future { |f| page.once('pageerror') { |err| f.fulfill(err) } }
-        page.goto('http://127.0.0.1:4567/error.html')
+        page.goto("#{server_prefix}/error.html")
         expect((await error_promise).message).to include("Fancy error!")
       end
     end
   end
 
-  describe '#user_agent=' do
+  describe '#user_agent=', sinatra: true do
     include Utils::AttachFrame
-    sinatra do
-      get('/mobile.html') {
-        '<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">'
-      }
-    end
 
     it 'should work' do
       expect(page.evaluate('() => navigator.userAgent')).to include('Mozilla')
       page.user_agent = 'foobar'
       async_wait_for_request = resolvable_future do |f|
-        sinatra.get('/empty.html') do
+        sinatra.get('/_empty.html') do
           f.fulfill(request)
           "EMPTY"
         end
       end
-      page.goto('http://127.0.0.1:4567/empty.html')
+      page.goto("#{server_prefix}/_empty.html")
       request = await async_wait_for_request
       expect(request.env['HTTP_USER_AGENT']).to eq('foobar')
     end
 
     it 'should work for subframes' do
       expect(page.evaluate('() => navigator.userAgent')).to include('Mozilla')
-      page.goto('http://127.0.0.1:4567/xx')
+      page.goto(server_empty_page)
       page.user_agent = 'foobar'
       async_wait_for_request = resolvable_future do |f|
         sinatra.get('/empty2.html') do
@@ -987,7 +914,7 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should emulate device user-agent' do
-      page.goto('http://127.0.0.1:4567/mobile.html')
+      page.goto("#{server_prefix}/mobile.html")
       expect(page.evaluate('() => navigator.userAgent')).not_to include('iPhone')
       page.user_agent = Puppeteer::Devices.iPhone_6.user_agent
       expect(page.evaluate('() => navigator.userAgent')).to include('iPhone')
@@ -1011,45 +938,45 @@ RSpec.describe Puppeteer::Page do
       expect(page.content).to eq("#{html4doctype}<html><head></head><body><div>hello</div></body></html>")
     end
 
-    context 'with stall for image page' do
-      sinatra do
-        get('/img.png') { sleep 1000 ; "" }
-      end
+    context 'with stall for image page', sinatra: true do
+      before {
+        sinatra.get('/img.png') { sleep 1000 ; "" }
+      }
 
       it 'should respect timeout' do
         Timeout.timeout(5) do
-          expect { page.set_content('<img src="http://127.0.0.1:4567/img.png" />', timeout: 1) }.to raise_error(Puppeteer::TimeoutError)
+          expect { page.set_content("<img src=\"#{server_prefix}/img.png\" />", timeout: 1) }.to raise_error(Puppeteer::TimeoutError)
         end
       end
 
       it 'should respect default navigation timeout' do
         page.default_navigation_timeout = 1
         Timeout.timeout(5) do
-          expect { page.content = '<img src="http://127.0.0.1:4567/img.png" />' }.to raise_error(Puppeteer::TimeoutError)
+          expect { page.content = "<img src=\"#{server_prefix}/img.png\" />" }.to raise_error(Puppeteer::TimeoutError)
+        end
+      end
+    end
+
+    it 'should await resources to load', sinatra: true do
+      async_wait_for_request = resolvable_future do |f|
+        sinatra.get('/img2.png') do
+          f.fulfill(request)
+
+          sleep 0.3 # emulate image to load
+          ""
         end
       end
 
-      it 'should await resources to load' do
-        async_wait_for_request = resolvable_future do |f|
-          sinatra.get('/img2.png') do
-            f.fulfill(request)
-
-            sleep 0.3 # emulate image to load
-            ""
-          end
-        end
-
-        content_promise = future do
-          page.content = '<img src="http://127.0.0.1:4567/img2.png" />'
-        end
-
-        await async_wait_for_request
-        expect(content_promise).not_to be_fulfilled
-
-        sleep 1 # wait for image loaded completely
-
-        expect(content_promise).to be_fulfilled
+      content_promise = future do
+        page.content = "<img src=\"#{server_prefix}/img2.png\" />"
       end
+
+      await async_wait_for_request
+      expect(content_promise).not_to be_fulfilled
+
+      sleep 1 # wait for image loaded completely
+
+      expect(content_promise).to be_fulfilled
     end
 
     it 'should work fast enough' do
@@ -1409,13 +1336,9 @@ RSpec.describe Puppeteer::Page do
   # });
 
   describe '#url' do
-    sinatra do
-      get("/empty.html") { "" }
-    end
-
-    it 'should work' do
-      expect { page.goto("http://127.0.0.1:4567/empty.html") }.to change { page.url }.
-        from("about:blank").to("http://127.0.0.1:4567/empty.html")
+    it 'should work', sinatra: true do
+      expect { page.goto(server_empty_page) }.to change { page.url }.
+        from("about:blank").to(server_empty_page)
     end
   end
 
@@ -1431,12 +1354,12 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  describe '#cache_enabled', browser_context: :incognito do
-    sinatra do
-      get("/cached/one-style.css") {
+  describe '#cache_enabled', browser_context: :incognito, sinatra: true do
+    before {
+      sinatra.get("/cached/_one-style.css") {
         "body { background-color: pink; }"
       }
-    end
+    }
 
     it 'should enable or disable the cache based on the state passed' do
       request_count = 0
@@ -1444,7 +1367,7 @@ RSpec.describe Puppeteer::Page do
       last_modified_timestamp = Time.now.iso8601
       sleep 1
 
-      sinatra.get('/cached/one-style.html') do
+      sinatra.get('/cached/_one-style.html') do
         request_count += 1
 
         # ref: https://github.com/puppeteer/puppeteer/blob/main/utils/testserver/index.js
@@ -1452,10 +1375,10 @@ RSpec.describe Puppeteer::Page do
         last_modified last_modified_timestamp
 
         response_count += 1
-        "<link rel='stylesheet' href='./one-style.css'><div>hello, world!</div>"
+        "<link rel='stylesheet' href='./_one-style.css'><div>hello, world!</div>"
       end
 
-      page.goto('http://127.0.0.1:4567/cached/one-style.html')
+      page.goto("#{server_prefix}/cached/_one-style.html")
       page.reload
 
       expect(request_count).to eq(2)
@@ -1475,7 +1398,7 @@ RSpec.describe Puppeteer::Page do
       last_modified_timestamp = Time.now.iso8601
       sleep 1
 
-      sinatra.get('/cached/one-style2.html') do
+      sinatra.get('/cached/_one-style2.html') do
         request_count += 1
 
         # ref: https://github.com/puppeteer/puppeteer/blob/main/utils/testserver/index.js
@@ -1483,10 +1406,10 @@ RSpec.describe Puppeteer::Page do
         last_modified last_modified_timestamp
 
         response_count += 1
-        "<link rel='stylesheet' href='./one-style.css'><div>hello, world!</div>"
+        "<link rel='stylesheet' href='./_one-style.css'><div>hello, world!</div>"
       end
 
-      page.goto('http://127.0.0.1:4567/cached/one-style2.html')
+      page.goto("#{server_prefix}/cached/_one-style2.html")
       page.reload
 
       page.cache_enabled = false
@@ -1501,14 +1424,10 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'printing to PDF' do
-    sinatra do
-      get("/") { "<h1>It Works!</h1>" }
-    end
-
-    it 'can print to PDF and save to file' do
+    it 'can print to PDF and save to file', sinatra: true do
       skip('Printing to pdf is currently only supported in headless') unless headless?
-
-      page.goto('http://127.0.0.1:4567/')
+      sinatra.get("/") { "<h1>It Works!</h1>" }
+      page.goto("#{server_prefix}/")
 
       Dir.mktmpdir do |tempdir|
         output_filepath = File.join(tempdir, "output.pdf")
@@ -1520,12 +1439,8 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe '#title' do
-    sinatra do
-      get("/title") { "<title>Woof-Woof</title>" }
-    end
-
-    it 'should return the page title' do
-      page.goto("http://127.0.0.1:4567/title")
+    it 'should return the page title', sinatra: true do
+      page.goto("#{server_prefix}/title.html")
       expect(page.title).to eq("Woof-Woof")
     end
   end

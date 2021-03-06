@@ -52,12 +52,12 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
     end
   end
 
-  describe 'target events' do
-    sinatra do
-      get '/test' do
+  describe 'target events', sinatra: true do
+    before {
+      sinatra.get('/test') do
         'test'
       end
-    end
+    }
 
     it_fails_firefox 'should fire target events' do
       context = browser.create_incognito_browser_context
@@ -73,34 +73,34 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       end
 
       page = context.new_page
-      page.goto('http://127.0.0.1:4567/test')
+      page.goto("#{server_prefix}/test")
       page.close
 
       expect(events).to eq([
         "CREATED: about:blank",
-        "CHANGED: http://127.0.0.1:4567/test",
-        "DESTROYED: http://127.0.0.1:4567/test",
+        "CHANGED: #{server_prefix}/test",
+        "DESTROYED: #{server_prefix}/test",
       ])
       context.close
     end
   end
 
-  describe 'wait for target' do
-    sinatra do
-      get '/test' do
+  describe 'wait for target', sinatra: true do
+    before {
+      sinatra.get('/test') do
         'test'
       end
-    end
+    }
 
     it_fails_firefox 'should wait for a target' do
       context = browser.create_incognito_browser_context
       resolved = false
-      target_promise = context.async_wait_for_target(predicate: -> (target) { target.url == 'http://127.0.0.1:4567/test' })
+      target_promise = context.async_wait_for_target(predicate: -> (target) { target.url == "#{server_prefix}/test" })
       target_promise.then { resolved = true }
 
       page = context.new_page
       expect(resolved).to eq(false)
-      page.goto('http://127.0.0.1:4567/test')
+      page.goto("#{server_prefix}/test")
       target = await target_promise
       expect(target.page).to eq(page)
       context.close
@@ -114,19 +114,19 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
       page = context.new_page
       expect(resolved).to eq(false)
-      page.goto('http://127.0.0.1:4567/test')
+      page.goto("#{server_prefix}/test")
       expect(resolved).to eq(false)
       expect { await target_promise }.to raise_error(Puppeteer::TimeoutError)
       context.close
     end
   end
 
-  describe 'isolation' do
-    sinatra do
-      get '/isolation' do
+  describe 'isolation', sinatra: true do
+    before {
+      sinatra.get('/isolation') do
         'test isolation'
       end
-    end
+    }
 
     it 'should isolate localStorage and cookies' do
       # Create two incognito contexts.
@@ -138,7 +138,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
       pages = contexts.map.with_index do |context, index|
         context.new_page.tap do |page|
-          page.goto('http://127.0.0.1:4567/isolation')
+          page.goto("#{server_prefix}/isolation")
           page.evaluate(<<~JAVASCRIPT)
           () => {
             localStorage.setItem('name', 'page#{index}');

@@ -82,21 +82,17 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
     end
   end
 
-  describe 'wait_for_selector (aria)', puppeteer: :page do
+  describe 'wait_for_selector (aria)', puppeteer: :page, sinatra: true do
     let(:add_element) { '(tag) => document.body.appendChild(document.createElement(tag))' }
 
-    sinatra do
-      get('/empty') { 'EMPTY' }
-    end
-
     it 'should immediately resolve promise if node exists' do
-      page.goto('http://127.0.0.1:4567/empty')
+      page.goto(server_empty_page)
       page.evaluate(add_element, 'button')
       Timeout.timeout(1) { page.wait_for_selector('aria/[role="button"]') }
     end
 
     it 'should persist query handler bindings across reloads' do
-      page.goto('http://127.0.0.1:4567/empty')
+      page.goto(server_empty_page)
       page.evaluate(add_element, 'button')
       Timeout.timeout(1) { page.wait_for_selector('aria/[role="button"]') }
       page.reload
@@ -107,13 +103,13 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
     it 'should persist query handler bindings across navigations' do
       # Reset page but make sure that execution context ids start with 1.
       page.goto('data:text/html,')
-      page.goto('http://127.0.0.1:4567/empty')
+      page.goto(server_empty_page)
       page.evaluate(add_element, 'button')
       Timeout.timeout(1) { page.wait_for_selector('aria/[role="button"]') }
 
       # Reset page but again make sure that execution context ids start with 1.
       page.goto('data:text/html,')
-      page.goto('http://127.0.0.1:4567/empty')
+      page.goto(server_empty_page)
       page.evaluate(add_element, 'button')
       Timeout.timeout(1) { page.wait_for_selector('aria/[role="button"]') }
     end

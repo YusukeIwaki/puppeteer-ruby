@@ -99,7 +99,9 @@ class Puppeteer::Page
     @client.on_event('Page.loadEventFired') do |event|
       emit_event(PageEmittedEvents::Load)
     end
-    # client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
+    @client.on('Runtime.consoleAPICalled') do |event|
+      handle_console_api(event)
+    end
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
     @client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
@@ -495,30 +497,31 @@ class Puppeteer::Page
     emit_event(PageEmittedEvents::PageError, err)
   end
 
-  # /**
-  #  * @param {!Protocol.Runtime.consoleAPICalledPayload} event
-  #  */
-  # async _onConsoleAPI(event) {
-  #   if (event.executionContextId === 0) {
-  #     // DevTools protocol stores the last 1000 console messages. These
-  #     // messages are always reported even for removed execution contexts. In
-  #     // this case, they are marked with executionContextId = 0 and are
-  #     // reported upon enabling Runtime agent.
-  #     //
-  #     // Ignore these messages since:
-  #     // - there's no execution context we can use to operate with message
-  #     //   arguments
-  #     // - these messages are reported before Puppeteer clients can subscribe
-  #     //   to the 'console'
-  #     //   page event.
-  #     //
-  #     // @see https://github.com/puppeteer/puppeteer/issues/3865
-  #     return;
-  #   }
-  #   const context = this._frameManager.executionContextById(event.executionContextId);
-  #   const values = event.args.map(arg => createJSHandle(context, arg));
-  #   this._addConsoleMessage(event.type, values, event.stackTrace);
-  # }
+  private def handle_console_api(event)
+    if event['executionContextId'] == 0
+      # DevTools protocol stores the last 1000 console messages. These
+      # messages are always reported even for removed execution contexts. In
+      # this case, they are marked with executionContextId = 0 and are
+      # reported upon enabling Runtime agent.
+      #
+      # Ignore these messages since:
+      # - there's no execution context we can use to operate with message
+      #   arguments
+      # - these messages are reported before Puppeteer clients can subscribe
+      #   to the 'console'
+      #   page event.
+      #
+      # @see https://github.com/puppeteer/puppeteer/issues/3865
+      return
+    end
+
+    context = @frame_manager.execution_context_by_id(event['executionContextId'])
+    values = event['args'].map do |arg|
+      remote_object = Puppeteer::RemoteObject.new(arg)
+      Puppeteer::JSHandle.create(context: context, remote_object: remote_object)
+    end
+    add_console_message(event['type'], values, event['stackTrace'])
+  end
 
   # /**
   #  * @param {!Protocol.Runtime.bindingCalledPayload} event
@@ -571,32 +574,23 @@ class Puppeteer::Page
   #   }
   # }
 
-  # /**
-  #  * @param {string} type
-  #  * @param {!Array<!Puppeteer.JSHandle>} args
-  #  * @param {Protocol.Runtime.StackTrace=} stackTrace
-  #  */
-  # _addConsoleMessage(type, args, stackTrace) {
-  #   if (!this.listenerCount(PageEmittedEvents::Console)) {
-  #     args.forEach(arg => arg.dispose());
-  #     return;
-  #   }
-  #   const textTokens = [];
-  #   for (const arg of args) {
-  #     const remoteObject = arg._remoteObject;
-  #     if (remoteObject.objectId)
-  #       textTokens.push(arg.toString());
-  #     else
-  #       textTokens.push(helper.valueFromRemoteObject(remoteObject));
-  #   }
-  #   const location = stackTrace && stackTrace.callFrames.length ? {
-  #     url: stackTrace.callFrames[0].url,
-  #     lineNumber: stackTrace.callFrames[0].lineNumber,
-  #     columnNumber: stackTrace.callFrames[0].columnNumber,
-  #   } : {};
-  #   const message = new ConsoleMessage(type, textTokens.join(' '), args, location);
-  #   this.emit(PageEmittedEvents::Console, message);
-  # }
+  private def add_console_message(type, args, stack_trace)
+    text_tokens = args.map { |arg| arg.remote_object.value }
+
+    call_frame = stack_trace['callFrames']&.first
+    location =
+      if call_frame
+        Puppeteer::ConsoleMessage::Location.new(
+          url: call_frame['url'],
+          line_number: call_frame['lineNumber'],
+          column_number: call_frame['columnNumber'],
+        )
+      else
+        nil
+      end
+    console_message = Puppeteer::ConsoleMessage.new(type, text_tokens.join(' '), args, location)
+    emit_event(PageEmittedEvents::Console, console_message)
+  end
 
   private def handle_dialog_opening(event)
     dialog_type = event['type']

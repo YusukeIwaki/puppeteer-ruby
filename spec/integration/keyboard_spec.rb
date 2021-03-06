@@ -51,30 +51,9 @@ RSpec.describe Puppeteer::Keyboard do
     end
   end
 
-  context 'with textarea page' do
-    sinatra do
-      get('/textarea') do
-        <<~HTML
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Textarea test</title>
-          </head>
-          <body>
-            <textarea></textarea>
-            <script>
-              globalThis.result = '';
-              globalThis.textarea = document.querySelector('textarea');
-              textarea.addEventListener('input', () => result = textarea.value, false);
-            </script>
-          </body>
-        </html>
-        HTML
-      end
-    end
-
+  context 'with textarea page', sinatra: true do
     before {
-      page.goto("http://127.0.0.1:4567/textarea")
+      page.goto("#{server_prefix}/input/textarea.html")
     }
 
     it 'should move with the arrow keys' do
@@ -196,58 +175,9 @@ RSpec.describe Puppeteer::Keyboard do
     end
   end
 
-  context 'with keyboard page' do
-    sinatra do
-      get('/keyboard') do
-        <<~HTML
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Keyboard test</title>
-          </head>
-          <body>
-            <textarea></textarea>
-            <script>
-              window.result = "";
-              let textarea = document.querySelector('textarea');
-              textarea.focus();
-              textarea.addEventListener('keydown', event => {
-                log('Keydown:', event.key, event.code, event.which, modifiers(event));
-              });
-              textarea.addEventListener('keypress', event => {
-                log('Keypress:', event.key, event.code, event.which, event.charCode, modifiers(event));
-              });
-              textarea.addEventListener('keyup', event => {
-                log('Keyup:', event.key, event.code, event.which, modifiers(event));
-              });
-              function modifiers(event) {
-                let m = [];
-                if (event.altKey)
-                  m.push('Alt')
-                if (event.ctrlKey)
-                  m.push('Control');
-                if (event.shiftKey)
-                  m.push('Shift')
-                return '[' + m.join(' ') + ']';
-              }
-              function log(...args) {
-                console.log.apply(console, args);
-                result += args.join(' ') + '\\n';
-              }
-              function getResult() {
-                let temp = result.trim();
-                result = "";
-                return temp;
-              }
-            </script>
-          </body>
-        </html>
-        HTML
-      end
-    end
-
+  context 'with keyboard page', sinatra: true do
     before {
-      page.goto("http://127.0.0.1:4567/keyboard")
+      page.goto("#{server_prefix}/input/keyboard.html")
     }
 
     {
@@ -345,36 +275,12 @@ RSpec.describe Puppeteer::Keyboard do
     expect { page.keyboard.press('😊') }.to raise_error(/Unknown key: "😊"/)
   end
 
-  context 'with textarea page and iframe' do
+  context 'with textarea page and iframe', sinatra: true do
     include Utils::AttachFrame
 
-    sinatra do
-      get('/') do
-        '<html><body></body></html>'
-      end
-      get('/textarea') do
-        <<~HTML
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Textarea test</title>
-          </head>
-          <body>
-            <textarea></textarea>
-            <script>
-              globalThis.result = '';
-              globalThis.textarea = document.querySelector('textarea');
-              textarea.addEventListener('input', () => result = textarea.value, false);
-            </script>
-          </body>
-        </html>
-        HTML
-      end
-    end
-
     before {
-      page.goto("http://127.0.0.1:4567/")
-      attach_frame(page, 'emoji-test', '/textarea')
+      page.goto(server_empty_page)
+      attach_frame(page, 'emoji-test', '/input/textarea.html')
     }
 
     it_fails_firefox 'should type emoji into an iframe' do

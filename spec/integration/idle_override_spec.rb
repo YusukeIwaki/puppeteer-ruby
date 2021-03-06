@@ -6,39 +6,9 @@ RSpec.describe 'Emulate idle state' do
     page.evaluate('(element) => element.innerText', state_element)
   end
 
-  sinatra do
-    get('/idle-detector.html') do
-      <<~HTML
-      <!DOCTYPE html>
-      <div id="state"></div>
-      <script>
-        const elState = document.querySelector('#state');
-        function setState(msg) {
-          elState.textContent = msg;
-        }
-        async function main() {
-          const controller = new AbortController();
-          const signal = controller.signal;
-          const idleDetector = new IdleDetector({
-            threshold: 60000,
-            signal,
-          });
-          idleDetector.addEventListener('change', () => {
-            const userState = idleDetector.userState;
-            const screenState = idleDetector.screenState;
-            setState(`Idle state: ${userState}, ${screenState}.`);
-          });
-          idleDetector.start();
-        }
-        main();
-      </script>
-      HTML
-    end
-  end
-
-  it_fails_firefox 'changing idle state emulation causes change of the IdleDetector state', browser_context: :incognit do
-    page.browser_context.override_permissions("http://127.0.0.1:4567/idle-detector.html", ['idle-detection'])
-    page.goto('http://127.0.0.1:4567/idle-detector.html')
+  it_fails_firefox 'changing idle state emulation causes change of the IdleDetector state', browser_context: :incognit, sinatra: true do
+    page.browser_context.override_permissions("#{server_prefix}/idle-detector.html", ['idle-detection'])
+    page.goto("#{server_prefix}/idle-detector.html")
 
     # Store initial state, as soon as it is not guaranteed to be `active, unlocked`.
     initial_state = idle_state_for(page)

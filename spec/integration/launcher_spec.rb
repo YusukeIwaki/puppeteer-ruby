@@ -2,30 +2,25 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::Launcher do
   describe 'Browser#disconnect', puppeteer: :browser do
-    context 'with one-style page' do
-      sinatra do
-        get('/one-style.html') do
-          "<link rel='stylesheet' href='./one-style.css'><div>hello, world!</div>"
-        end
+    it 'should reject navigation when browser closes', sinatra: true do
+      remote = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
+      page = remote.new_page
+
+      # try to disconnect remote connection exactly during loading css.
+      wait_for_css = resolvable_future
+      sinatra.get('/_one-style.html') do
+        "<link rel='stylesheet' href='./_one-style.css'><div>hello, world!</div>"
       end
-
-      it 'should reject navigation when browser closes' do
-        remote = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
-        page = remote.new_page
-
-        # try to disconnect remote connection exactly during loading css.
-        wait_for_css = resolvable_future
-        sinatra.get('/one-style.css') do
-          wait_for_css.fulfill(nil)
-          sleep 30
-          "body { background-color: pink; }"
-        end
-        navigation_promise = future { page.goto('http://127.0.0.1:4567/one-style.html') }
-        wait_for_css.then { sleep 0.02; remote.disconnect }
-
-        expect { await navigation_promise }.to raise_error(/Navigation failed because browser has disconnected!/)
-        browser.close
+      sinatra.get('/_one-style.css') do
+        wait_for_css.fulfill(nil)
+        sleep 30
+        "body { background-color: pink; }"
       end
+      navigation_promise = future { page.goto("#{server_prefix}/_one-style.html") }
+      wait_for_css.then { sleep 0.02; remote.disconnect }
+
+      expect { await navigation_promise }.to raise_error(/Navigation failed because browser has disconnected!/)
+      browser.close
     end
 
     it 'should reject wait_for_selector when browser closes' do
@@ -41,17 +36,13 @@ RSpec.describe Puppeteer::Launcher do
   end
 
   describe 'Browser#close', puppeteer: :browser do
-    sinatra do
-      get('/empty.html') { "" }
-    end
-
-    it 'should terminate network waiters' do
+    it 'should terminate network waiters', sinatra: true do
       remote = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
       new_page = remote.new_page
 
-      wait_for_request = new_page.async_wait_for_request(url: 'http://localhost:4567/empty.html')
-      wait_for_response = new_page.async_wait_for_response(url: 'http://localhost:4567/empty.html')
+      wait_for_request = new_page.async_wait_for_request(url: server_empty_page)
+      wait_for_response = new_page.async_wait_for_response(url: server_empty_page)
 
       browser.close
       expect { await wait_for_request }.to raise_error(/Target Closed/)
@@ -120,57 +111,51 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    context 'with empty page' do
-      sinatra do
-        get('/empty.html') { "" }
-      end
+    it 'user_data_dir option should restore state', sinatra: true do
+      Dir.mktmpdir do |user_data_dir|
+        options = default_launch_options.merge(
+          user_data_dir: user_data_dir,
+        )
 
-      it 'user_data_dir option should restore state' do
-        Dir.mktmpdir do |user_data_dir|
-          options = default_launch_options.merge(
-            user_data_dir: user_data_dir,
-          )
+        Puppeteer.launch(**options) do |browser|
+          # Open a page to make sure its functional.
+          page = browser.new_page
+          page.goto(server_empty_page)
+          page.evaluate("() => (localStorage.hey = 'hello')")
+        end
 
-          Puppeteer.launch(**options) do |browser|
-            # Open a page to make sure its functional.
-            page = browser.new_page
-            page.goto('http://localhost:4567/empty.html')
-            page.evaluate("() => (localStorage.hey = 'hello')")
-          end
-
-          Puppeteer.launch(**options) do |browser|
-            # Open a page to make sure its functional.
-            page = browser.new_page
-            page.goto('http://localhost:4567/empty.html')
-            expect(page.evaluate("() => localStorage.hey")).to eq('hello')
-          end
+        Puppeteer.launch(**options) do |browser|
+          # Open a page to make sure its functional.
+          page = browser.new_page
+          page.goto(server_empty_page)
+          expect(page.evaluate("() => localStorage.hey")).to eq('hello')
         end
       end
+    end
 
-      it 'user_data_dir option should restore cookies' do
-        Dir.mktmpdir do |user_data_dir|
-          options = default_launch_options.merge(
-            user_data_dir: user_data_dir,
-          )
+    it 'user_data_dir option should restore cookies', sinatra: true do
+      Dir.mktmpdir do |user_data_dir|
+        options = default_launch_options.merge(
+          user_data_dir: user_data_dir,
+        )
 
-          Puppeteer.launch(**options) do |browser|
-            # Open a page to make sure its functional.
-            page = browser.new_page
-            page.goto('http://localhost:4567/empty.html')
-            js = <<~JAVASCRIPT
-            () =>
-              (document.cookie =
-                'doSomethingOnlyOnce=true; expires=Fri, 31 Dec 9999 23:59:59 GMT')
-            JAVASCRIPT
-            page.evaluate(js)
-          end
+        Puppeteer.launch(**options) do |browser|
+          # Open a page to make sure its functional.
+          page = browser.new_page
+          page.goto(server_empty_page)
+          js = <<~JAVASCRIPT
+          () =>
+            (document.cookie =
+              'doSomethingOnlyOnce=true; expires=Fri, 31 Dec 9999 23:59:59 GMT')
+          JAVASCRIPT
+          page.evaluate(js)
+        end
 
-          Puppeteer.launch(**options) do |browser|
-            # Open a page to make sure its functional.
-            page = browser.new_page
-            page.goto('http://localhost:4567/empty.html')
-            expect(page.evaluate("() => document.cookie")).to eq('doSomethingOnlyOnce=true')
-          end
+        Puppeteer.launch(**options) do |browser|
+          # Open a page to make sure its functional.
+          page = browser.new_page
+          page.goto(server_empty_page)
+          expect(page.evaluate("() => document.cookie")).to eq('doSomethingOnlyOnce=true')
         end
       end
     end
@@ -212,20 +197,20 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    it 'should have custom URL when launching browser', pending: Puppeteer.env.ci? && Puppeteer.env.firefox? do
+    it 'should have custom URL when launching browser', pending: Puppeteer.env.ci? && Puppeteer.env.firefox?, sinatra: true do
       options = default_launch_options.dup
       options[:args] ||= []
-      options[:args] += ['http://example.com/empty.html']
+      options[:args] += [server_empty_page]
 
       Puppeteer.launch(**options) do |browser|
         expect(browser.pages.size).to eq(1)
 
         page = browser.pages.first
-        unless page.url == 'http://example.com/empty.html'
+        unless page.url == server_empty_page
           await page.async_wait_for_navigation
         end
 
-        expect(page.url).to eq('http://example.com/empty.html')
+        expect(page.url).to eq(server_empty_page)
       end
     end
 
@@ -255,26 +240,18 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    context 'with longlong page' do
-      sinatra do
-        get('/longlong.html') do
-          "<body>#{1000.times.map(&:to_s).join("<br />")}</body>"
-        end
-      end
+    it 'should take fullPage screenshots when defaultViewport is null', sinatra: true do
+      options = default_launch_options.merge(
+        default_viewport: nil,
+      )
 
-      it 'should take fullPage screenshots when defaultViewport is null' do
-        options = default_launch_options.merge(
-          default_viewport: nil,
-        )
+      Puppeteer.launch(**options) do |browser|
+        page = browser.new_page
+        page.goto("#{server_prefix}/grid.html")
+        screenshot = page.screenshot(full_page: true)
 
-        Puppeteer.launch(**options) do |browser|
-          page = browser.new_page
-          page.goto('http://127.0.0.1:4567/longlong.html')
-          screenshot = page.screenshot(full_page: true)
-
-          # FIXME: It would be better to check the height of this screenshot here.
-          expect(screenshot.size).to be > 500000
-        end
+        # FIXME: It would be better to check the height of this screenshot here.
+        expect(screenshot.size).to be > 50000
       end
     end
   end
@@ -380,6 +357,8 @@ RSpec.describe Puppeteer::Launcher do
 #   });
 
   describe 'Puppeteer.connect', puppeteer: :browser do
+    include Utils::DumpFrames
+
     it 'should be able to connect multiple times to the same browser' do
       other_browser = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
@@ -397,7 +376,7 @@ RSpec.describe Puppeteer::Launcher do
       Timeout.timeout(3) do
         await_all(
           resolvable_future { |f| browser.once('disconnected') { f.fulfill(nil) } },
-          future { remote_browser.close }
+          future { remote_browser.close },
         )
       end
     end
@@ -431,101 +410,26 @@ RSpec.describe Puppeteer::Launcher do
     #       await browser.close();
     #     });
 
-    context 'with nested frames page' do
-      sinatra do
-        get('/nested-frames.html') do
-          <<~HTML
-          <style>
-          body {
-              display: flex;
-          }
+    it_fails_firefox 'should be able to reconnect to a disconnected browser', sinatra: true do
+      ws_endpoint = browser.ws_endpoint
 
-          body iframe {
-              flex-grow: 1;
-              flex-shrink: 1;
-          }
-          ::-webkit-scrollbar{
-              display: none;
-          }
-          html { /* for Firefox */
-            scrollbar-width: none;
-          }
-          </style>
-          <script>
-          async function attachFrame(frameId, url) {
-              var frame = document.createElement('iframe');
-              frame.src = url;
-              frame.id = frameId;
-              document.body.appendChild(frame);
-              await new Promise(x => frame.onload = x);
-              return 'kazakh';
-          }
-          </script>
-          <iframe src='./two-frames.html' name='2frames'></iframe>
-          <iframe src='./frame.html' name='aframe'></iframe>
-          HTML
+      page = browser.new_page
+      page.goto("#{server_prefix}/frames/nested-frames.html")
+      browser.disconnect
+
+      Puppeteer.connect(browser_ws_endpoint: ws_endpoint) do |remote_browser|
+        restored_page = remote_browser.pages.find do |page|
+          page.url == "#{server_prefix}/frames/nested-frames.html"
         end
-        get('/two-frames.html') do
-          <<~HTML
-          <style>
-          body {
-              display: flex;
-              flex-direction: column;
-          }
 
-          body iframe {
-              flex-grow: 1;
-              flex-shrink: 1;
-          }
-
-          html { /* for Firefox */
-            scrollbar-width: none;
-          }
-          </style>
-          <iframe src='./frame.html' name='uno'></iframe>
-          <iframe src='./frame.html' name='dos'></iframe>
-          HTML
-        end
-        get('/frame.html') do
-          <<~HTML
-          <script src='./script.js' type='text/javascript'></script>
-          <style>
-          div {
-            color: blue;
-            line-height: 18px;
-          }
-          </style>
-          <div>Hi, I'm frame</div>
-          HTML
-        end
-        get('/empty.html') do
-          ''
-        end
-      end
-
-      include Utils::DumpFrames
-
-      it_fails_firefox 'should be able to reconnect to a disconnected browser' do
-        ws_endpoint = browser.ws_endpoint
-
-        page = browser.new_page
-        page.goto('http://127.0.0.1:4567/nested-frames.html')
-        browser.disconnect
-
-        Puppeteer.connect(browser_ws_endpoint: ws_endpoint) do |remote_browser|
-          restored_page = remote_browser.pages.find do |page|
-            page.url == 'http://127.0.0.1:4567/nested-frames.html'
-          end
-
-          expect(dump_frames(restored_page.main_frame)).to eq([
-            'http://127.0.0.1:<PORT>/nested-frames.html',
-            '    http://127.0.0.1:<PORT>/two-frames.html (2frames)',
-            '        http://127.0.0.1:<PORT>/frame.html (uno)',
-            '        http://127.0.0.1:<PORT>/frame.html (dos)',
-            '    http://127.0.0.1:<PORT>/frame.html (aframe)',
-          ])
-          expect(restored_page.evaluate('() => 7 * 8')).to eq(56)
-        end
+        expect(dump_frames(restored_page.main_frame)).to eq([
+          'http://localhost:<PORT>/frames/nested-frames.html',
+          '    http://localhost:<PORT>/frames/two-frames.html (2frames)',
+          '        http://localhost:<PORT>/frames/frame.html (uno)',
+          '        http://localhost:<PORT>/frames/frame.html (dos)',
+          '    http://localhost:<PORT>/frames/frame.html (aframe)',
+        ])
+        expect(restored_page.evaluate('() => 7 * 8')).to eq(56)
       end
     end
 
@@ -567,14 +471,14 @@ RSpec.describe Puppeteer::Launcher do
   end
 
   describe 'Browser target events', puppeteer: :browser do
-    it 'should work' do
+    it 'should work', sinatra: true do
       events = []
       browser.on('targetcreated') { events << 'CREATED' }
       browser.on('targetchanged') { events << 'CHANGED' }
       browser.on('targetdestroyed') { events << 'DESTROYED' }
 
       page = browser.new_page
-      page.goto('http://example.com/')
+      page.goto(server_empty_page)
       page.close
 
       if Puppeteer.env.firefox?
