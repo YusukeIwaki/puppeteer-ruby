@@ -153,16 +153,19 @@ class Puppeteer::Frame
     @detached
   end
 
-  # @param style_tag [Puppeteer::Page::ScriptTag]
-  # @return {!Promise<!ElementHandle>}
-  def add_script_tag(script_tag)
-    @main_world.add_script_tag(script_tag)
+  # @param url [String?]
+  # @param path [String?]
+  # @param content [String?]
+  # @param type [String?]
+  def add_script_tag(url: nil, path: nil, content: nil, type: nil)
+    @main_world.add_script_tag(url: url, path: path, content: content, type: type)
   end
 
-  # @param style_tag [Puppeteer::Page::StyleTag]
-  # @return {!Promise<!ElementHandle>}
-  def add_style_tag(style_tag)
-    @main_world.add_style_tag(style_tag)
+  # @param url [String?]
+  # @param path [String?]
+  # @param content [String?]
+  def add_style_tag(url: nil, path: nil, content: nil)
+    @main_world.add_style_tag(url: url, path: path, content: content)
   end
 
   # @param selector [String]

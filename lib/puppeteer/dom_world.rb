@@ -230,83 +230,74 @@ class Puppeteer::DOMWorld
     end
   end
 
-  # /**
-  #  * @param {!{url?: string, path?: string, content?: string, type?: string}} options
-  #  * @return {!Promise<!Puppeteer.ElementHandle>}
-  #  */
-  # async addScriptTag(options) {
-  #   const {
-  #     url = null,
-  #     path = null,
-  #     content = null,
-  #     type = ''
-  #   } = options;
-  #   if (url !== null) {
-  #     try {
-  #       const context = await this.executionContext();
-  #       return (await context.evaluateHandle(addScriptUrl, url, type)).asElement();
-  #     } catch (error) {
-  #       throw new Error(`Loading script from ${url} failed`);
-  #     }
-  #   }
+  # @param url [String?]
+  # @param path [String?]
+  # @param content [String?]
+  # @param type [String?]
+  def add_script_tag(url: nil, path: nil, content: nil, type: nil)
+    if url
+      begin
+        return execution_context.
+          evaluate_handle(ADD_SCRIPT_URL, url, type || '').
+          as_element
+      rescue Puppeteer::ExecutionContext::EvaluationError
+        raise "Loading script from #{url} failed"
+      end
+    end
 
-  #   if (path !== null) {
-  #     let contents = await readFileAsync(path, 'utf8');
-  #     contents += '//# sourceURL=' + path.replace(/\n/g, '');
-  #     const context = await this.executionContext();
-  #     return (await context.evaluateHandle(addScriptContent, contents, type)).asElement();
-  #   }
+    if path
+      contents = File.read(path)
+      contents += "//# sourceURL=#{path.gsub(/\n/, '')}"
+      return execution_context.
+        evaluate_handle(ADD_SCRIPT_CONTENT, contents, type || '').
+        as_element
+    end
 
-  #   if (content !== null) {
-  #     const context = await this.executionContext();
-  #     return (await context.evaluateHandle(addScriptContent, content, type)).asElement();
-  #   }
+    if content
+      return execution_context.
+        evaluate_handle(ADD_SCRIPT_CONTENT, content, type || '').
+        as_element
+    end
 
-  #   throw new Error('Provide an object with a `url`, `path` or `content` property');
+    raise ArgumentError.new('Provide an object with a `url`, `path` or `content` property')
+  end
 
-  #   /**
-  #    * @param {string} url
-  #    * @param {string} type
-  #    * @return {!Promise<!HTMLElement>}
-  #    */
-  #   async function addScriptUrl(url, type) {
-  #     const script = document.createElement('script');
-  #     script.src = url;
-  #     if (type)
-  #       script.type = type;
-  #     const promise = new Promise((res, rej) => {
-  #       script.onload = res;
-  #       script.onerror = rej;
-  #     });
-  #     document.head.appendChild(script);
-  #     await promise;
-  #     return script;
-  #   }
+  ADD_SCRIPT_URL = <<~JAVASCRIPT
+  async (url, type) => {
+    const script = document.createElement('script');
+    script.src = url;
+    if (type)
+      script.type = type;
+    const promise = new Promise((res, rej) => {
+      script.onload = res;
+      script.onerror = rej;
+    });
+    document.head.appendChild(script);
+    await promise;
+    return script;
+  }
+  JAVASCRIPT
 
-  #   /**
-  #    * @param {string} content
-  #    * @param {string} type
-  #    * @return {!HTMLElement}
-  #    */
-  #   function addScriptContent(content, type = 'text/javascript') {
-  #     const script = document.createElement('script');
-  #     script.type = type;
-  #     script.text = content;
-  #     let error = null;
-  #     script.onerror = e => error = e;
-  #     document.head.appendChild(script);
-  #     if (error)
-  #       throw error;
-  #     return script;
-  #   }
-  # }
+  ADD_SCRIPT_CONTENT = <<~JAVASCRIPT
+  (content, type) => {
+    if (type === undefined) type = 'text/javascript';
+    const script = document.createElement('script');
+    script.type = type;
+    script.text = content;
+    let error = null;
+    script.onerror = e => error = e;
+    document.head.appendChild(script);
+    if (error)
+      throw error;
+    return script;
+  }
+  JAVASCRIPT
 
-  # /**
-  #  * @param {!{url?: string, path?: string, content?: string}} options
-  #  * @return {!Promise<!Puppeteer.ElementHandle>}
-  #  */
-  # async addStyleTag(options) {
-  #   const {
+  # @param url [String?]
+  # @param path [String?]
+  # @param content [String?]
+  def add_style_tag(url: nil, path: nil, content: nil)
+    #   const {
   #     url = null,
   #     path = null,
   #     content = null
@@ -368,6 +359,7 @@ class Puppeteer::DOMWorld
   #     return style;
   #   }
   # }
+  end
 
   class ElementNotFoundError < StandardError
     def initialize(selector)
