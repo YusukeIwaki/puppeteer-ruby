@@ -1006,7 +1006,7 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  describe '#bypass_csp=' do
+  describe '#bypass_csp=', skip: Puppeteer.env.firefox? do
     it 'should bypass CSP meta tag', sinatra: true do
       # Make sure CSP prohibits addScriptTag.
       page.goto("#{server_prefix}/csp.html")

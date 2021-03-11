@@ -240,7 +240,9 @@ class Puppeteer::DOMWorld
         return execution_context.
           evaluate_handle(ADD_SCRIPT_URL, url, type || '').
           as_element
-      rescue Puppeteer::ExecutionContext::EvaluationError
+      rescue Puppeteer::ExecutionContext::EvaluationError # for Chrome
+        raise "Loading script from #{url} failed"
+      rescue Puppeteer::Connection::ProtocolError # for Firefox
         raise "Loading script from #{url} failed"
       end
     end
