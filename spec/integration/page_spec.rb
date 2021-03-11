@@ -1006,23 +1006,20 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describeFailsFirefox('Page.setBypassCSP', function () {
-  #   it('should bypass CSP meta tag', async () => {
-  #     const { page, server } = getTestState();
+  describe '#bypass_csp=', skip: Puppeteer.env.firefox? do
+    it 'should bypass CSP meta tag', sinatra: true do
+      # Make sure CSP prohibits addScriptTag.
+      page.goto("#{server_prefix}/csp.html")
+      page.add_script_tag(content: 'window.__injected = 42;')
+      expect(page.evaluate('() => globalThis.__injected')).to be_nil
 
-  #     // Make sure CSP prohibits addScriptTag.
-  #     await page.goto(server.PREFIX + '/csp.html');
-  #     await page
-  #       .addScriptTag({ content: 'window.__injected = 42;' })
-  #       .catch((error) => void error);
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(undefined);
-
-  #     // By-pass CSP and try one more time.
-  #     await page.setBypassCSP(true);
-  #     await page.reload();
-  #     await page.addScriptTag({ content: 'window.__injected = 42;' });
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(42);
-  #   });
+      # By-pass CSP and try one more time.
+      page.bypass_csp = true
+      page.reload
+      page.add_script_tag(content: 'window.__injected = 42;')
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+    end
+  end
 
   #   it('should bypass CSP header', async () => {
   #     const { page, server } = getTestState();
@@ -1091,134 +1088,80 @@ RSpec.describe Puppeteer::Page do
   #   });
   # });
 
-  # describe('Page.addScriptTag', function () {
-  #   it('should throw an error if no options are provided', async () => {
-  #     const { page } = getTestState();
+  describe '#add_script_tag' do
+    it 'should throw an error if no options are provided' do
+      expect { page.add_script_tag }.to raise_error(/Provide an object with a `url`, `path` or `content` property/)
+    end
 
-  #     let error = null;
-  #     try {
-  #       // @ts-expect-error purposefully passing bad options
-  #       await page.addScriptTag('/injectedfile.js');
-  #     } catch (error_) {
-  #       error = error_;
-  #     }
-  #     expect(error.message).toBe(
-  #       'Provide an object with a `url`, `path` or `content` property'
-  #     );
-  #   });
+    it 'should work with a url', sinatra: true do
+      page.goto(server_empty_page)
+      script_handle = page.add_script_tag(url: '/injectedfile.js')
+      expect(script_handle.as_element).to be_a(Puppeteer::ElementHandle)
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+    end
 
-  #   it('should work with a url', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with a url and type=module', sinatra: true do
+      page.goto(server_empty_page)
+      page.add_script_tag(url: '/es6/es6import.js', type: 'module')
+      expect(page.evaluate('() => globalThis.__es6injected')).to eq(42)
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const scriptHandle = await page.addScriptTag({ url: '/injectedfile.js' });
-  #     expect(scriptHandle.asElement()).not.toBeNull();
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(42);
-  #   });
+    it 'should work with a path and type=module', sinatra: true do
+      page.goto(server_empty_page)
+      page.add_script_tag(path: 'spec/assets/es6/es6pathimport.js', type: 'module')
+      page.wait_for_function('() => window.__es6injected')
+      expect(page.evaluate('() => globalThis.__es6injected')).to eq(42)
+    end
 
-  #   it('should work with a url and type=module', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with a content and type=module', sinatra: true do
+      page.goto(server_empty_page)
+      page.add_script_tag(
+        content: "import num from '/es6/es6module.js';window.__es6injected = num;",
+        type: 'module',
+      )
+      page.wait_for_function('() => window.__es6injected')
+      expect(page.evaluate('() => globalThis.__es6injected')).to eq(42)
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.addScriptTag({ url: '/es6/es6import.js', type: 'module' });
-  #     expect(await page.evaluate(() => globalThis.__es6injected)).toBe(42);
-  #   });
+    it 'should throw an error if loading from url fail', sinatra: true do
+      page.goto(server_empty_page)
+      expect {
+        page.add_script_tag(url: '/nonexistfile.js')
+      }.to raise_error(/Loading script from \/nonexistfile.js failed/)
+    end
 
-  #   it('should work with a path and type=module', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with a path', sinatra: true do
+      page.goto(server_empty_page)
+      script_handle = page.add_script_tag(path: 'spec/assets/injectedfile.js')
+      expect(script_handle.as_element).to be_a(Puppeteer::ElementHandle)
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.addScriptTag({
-  #       path: path.join(__dirname, 'assets/es6/es6pathimport.js'),
-  #       type: 'module',
-  #     });
-  #     await page.waitForFunction('window.__es6injected');
-  #     expect(await page.evaluate(() => globalThis.__es6injected)).toBe(42);
-  #   });
+    it 'should include sourcemap when path is provided', sinatra: true do
+      page.goto(server_empty_page)
+      page.add_script_tag(path: 'spec/assets/injectedfile.js')
+      result = page.evaluate('() => globalThis.__injectedError.stack')
+      expect(result).to include('spec/assets/injectedfile.js')
+    end
 
-  #   it('should work with a content and type=module', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with content', sinatra: true do
+      page.goto(server_empty_page)
+      script_handle = page.add_script_tag(content: 'window.__injected = 35;')
+      expect(script_handle.as_element).to be_a(Puppeteer::ElementHandle)
+      expect(page.evaluate('() => globalThis.__injected')).to eq(35)
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.addScriptTag({
-  #       content: `import num from '/es6/es6module.js';window.__es6injected = num;`,
-  #       type: 'module',
-  #     });
-  #     await page.waitForFunction('window.__es6injected');
-  #     expect(await page.evaluate(() => globalThis.__es6injected)).toBe(42);
-  #   });
+    #  @see https://github.com/puppeteer/puppeteer/issues/4840
+    it 'should throw when added with content to the CSP page', sinatra: true, pending: true do
+      page.goto("#{server_prefix}/csp.html")
+      expect { page.add_script_tag(content: 'window.__injected = 35;') }.to raise_error
+    end
 
-  #   it('should throw an error if loading from url fail', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     let error = null;
-  #     try {
-  #       await page.addScriptTag({ url: '/nonexistfile.js' });
-  #     } catch (error_) {
-  #       error = error_;
-  #     }
-  #     expect(error.message).toBe('Loading script from /nonexistfile.js failed');
-  #   });
-
-  #   it('should work with a path', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const scriptHandle = await page.addScriptTag({
-  #       path: path.join(__dirname, 'assets/injectedfile.js'),
-  #     });
-  #     expect(scriptHandle.asElement()).not.toBeNull();
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(42);
-  #   });
-
-  #   it('should include sourcemap when path is provided', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.addScriptTag({
-  #       path: path.join(__dirname, 'assets/injectedfile.js'),
-  #     });
-  #     const result = await page.evaluate(
-  #       () => globalThis.__injectedError.stack
-  #     );
-  #     expect(result).toContain(path.join('assets', 'injectedfile.js'));
-  #   });
-
-  #   it('should work with content', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const scriptHandle = await page.addScriptTag({
-  #       content: 'window.__injected = 35;',
-  #     });
-  #     expect(scriptHandle.asElement()).not.toBeNull();
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(35);
-  #   });
-
-  #   // @see https://github.com/puppeteer/puppeteer/issues/4840
-  #   xit('should throw when added with content to the CSP page', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.PREFIX + '/csp.html');
-  #     let error = null;
-  #     await page
-  #       .addScriptTag({ content: 'window.__injected = 35;' })
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeTruthy();
-  #   });
-
-  #   it('should throw when added with URL to the CSP page', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.PREFIX + '/csp.html');
-  #     let error = null;
-  #     await page
-  #       .addScriptTag({ url: server.CROSS_PROCESS_PREFIX + '/injectedfile.js' })
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeTruthy();
-  #   });
-  # });
+    it 'should throw when added with URL to the CSP page', sinatra: true do
+      page.goto("#{server_prefix}/csp.html")
+      expect { page.add_script_tag(url: "#{server_cross_process_prefix}/injectedfile.js") }.to raise_error(/Loading script from http.* failed/)
+    end
+  end
 
   # describe('Page.addStyleTag', function () {
   #   it('should throw an error if no options are provided', async () => {
