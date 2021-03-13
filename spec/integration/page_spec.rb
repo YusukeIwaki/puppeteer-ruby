@@ -1163,120 +1163,57 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describe('Page.addStyleTag', function () {
-  #   it('should throw an error if no options are provided', async () => {
-  #     const { page } = getTestState();
+  describe '#add_style_tag' do
+    it 'should throw an error if no options are provided' do
+      expect { page.add_style_tag }.to raise_error(/Provide an object with a `url`, `path` or `content` property/)
+    end
 
-  #     let error = null;
-  #     try {
-  #       // @ts-expect-error purposefully passing bad input
-  #       await page.addStyleTag('/injectedstyle.css');
-  #     } catch (error_) {
-  #       error = error_;
-  #     }
-  #     expect(error.message).toBe(
-  #       'Provide an object with a `url`, `path` or `content` property'
-  #     );
-  #   });
+    it 'should work with a url', sinatra: true do
+      page.goto(server_empty_page)
+      style_handle = page.add_style_tag(url: '/injectedstyle.css')
+      expect(style_handle.as_element).to be_a(Puppeteer::ElementHandle)
+      bg_color = page.evaluate("window.getComputedStyle(document.querySelector('body')).getPropertyValue('background-color')")
+      expect(bg_color).to eq('rgb(255, 0, 0)')
+    end
 
-  #   it('should work with a url', async () => {
-  #     const { page, server } = getTestState();
+    it 'should throw an error if loading from url fail', sinatra: true do
+      page.goto(server_empty_page)
+      expect { page.add_style_tag(url: '/nonexistfile.js') }.to raise_error(/Loading style from \/nonexistfile.js failed/)
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const styleHandle = await page.addStyleTag({ url: '/injectedstyle.css' });
-  #     expect(styleHandle.asElement()).not.toBeNull();
-  #     expect(
-  #       await page.evaluate(
-  #         `window.getComputedStyle(document.querySelector('body')).getPropertyValue('background-color')`
-  #       )
-  #     ).toBe('rgb(255, 0, 0)');
-  #   });
+    it 'should work with a path', sinatra: true do
+      page.goto(server_empty_page)
+      style_handle = page.add_style_tag(path: 'spec/assets/injectedstyle.css')
+      expect(style_handle.as_element).to be_a(Puppeteer::ElementHandle)
+      bg_color = page.evaluate("window.getComputedStyle(document.querySelector('body')).getPropertyValue('background-color')")
+      expect(bg_color).to eq('rgb(255, 0, 0)')
+    end
 
-  #   it('should throw an error if loading from url fail', async () => {
-  #     const { page, server } = getTestState();
+    it 'should include sourcemap when path is provided', sinatra: true do
+      page.goto(server_empty_page)
+      style_handle = page.add_style_tag(path: 'spec/assets/injectedstyle.css')
+      style_content = style_handle.evaluate('style => style.innerHTML')
+      expect(style_content).to include('assets/injectedstyle.css')
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     let error = null;
-  #     try {
-  #       await page.addStyleTag({ url: '/nonexistfile.js' });
-  #     } catch (error_) {
-  #       error = error_;
-  #     }
-  #     expect(error.message).toBe('Loading style from /nonexistfile.js failed');
-  #   });
+    it 'should work with content', sinatra: true do
+      page.goto(server_empty_page)
+      style_handle = page.add_style_tag(content: 'body { background-color: green; }')
+      expect(style_handle).to be_a(Puppeteer::ElementHandle)
+      bg_color = page.evaluate("window.getComputedStyle(document.querySelector('body')).getPropertyValue('background-color')")
+      expect(bg_color).to eq('rgb(0, 128, 0)')
+    end
 
-  #   it('should work with a path', async () => {
-  #     const { page, server } = getTestState();
+    it_fails_firefox 'should throw when added with content to the CSP page', sinatra: true do
+      page.goto("#{server_prefix}/csp.html")
+      expect { page.add_style_tag(content: 'body { background-color: green; }') }.to raise_error
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const styleHandle = await page.addStyleTag({
-  #       path: path.join(__dirname, 'assets/injectedstyle.css'),
-  #     });
-  #     expect(styleHandle.asElement()).not.toBeNull();
-  #     expect(
-  #       await page.evaluate(
-  #         `window.getComputedStyle(document.querySelector('body')).getPropertyValue('background-color')`
-  #       )
-  #     ).toBe('rgb(255, 0, 0)');
-  #   });
-
-  #   it('should include sourcemap when path is provided', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.addStyleTag({
-  #       path: path.join(__dirname, 'assets/injectedstyle.css'),
-  #     });
-  #     const styleHandle = await page.$('style');
-  #     const styleContent = await page.evaluate(
-  #       (style: HTMLStyleElement) => style.innerHTML,
-  #       styleHandle
-  #     );
-  #     expect(styleContent).toContain(path.join('assets', 'injectedstyle.css'));
-  #   });
-
-  #   it('should work with content', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const styleHandle = await page.addStyleTag({
-  #       content: 'body { background-color: green; }',
-  #     });
-  #     expect(styleHandle.asElement()).not.toBeNull();
-  #     expect(
-  #       await page.evaluate(
-  #         `window.getComputedStyle(document.querySelector('body')).getPropertyValue('background-color')`
-  #       )
-  #     ).toBe('rgb(0, 128, 0)');
-  #   });
-
-  #   itFailsFirefox(
-  #     'should throw when added with content to the CSP page',
-  #     async () => {
-  #       const { page, server } = getTestState();
-
-  #       await page.goto(server.PREFIX + '/csp.html');
-  #       let error = null;
-  #       await page
-  #         .addStyleTag({ content: 'body { background-color: green; }' })
-  #         .catch((error_) => (error = error_));
-  #       expect(error).toBeTruthy();
-  #     }
-  #   );
-
-  #   it('should throw when added with URL to the CSP page', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.PREFIX + '/csp.html');
-  #     let error = null;
-  #     await page
-  #       .addStyleTag({
-  #         url: server.CROSS_PROCESS_PREFIX + '/injectedstyle.css',
-  #       })
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeTruthy();
-  #   });
-  # });
+    it 'should throw when added with URL to the CSP page', sinatra: true do
+      page.goto("#{server_prefix}/csp.html")
+      expect { page.add_style_tag(url: "#{server_cross_process_prefix}/injectedstyle.css") }.to raise_error(/Loading style from http.* failed/)
+    end
+  end
 
   describe '#url' do
     it 'should work', sinatra: true do

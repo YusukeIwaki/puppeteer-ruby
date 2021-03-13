@@ -299,69 +299,58 @@ class Puppeteer::DOMWorld
   # @param path [String?]
   # @param content [String?]
   def add_style_tag(url: nil, path: nil, content: nil)
-    #   const {
-  #     url = null,
-  #     path = null,
-  #     content = null
-  #   } = options;
-  #   if (url !== null) {
-  #     try {
-  #       const context = await this.executionContext();
-  #       return (await context.evaluateHandle(addStyleUrl, url)).asElement();
-  #     } catch (error) {
-  #       throw new Error(`Loading style from ${url} failed`);
-  #     }
-  #   }
+    if url
+      begin
+        return execution_context.evaluate_handle(ADD_STYLE_URL, url).as_element
+      rescue Puppeteer::ExecutionContext::EvaluationError # for Chrome
+        raise "Loading style from #{url} failed"
+      rescue Puppeteer::Connection::ProtocolError # for Firefox
+        raise "Loading style from #{url} failed"
+      end
+    end
 
-  #   if (path !== null) {
-  #     let contents = await readFileAsync(path, 'utf8');
-  #     contents += '/*# sourceURL=' + path.replace(/\n/g, '') + '*/';
-  #     const context = await this.executionContext();
-  #     return (await context.evaluateHandle(addStyleContent, contents)).asElement();
-  #   }
+    if path
+      contents = File.read(path)
+      contents += "/*# sourceURL=#{path.gsub(/\n/, '')}*/"
+      return execution_context.evaluate_handle(ADD_STYLE_CONTENT, contents).as_element
+    end
 
-  #   if (content !== null) {
-  #     const context = await this.executionContext();
-  #     return (await context.evaluateHandle(addStyleContent, content)).asElement();
-  #   }
+    if content
+      return execution_context.evaluate_handle(ADD_STYLE_CONTENT, content).as_element
+    end
 
-  #   throw new Error('Provide an object with a `url`, `path` or `content` property');
-
-  #   /**
-  #    * @param {string} url
-  #    * @return {!Promise<!HTMLElement>}
-  #    */
-  #   async function addStyleUrl(url) {
-  #     const link = document.createElement('link');
-  #     link.rel = 'stylesheet';
-  #     link.href = url;
-  #     const promise = new Promise((res, rej) => {
-  #       link.onload = res;
-  #       link.onerror = rej;
-  #     });
-  #     document.head.appendChild(link);
-  #     await promise;
-  #     return link;
-  #   }
-
-  #   /**
-  #    * @param {string} content
-  #    * @return {!Promise<!HTMLElement>}
-  #    */
-  #   async function addStyleContent(content) {
-  #     const style = document.createElement('style');
-  #     style.type = 'text/css';
-  #     style.appendChild(document.createTextNode(content));
-  #     const promise = new Promise((res, rej) => {
-  #       style.onload = res;
-  #       style.onerror = rej;
-  #     });
-  #     document.head.appendChild(style);
-  #     await promise;
-  #     return style;
-  #   }
-  # }
+    raise ArgumentError.new('Provide an object with a `url`, `path` or `content` property')
   end
+
+  ADD_STYLE_URL = <<~JAVASCRIPT
+    async (url) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = url;
+      const promise = new Promise((res, rej) => {
+        link.onload = res;
+        link.onerror = rej;
+      });
+      document.head.appendChild(link);
+      await promise;
+      return link;
+    }
+  JAVASCRIPT
+
+  ADD_STYLE_CONTENT = <<~JAVASCRIPT
+    async (content) => {
+      const style = document.createElement('style');
+      style.type = 'text/css';
+      style.appendChild(document.createTextNode(content));
+      const promise = new Promise((res, rej) => {
+        style.onload = res;
+        style.onerror = rej;
+      });
+      document.head.appendChild(style);
+      await promise;
+      return style;
+    }
+  JAVASCRIPT
 
   class ElementNotFoundError < StandardError
     def initialize(selector)
