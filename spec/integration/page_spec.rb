@@ -1007,6 +1007,8 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe '#bypass_csp=', skip: Puppeteer.env.firefox? do
+    include Utils::AttachFrame
+
     it 'should bypass CSP meta tag', sinatra: true do
       # Make sure CSP prohibits addScriptTag.
       page.goto("#{server_prefix}/csp.html")
@@ -1019,74 +1021,53 @@ RSpec.describe Puppeteer::Page do
       page.add_script_tag(content: 'window.__injected = 42;')
       expect(page.evaluate('() => globalThis.__injected')).to eq(42)
     end
+
+    it 'should bypass CSP header', sinatra: true do
+      sinatra.get('/empty_csp.html') do
+        headers('Content-Security-Policy' => 'default-src "self"')
+        body('EMPTY')
+      end
+
+      # Make sure CSP prohibits addScriptTag.
+      page.goto("#{server_prefix}/empty_csp.html")
+      page.add_script_tag(content: 'window.__injected = 42;')
+      expect(page.evaluate('() => globalThis.__injected')).to be_nil
+
+      # By-pass CSP and try one more time.
+      page.bypass_csp = true
+      page.reload
+      page.add_script_tag(content: 'window.__injected = 42;')
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+    end
+
+    it 'should bypass after cross-process navigation', sinatra: true do
+      page.bypass_csp = true
+      page.goto("#{server_prefix}/csp.html")
+      page.add_script_tag(content: 'window.__injected = 42;')
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+
+      page.goto("#{server_cross_process_prefix}/csp.html")
+      page.add_script_tag(content: 'window.__injected = 42;')
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+    end
+
+    it 'should bypass CSP in iframes as well', sinatra: true do
+      page.goto(server_empty_page)
+
+      # Make sure CSP prohibits addScriptTag in an iframe.
+      frame = attach_frame(page, 'frame1', "#{server_prefix}/csp.html")
+      frame.add_script_tag(content: 'window.__injected = 42;')
+      expect(frame.evaluate('() => globalThis.__injected')).to be_nil
+
+      # By-pass CSP and try one more time.
+      page.bypass_csp = true
+      page.reload
+
+      frame = attach_frame(page, 'frame1', "#{server_prefix}/csp.html")
+      frame.add_script_tag(content: 'window.__injected = 42;')
+      expect(frame.evaluate('() => globalThis.__injected')).to eq(42)
+    end
   end
-
-  #   it('should bypass CSP header', async () => {
-  #     const { page, server } = getTestState();
-
-  #     // Make sure CSP prohibits addScriptTag.
-  #     server.setCSP('/empty.html', 'default-src "self"');
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page
-  #       .addScriptTag({ content: 'window.__injected = 42;' })
-  #       .catch((error) => void error);
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(undefined);
-
-  #     // By-pass CSP and try one more time.
-  #     await page.setBypassCSP(true);
-  #     await page.reload();
-  #     await page.addScriptTag({ content: 'window.__injected = 42;' });
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(42);
-  #   });
-
-  #   it('should bypass after cross-process navigation', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.setBypassCSP(true);
-  #     await page.goto(server.PREFIX + '/csp.html');
-  #     await page.addScriptTag({ content: 'window.__injected = 42;' });
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(42);
-
-  #     await page.goto(server.CROSS_PROCESS_PREFIX + '/csp.html');
-  #     await page.addScriptTag({ content: 'window.__injected = 42;' });
-  #     expect(await page.evaluate(() => globalThis.__injected)).toBe(42);
-  #   });
-  #   it('should bypass CSP in iframes as well', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     {
-  #       // Make sure CSP prohibits addScriptTag in an iframe.
-  #       const frame = await utils.attachFrame(
-  #         page,
-  #         'frame1',
-  #         server.PREFIX + '/csp.html'
-  #       );
-  #       await frame
-  #         .addScriptTag({ content: 'window.__injected = 42;' })
-  #         .catch((error) => void error);
-  #       expect(await frame.evaluate(() => globalThis.__injected)).toBe(
-  #         undefined
-  #       );
-  #     }
-
-  #     // By-pass CSP and try one more time.
-  #     await page.setBypassCSP(true);
-  #     await page.reload();
-
-  #     {
-  #       const frame = await utils.attachFrame(
-  #         page,
-  #         'frame1',
-  #         server.PREFIX + '/csp.html'
-  #       );
-  #       await frame
-  #         .addScriptTag({ content: 'window.__injected = 42;' })
-  #         .catch((error) => void error);
-  #       expect(await frame.evaluate(() => globalThis.__injected)).toBe(42);
-  #     }
-  #   });
-  # });
 
   describe '#add_script_tag' do
     it 'should throw an error if no options are provided' do
