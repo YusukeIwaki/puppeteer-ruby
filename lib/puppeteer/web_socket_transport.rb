@@ -37,6 +37,8 @@ class Puppeteer::WebSocketTransport
 
   def close
     @ws.close
+  rescue EOFError
+    # ignore EOLError. The connection is already closed.
   end
 
   def on_close(&block)

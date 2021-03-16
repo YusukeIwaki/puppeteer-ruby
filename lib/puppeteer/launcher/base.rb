@@ -32,6 +32,14 @@ module Puppeteer::Launcher
         when Firefox
           '/Applications/Firefox Nightly.app/Contents/MacOS/firefox'
         end
+      elsif Puppeteer.env.windows?
+        case self
+        when Chrome
+          'C:\Program Files\Google\Chrome\Application\chrome.exe'
+          # 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+        when Firefox
+          'C:\Program Files\Firefox Nightly\firefox.exe'
+        end
       else
         case self
         when Chrome

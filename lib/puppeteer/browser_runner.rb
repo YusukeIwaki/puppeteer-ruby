@@ -111,7 +111,7 @@ class Puppeteer::BrowserRunner
       end
     end
 
-    if @launch_options.handle_SIGHUP?
+    if @launch_options.handle_SIGHUP? && !Puppeteer.env.windows?
       trap(:HUP) do
         close
       end

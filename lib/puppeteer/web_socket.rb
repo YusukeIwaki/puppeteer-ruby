@@ -18,6 +18,8 @@ class Puppeteer::WebSocket
       @socket.write(data)
     rescue Errno::EPIPE
       raise EOFError.new('already closed')
+    rescue Errno::ECONNRESET
+      raise EOFError.new('closed by remote')
     end
 
     def readpartial(maxlen = 1024)

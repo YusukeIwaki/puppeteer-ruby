@@ -14,6 +14,10 @@ class Puppeteer::Env
   def darwin?
     RUBY_PLATFORM.include?('darwin')
   end
+
+  def windows?
+    RUBY_PLATFORM =~ /mswin|mingw|cygwin/
+  end
 end
 
 class Puppeteer
