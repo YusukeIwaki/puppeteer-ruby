@@ -1,0 +1,40 @@
+name: Windows check
+on: [pull_request]
+jobs:
+  windows_edge_rspec:
+    name: RSpec on Windows / Edge
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.0
+      - name: Install dependencies
+        run: |
+          gem uninstall bundler
+          gem install bundler -v 2.2.3
+          bundle install
+      - uses: browser-actions/setup-edge@latest
+      - name: Check example
+        run: bundle exec rspec spec/integration/example_spec.rb
+        env:
+          PUPPETEER_EXECUTABLE_PATH_RSPEC: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+
+  windows_chrome_rspec:
+    name: RSpec on Windows / Chrome
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.0
+      - name: Install dependencies
+        run: |
+          gem uninstall bundler
+          gem install bundler -v 2.2.3
+          bundle install
+      - uses: browser-actions/setup-chrome@latest
+      - name: Check example
+        run: bundle exec rspec spec/integration/example_spec.rb
