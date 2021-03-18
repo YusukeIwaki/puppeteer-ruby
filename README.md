@@ -29,6 +29,8 @@ Or install it yourself as:
 ### Capture a site
 
 ```ruby
+require 'puppeteer'
+
 Puppeteer.launch(headless: false) do |browser|
   page = browser.pages.first || browser.new_page
   page.goto("https://github.com/YusukeIwaki")
@@ -66,6 +68,8 @@ end
 ### Evaluate JavaScript
 
 ```ruby
+require 'puppeteer'
+
 Puppeteer.launch do |browser|
   page = browser.pages.last || browser.new_page
   page.goto 'https://github.com/YusukeIwaki'
