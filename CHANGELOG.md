@@ -1,6 +1,16 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.30.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.0...master)]
 
 * xxx
+
+### 0.31.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.30.0...0.31.0)]
+
+New features:
+
+* Now puppeteer-ruby is compatible with Windows
+
+Bugfix:
+
+* Fix `Page#add_script_tag` and `Page#add_style_tag` to work
 
 ### 0.30.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.29.0...0.30.0)]
 
