@@ -202,6 +202,7 @@ class Puppeteer::Page
   end
 
   attr_reader :javascript_enabled, :target
+  alias_method :javascript_enabled?, :javascript_enabled
 
   def browser
     @target.browser

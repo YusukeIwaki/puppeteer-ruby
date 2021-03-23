@@ -6,7 +6,7 @@ A Ruby port of [puppeteer](https://pptr.dev/).
 
 ![logo](puppeteer-ruby.png)
 
-REMARK: This Gem covers just a part of Puppeteer APIs. Feedbacks and feature requests are welcome :)
+REMARK: This Gem covers just a part of Puppeteer APIs. See [API Coverage list](./docs/api_coverage.md) for detail. Feedbacks and feature requests are welcome :)
 
 ## Getting Started
 

@@ -20,8 +20,8 @@ class Puppeteer::Env
   end
 end
 
-class Puppeteer
-  def self.env
-    Puppeteer::Env.new
+module Puppeteer
+  module_function def env
+    ::Puppeteer::Env.new
   end
 end
