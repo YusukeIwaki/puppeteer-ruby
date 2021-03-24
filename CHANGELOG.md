@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.1...master)]
 
 * xxx
+
+### 0.31.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.0...0.31.1)]
+
+Bugfix:
+
+* Fix `Page#pdf` to work on Windows.
 
 ### 0.31.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.30.0...0.31.0)]
 
