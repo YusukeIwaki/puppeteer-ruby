@@ -989,7 +989,7 @@ class Puppeteer::Page
 
     def read
       out = StringIO.new
-      File.open(@path, 'w') do |file|
+      File.open(@path, 'wb') do |file|
         eof = false
         until eof
           response = @client.send_message('IO.read', handle: @handle)
