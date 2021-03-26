@@ -1,6 +1,8 @@
 ### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.1...master)]
 
-* xxx
+Bugfix:
+
+* Fix `wait_for_selector` to work.
 
 ### 0.31.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.0...0.31.1)]
 
