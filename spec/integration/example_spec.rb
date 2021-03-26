@@ -18,10 +18,34 @@ RSpec.describe 'example' do
     end
   end
 
-  it {
-    page.goto('https://twitter.com/AndroidDev')
-    Timeout.timeout(10) { page.wait_for_selector('article[role="article"]') }
-  }
+  it 'should print PDF with options' do
+    skip if Puppeteer.env.ci? && !Puppeteer.env.windows?
+
+    page.viewport = Puppeteer::Viewport.new(width: 1200, height: 800, device_scale_factor: 2)
+    page.goto("https://github.com/YusukeIwaki")
+    page.wait_for_selector(".js-yearly-contributions")
+    overlay = page.query_selector('.js-yearly-contributions')
+
+    js = <<-JAVASCRIPT
+    graph => {
+      const width = getComputedStyle(graph).width;
+      graph = graph.cloneNode(true);
+      graph.style.width = width;
+      document.body.innerHTML = `
+        <div style="display:flex;justify-content:center;align-items:center;height:100vh;">;
+          ${graph.outerHTML}
+        </div>
+      `;
+    }
+    JAVASCRIPT
+    page.evaluate(js, overlay)
+    page.pdf(
+      path: '5.element-to-pdf.github.pdf',
+      print_background: true,
+      format: "letter",
+      margin: { top: "1cm", left: "2cm", right: "3cm", bottom: "4cm" },
+    )
+  end
 
   it 'should input text and grab DOM elements' do
     skip if Puppeteer.env.ci? && !Puppeteer.env.windows?
