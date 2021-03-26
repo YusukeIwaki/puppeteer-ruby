@@ -135,10 +135,9 @@ class Puppeteer::WaitTask
       /**
        * @return {!Promise<*>}
        */
-      function pollMutation() {
-          const success = predicate(...args);
-          if (success)
-              return Promise.resolve(success);
+      async function pollMutation() {
+          const success = await predicate(...args);
+          if (success) return Promise.resolve(success);
           let fulfill;
           const result = new Promise((x) => (fulfill = x));
           const observer = new MutationObserver(() => {
@@ -159,38 +158,34 @@ class Puppeteer::WaitTask
           });
           return result;
       }
-      function pollRaf() {
+      async function pollRaf() {
           let fulfill;
           const result = new Promise((x) => (fulfill = x));
-          onRaf();
+          await onRaf();
           return result;
-          function onRaf() {
+          async function onRaf() {
               if (timedOut) {
                   fulfill();
                   return;
               }
-              const success = predicate(...args);
-              if (success)
-                  fulfill(success);
-              else
-                  requestAnimationFrame(onRaf);
+              const success = await predicate(...args);
+              if (success) fulfill(success);
+              else requestAnimationFrame(onRaf);
           }
       }
-      function pollInterval(pollInterval) {
+      async function pollInterval(pollInterval) {
           let fulfill;
           const result = new Promise((x) => (fulfill = x));
-          onTimeout();
+          await onTimeout();
           return result;
-          function onTimeout() {
+          async function onTimeout() {
               if (timedOut) {
                   fulfill();
                   return;
               }
-              const success = predicate(...args);
-              if (success)
-                  fulfill(success);
-              else
-                  setTimeout(onTimeout, pollInterval);
+              const success = await predicate(...args);
+              if (success) fulfill(success);
+              else setTimeout(onTimeout, pollInterval);
           }
       }
   }
