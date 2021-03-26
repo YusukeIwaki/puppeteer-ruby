@@ -587,6 +587,16 @@ class Puppeteer::Page
     emit_event(PageEmittedEvents::Dialog, dialog)
   end
 
+  private def set_transparent_background_color(&block)
+    @client.send_message(
+      'Emulation.setDefaultBackgroundColorOverride',
+      color: { r: 0, g: 0, b: 0, a: 0 })
+  end
+
+  private def reset_default_background_color(&block)
+    @client.send_message('Emulation.setDefaultBackgroundColorOverride')
+  end
+
   # @return [String]
   def url
     main_frame.url
@@ -949,18 +959,14 @@ class Puppeteer::Page
     end
 
     should_set_default_background = screenshot_options.omit_background? && format == 'png'
-    if should_set_default_background
-      @client.send_message('Emulation.setDefaultBackgroundColorOverride', color: { r: 0, g: 0, b: 0, a: 0 })
-    end
+    set_transparent_background_color if should_set_default_background
     screenshot_params = {
       format: format,
       quality: screenshot_options.quality,
       clip: clip,
     }.compact
     result = @client.send_message('Page.captureScreenshot', screenshot_params)
-    if should_set_default_background
-      @client.send_message('Emulation.setDefaultBackgroundColorOverride')
-    end
+    reset_default_background_color if should_set_default_background
 
     if screenshot_options.full_page? && @viewport
       self.viewport = @viewport
@@ -1018,7 +1024,10 @@ class Puppeteer::Page
   # @return [String]
   def pdf(options = {})
     pdf_options = PDFOptions.new(options)
+    omit_background = options[:omit_background]
+    set_transparent_background_color if omit_background
     result = @client.send_message('Page.printToPDF', pdf_options.page_print_args)
+    reset_default_background_color if omit_background
     ProtocolStreamReader.new(client: @client, handle: result['stream'], path: pdf_options.path).read
   rescue => err
     if err.message.include?('PrintToPDF is not implemented')
