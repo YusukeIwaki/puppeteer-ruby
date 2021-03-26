@@ -44,6 +44,7 @@ RSpec.describe 'example' do
       print_background: true,
       format: "letter",
       margin: { top: "1cm", left: "2cm", right: "3cm", bottom: "4cm" },
+      omit_background: true,
     )
   end
 
