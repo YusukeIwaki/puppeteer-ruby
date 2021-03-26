@@ -140,12 +140,12 @@ class Puppeteer::WaitTask
           if (success) return Promise.resolve(success);
           let fulfill;
           const result = new Promise((x) => (fulfill = x));
-          const observer = new MutationObserver(() => {
+          const observer = new MutationObserver(async () => {
               if (timedOut) {
                   observer.disconnect();
                   fulfill();
               }
-              const success = predicate(...args);
+              const success = await predicate(...args);
               if (success) {
                   observer.disconnect();
                   fulfill(success);

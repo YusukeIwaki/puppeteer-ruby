@@ -18,6 +18,11 @@ RSpec.describe 'example' do
     end
   end
 
+  it {
+    page.goto('https://twitter.com/AndroidDev')
+    Timeout.timeout(10) { page.wait_for_selector('article[role="article"]') }
+  }
+
   it 'should input text and grab DOM elements' do
     skip if Puppeteer.env.ci? && !Puppeteer.env.windows?
 
