@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.3...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.4...master)]
 
 * xxx
+
+### 0.31.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.3...0.31.4)]
+
+Bugfix:
+
+* Fix PDF options (format, margin, omit_background) to work.
 
 ### 0.31.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.1...0.31.3)]
 
