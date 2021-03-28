@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'input tests' do
   describe 'input' do
-    it 'should upload the file', sinatra: true do
+    it_fails_firefox 'should upload the file', sinatra: true do
       page.goto("#{server_prefix}/input/fileupload.html")
       filepath = File.join('spec', 'assets', 'file-to-upload.txt')
       input = page.query_selector('input')
