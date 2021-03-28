@@ -33,4 +33,215 @@ RSpec.describe 'input tests' do
       expect(page.evaluate(js, input)).to eq('contents of the file')
     end
   end
+
+  describe 'Page#wait_for_file_chooser' do
+    it_fails_firefox 'should work when file input is attached to DOM' do
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      expect(chooser).to be_a(Puppeteer::FileChooser)
+    end
+    it_fails_firefox 'should work when file input is not attached to DOM' do
+      js = <<~JAVASCRIPT
+      () => {
+        const el = document.createElement('input');
+        el.type = 'file';
+        el.click();
+      }
+      JAVASCRIPT
+
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_evaluate(js),
+      ).first
+      expect(chooser).to be_a(Puppeteer::FileChooser)
+    end
+    it 'should respect timeout' do
+      expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
+    end
+    it 'should respect default timeout when there is no custom timeout' do
+      page.default_timeout = 1
+      expect { page.wait_for_file_chooser }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
+    end
+    it 'should prioritize exact timeout over default timeout' do
+      page.default_timeout = 5000
+      expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
+    end
+    it_fails_firefox 'should work with no timeout' do
+      js = <<~JAVASCRIPT
+      () => {
+        setTimeout(() => {
+          const el = document.createElement('input');
+          el.type = 'file';
+          el.click();
+        }, 50)
+      }
+      JAVASCRIPT
+
+      chooser = await_all(
+        page.async_wait_for_file_chooser(timeout: 0),
+        page.async_evaluate(js),
+      ).first
+      expect(chooser).to be_a(Puppeteer::FileChooser)
+    end
+    it_fails_firefox 'should return the same file chooser when there are many watchdogs simultaneously' do
+      page.content = '<input type=file>'
+      choosers = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_wait_for_file_chooser,
+        page.async_eval_on_selector('input', '(input) => input.click()'),
+      ).first(2)
+      expect(choosers.first).to eq(choosers.last)
+    end
+  end
+
+  describe 'FileChooser#accept' do
+    let(:filepath) { File.join('spec', 'assets', 'file-to-upload.txt') }
+
+    it_fails_firefox 'should accept single file' do
+      page.content = "<input type=file oninput='javascript:console.timeStamp()'>"
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      chooser.accept(filepath)
+      expect(page.eval_on_selector('input', "(input) => input.files.length")).to eq(1)
+      expect(page.eval_on_selector('input', "(input) => input.files[0].name")).to eq("file-to-upload.txt")
+    end
+    it_fails_firefox 'should be able to read selected file' do
+      page.content = '<input type=file>'
+      future {
+        chooser = page.wait_for_file_chooser
+        chooser.accept(filepath)
+      }
+      js = <<~JAVASCRIPT
+      async (picker) => {
+        picker.click();
+        await new Promise((x) => (picker.oninput = x));
+        const reader = new FileReader();
+        const promise = new Promise((fulfill) => (reader.onload = fulfill));
+        reader.readAsText(picker.files[0]);
+        return promise.then(() => reader.result);
+      }
+      JAVASCRIPT
+      expect(page.eval_on_selector('input', js)).to eq('contents of the file')
+    end
+    it_fails_firefox 'should be able to reset selected files with empty file list' do
+      page.content = '<input type=file>'
+
+      future {
+        chooser = page.wait_for_file_chooser
+        chooser.accept(filepath)
+      }
+      js = <<~JAVASCRIPT
+      async (picker) => {
+        picker.click();
+        await new Promise((x) => (picker.oninput = x));
+        return picker.files.length;
+      }
+      JAVASCRIPT
+      expect(page.eval_on_selector('input', js)).to eq(1)
+
+      future {
+        chooser = page.wait_for_file_chooser
+        chooser.accept([])
+      }
+      js = <<~JAVASCRIPT
+      async (picker) => {
+        picker.click();
+        await new Promise((x) => (picker.oninput = x));
+        return picker.files.length;
+      }
+      JAVASCRIPT
+      expect(page.eval_on_selector('input', js)).to eq(0)
+    end
+    it_fails_firefox 'should not accept multiple files for single-file input' do
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      pprt_png = File.join('spec', 'assets', 'pptr.png')
+      expect { chooser.accept([filepath, pprt_png]) }.to raise_error(/Multiple file uploads only work with <input type=file multiple>/)
+    end
+    it_fails_firefox 'should fail for non-existent files' do
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      expect { chooser.accept(['file-does-not-exist.txt']) }.to raise_error(/file-does-not-exist.txt does not exist or is not readable/)
+    end
+    it_fails_firefox 'should fail when accepting file chooser twice' do
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_eval_on_selector('input', '(input) => input.click()'),
+      ).first
+      chooser.accept([])
+      expect { chooser.accept([]) }.to raise_error(/Cannot accept FileChooser which is already handled!/)
+    end
+  end
+
+  describe 'FileChooser#cancel' do
+    it_fails_firefox 'should cancel dialog' do
+      # Consider file chooser canceled if we can summon another one.
+      # There's no reliable way in WebPlatform to see that FileChooser was
+      # canceled.
+
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_eval_on_selector('input', '(input) => input.click()'),
+      ).first
+      chooser.cancel
+
+      # If this resolves, than we successfully canceled file chooser.
+      Timeout.timeout(2) do
+        await_all(
+          page.async_wait_for_file_chooser,
+          page.async_eval_on_selector('input', '(input) => input.click()'),
+        )
+      end
+    end
+
+    it_fails_firefox 'should fail when canceling file chooser twice' do
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_eval_on_selector('input', '(input) => input.click()'),
+      ).first
+      chooser.cancel
+      expect { chooser.cancel }.to raise_error(/Cannot cancel FileChooser which is already handled!/)
+    end
+  end
+
+  describe 'FileChooser#multiple?' do
+    it_fails_firefox 'should work for single file pick' do
+      page.content = '<input type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      expect(chooser).not_to be_multiple
+    end
+    it_fails_firefox 'should work for "multiple"' do
+      page.content = '<input multiple type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      expect(chooser).to be_multiple
+    end
+    it_fails_firefox 'should work for "webkitdirectory"' do
+      page.content = '<input multiple webkitdirectory type=file>'
+      chooser = await_all(
+        page.async_wait_for_file_chooser,
+        page.async_click('input'),
+      ).first
+      expect(chooser).to be_multiple
+    end
+  end
 end

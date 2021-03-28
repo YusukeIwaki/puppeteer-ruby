@@ -183,7 +183,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
 
     if error_path = file_paths.find { |file_path| !File.exist?(file_path) }
-      raise ArgmentError.new("#{error_path} does not exist or is not readable")
+      raise ArgumentError.new("#{error_path} does not exist or is not readable")
     end
 
     backend_node_id = @remote_object.node_info(@client)["node"]["backendNodeId"]
@@ -201,7 +201,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         element.dispatchEvent(new Event('change', { bubbles: true }));
       }
       JAVASCRIPT
-      await this.evaluate(fn)
+      await evaluate(fn)
     else
       @remote_object.set_file_input_files(@client, file_paths.map { |path| File.expand_path(path) }, backend_node_id)
     end
