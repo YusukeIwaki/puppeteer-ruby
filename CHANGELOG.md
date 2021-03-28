@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.4...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.5...master)]
 
 * xxx
+
+### 0.31.5 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.4...0.31.5)]
+
+Bugfix:
+
+* Fix file uploading to work without crash.
 
 ### 0.31.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.3...0.31.4)]
 
