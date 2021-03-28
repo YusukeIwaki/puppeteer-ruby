@@ -203,7 +203,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
       JAVASCRIPT
       await this.evaluate(fn)
     else
-      @remote_object.set_file_input_files(@client, file_paths, backend_node_id)
+      @remote_object.set_file_input_files(@client, file_paths.map { |path| File.expand_path(path) }, backend_node_id)
     end
   end
 
