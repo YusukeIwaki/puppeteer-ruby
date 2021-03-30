@@ -29,6 +29,32 @@ jobs:
       - image: circleci/ruby:3.0.0-buster-node-browsers
     <<: *rspec_chrome_job
 
+  rspec_chromium_alpine:
+    docker:
+      - image: ruby:3.0-alpine
+    steps:
+      - run:
+          command: apk add build-base chromium curl font-noto fontconfig git less wget
+      - run:
+          name: Install NotoSansCJKjp
+          command: |
+            wget https://noto-website.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip \
+            && mkdir -p /usr/share/fonts/NotoSansCJKjp \
+            && unzip NotoSansCJKjp-hinted.zip -d /usr/share/fonts/NotoSansCJKjp/ \
+            && rm NotoSansCJKjp-hinted.zip \
+            && fc-cache -fv
+
+      - checkout
+      - run:
+          command: gem install bundler:2.2.3 && bundle install
+      - run:
+          name: rspec
+          command: |
+            DEBUG=1 PUPPETEER_EXECUTABLE_PATH_RSPEC=/usr/bin/chromium-browser \
+            bundle exec rspec --profile 10 \
+              --format RspecJunitFormatter \
+              --out test_results/rspec.xml \
+              --format documentation spec/integration/
   rspec_firefox:
     docker:
       - image: circleci/ruby:2.7.2-buster-node-browsers
@@ -81,6 +107,7 @@ workflows:
       - rspec_chrome_ruby2_6
       - rspec_chrome_ruby2_7
       - rspec_chrome_ruby3_0
+      - rspec_chromium_alpine
       - rspec_firefox
   rubygems-deploy:
     jobs:

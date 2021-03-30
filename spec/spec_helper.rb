@@ -14,6 +14,10 @@ module PuppeteerEnvExtension
   def firefox?
     product == 'firefox'
   end
+
+  def root_user?
+    Process.uid == 0
+  end
 end
 
 Puppeteer::Env.include(PuppeteerEnvExtension)
@@ -33,6 +37,9 @@ RSpec.configure do |config|
     product: Puppeteer.env.product,
     executable_path: ENV['PUPPETEER_EXECUTABLE_PATH_RSPEC'],
   }.compact
+  if Puppeteer.env.root_user?
+    launch_options[:args] = ['--no-sandbox']
+  end
   if Puppeteer.env.debug? && !Puppeteer.env.ci?
     launch_options[:headless] = false
   end
