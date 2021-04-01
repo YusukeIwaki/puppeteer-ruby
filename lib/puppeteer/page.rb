@@ -104,7 +104,7 @@ class Puppeteer::Page
     end
     # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
     @client.on_event('Page.javascriptDialogOpening') do |event|
-      handle_dialog_opening(event)
+      future { handle_dialog_opening(event) }
     end
     @client.on_event('Runtime.exceptionThrown') do |exception|
       handle_exception(exception['exceptionDetails'])
@@ -117,7 +117,7 @@ class Puppeteer::Page
       handle_log_entry_added(event)
     end
     @client.on_event('Page.fileChooserOpened') do |event|
-      handle_file_chooser(event)
+      future { handle_file_chooser(event) }
     end
     @target.is_closed_promise.then do
       emit_event(PageEmittedEvents::Close)

@@ -45,11 +45,7 @@ class Puppeteer::Connection
     @transport = transport
     @transport.on_message do |data|
       message = JSON.parse(data)
-      if can_handle_async?(message)
-        async_handle_message(message)
-      else
-        handle_message(message)
-      end
+      handle_message(message)
     end
     @transport.on_close do |reason, code|
       handle_close
@@ -62,14 +58,6 @@ class Puppeteer::Connection
   # used only in Browser#connected?
   def closed?
     @closed
-  end
-
-  private def can_handle_async?(message)
-    return true unless message['method']
-
-    # Puppeteer doesn't handle any Network monitoring responses.
-    # So we don't care their handling order.
-    message['method'].start_with?('Network.')
   end
 
   def self.from_session(session)
@@ -231,7 +219,7 @@ class Puppeteer::Connection
         end
       end
     else
-      future { emit_event(message['method'], message['params']) }
+      emit_event(message['method'], message['params'])
     end
   end
 
