@@ -273,16 +273,6 @@ class Puppeteer::Connection
   def create_session(target_info)
     result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
-
-    # Target.attachedToTarget is often notified after the result of Target.attachToTarget.
-    # D, [2020-04-04T23:04:30.736311 #91875] DEBUG -- : RECV << {"id"=>2, "result"=>{"sessionId"=>"DA002F8A95B04710502CB40D8430B95A"}}
-    # D, [2020-04-04T23:04:30.736649 #91875] DEBUG -- : RECV << {"method"=>"Target.attachedToTarget", "params"=>{"sessionId"=>"DA002F8A95B04710502CB40D8430B95A", "targetInfo"=>{"targetId"=>"EBAB949A7DE63F12CB94268AD3A9976B", "type"=>"page", "title"=>"about:blank", "url"=>"about:blank", "attached"=>true, "browserContextId"=>"46D23767E9B79DD9E589101121F6DADD"}, "waitingForDebugger"=>false}}
-    # So we have to wait for "Target.attachedToTarget" a bit.
-    20.times do
-      if @sessions[session_id]
-        return @sessions[session_id]
-      end
-      sleep 0.1
-    end
+    @sessions[session_id]
   end
 end
