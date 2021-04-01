@@ -45,8 +45,11 @@ class Puppeteer::Connection
     @transport = transport
     @transport.on_message do |data|
       message = JSON.parse(data)
-      sleep_before_handling_message(message)
-      async_handle_message(message)
+      if can_handle_async?(message)
+        async_handle_message(message)
+      else
+        handle_message(message)
+      end
     end
     @transport.on_close do |reason, code|
       handle_close
@@ -61,14 +64,12 @@ class Puppeteer::Connection
     @closed
   end
 
-  private def sleep_before_handling_message(message)
-    # Puppeteer doesn't handle any Network monitoring responses.
-    # So we don't have to sleep.
-    return if message['method']&.start_with?('Network.')
+  private def can_handle_async?(message)
+    return true unless message['method']
 
-    # For some reasons, sleeping a bit reduces trivial errors...
-    # 4ms is an interval of internal shared timer of WebKit.
-    sleep 0.004
+    # Puppeteer doesn't handle any Network monitoring responses.
+    # So we don't care their handling order.
+    message['method'].start_with?('Network.')
   end
 
   def self.from_session(session)
@@ -230,7 +231,7 @@ class Puppeteer::Connection
         end
       end
     else
-      emit_event(message['method'], message['params'])
+      future { emit_event(message['method'], message['params']) }
     end
   end
 

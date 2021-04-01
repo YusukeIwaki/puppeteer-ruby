@@ -51,7 +51,7 @@ class Puppeteer::CDPSession
         raise Error.new("unknown id: #{message['id']}")
       end
     else
-      emit_event(message['method'], message['params'])
+      future { emit_event(message['method'], message['params']) }
     end
   end
 
