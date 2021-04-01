@@ -46,7 +46,11 @@ class Puppeteer::Connection
     @transport.on_message do |data|
       message = JSON.parse(data)
       sleep_before_handling_message(message)
-      async_handle_message(message)
+      if should_handle_synchronously?(message)
+        handle_message(message)
+      else
+        async_handle_message(message)
+      end
     end
     @transport.on_close do |reason, code|
       handle_close
@@ -69,6 +73,40 @@ class Puppeteer::Connection
     # For some reasons, sleeping a bit reduces trivial errors...
     # 4ms is an interval of internal shared timer of WebKit.
     sleep 0.004
+  end
+
+  private def should_handle_synchronously?(message)
+    return true if message['id']
+
+    case message['method']
+    when nil
+      false
+    when /^Network\./
+      # Puppeteer doesn't handle any Network monitoring responses.
+      # So we don't care their handling order.
+      false
+    when /^Page\.frame/
+      # Page.frameAttached
+      # Page.frameNavigated
+      # Page.frameDetached
+      # Page.frameStoppedLoading
+      true
+    when 'Page.lifecycleEvent'
+      true
+    when /^Runtime\.executionContext/
+      # - Runtime.executionContextCreated
+      # - Runtime.executionContextDestroyed
+      # - Runtime.executionContextsCleared
+      # These events should be strictly ordered.
+      true
+    when 'Target.attachedToTarget', 'Target.detachedFromTarget'
+      true
+    when 'Target.targetCreated'
+      # type=page must be handled asynchronously for avoiding wait timeout...
+      message.dig('params', 'targetInfo', 'type') == 'browser'
+    else
+      false
+    end
   end
 
   def self.from_session(session)
