@@ -1240,6 +1240,7 @@ RSpec.describe Puppeteer::Page do
       end
 
       page.goto("#{server_prefix}/cached/_one-style.html")
+      sleep 0.5
       page.reload
 
       expect(request_count).to eq(2)

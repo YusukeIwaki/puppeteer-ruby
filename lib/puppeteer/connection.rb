@@ -46,7 +46,11 @@ class Puppeteer::Connection
     @transport.on_message do |data|
       message = JSON.parse(data)
       sleep_before_handling_message(message)
-      async_handle_message(message)
+      if should_handle_synchronously?(message)
+        handle_message(message)
+      else
+        async_handle_message(message)
+      end
     end
     @transport.on_close do |reason, code|
       handle_close
@@ -69,6 +73,40 @@ class Puppeteer::Connection
     # For some reasons, sleeping a bit reduces trivial errors...
     # 4ms is an interval of internal shared timer of WebKit.
     sleep 0.004
+  end
+
+  private def should_handle_synchronously?(message)
+    return true if message['id']
+
+    case message['method']
+    when nil
+      false
+    when /^Network\./
+      # Puppeteer doesn't handle any Network monitoring responses.
+      # So we don't care their handling order.
+      false
+    when /^Page\.frame/
+      # Page.frameAttached
+      # Page.frameNavigated
+      # Page.frameDetached
+      # Page.frameStoppedLoading
+      true
+    when 'Page.lifecycleEvent'
+      true
+    when /^Runtime\.executionContext/
+      # - Runtime.executionContextCreated
+      # - Runtime.executionContextDestroyed
+      # - Runtime.executionContextsCleared
+      # These events should be strictly ordered.
+      true
+    when 'Target.attachedToTarget', 'Target.detachedFromTarget'
+      true
+    when 'Target.targetCreated'
+      # type=page must be handled asynchronously for avoiding wait timeout...
+      message.dig('params', 'targetInfo', 'type') == 'browser'
+    else
+      false
+    end
   end
 
   def self.from_session(session)
@@ -273,16 +311,6 @@ class Puppeteer::Connection
   def create_session(target_info)
     result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
-
-    # Target.attachedToTarget is often notified after the result of Target.attachToTarget.
-    # D, [2020-04-04T23:04:30.736311 #91875] DEBUG -- : RECV << {"id"=>2, "result"=>{"sessionId"=>"DA002F8A95B04710502CB40D8430B95A"}}
-    # D, [2020-04-04T23:04:30.736649 #91875] DEBUG -- : RECV << {"method"=>"Target.attachedToTarget", "params"=>{"sessionId"=>"DA002F8A95B04710502CB40D8430B95A", "targetInfo"=>{"targetId"=>"EBAB949A7DE63F12CB94268AD3A9976B", "type"=>"page", "title"=>"about:blank", "url"=>"about:blank", "attached"=>true, "browserContextId"=>"46D23767E9B79DD9E589101121F6DADD"}, "waitingForDebugger"=>false}}
-    # So we have to wait for "Target.attachedToTarget" a bit.
-    20.times do
-      if @sessions[session_id]
-        return @sessions[session_id]
-      end
-      sleep 0.1
-    end
+    @sessions[session_id]
   end
 end
