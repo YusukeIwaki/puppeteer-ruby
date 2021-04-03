@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.5...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.6...master)]
 
 * xxx
+
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.5...0.31.6)]
+
+Improvement:
+
+* Increase stability [#87](https://github.com/YusukeIwaki/puppeteer-ruby/pull/87)
 
 ### 0.31.5 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.4...0.31.5)]
 
