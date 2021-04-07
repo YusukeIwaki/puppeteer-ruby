@@ -1,8 +1,19 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.6...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.0...master)]
 
 * xxx
 
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.5...0.31.6)]
+### 0.32.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.6...0.32.0)]
+
+New features:
+
+* Tracing
+* JS/CSS coverages
+
+Improvement:
+
+* Increase stability [#92](https://github.com/YusukeIwaki/puppeteer-ruby/pull/92)
+
+### 0.31.6 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.5...0.31.6)]
 
 Improvement:
 
