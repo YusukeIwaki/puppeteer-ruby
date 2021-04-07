@@ -19,3 +19,4 @@
 /.rakeTasks
 
 diff-*.png
+.envrc
