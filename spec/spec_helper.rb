@@ -185,5 +185,3 @@ RSpec::Core::ExampleGroup.extend(ItFailsFirefox)
 
 require_relative './golden_matcher'
 require_relative './utils'
-
-Rollbar.info("Hello world!")
