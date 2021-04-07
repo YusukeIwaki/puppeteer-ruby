@@ -337,12 +337,12 @@
 * detach
 * send
 
-## ~~Coverage~~
+## Coverage
 
-* ~~startCSSCoverage~~
-* ~~startJSCoverage~~
-* ~~stopCSSCoverage~~
-* ~~stopJSCoverage~~
+* startCSSCoverage => `#start_css_coverage`
+* startJSCoverage => `#start_js_coverage`
+* stopCSSCoverage => `#stop_css_coverage`
+* stopJSCoverage => `#stop_js_coverage`
 
 ## TimeoutError
 

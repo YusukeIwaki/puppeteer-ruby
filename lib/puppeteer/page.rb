@@ -41,7 +41,7 @@ class Puppeteer::Page
     @emulation_manager = Puppeteer::EmulationManager.new(client)
     @tracing = Puppeteer::Tracing.new(client)
     @page_bindings = {}
-    # @coverage = Coverage.new(client)
+    @coverage = Puppeteer::Coverage.new(client)
     @javascript_enabled = true
     @screenshot_task_queue = ScreenshotTaskQueue.new
 
