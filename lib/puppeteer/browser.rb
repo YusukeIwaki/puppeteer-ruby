@@ -45,6 +45,7 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self, context_id)
     end
     @targets = {}
+    @wait_for_creating_targets = {}
     @connection.on_event(ConnectionEmittedEvents::Disconnected) do
       emit_event(BrowserEmittedEvents::Disconnected)
     end
@@ -125,8 +126,10 @@ class Puppeteer::Browser
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
     )
-    #   assert(!this._targets.has(event.targetInfo.targetId), 'Target should not exist before targetCreated');
     @targets[target_info.target_id] = target
+    if_present(@wait_for_creating_targets.delete(target_info.target_id)) do |promise|
+      promise.fulfill(target)
+    end
     if await target.initialized_promise
       emit_event(BrowserEmittedEvents::TargetCreated, target)
       context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
@@ -139,6 +142,9 @@ class Puppeteer::Browser
     target = @targets[target_id]
     target.ignore_initialize_callback_promise
     @targets.delete(target_id)
+    if_present(@wait_for_creating_targets.delete(target_id)) do |promise|
+      promise.reject('target destroyed')
+    end
     target.closed_callback
     if await target.initialized_promise
       emit_event(BrowserEmittedEvents::TargetDestroyed, target)
@@ -184,6 +190,17 @@ class Puppeteer::Browser
     result = @connection.send_message('Target.createTarget', **create_target_params)
     target_id = result['targetId']
     target = @targets[target_id]
+    unless target
+      # Target.targetCreated is often notified before the response of Target.createdTarget.
+      # https://github.com/YusukeIwaki/puppeteer-ruby/issues/91
+      # D, [2021-04-07T03:00:10.125241 #187] DEBUG -- : SEND >> {"method":"Target.createTarget","params":{"url":"about:blank","browserContextId":"56A86FC3391B50180CF9A6450A0D8C21"},"id":3}
+      # D, [2021-04-07T03:00:10.142396 #187] DEBUG -- : RECV << {"id"=>3, "result"=>{"targetId"=>"A518447C415A1A3E1A8979454A155632"}}
+      # D, [2021-04-07T03:00:10.145360 #187] DEBUG -- : RECV << {"method"=>"Target.targetCreated", "params"=>{"targetInfo"=>{"targetId"=>"A518447C415A1A3E1A8979454A155632", "type"=>"page", "title"=>"", "url"=>"", "attached"=>false, "canAccessOpener"=>false, "browserContextId"=>"56A86FC3391B50180CF9A6450A0D8C21"}}}
+      # This is just a workaround logic...
+      Rollbar.info("Workaround of YusukeIwaki/puppeteer-ruby#91")
+      @wait_for_creating_targets[target_id] = resolvable_future
+      target = await @wait_for_creating_targets[target_id]
+    end
     await target.initialized_promise
     await target.page
   end

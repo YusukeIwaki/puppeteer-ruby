@@ -1,5 +1,14 @@
 require 'bundler/setup'
 require 'puppeteer'
+require 'rollbar'
+
+Rollbar.configure do |config|
+  if ENV['ROLLBAR_ACCESS_TOKEN']
+    config.access_token = ENV['ROLLBAR_ACCESS_TOKEN']
+  else
+    config.enabled = false
+  end
+end
 
 module PuppeteerEnvExtension
   # @return [String] chrome, firefox
