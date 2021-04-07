@@ -1,6 +1,6 @@
 # API coverages
 - Puppeteer version: v8.0.0
-- puppeteer-ruby version: 0.31.5
+- puppeteer-ruby version: 0.31.6
 
 ## Puppeteer
 
@@ -124,7 +124,7 @@
 * target
 * title
 * ~~touchscreen~~
-* ~~tracing~~
+* tracing
 * type => `#type_text`
 * url
 * viewport
@@ -170,10 +170,10 @@
 
 * ~~tap~~
 
-## ~~Tracing~~
+## Tracing
 
-* ~~start~~
-* ~~stop~~
+* start
+* stop
 
 ## FileChooser
 

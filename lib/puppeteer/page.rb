@@ -39,7 +39,7 @@ class Puppeteer::Page
     # @accessibility = Accessibility.new(client)
     @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings)
     @emulation_manager = Puppeteer::EmulationManager.new(client)
-    # @tracing = Tracing.new(client)
+    @tracing = Puppeteer::Tracing.new(client)
     @page_bindings = {}
     # @coverage = Coverage.new(client)
     @javascript_enabled = true
@@ -245,7 +245,7 @@ class Puppeteer::Page
     @frame_manager.main_frame
   end
 
-  attr_reader :touch_screen, :coverage, :accessibility
+  attr_reader :touch_screen, :coverage, :tracing, :accessibility
 
   def keyboard(&block)
     @keyboard.instance_eval(&block) unless block.nil?
@@ -986,35 +986,6 @@ class Puppeteer::Page
     buffer
   end
 
-  class ProtocolStreamReader
-    def initialize(client:, handle:, path:)
-      @client = client
-      @handle = handle
-      @path = path
-    end
-
-    def read
-      out = StringIO.new
-      File.open(@path, 'wb') do |file|
-        eof = false
-        until eof
-          response = @client.send_message('IO.read', handle: @handle)
-          eof = response['eof']
-          data =
-            if response['base64Encoded']
-              Base64.decode64(response['data'])
-            else
-              response['data']
-            end
-          out.write(data)
-          file.write(data)
-        end
-      end
-      @client.send_message('IO.close', handle: @handle)
-      out.read
-    end
-  end
-
   class PrintToPdfIsNotImplementedError < StandardError
     def initialize
       super('pdf() is only available in headless mode. See https://github.com/puppeteer/puppeteer/issues/1829')
@@ -1028,7 +999,7 @@ class Puppeteer::Page
     set_transparent_background_color if omit_background
     result = @client.send_message('Page.printToPDF', pdf_options.page_print_args)
     reset_default_background_color if omit_background
-    ProtocolStreamReader.new(client: @client, handle: result['stream'], path: pdf_options.path).read
+    Puppeteer::ProtocolStreamReader.new(client: @client, handle: result['stream'], path: pdf_options.path).read
   rescue => err
     if err.message.include?('PrintToPDF is not implemented')
       raise PrintToPdfIsNotImplementedError.new
