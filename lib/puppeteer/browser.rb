@@ -197,7 +197,6 @@ class Puppeteer::Browser
       # D, [2021-04-07T03:00:10.142396 #187] DEBUG -- : RECV << {"id"=>3, "result"=>{"targetId"=>"A518447C415A1A3E1A8979454A155632"}}
       # D, [2021-04-07T03:00:10.145360 #187] DEBUG -- : RECV << {"method"=>"Target.targetCreated", "params"=>{"targetInfo"=>{"targetId"=>"A518447C415A1A3E1A8979454A155632", "type"=>"page", "title"=>"", "url"=>"", "attached"=>false, "canAccessOpener"=>false, "browserContextId"=>"56A86FC3391B50180CF9A6450A0D8C21"}}}
       # This is just a workaround logic...
-      Rollbar.info("Workaround of YusukeIwaki/puppeteer-ruby#91")
       @wait_for_creating_targets[target_id] = resolvable_future
       target = await @wait_for_creating_targets[target_id]
     end
