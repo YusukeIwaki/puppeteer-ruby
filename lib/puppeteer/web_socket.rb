@@ -1,3 +1,4 @@
+require 'openssl'
 require 'socket'
 require 'websocket/driver'
 
@@ -5,11 +6,28 @@ require 'websocket/driver'
 # ref: https://github.com/cavalle/chrome_remote/blob/master/lib/chrome_remote/web_socket_client.rb
 class Puppeteer::WebSocket
   class DriverImpl # providing #url, #write(string)
+    class SecureSocketFactory
+      def initialize(host, port)
+        @host = host
+        @port = port || 443
+      end
+
+      def create
+        tcp_socket = TCPSocket.new(@host, @port)
+        OpenSSL::SSL::SSLSocket.new(tcp_socket).tap(&:connect)
+      end
+    end
+
     def initialize(url)
       @url = url
 
       endpoint = URI.parse(url)
-      @socket = TCPSocket.new(endpoint.host, endpoint.port)
+      @socket =
+        if endpoint.scheme == 'wss'
+          SecureSocketFactory.new(endpoint.host, endpoint.port).create
+        else
+          TCPSocket.new(endpoint.host, endpoint.port)
+        end
     end
 
     attr_reader :url
