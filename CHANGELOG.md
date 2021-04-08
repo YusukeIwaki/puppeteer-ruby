@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.1...master)]
 
 * xxx
+
+### 0.32.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.0...0.32.1)]
+
+Bugfix:
+
+* Fix WebSocket to work with `wss://...` endpoint (ex. browserless.io)
 
 ### 0.32.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.31.6...0.32.0)]
 
