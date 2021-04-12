@@ -134,6 +134,34 @@ RSpec.describe 'Screenshots' do
     # });
   end
 
+  # Regression spec for # https://github.com/YusukeIwaki/puppeteer-ruby/issues/96
+  describe 'full_page', sinatra: true do
+    shared_examples 'keep input value' do
+      it {
+        page.goto("#{server_prefix}/input/textarea.html")
+        page.type_text('textarea', 'my value')
+        page.screenshot(full_page: true)
+        expect(page.eval_on_selector('textarea', 'input => input.value')).to eq('my value')
+      }
+    end
+
+    context 'with Mobile viewport' do
+      before {
+        page.viewport = Puppeteer::Devices.iPhone_6.viewport
+      }
+
+      it_behaves_like 'keep input value'
+    end
+
+    context 'with 1200x1200 viewport' do
+      before {
+        page.viewport = Puppeteer::Viewport.new(width: 1200, height: 1200)
+      }
+
+      it_behaves_like 'keep input value'
+    end
+  end
+
   # describe('ElementHandle.screenshot', function () {
   #   it('should work', async () => {
   #     const { page, server } = getTestState();

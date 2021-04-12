@@ -32,7 +32,7 @@ class Puppeteer::EmulationManager
       ),
     )
 
-    reload_needed = @emulating_mobile != mobile || @hasTouch != has_touch
+    reload_needed = @emulating_mobile != mobile || @has_touch != has_touch
     @emulating_mobile = mobile
     @has_touch = has_touch
     reload_needed
