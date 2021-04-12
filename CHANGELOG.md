@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.1...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.2...master)]
 
 * xxx
+
+### 0.32.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.1...0.32.2)]
+
+Bugfix:
+
+* Fix full_page option in screenshot.
 
 ### 0.32.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.0...0.32.1)]
 
