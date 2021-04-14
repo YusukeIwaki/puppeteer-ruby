@@ -81,11 +81,11 @@
 * deleteCookie => `#delete_cookie`
 * emulate
 * emulateIdleState => `#emulate_idle_state`
-* ~~emulateMediaFeatures~~
+* emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
 * ~~emulateNetworkConditions~~
 * emulateTimezone => `#emulate_timezone`
-* ~~emulateVisionDeficiency~~
+* emulateVisionDeficiency => `#emulate_vision_deficiency`
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * evaluateOnNewDocument => `#evaluate_on_new_document`
