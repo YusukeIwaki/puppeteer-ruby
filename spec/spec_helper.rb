@@ -54,15 +54,6 @@ RSpec.configure do |config|
     @default_launch_options = launch_options
     @puppeteer_headless = launch_options[:headless] != false
 
-    # if example.metadata[:disable_web_security]
-    #   # Enable cross-origin access for cookies_spec
-    #   # ref: https://github.com/puppeteer/puppeteer/issues/4053
-    #   launch_options[:args] = [
-    #     '--disable-web-security',
-    #     '--disable-features=IsolateOrigins,site-per-process',
-    #   ]
-    # end
-
     if example.metadata[:puppeteer].to_s == 'browser'
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
@@ -72,6 +63,21 @@ RSpec.configure do |config|
       Puppeteer.launch(**launch_options) do |browser|
         context = browser.create_incognito_browser_context
         @puppeteer_page = context.new_page
+        begin
+          example.run
+        ensure
+          @puppeteer_page.close
+        end
+      end
+    elsif example.metadata[:disable_web_security]
+      # Enable cross-origin access for cookies_spec
+      # ref: https://github.com/puppeteer/puppeteer/issues/4053
+      launch_options[:args] = [
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+      ]
+      Puppeteer.launch(**launch_options) do |browser|
+        @puppeteer_page = browser.new_page
         begin
           example.run
         ensure
@@ -126,6 +132,7 @@ RSpec.configure do |config|
       begin
         example.run
       ensure
+        @puppeteer_page.clear_cookies unless Puppeteer.env.firefox?
         @puppeteer_page.close
         browser.disconnect
       end

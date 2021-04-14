@@ -280,7 +280,7 @@ RSpec.describe 'cookies' do
       ))
     end
 
-    it_fails_firefox 'should set cookies from a frame' do
+    it_fails_firefox 'should set cookies from a frame', disable_web_security: true do
       page.goto("#{server_prefix}/grid.html")
       page.set_cookie(name: 'localhost-cookie', value: 'best')
       js = <<~JAVASCRIPT

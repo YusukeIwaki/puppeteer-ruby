@@ -377,6 +377,10 @@ class Puppeteer::Page
     end
   end
 
+  def clear_cookies
+    @client.send_message('Network.clearBrowserCookies')
+  end
+
   # @param url [String?]
   # @param path [String?]
   # @param content [String?]
