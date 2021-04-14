@@ -91,148 +91,102 @@ RSpec.describe 'Emulation' do
     end
   end
 
-  # describe('Page.emulateMediaType', function () {
-  #   itFailsFirefox('should work', async () => {
-  #     const { page } = getTestState();
+  describe 'Page.emulate_media_type' do
+    it_fails_firefox 'should work' do
+      expect(page.evaluate("() => matchMedia('screen').matches")).to eq(true)
+      expect(page.evaluate("() => matchMedia('print').matches")).to eq(false)
+      page.emulate_media_type('print')
+      expect(page.evaluate("() => matchMedia('screen').matches")).to eq(false)
+      expect(page.evaluate("() => matchMedia('print').matches")).to eq(true)
+      page.emulate_media_type(nil)
+      expect(page.evaluate("() => matchMedia('screen').matches")).to eq(true)
+      expect(page.evaluate("() => matchMedia('print').matches")).to eq(false)
+    end
 
-  #     expect(await page.evaluate(() => matchMedia('screen').matches)).toBe(
-  #       true
-  #     );
-  #     expect(await page.evaluate(() => matchMedia('print').matches)).toBe(
-  #       false
-  #     );
-  #     await page.emulateMediaType('print');
-  #     expect(await page.evaluate(() => matchMedia('screen').matches)).toBe(
-  #       false
-  #     );
-  #     expect(await page.evaluate(() => matchMedia('print').matches)).toBe(true);
-  #     await page.emulateMediaType(null);
-  #     expect(await page.evaluate(() => matchMedia('screen').matches)).toBe(
-  #       true
-  #     );
-  #     expect(await page.evaluate(() => matchMedia('print').matches)).toBe(
-  #       false
-  #     );
-  #   });
-  #   it('should throw in case of bad argument', async () => {
-  #     const { page } = getTestState();
+    it 'should throw in case of bad argument' do
+      expect { page.emulate_media_type('bad') }.to raise_error(/Unsupported media type: bad/)
+    end
+  end
 
-  #     let error = null;
-  #     await page.emulateMediaType('bad').catch((error_) => (error = error_));
-  #     expect(error.message).toBe('Unsupported media type: bad');
-  #   });
-  # });
+  describe 'Page.emulate_media_features' do
+    it_fails_firefox 'should work' do
+      page.emulate_media_features([
+        { name: 'prefers-reduced-motion', value: 'reduce' },
+      ])
+      expect(page.evaluate("() => matchMedia('(prefers-reduced-motion: reduce)').matches")).to eq(true)
+      expect(page.evaluate("() => matchMedia('(prefers-reduced-motion: no-preference)').matches")).to eq(false)
 
-  # describe('Page.emulateMediaFeatures', function () {
-  #   itFailsFirefox('should work', async () => {
-  #     const { page } = getTestState();
+      page.emulate_media_features([
+        { name: 'prefers-color-scheme', value: 'light' },
+      ])
+      expect(page.evaluate("() => matchMedia('(prefers-color-scheme: light)').matches")).to eq(true)
+      expect(page.evaluate("() => matchMedia('(prefers-color-scheme: dark)').matches")).to eq(false)
+      page.emulate_media_features([
+        { name: 'prefers-color-scheme', value: 'dark' },
+      ])
+      expect(page.evaluate("() => matchMedia('(prefers-color-scheme: light)').matches")).to eq(false)
+      expect(page.evaluate("() => matchMedia('(prefers-color-scheme: dark)').matches")).to eq(true)
 
-  #     await page.emulateMediaFeatures([
-  #       { name: 'prefers-reduced-motion', value: 'reduce' },
-  #     ]);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-reduced-motion: reduce)').matches
-  #       )
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-reduced-motion: no-preference)').matches
-  #       )
-  #     ).toBe(false);
-  #     await page.emulateMediaFeatures([
-  #       { name: 'prefers-color-scheme', value: 'light' },
-  #     ]);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-color-scheme: light)').matches
-  #       )
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-color-scheme: dark)').matches
-  #       )
-  #     ).toBe(false);
-  #     await page.emulateMediaFeatures([
-  #       { name: 'prefers-color-scheme', value: 'dark' },
-  #     ]);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-color-scheme: dark)').matches
-  #       )
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-color-scheme: light)').matches
-  #       )
-  #     ).toBe(false);
-  #     await page.emulateMediaFeatures([
-  #       { name: 'prefers-reduced-motion', value: 'reduce' },
-  #       { name: 'prefers-color-scheme', value: 'light' },
-  #     ]);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-reduced-motion: reduce)').matches
-  #       )
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-reduced-motion: no-preference)').matches
-  #       )
-  #     ).toBe(false);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-color-scheme: light)').matches
-  #       )
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(
-  #         () => matchMedia('(prefers-color-scheme: dark)').matches
-  #       )
-  #     ).toBe(false);
-  #     await page.emulateMediaFeatures([{ name: 'color-gamut', value: 'srgb' }]);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: p3)').matches)
-  #     ).toBe(false);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: srgb)').matches)
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: rec2020)').matches)
-  #     ).toBe(false);
-  #     await page.emulateMediaFeatures([{ name: 'color-gamut', value: 'p3' }]);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: p3)').matches)
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: srgb)').matches)
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: rec2020)').matches)
-  #     ).toBe(false);
-  #     await page.emulateMediaFeatures([
-  #       { name: 'color-gamut', value: 'rec2020' },
-  #     ]);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: p3)').matches)
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: srgb)').matches)
-  #     ).toBe(true);
-  #     expect(
-  #       await page.evaluate(() => matchMedia('(color-gamut: rec2020)').matches)
-  #     ).toBe(true);
-  #   });
-  #   it('should throw in case of bad argument', async () => {
-  #     const { page } = getTestState();
+      page.emulate_media_features([
+        { name: 'prefers-reduced-motion', value: 'reduce' },
+        { name: 'prefers-color-scheme', value: 'light' },
+      ])
+      expect(page.evaluate("() => matchMedia('(prefers-reduced-motion: reduce)').matches")).to eq(true)
+      expect(page.evaluate("() => matchMedia('(prefers-reduced-motion: no-preference)').matches")).to eq(false)
+      expect(page.evaluate("() => matchMedia('(prefers-color-scheme: light)').matches")).to eq(true)
+      expect(page.evaluate("() => matchMedia('(prefers-color-scheme: dark)').matches")).to eq(false)
 
-  #     let error = null;
-  #     await page
-  #       .emulateMediaFeatures([{ name: 'bad', value: '' }])
-  #       .catch((error_) => (error = error_));
-  #     expect(error.message).toBe('Unsupported media feature: bad');
-  #   });
-  # });
+      # 'color-gamut' is supported on Chrome >= 90
+      aggregate_failures 'color-gamut' do
+        page.emulate_media_features([
+          { name: 'color-gamut', value: 'srgb' },
+        ])
+        expected = {
+          p3: false,
+          srgb: true,
+          rec2020: false,
+        }
+        observed = expected.map do |key, _|
+          [key, page.evaluate("() => matchMedia('(color-gamut: #{key})').matches")]
+        end.to_h
+        expect(observed).to eq(expected)
+
+        page.emulate_media_features([
+          { name: 'color-gamut', value: 'p3' },
+        ])
+        expected = {
+          p3: true,
+          srgb: true,
+          rec2020: false,
+        }
+        observed = expected.map do |key, _|
+          [key, page.evaluate("() => matchMedia('(color-gamut: #{key})').matches")]
+        end.to_h
+        expect(observed).to eq(expected)
+
+        page.emulate_media_features([
+          { name: 'color-gamut', value: 'rec2020' },
+        ])
+        expected = {
+          p3: true,
+          srgb: true,
+          rec2020: true,
+        }
+        observed = expected.map do |key, _|
+          [key, page.evaluate("() => matchMedia('(color-gamut: #{key})').matches")]
+        end.to_h
+        expect(observed).to eq(expected)
+      end
+    end
+
+    it 'should throw in case of bad argument' do
+      expect {
+        page.emulate_media_features([
+          { name: 'bad', value: '' },
+        ])
+      }.to raise_error(/Unsupported media feature: bad/)
+    end
+  end
 
   # describeFailsFirefox('Page.emulateTimezone', function () {
   #   it('should work', async () => {

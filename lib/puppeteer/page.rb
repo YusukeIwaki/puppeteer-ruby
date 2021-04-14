@@ -794,21 +794,20 @@ class Puppeteer::Page
     @client.send_message('Emulation.setEmulatedMedia', media: media_type_str)
   end
 
-  # /**
-  #  * @param {?Array<MediaFeature>} features
-  #  */
-  # async emulateMediaFeatures(features) {
-  #   if (features === null)
-  #     await this._client.send('Emulation.setEmulatedMedia', {features: null});
-  #   if (Array.isArray(features)) {
-  #     features.every(mediaFeature => {
-  #       const name = mediaFeature.name;
-  #       assert(/^prefers-(?:color-scheme|reduced-motion)$/.test(name), 'Unsupported media feature: ' + name);
-  #       return true;
-  #     });
-  #     await this._client.send('Emulation.setEmulatedMedia', {features: features});
-  #   }
-  # }
+  # @param features [Array]
+  def emulate_media_features(features)
+    if features.nil?
+      @client.send_message('Emulation.setEmulatedMedia', features: nil)
+    elsif features.is_a?(Array)
+      features.each do |media_feature|
+        name = media_feature[:name]
+        unless /^(?:prefers-(?:color-scheme|reduced-motion)|color-gamut)$/.match?(name)
+          raise ArgumentError.new("Unsupported media feature: #{name}")
+        end
+      end
+      @client.send_message('Emulation.setEmulatedMedia', features: features)
+    end
+  end
 
   # @param timezone_id [String?]
   def emulate_timezone(timezone_id)
