@@ -138,6 +138,14 @@ RSpec.configure do |config|
       end
     end
   end
+  config.after(:suite) do
+    if Puppeteer.respond_to?(:cached_browser_ws_endpoint)
+      browser = Puppeteer.connect(
+        browser_ws_endpoint: Puppeteer.cached_browser_ws_endpoint,
+      ) rescue nil
+      browser&.close
+    end
+  end
 
   # Unit test doesn't connect to internet. No need to wait for 30sec. Set it to 7.5sec.
   config.before(:each, type: :puppeteer) do
