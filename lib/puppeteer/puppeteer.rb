@@ -8,6 +8,8 @@ class Puppeteer::Puppeteer
     @is_puppeteer_core = is_puppeteer_core
   end
 
+  class NoViewport ; end
+
   # @param product [String]
   # @param executable_path [String]
   # @param ignore_default_args [Array<String>|nil]
@@ -42,7 +44,7 @@ class Puppeteer::Puppeteer
     devtools: nil,
     headless: nil,
     ignore_https_errors: nil,
-    default_viewport: nil,
+    default_viewport: NoViewport.new,
     slow_mo: nil
   )
     options = {
@@ -63,6 +65,9 @@ class Puppeteer::Puppeteer
       default_viewport: default_viewport,
       slow_mo: slow_mo,
     }
+    if default_viewport.is_a?(NoViewport)
+      options.delete(:default_viewport)
+    end
 
     @product_name ||= product
     browser = launcher.launch(options)

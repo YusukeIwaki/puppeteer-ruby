@@ -15,8 +15,12 @@ class Puppeteer::EmulationManager
     width = viewport.width
     height = viewport.height
     device_scale_factor = viewport.device_scale_factor
-    # /** @type {Protocol.Emulation.ScreenOrientation} */
-    # const screenOrientation = viewport.isLandscape ? { angle: 90, type: 'landscapePrimary' } : { angle: 0, type: 'portraitPrimary' };
+    screen_orientation =
+      if viewport.landscape?
+        { angle: 90, type: 'landscapePrimary' }
+      else
+        { angle: 0, type: 'portraitPrimary' }
+      end
     has_touch = viewport.has_touch?
 
     await_all(
@@ -25,7 +29,7 @@ class Puppeteer::EmulationManager
         width: width,
         height: height,
         deviceScaleFactor: device_scale_factor,
-        # screenOrientation: screen_orientation,
+        screenOrientation: screen_orientation,
       ),
       @client.async_send_message('Emulation.setTouchEmulationEnabled',
         enabled: has_touch,
