@@ -820,6 +820,23 @@ class Puppeteer::Page
     end
   end
 
+  VISION_DEFICIENCY_TYPES = %w[
+    none
+    achromatopsia
+    blurredVision
+    deuteranopia
+    protanopia
+    tritanopia
+  ].freeze
+
+  def emulate_vision_deficiency(vision_deficiency_type)
+    value = vision_deficiency_type || 'none'
+    unless VISION_DEFICIENCY_TYPES.include?(value)
+      raise ArgumentError.new("Unsupported vision deficiency: #{vision_deficiency_type}")
+    end
+    @client.send_message('Emulation.setEmulatedVisionDeficiency', type: value)
+  end
+
   # @param is_user_active [Boolean]
   # @param is_screen_unlocked [Boolean]
   def emulate_idle_state(is_user_active: nil, is_screen_unlocked: nil)

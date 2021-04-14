@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'tmpdir'
 
 RSpec.describe 'Emulation' do
   let(:iPhone) { Puppeteer.devices.iPhone_6 }
@@ -188,104 +189,44 @@ RSpec.describe 'Emulation' do
     end
   end
 
-  # describeFailsFirefox('Page.emulateTimezone', function () {
-  #   it('should work', async () => {
-  #     const { page } = getTestState();
+  describe 'Page.emulateTimezone', skip: Puppeteer.env.firefox? do
+    it 'should work' do
+      page.evaluate('() => { globalThis.date = new Date(1479579154987) }')
 
-  #     await page.evaluate(() => {
-  #       globalThis.date = new Date(1479579154987);
-  #     });
-  #     await page.emulateTimezone('America/Jamaica');
-  #     expect(await page.evaluate(() => globalThis.date.toString())).toBe(
-  #       'Sat Nov 19 2016 13:12:34 GMT-0500 (Eastern Standard Time)'
-  #     );
+      expected = {
+        'America/Jamaica' => 'Sat Nov 19 2016 13:12:34 GMT-0500 (Eastern Standard Time)',
+        'Pacific/Honolulu' => 'Sat Nov 19 2016 08:12:34 GMT-1000 (Hawaii-Aleutian Standard Time)',
+        'America/Buenos_Aires' => 'Sat Nov 19 2016 15:12:34 GMT-0300 (Argentina Standard Time)',
+        'Europe/Berlin' => 'Sat Nov 19 2016 19:12:34 GMT+0100 (Central European Standard Time)',
+      }
+      observed = expected.map do |time_zone, _|
+        page.emulate_timezone(time_zone)
+        [time_zone, page.evaluate('() => globalThis.date.toString()')]
+      end.to_h
+      expect(observed).to eq(expected)
+    end
 
-  #     await page.emulateTimezone('Pacific/Honolulu');
-  #     expect(await page.evaluate(() => globalThis.date.toString())).toBe(
-  #       'Sat Nov 19 2016 08:12:34 GMT-1000 (Hawaii-Aleutian Standard Time)'
-  #     );
+    it 'should throw for invalid timezone IDs' do
+      expect { page.emulate_timezone('Foo/Bar') }.to raise_error(/Invalid timezone ID: Foo\/Bar/)
+      expect { page.emulate_timezone('Baz/Qux') }.to raise_error(/Invalid timezone ID: Baz\/Qux/)
+    end
+  end
 
-  #     await page.emulateTimezone('America/Buenos_Aires');
-  #     expect(await page.evaluate(() => globalThis.date.toString())).toBe(
-  #       'Sat Nov 19 2016 15:12:34 GMT-0300 (Argentina Standard Time)'
-  #     );
+  describe 'Page.emulateVisionDeficiency', skip: Puppeteer.env.firefox? do
+    it 'should work', sinatra: true do
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
+      page.goto("#{server_prefix}/grid.html")
 
-  #     await page.emulateTimezone('Europe/Berlin');
-  #     expect(await page.evaluate(() => globalThis.date.toString())).toBe(
-  #       'Sat Nov 19 2016 19:12:34 GMT+0100 (Central European Standard Time)'
-  #     );
-  #   });
+      Dir.mktmpdir do |dir|
+        Puppeteer::Page::VISION_DEFICIENCY_TYPES.each do |type|
+          page.emulate_vision_deficiency(type)
+          page.screenshot(path: File.join(dir, "grid-#{type}.png"))
+        end
+      end
+    end
 
-  #   it('should throw for invalid timezone IDs', async () => {
-  #     const { page } = getTestState();
-
-  #     let error = null;
-  #     await page.emulateTimezone('Foo/Bar').catch((error_) => (error = error_));
-  #     expect(error.message).toBe('Invalid timezone ID: Foo/Bar');
-  #     await page.emulateTimezone('Baz/Qux').catch((error_) => (error = error_));
-  #     expect(error.message).toBe('Invalid timezone ID: Baz/Qux');
-  #   });
-  # });
-
-  # describeFailsFirefox('Page.emulateVisionDeficiency', function () {
-  #   it('should work', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.setViewport({ width: 500, height: 500 });
-  #     await page.goto(server.PREFIX + '/grid.html');
-
-  #     {
-  #       await page.emulateVisionDeficiency('none');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('screenshot-sanity.png');
-  #     }
-
-  #     {
-  #       await page.emulateVisionDeficiency('achromatopsia');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('vision-deficiency-achromatopsia.png');
-  #     }
-
-  #     {
-  #       await page.emulateVisionDeficiency('blurredVision');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('vision-deficiency-blurredVision.png');
-  #     }
-
-  #     {
-  #       await page.emulateVisionDeficiency('deuteranopia');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('vision-deficiency-deuteranopia.png');
-  #     }
-
-  #     {
-  #       await page.emulateVisionDeficiency('protanopia');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('vision-deficiency-protanopia.png');
-  #     }
-
-  #     {
-  #       await page.emulateVisionDeficiency('tritanopia');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('vision-deficiency-tritanopia.png');
-  #     }
-
-  #     {
-  #       await page.emulateVisionDeficiency('none');
-  #       const screenshot = await page.screenshot();
-  #       expect(screenshot).toBeGolden('screenshot-sanity.png');
-  #     }
-  #   });
-
-  #   it('should throw for invalid vision deficiencies', async () => {
-  #     const { page } = getTestState();
-
-  #     let error = null;
-  #     await page
-  #       // @ts-expect-error deliberately passign invalid deficiency
-  #       .emulateVisionDeficiency('invalid')
-  #       .catch((error_) => (error = error_));
-  #     expect(error.message).toBe('Unsupported vision deficiency: invalid');
-  #   });
-  # });
+    it 'should throw for invalid vision deficiencies' do
+      expect { page.emulate_vision_deficiency('invalid') }.to raise_error(/Unsupported vision deficiency: invalid/)
+    end
+  end
 end
