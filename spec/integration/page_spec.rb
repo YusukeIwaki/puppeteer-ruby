@@ -323,6 +323,7 @@ RSpec.describe Puppeteer::Page do
 
   describe '#offline_mode=' do
     it_fails_firefox 'should work', sinatra: true do
+      page.clear_cache
       page.offline_mode = true
       expect { page.goto(server_empty_page) }.to raise_error(/net::ERR_INTERNET_DISCONNECTED/)
 

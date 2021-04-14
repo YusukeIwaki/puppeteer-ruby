@@ -377,6 +377,10 @@ class Puppeteer::Page
     end
   end
 
+  def clear_cache
+    @client.send_message('Network.clearBrowserCache')
+  end
+
   def clear_cookies
     @client.send_message('Network.clearBrowserCookies')
   end
