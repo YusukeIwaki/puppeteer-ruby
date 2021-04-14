@@ -111,6 +111,8 @@ RSpec.describe 'Emulation' do
 
   describe 'Page.emulate_media_features' do
     it_fails_firefox 'should work' do
+      pending "'color-gamut' is supported on Chrome >= 90"
+
       page.emulate_media_features([
         { name: 'prefers-reduced-motion', value: 'reduce' },
       ])
@@ -137,7 +139,6 @@ RSpec.describe 'Emulation' do
       expect(page.evaluate("() => matchMedia('(prefers-color-scheme: light)').matches")).to eq(true)
       expect(page.evaluate("() => matchMedia('(prefers-color-scheme: dark)').matches")).to eq(false)
 
-      # 'color-gamut' is supported on Chrome >= 90
       aggregate_failures 'color-gamut' do
         page.emulate_media_features([
           { name: 'color-gamut', value: 'srgb' },
