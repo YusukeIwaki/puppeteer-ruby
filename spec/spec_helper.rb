@@ -79,62 +79,55 @@ RSpec.configure do |config|
         end
       end
     else
-      if Puppeteer.env.firefox?
-        # Launching Firefox every time is very slow.
-        # So we keep a launched instance and reuse it with Puppeteer.connect.
-        unless Puppeteer.respond_to?(:firefox_ws_endpoint)
-          def Puppeteer.firefox_ws_endpoint
-            @firefox_ws_endpoint
-          end
-
-          def Puppeteer.firefox_ws_endpoint=(value)
-            @firefox_ws_endpoint = value
-          end
+      # Launching browser every time is very slow.
+      # So we keep a launched instance and reuse it with Puppeteer.connect.
+      unless Puppeteer.respond_to?(:cached_browser_ws_endpoint)
+        def Puppeteer.cached_browser_ws_endpoint
+          @cached_browser_ws_endpoint
         end
 
-        allowed_connect_option_keys = %i[
-          browser_ws_endpoint
-          browser_url
-          transport
-          ignore_https_errors
-          default_viewport
-          slow_mo
-        ]
-        connect_options = launch_options.select { |k, _| allowed_connect_option_keys.include?(k) }
-        connect_options[:browser_ws_endpoint] = Puppeteer.firefox_ws_endpoint
+        def Puppeteer.cached_browser_ws_endpoint=(value)
+          @cached_browser_ws_endpoint = value
+        end
+      end
 
-        browser =
-          begin
-            Puppeteer.connect(**connect_options)
-          rescue ArgumentError # browser_ws_endpoint is nil
-            Puppeteer.launch(**launch_options)
-          rescue Errno::ECONNREFUSED # Firefox is gone (crashed?).
-            Puppeteer.launch(**launch_options)
-          end
+      allowed_connect_option_keys = %i[
+        browser_ws_endpoint
+        browser_url
+        transport
+        ignore_https_errors
+        default_viewport
+        slow_mo
+      ]
+      connect_options = launch_options.select { |k, _| allowed_connect_option_keys.include?(k) }
+      connect_options[:browser_ws_endpoint] = Puppeteer.cached_browser_ws_endpoint
 
+      browser =
         begin
-          # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
-          # So create new page for each spec.
-          @puppeteer_page = browser.new_page
-        rescue Puppeteer::Connection::ProtocolError
-          # Firefox is closed by user interaction.
-          browser = Puppeteer.launch(**launch_options)
-          @puppeteer_page = browser.new_page
+          Puppeteer.connect(**connect_options)
+        rescue ArgumentError # browser_ws_endpoint is nil
+          Puppeteer.launch(**launch_options)
+        rescue Errno::ECONNREFUSED # Firefox is gone (crashed?).
+          Puppeteer.launch(**launch_options)
         end
 
-        Puppeteer.firefox_ws_endpoint = browser.ws_endpoint
+      begin
+        # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
+        # So create new page for each spec.
+        @puppeteer_page = browser.new_page
+      rescue Puppeteer::Connection::ProtocolError
+        # Firefox is closed by user interaction.
+        browser = Puppeteer.launch(**launch_options)
+        @puppeteer_page = browser.new_page
+      end
 
-        begin
-          example.run
-        ensure
-          @puppeteer_page.close
-          browser.disconnect
-        end
-      else
-        Puppeteer.launch(**launch_options) do |browser|
-          @puppeteer_page = browser.pages.first || browser.new_page
-          example.run
-        end
+      Puppeteer.cached_browser_ws_endpoint = browser.ws_endpoint
+
+      begin
+        example.run
+      ensure
+        @puppeteer_page.close
+        browser.disconnect
       end
     end
   end
