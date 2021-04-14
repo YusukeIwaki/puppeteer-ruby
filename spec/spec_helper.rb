@@ -80,15 +80,55 @@ RSpec.configure do |config|
       end
     else
       if Puppeteer.env.firefox?
-        Puppeteer.launch(**launch_options) do |browser|
+        # Launching Firefox every time is very slow.
+        # So we keep a launched instance and reuse it with Puppeteer.connect.
+        unless Puppeteer.respond_to?(:firefox_ws_endpoint)
+          def Puppeteer.firefox_ws_endpoint
+            @firefox_ws_endpoint
+          end
+
+          def Puppeteer.firefox_ws_endpoint=(value)
+            @firefox_ws_endpoint = value
+          end
+        end
+
+        allowed_connect_option_keys = %i[
+          browser_ws_endpoint
+          browser_url
+          transport
+          ignore_https_errors
+          default_viewport
+          slow_mo
+        ]
+        connect_options = launch_options.select { |k, _| allowed_connect_option_keys.include?(k) }
+        connect_options[:browser_ws_endpoint] = Puppeteer.firefox_ws_endpoint
+
+        browser =
+          begin
+            Puppeteer.connect(**connect_options)
+          rescue ArgumentError # browser_ws_endpoint is nil
+            Puppeteer.launch(**launch_options)
+          rescue Errno::ECONNREFUSED # Firefox is gone (crashed?).
+            Puppeteer.launch(**launch_options)
+          end
+
+        begin
           # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
           # So create new page for each spec.
           @puppeteer_page = browser.new_page
-          begin
-            example.run
-          ensure
-            @puppeteer_page.close
-          end
+        rescue Puppeteer::Connection::ProtocolError
+          # Firefox is closed by user interaction.
+          browser = Puppeteer.launch(**launch_options)
+          @puppeteer_page = browser.new_page
+        end
+
+        Puppeteer.firefox_ws_endpoint = browser.ws_endpoint
+
+        begin
+          example.run
+        ensure
+          @puppeteer_page.close
+          browser.disconnect
         end
       else
         Puppeteer.launch(**launch_options) do |browser|
