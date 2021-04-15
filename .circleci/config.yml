@@ -51,6 +51,28 @@ jobs:
               --out test_results/rspec.xml \
               --format documentation spec/integration/
 
+  rspec_firefox_pending_check:
+    docker:
+      - image: circleci/ruby:2.7.2-buster-node-browsers
+    steps:
+      - checkout
+      - run:
+          command: gem install bundler:2.2.3 && bundle install
+      - run:
+          name: install firefox-nightly
+          command: |
+            wget -O nightly.tar.bz2 "https://download.mozilla.org/?product=firefox-nightly-latest-ssl&os=linux64&lang=en-US"
+            tar xf nightly.tar.bz2
+      - run:
+          name: rspec
+          command: |
+            DEBUG=1 PUPPETEER_PRODUCT_RSPEC=firefox PENDING_CHECK=true \
+            PUPPETEER_EXECUTABLE_PATH_RSPEC=${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}/firefox/firefox \
+            bundle exec rspec --profile 10 \
+              --format RspecJunitFormatter \
+              --out test_results/rspec.xml \
+              --format documentation spec/integration/
+
   deploy:
     docker:
       - image: circleci/ruby:2.6.3-stretch-node
@@ -82,6 +104,7 @@ workflows:
       - rspec_chrome_ruby2_7
       - rspec_chrome_ruby3_0
       - rspec_firefox
+      - rspec_firefox_pending_check
   rubygems-deploy:
     jobs:
       - deploy:
