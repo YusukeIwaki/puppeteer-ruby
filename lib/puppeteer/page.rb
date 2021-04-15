@@ -49,7 +49,7 @@ class Puppeteer::Page
     @client.on_event('Target.attachedToTarget') do |event|
       if event['targetInfo']['type'] != 'worker'
         # If we don't detach from service workers, they will never die.
-        await @client.send_message('Target.detachFromTarget', sessionId: event['sessionId'])
+        @client.async_send_message('Target.detachFromTarget', sessionId: event['sessionId'])
         next
       end
 

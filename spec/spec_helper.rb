@@ -47,6 +47,10 @@ RSpec.configure do |config|
   end
 
   config.around(:each, type: :puppeteer) do |example|
+    if ENV['PENDING_CHECK'] && !example.metadata[:pending]
+      skip 'Pending check mode'
+    end
+
     @default_launch_options = launch_options
     @puppeteer_headless = launch_options[:headless] != false
 
@@ -174,7 +178,14 @@ end
 module ItFailsFirefox
   def it_fails_firefox(*args, **kwargs, &block)
     if Puppeteer.env.firefox?
-      pending(*args, **kwargs, &block)
+      if ENV['PENDING_CHECK']
+        # Executed but not marked as failure.
+        # Fails if pass.
+        pending(*args, **kwargs, &block)
+      else
+        # Not executed, just skip.
+        skip(*args, **kwargs, &block)
+      end
     else
       it(*args, **kwargs, &block)
     end

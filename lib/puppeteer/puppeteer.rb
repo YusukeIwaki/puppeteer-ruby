@@ -69,7 +69,7 @@ class Puppeteer::Puppeteer
       options.delete(:default_viewport)
     end
 
-    @product_name ||= product
+    @product_name = product
     browser = launcher.launch(options)
     if block_given?
       begin
@@ -123,7 +123,7 @@ class Puppeteer::Puppeteer
   end
 
   private def launcher
-    @launcher ||= Puppeteer::Launcher.new(
+    @launcher = Puppeteer::Launcher.new(
       project_root: @project_root,
       preferred_revision: @preferred_revision,
       is_puppeteer_core: @is_puppeteer_core,
