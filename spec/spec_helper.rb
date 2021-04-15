@@ -95,37 +95,17 @@ RSpec.configure do |config|
     else
       # Launching browser every time is very slow.
       # So we keep a launched instance and reuse it with Puppeteer.connect.
-      unless Puppeteer.respond_to?(:cached_browser_ws_endpoint)
-        def Puppeteer.cached_browser_ws_endpoint
-          @cached_browser_ws_endpoint
+      unless Puppeteer.respond_to?(:cached_browser)
+        def Puppeteer.cached_browser
+          @cached_browser
         end
 
-        def Puppeteer.cached_browser_ws_endpoint=(value)
-          @cached_browser_ws_endpoint = value
+        def Puppeteer.cached_browser=(value)
+          @cached_browser = value
         end
       end
 
-      allowed_connect_option_keys = %i[
-        browser_ws_endpoint
-        browser_url
-        transport
-        ignore_https_errors
-        default_viewport
-        slow_mo
-      ]
-      connect_options = launch_options.select { |k, _| allowed_connect_option_keys.include?(k) }
-      connect_options[:browser_ws_endpoint] = Puppeteer.cached_browser_ws_endpoint
-
-      browser =
-        begin
-          Timeout.timeout(3) { Puppeteer.connect(**connect_options) }
-        rescue ArgumentError # browser_ws_endpoint is nil
-          Puppeteer.launch(**launch_options)
-        rescue Timeout::Error # Firefox is gone (hang?).
-          Puppeteer.launch(**launch_options)
-        rescue Errno::ECONNREFUSED # Firefox is gone (crashed?).
-          Puppeteer.launch(**launch_options)
-        end
+      browser = Puppeteer.cached_browser || Puppeteer.launch(**launch_options)
 
       Timeout.timeout(3) do
         begin
@@ -138,7 +118,7 @@ RSpec.configure do |config|
           @puppeteer_page = browser.new_page
         end
 
-        Puppeteer.cached_browser_ws_endpoint = browser.ws_endpoint
+        Puppeteer.cached_browser = browser
       end
 
       begin
@@ -146,17 +126,13 @@ RSpec.configure do |config|
       ensure
         @puppeteer_page.clear_cookies unless Puppeteer.env.firefox?
         @puppeteer_page.close
-        browser.disconnect
       end
     end
   end
   config.after(:suite) do
-    if Puppeteer.respond_to?(:cached_browser_ws_endpoint)
+    if Puppeteer.respond_to?(:cached_browser)
       Timeout.timeout(3) do
-        browser = Puppeteer.connect(
-          browser_ws_endpoint: Puppeteer.cached_browser_ws_endpoint,
-        ) rescue nil
-        browser&.close
+        Puppeteer.cached_browser&.close
       end
     end
   end
