@@ -46,6 +46,14 @@ RSpec.configure do |config|
     launch_options[:headless] = false
   end
 
+  # Unit test doesn't connect to internet. No need to wait for 30sec. Set it to 7.5sec.
+  config.before(:each, type: :puppeteer) do
+    stub_const("Puppeteer::TimeoutSettings::DEFAULT_TIMEOUT", 7500)
+  end
+
+  # Every browser automation test case should spend less than 15sec.
+  spec_timeout = 15
+
   config.around(:each, type: :puppeteer) do |example|
     if ENV['PENDING_CHECK'] && !example.metadata[:pending]
       skip 'Pending check mode'
@@ -57,14 +65,14 @@ RSpec.configure do |config|
     if example.metadata[:puppeteer].to_s == 'browser'
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
-        example.run
+        Timeout.timeout(spec_timeout) { example.run }
       end
     elsif example.metadata[:browser_context].to_s == 'incognito'
       Puppeteer.launch(**launch_options) do |browser|
         context = browser.create_incognito_browser_context
         @puppeteer_page = context.new_page
         begin
-          example.run
+          Timeout.timeout(spec_timeout) { example.run }
         ensure
           @puppeteer_page.close
         end
@@ -79,7 +87,7 @@ RSpec.configure do |config|
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_page = browser.new_page
         begin
-          example.run
+          Timeout.timeout(spec_timeout) { example.run }
         ensure
           @puppeteer_page.close
         end
@@ -110,27 +118,31 @@ RSpec.configure do |config|
 
       browser =
         begin
-          Puppeteer.connect(**connect_options)
+          Timeout.timeout(3) { Puppeteer.connect(**connect_options) }
         rescue ArgumentError # browser_ws_endpoint is nil
+          Puppeteer.launch(**launch_options)
+        rescue Timeout::Error # Firefox is gone (hang?).
           Puppeteer.launch(**launch_options)
         rescue Errno::ECONNREFUSED # Firefox is gone (crashed?).
           Puppeteer.launch(**launch_options)
         end
 
-      begin
-        # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
-        # So create new page for each spec.
-        @puppeteer_page = browser.new_page
-      rescue Puppeteer::Connection::ProtocolError
-        # Firefox is closed by user interaction.
-        browser = Puppeteer.launch(**launch_options)
-        @puppeteer_page = browser.new_page
+      Timeout.timeout(3) do
+        begin
+          # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
+          # So create new page for each spec.
+          @puppeteer_page = browser.new_page
+        rescue Puppeteer::Connection::ProtocolError
+          # Firefox is closed by user interaction.
+          browser = Puppeteer.launch(**launch_options)
+          @puppeteer_page = browser.new_page
+        end
+
+        Puppeteer.cached_browser_ws_endpoint = browser.ws_endpoint
       end
 
-      Puppeteer.cached_browser_ws_endpoint = browser.ws_endpoint
-
       begin
-        example.run
+        Timeout.timeout(spec_timeout) { example.run }
       ensure
         @puppeteer_page.clear_cookies unless Puppeteer.env.firefox?
         @puppeteer_page.close
@@ -140,22 +152,12 @@ RSpec.configure do |config|
   end
   config.after(:suite) do
     if Puppeteer.respond_to?(:cached_browser_ws_endpoint)
-      browser = Puppeteer.connect(
-        browser_ws_endpoint: Puppeteer.cached_browser_ws_endpoint,
-      ) rescue nil
-      browser&.close
-    end
-  end
-
-  # Unit test doesn't connect to internet. No need to wait for 30sec. Set it to 7.5sec.
-  config.before(:each, type: :puppeteer) do
-    stub_const("Puppeteer::TimeoutSettings::DEFAULT_TIMEOUT", 7500)
-  end
-
-  # Every browser automation test case should spend less than 15sec.
-  if Puppeteer.env.ci?
-    config.around(:each, type: :puppeteer) do |example|
-      Timeout.timeout(15) { example.run }
+      Timeout.timeout(3) do
+        browser = Puppeteer.connect(
+          browser_ws_endpoint: Puppeteer.cached_browser_ws_endpoint,
+        ) rescue nil
+        browser&.close
+      end
     end
   end
 
