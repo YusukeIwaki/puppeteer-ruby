@@ -263,7 +263,7 @@ RSpec.describe Puppeteer::Page do
       expect(frame.evaluate('() => globalThis.result')).to eq('Clicked')
     end
 
-    it 'sshould click the button with deviceScaleFactor set' do
+    it 'should click the button with deviceScaleFactor set' do
       page.viewport = Puppeteer::Viewport.new(width: 400, height: 400, device_scale_factor: 5)
       unless page.evaluate('() => window.devicePixelRatio') == 5
         raise 'something wrong...'
