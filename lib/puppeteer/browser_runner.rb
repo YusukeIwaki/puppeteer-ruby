@@ -161,14 +161,17 @@ class Puppeteer::BrowserRunner
   end
 
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
+    msg = []
     Timeout.timeout(timeout / 1000.0) do
-      loop do
-        line = browser_process.stderr.readline
-        /^DevTools listening on (ws:\/\/.*)$/.match(line) do |m|
-          return m[1]
+      while line = browser_process.stderr.gets
+        if /^DevTools listening on (ws:\/\/.*)$/ =~ line
+          return $1
         end
+        msg << line
       end
     end
+    raise "WS endpoint not found - process may have exited unexpectedly" \
+      " (stderr: `#{msg.map(&:strip).join " "}`)"
   rescue Timeout::Error
     raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
   end
