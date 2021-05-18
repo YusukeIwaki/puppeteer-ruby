@@ -161,14 +161,18 @@ class Puppeteer::BrowserRunner
   end
 
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
+    lines = []
     Timeout.timeout(timeout / 1000.0) do
       loop do
         line = browser_process.stderr.readline
         /^DevTools listening on (ws:\/\/.*)$/.match(line) do |m|
           return m[1]
         end
+        lines << line
       end
     end
+  rescue EOFError
+    raise LaunchError.new("\n#{lines.join("\n")}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
   rescue Timeout::Error
     raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
   end
