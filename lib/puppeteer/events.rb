@@ -1,11 +1,9 @@
 require 'digest/md5'
 
 module EventsDefinitionUtils
-  refine Kernel do
-    # Symbol is used to prevent external parties listening to these events
-    def Symbol(str)
-      Digest::MD5.hexdigest(str)
-    end
+  # symbol is used to prevent external parties listening to these events
+  module_function def symbol(str)
+    Digest::MD5.hexdigest(str)
   end
 
   refine Hash do
@@ -28,14 +26,14 @@ using EventsDefinitionUtils
 module ConnectionEmittedEvents ; end
 
 {
-  Disconnected: Symbol('Connection.Disconnected'),
+  Disconnected: EventsDefinitionUtils.symbol('Connection.Disconnected'),
 }.define_const_into(ConnectionEmittedEvents)
 
 # Internal events that the CDPSession class emits.
 module CDPSessionEmittedEvents ; end
 
 {
-  Disconnected: Symbol('CDPSession.Disconnected'),
+  Disconnected: EventsDefinitionUtils.symbol('CDPSession.Disconnected'),
 }.define_const_into(CDPSessionEmittedEvents)
 
 # All the events a Browser may emit.
@@ -82,10 +80,10 @@ module BrowserContextEmittedEvents ; end
 module NetworkManagerEmittedEvents ; end
 
 {
-  Request: Symbol('NetworkManager.Request'),
-  Response: Symbol('NetworkManager.Response'),
-  RequestFailed: Symbol('NetworkManager.RequestFailed'),
-  RequestFinished: Symbol('NetworkManager.RequestFinished'),
+  Request: EventsDefinitionUtils.symbol('NetworkManager.Request'),
+  Response: EventsDefinitionUtils.symbol('NetworkManager.Response'),
+  RequestFailed: EventsDefinitionUtils.symbol('NetworkManager.RequestFailed'),
+  RequestFinished: EventsDefinitionUtils.symbol('NetworkManager.RequestFinished'),
 }.define_const_into(NetworkManagerEmittedEvents)
 
 
@@ -94,13 +92,13 @@ module NetworkManagerEmittedEvents ; end
 module FrameManagerEmittedEvents ; end
 
 {
-  FrameAttached: Symbol('FrameManager.FrameAttached'),
-  FrameNavigated: Symbol('FrameManager.FrameNavigated'),
-  FrameDetached: Symbol('FrameManager.FrameDetached'),
-  LifecycleEvent: Symbol('FrameManager.LifecycleEvent'),
-  FrameNavigatedWithinDocument: Symbol('FrameManager.FrameNavigatedWithinDocument'),
-  ExecutionContextCreated: Symbol('FrameManager.ExecutionContextCreated'),
-  ExecutionContextDestroyed: Symbol('FrameManager.ExecutionContextDestroyed'),
+  FrameAttached: EventsDefinitionUtils.symbol('FrameManager.FrameAttached'),
+  FrameNavigated: EventsDefinitionUtils.symbol('FrameManager.FrameNavigated'),
+  FrameDetached: EventsDefinitionUtils.symbol('FrameManager.FrameDetached'),
+  LifecycleEvent: EventsDefinitionUtils.symbol('FrameManager.LifecycleEvent'),
+  FrameNavigatedWithinDocument: EventsDefinitionUtils.symbol('FrameManager.FrameNavigatedWithinDocument'),
+  ExecutionContextCreated: EventsDefinitionUtils.symbol('FrameManager.ExecutionContextCreated'),
+  ExecutionContextDestroyed: EventsDefinitionUtils.symbol('FrameManager.ExecutionContextDestroyed'),
 }.define_const_into(FrameManagerEmittedEvents)
 
 # All the events that a page instance may emit.
