@@ -35,7 +35,7 @@ jobs:
     steps:
       - checkout
       - run:
-          command: gem install bundler:2.2.3 && bundle install
+          command: gem install bundler:2.2.3 puppeteer && bundle install
       - run:
           name: install firefox-nightly
           command: |
