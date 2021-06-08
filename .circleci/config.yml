@@ -47,9 +47,16 @@ jobs:
             DEBUG=1 PUPPETEER_PRODUCT_RSPEC=firefox \
             PUPPETEER_EXECUTABLE_PATH_RSPEC=${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}/firefox/firefox \
             bundle exec rspec --profile 10 \
+              --failure-exit-code 0 \
               --format RspecJunitFormatter \
               --out test_results/rspec.xml \
               --format documentation spec/integration/
+      - run:
+          name: rspec (retry)
+          command: |
+            DEBUG=1 PUPPETEER_PRODUCT_RSPEC=firefox \
+            PUPPETEER_EXECUTABLE_PATH_RSPEC=${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}/firefox/firefox \
+            bundle exec rspec --only-failures --format documentation spec/integration/
 
   rspec_firefox_pending_check:
     docker:
