@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v8.0.0
+- Puppeteer version: v10.0.0
 - puppeteer-ruby version: 0.32.3
 
 ## Puppeteer
@@ -334,6 +334,7 @@
 
 ## CDPSession
 
+* connection
 * detach
 * send
 
