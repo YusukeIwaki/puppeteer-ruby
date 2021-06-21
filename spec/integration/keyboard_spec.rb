@@ -32,6 +32,21 @@ RSpec.describe Puppeteer::Keyboard do
       end
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('(')
     end
+
+    it 'should input <' do
+      text = '<puppeteer>'
+      page.keyboard.type_text(text)
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
+    end
+
+    it 'should input < by pressing Shift + ,' do
+      page.keyboard do
+        down('Shift')
+        press('Comma')
+        up('Shift')
+      end
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('<')
+    end
   end
 
   context 'with key event listener content' do
