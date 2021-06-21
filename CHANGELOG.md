@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.3...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.4...master)]
 
 * xxx
+
+### 0.32.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.3...0.32.4)]
+
+Bugfix:
+
+* Fix `#type_text` to input '<' correctly.
 
 ### 0.32.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.2...0.32.3)]
 
