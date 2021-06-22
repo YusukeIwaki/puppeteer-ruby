@@ -78,15 +78,15 @@ class Puppeteer::Page
 
       pixels =
         if parameter.is_a?(Numeric)
-          parameter.to_i
+          parameter
         elsif parameter.is_a?(String)
           unit = parameter[-2..-1].downcase
           value =
             if UNIT_TO_PIXELS.has_key?(unit)
-              parameter[0...-2].to_i
+              parameter[0...-2].to_f
             else
               unit = 'px'
-              parameter.to_i
+              parameter.to_f
             end
 
           value * UNIT_TO_PIXELS[unit]
@@ -94,7 +94,7 @@ class Puppeteer::Page
           raise ArgumentError.new("page.pdf() Cannot handle parameter type: #{parameter.class}")
         end
 
-      pixels / 96
+      pixels / 96.0
     end
 
     private def paper_size
