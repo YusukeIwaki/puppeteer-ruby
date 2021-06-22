@@ -1,6 +1,14 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.4...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.33.0...master)]
 
 * xxx
+
+### 0.33.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.4...0.33.0)]
+
+NOTE: Requires Ruby version >= 2.6 explicitly since this version.
+
+Bugfix:
+
+* Fix PDF options to work correctly on decimal numbers specified.
 
 ### 0.32.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.3...0.32.4)]
 
