@@ -80,30 +80,6 @@ jobs:
               --out test_results/rspec.xml \
               --format documentation spec/integration/
 
-  deploy:
-    docker:
-      - image: circleci/ruby:2.6.3-stretch-node
-    steps:
-      - checkout
-      - run:
-          command: gem install bundler:2.2.3 && bundle install
-      - run:
-          name: rake build
-          command: rake build
-      - run:
-          name: setup API key
-          command: |
-            mkdir -p ~/.gem/
-            echo "---" > ~/.gem/credentials
-            echo ":rubygems_api_key: $RUBYGEMS_API_KEY" >> ~/.gem/credentials
-            chmod 600 ~/.gem/credentials
-      - run:
-          name: Check Puppeteer::version
-          command: bundle exec ruby -e 'raise "invalid Puppeteer::VERSION" unless Puppeteer::VERSION == ENV["CIRCLE_TAG"]'
-      - run:
-          name: gem push
-          command: gem push pkg/puppeteer-ruby-$CIRCLE_TAG.gem
-
 workflows:
   ci:
     jobs:
@@ -112,11 +88,3 @@ workflows:
       - rspec_chrome_ruby3_0
       - rspec_firefox
       - rspec_firefox_pending_check
-  rubygems-deploy:
-    jobs:
-      - deploy:
-          filters:
-            tags:
-              only: /^[0-9]\.[0-9]+\.[0-9].*/
-            branches:
-              ignore: /.*/
