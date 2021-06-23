@@ -131,9 +131,9 @@
 * ~~waitFor~~
 * waitForFileChooser => `#wait_for_file_chooser`
 * waitForFunction => `#wait_for_function`
-* waitForNavigation => `#async_wait_for_navigation`
-* waitForRequest => `#async_wait_for_request`
-* waitForResponse => `#async_wait_for_response`
+* waitForNavigation => `#wait_for_navigation`
+* waitForRequest => `#wait_for_request`
+* waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`
 * waitForTimeout => `#wait_for_timeout`
 * waitForXPath => `#wait_for_xpath`
@@ -226,7 +226,7 @@
 * url
 * ~~waitFor~~
 * waitForFunction => `#wait_for_function`
-* waitForNavigation => `#async_wait_for_navigation`
+* waitForNavigation => `#wait_for_navigation`
 * waitForSelector => `#wait_for_selector`
 * waitForTimeout => `#wait_for_timeout`
 * waitForXPath => `#wait_for_xpath`

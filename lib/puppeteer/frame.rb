@@ -35,7 +35,7 @@ class Puppeteer::Frame
 
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
-  private def wait_for_navigation(timeout: nil, wait_until: nil)
+  def wait_for_navigation(timeout: nil, wait_until: nil)
     @frame_manager.wait_for_frame_navigation(self, timeout: timeout, wait_until: wait_until)
   end
 
