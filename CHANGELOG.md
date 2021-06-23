@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.33.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.0...master)]
 
 * xxx
+
+### 0.34.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.33.0...0.34.0)]
+
+New features:
+
+* Sync API with block
 
 ### 0.33.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.32.4...0.33.0)]
 
