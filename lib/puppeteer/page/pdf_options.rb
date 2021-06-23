@@ -20,12 +20,6 @@ class Puppeteer::Page
   class PDFOptions
     # @params options [Hash]
     def initialize(options)
-      unless options[:path]
-        # Original puppeteer allows path = nil, however nothing to do without path actually.
-        # Also in most case, users forget to specify path parameter. So let's raise ArgumentError.
-        raise ArgumentError('"path" parameter must be specified.')
-      end
-
       @scale = options[:scale]
       @display_header_footer = options[:display_header_footer]
       @header_template = options[:header_template]
