@@ -37,10 +37,9 @@ RSpec.describe 'input tests' do
   describe 'Page#wait_for_file_chooser' do
     it_fails_firefox 'should work when file input is attached to DOM' do
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       expect(chooser).to be_a(Puppeteer::FileChooser)
     end
     it_fails_firefox 'should work when file input is not attached to DOM' do
@@ -52,10 +51,9 @@ RSpec.describe 'input tests' do
       }
       JAVASCRIPT
 
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_evaluate(js),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.evaluate(js)
+      end
       expect(chooser).to be_a(Puppeteer::FileChooser)
     end
     it 'should respect timeout' do
@@ -80,10 +78,9 @@ RSpec.describe 'input tests' do
       }
       JAVASCRIPT
 
-      chooser = await_all(
-        page.async_wait_for_file_chooser(timeout: 0),
-        page.async_evaluate(js),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.evaluate(js)
+      end
       expect(chooser).to be_a(Puppeteer::FileChooser)
     end
     it_fails_firefox 'should return the same file chooser when there are many watchdogs simultaneously' do
@@ -102,10 +99,9 @@ RSpec.describe 'input tests' do
 
     it_fails_firefox 'should accept single file' do
       page.content = "<input type=file oninput='javascript:console.timeStamp()'>"
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       chooser.accept(filepath)
       expect(page.eval_on_selector('input', "(input) => input.files.length")).to eq(1)
       expect(page.eval_on_selector('input', "(input) => input.files[0].name")).to eq("file-to-upload.txt")
@@ -159,27 +155,24 @@ RSpec.describe 'input tests' do
     end
     it_fails_firefox 'should not accept multiple files for single-file input' do
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       pprt_png = File.join('spec', 'assets', 'pptr.png')
       expect { chooser.accept([filepath, pprt_png]) }.to raise_error(/Multiple file uploads only work with <input type=file multiple>/)
     end
     it_fails_firefox 'should fail for non-existent files' do
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       expect { chooser.accept(['file-does-not-exist.txt']) }.to raise_error(/file-does-not-exist.txt does not exist or is not readable/)
     end
     it_fails_firefox 'should fail when accepting file chooser twice' do
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_eval_on_selector('input', '(input) => input.click()'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.eval_on_selector('input', '(input) => input.click()')
+      end
       chooser.accept([])
       expect { chooser.accept([]) }.to raise_error(/Cannot accept FileChooser which is already handled!/)
     end
@@ -192,27 +185,24 @@ RSpec.describe 'input tests' do
       # canceled.
 
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_eval_on_selector('input', '(input) => input.click()'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.eval_on_selector('input', '(input) => input.click()')
+      end
       chooser.cancel
 
       # If this resolves, than we successfully canceled file chooser.
       Timeout.timeout(2) do
-        await_all(
-          page.async_wait_for_file_chooser,
-          page.async_eval_on_selector('input', '(input) => input.click()'),
-        )
+        chooser = page.wait_for_file_chooser do
+          page.eval_on_selector('input', '(input) => input.click()')
+        end
       end
     end
 
     it_fails_firefox 'should fail when canceling file chooser twice' do
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_eval_on_selector('input', '(input) => input.click()'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.eval_on_selector('input', '(input) => input.click()')
+      end
       chooser.cancel
       expect { chooser.cancel }.to raise_error(/Cannot cancel FileChooser which is already handled!/)
     end
@@ -221,26 +211,23 @@ RSpec.describe 'input tests' do
   describe 'FileChooser#multiple?' do
     it_fails_firefox 'should work for single file pick' do
       page.content = '<input type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       expect(chooser).not_to be_multiple
     end
     it_fails_firefox 'should work for "multiple"' do
       page.content = '<input multiple type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       expect(chooser).to be_multiple
     end
     it_fails_firefox 'should work for "webkitdirectory"' do
       page.content = '<input multiple webkitdirectory type=file>'
-      chooser = await_all(
-        page.async_wait_for_file_chooser,
-        page.async_click('input'),
-      ).first
+      chooser = page.wait_for_file_chooser do
+        page.click('input')
+      end
       expect(chooser).to be_multiple
     end
   end

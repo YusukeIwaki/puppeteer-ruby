@@ -98,10 +98,10 @@ RSpec.describe Puppeteer::Frame do
     it_fails_firefox 'should send "framenavigated" when navigating on anchor URLs' do
       page.goto(server_empty_page)
       Timeout.timeout(5) do
-        await_all(
-          future { page.goto("#{server_empty_page}#foo") },
-          resolvable_future { |f| page.once('framenavigated') { |frame| f.fulfill(frame) } },
-        )
+        framenavigated_promise = resolvable_future { |f| page.once('framenavigated') { |frame| f.fulfill(frame) } }
+        framenavigated_promise.with_waiting_for_complete do
+          page.goto("#{server_empty_page}#foo")
+        end
         expect(page.url).to eq("#{server_empty_page}#foo")
       end
     end
@@ -217,10 +217,10 @@ RSpec.describe Puppeteer::Frame do
       page.evaluate(js)
       expect(frame1).to be_detached
 
-      frame2 = await_all(
-        resolvable_future { |f| page.once('frameattached') { |frame| f.fulfill(frame) } },
-        page.async_evaluate('() => document.body.appendChild(globalThis.frame)'),
-      ).first
+      frameattached_promise = resolvable_future { |f| page.once('frameattached') { |frame| f.fulfill(frame) } }
+      frame2 = frameattached_promise.with_waiting_for_complete do
+        page.evaluate('() => document.body.appendChild(globalThis.frame)')
+      end
       expect(frame2).not_to be_detached
       expect(frame1).not_to eq(frame2)
     end

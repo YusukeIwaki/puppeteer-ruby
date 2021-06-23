@@ -49,12 +49,13 @@ Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=
   page.goto("https://github.com/", wait_until: 'domcontentloaded')
 
   form = page.query_selector("form.js-site-search-form")
-  searchInput = form.query_selector("input.header-search-input")
-  searchInput.type_text("puppeteer")
-  await_all(
-    page.async_wait_for_navigation,
-    searchInput.async_press("Enter"),
-  )
+  search_input = form.query_selector("input.header-search-input")
+  search_input.click
+  page.keyboard.type_text("puppeteer")
+
+  page.wait_for_navigation do
+    search_input.press('Enter')
+  end
 
   list = page.query_selector("ul.repo-list")
   items = list.query_selector_all("div.f4")
@@ -136,10 +137,9 @@ RSpec.describe 'hotel.testplanisphere.dev', type: :feature do
 
     reservation_link = puppeteer_page.query_selector_all('li.nav-item')[1]
 
-    await_all(
-      puppeteer_page.async_wait_for_navigation,
-      reservation_link.async_click,
-    )
+    puppeteer_page.wait_for_navigation do
+      reservation_link.click
+    end
 
     # expectation with Capybara DSL
     expect(page).to have_text('宿泊プラン一覧')

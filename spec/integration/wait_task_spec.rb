@@ -44,10 +44,9 @@ RSpec.describe Puppeteer::WaitTask do
 
     it 'should wait for predicate' do
       Timeout.timeout(1) do # assert not timeout.
-        await_all(
-          page.async_wait_for_function('() => window.innerWidth < 100'),
-          future { page.viewport = Puppeteer::Viewport.new(width: 10, height: 10) },
-        )
+        page.wait_for_function('() => window.innerWidth < 100') do
+          page.viewport = Puppeteer::Viewport.new(width: 10, height: 10)
+        end
       end
     end
 
@@ -75,10 +74,11 @@ RSpec.describe Puppeteer::WaitTask do
     it_fails_firefox 'should work with removed MutationObserver' do
       page.evaluate("() => delete window.MutationObserver")
 
-      handle = await_all(
-        page.async_wait_for_selector('.zombo'),
-        future { sleep 0.1; page.content = "<div class='zombo'>anything</div>" },
-      ).first
+
+      handle = page.wait_for_selector('.zombo') do
+        sleep 0.1
+        page.content = "<div class='zombo'>anything</div>"
+      end
       expect(page.evaluate("(x) => x.textContent", handle)).to eq('anything')
     end
 
