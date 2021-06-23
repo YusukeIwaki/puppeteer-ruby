@@ -57,12 +57,11 @@ RSpec.describe 'example' do
     form = page.query_selector("form.js-site-search-form")
     search_input = form.query_selector("input.header-search-input")
     search_input.click
-
     page.keyboard.type_text("puppeteer")
-    await_all(
-      page.async_wait_for_navigation,
-      search_input.async_press("Enter"),
-    )
+
+    page.wait_for_navigation do
+      search_input.press("Enter")
+    end
 
     list = page.query_selector("ul.repo-list")
     items = list.query_selector_all("div.f4")

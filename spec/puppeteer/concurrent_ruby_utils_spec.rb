@@ -47,6 +47,26 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
     end
   end
 
+  describe 'with_waiting_for_complete' do
+    it 'wait for complete' do
+      start = Time.now
+      result = future { sleep 0.5 ; 3 }.with_waiting_for_complete do
+        sleep 0.3
+      end
+      expect(Time.now - start).to be >= 0.5
+      expect(result).to eq(3)
+    end
+
+    it 'wait for block call' do
+      start = Time.now
+      result = future { sleep 0.3 ; 3 }.with_waiting_for_complete do
+        sleep 0.5
+      end
+      expect(Time.now - start).to be >= 0.5
+      expect(result).to eq(3)
+    end
+  end
+
   describe 'await_any' do
     it 'wait first future' do
       start = Time.now

@@ -15,6 +15,22 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
       end
       private define_async_method :async_piyo
 
+      def wait_for_example(sleep_sec, arg1, &block)
+        sleep sleep_sec
+        "--> #{arg1}#{block&.call}"
+      end
+      define_async_method :async_wait_for_example
+
+      def not_wait_for_example(arg1, &block)
+        "--> #{arg1} #{block&.call}"
+      end
+      define_async_method :async_not_wait_for_example
+
+      private def wait_for_example2(arg1, &block)
+        "--> #{arg1} #{block&.call}"
+      end
+      define_async_method :async_wait_for_example2
+
       def args_example(arg1, arg2 = nil)
         "-> #{arg1},#{arg2}"
       end
@@ -30,6 +46,50 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
       instance = DefineAsyncMethodExample.new
       expect(instance.async_fuga).to be_a(Concurrent::Promises::Future)
       expect(instance.async_fuga.value!).to eq('-> fuga')
+    end
+
+    it 'preserves the modifier of original method' do
+      expect(DefineAsyncMethodExample.private_method_defined?(:fuga)).to eq(true)
+      expect(DefineAsyncMethodExample.method_defined?(:fuga)).to eq(false)
+
+      expect(DefineAsyncMethodExample.method_defined?(:piyo)).to eq(true)
+    end
+
+    it 'modifies wait_for_ method' do
+      instance = DefineAsyncMethodExample.new
+      time_start = Time.now
+      result = instance.wait_for_example(0.5, "xx") do
+        sleep 0.3
+        'xxx'
+      end
+      expect(Time.now - time_start).to be >= 0.5
+      expect(result).to eq('--> xx')
+
+      time_start = Time.now
+      result = instance.wait_for_example(0.3, "yy") do
+        sleep 0.5
+        'yyy'
+      end
+      expect(Time.now - time_start).to be >= 0.5
+      expect(result).to eq('--> yy')
+    end
+
+    it 'doesnt modify method without prefix "wait_for_"' do
+      instance = DefineAsyncMethodExample.new
+
+      result = instance.not_wait_for_example("xx") do
+        'yy'
+      end
+      expect(result).to eq('--> xx yy')
+    end
+
+    it 'doesnt modify private wait_for_ method' do
+      instance = DefineAsyncMethodExample.new
+
+      result = instance.send(:wait_for_example2, "xx") do
+        'yy'
+      end
+      expect(result).to eq('--> xx yy')
     end
 
     it 'can be used with private' do

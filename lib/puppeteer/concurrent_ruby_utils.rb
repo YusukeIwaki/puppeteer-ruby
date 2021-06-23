@@ -1,5 +1,23 @@
 # utility methods for Concurrent::Promises.
 module Puppeteer::ConcurrentRubyUtils
+  module ConcurrentPromisesFutureExtension
+    # Extension for describing 2 concurrent tasks smartly.
+    #
+    # page.async_for_navigation.with_waiting_for_complete do
+    #   page.click('#submit')
+    # end
+    def with_waiting_for_complete(&block)
+      async_block_call = Concurrent::Promises.future do
+        block.call
+      rescue => err
+        Logger.new($stderr).warn(err)
+        raise err
+      end
+
+      Concurrent::Promises.zip(self, async_block_call).value!.first
+    end
+  end
+
   # wait for all promises.
   # REMARK: This method doesn't assure the order of calling.
   # for example, await_all(async1, async2) calls calls2 -> calls1 often.
@@ -48,7 +66,7 @@ module Puppeteer::ConcurrentRubyUtils
     rescue => err
       Logger.new($stderr).warn(err)
       raise err
-    end
+    end.extend(ConcurrentPromisesFutureExtension)
   end
 
   def resolvable_future(&block)
@@ -56,7 +74,7 @@ module Puppeteer::ConcurrentRubyUtils
     if block
       block.call(future)
     end
-    future
+    future.extend(ConcurrentPromisesFutureExtension)
   end
 end
 

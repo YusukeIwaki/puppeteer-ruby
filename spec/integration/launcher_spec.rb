@@ -374,10 +374,10 @@ RSpec.describe Puppeteer::Launcher do
       remote_browser = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
       Timeout.timeout(3) do
-        await_all(
-          resolvable_future { |f| browser.once('disconnected') { f.fulfill(nil) } },
-          future { remote_browser.close },
-        )
+        disconnected_promise = resolvable_future { |f| browser.once('disconnected') { f.fulfill(nil) } }
+        disconnected_promise.with_waiting_for_complete do
+          remote_browser.close
+        end
       end
     end
 
@@ -504,10 +504,10 @@ RSpec.describe Puppeteer::Launcher do
       remote_browser1.on('disconnected') { disconnected_remote1 += 1 }
       remote_browser2.on('disconnected') { disconnected_remote2 += 1 }
 
-      await_all(
-        resolvable_future { |f| remote_browser2.once('disconnected') { |frame| f.fulfill(frame) } },
-        future { remote_browser2.disconnect },
-      )
+      disconnected_promise = resolvable_future { |f| remote_browser2.once('disconnected') { |frame| f.fulfill(frame) } }
+      disconnected_promise.with_waiting_for_complete do
+        remote_browser2.disconnect
+      end
 
       expect(disconnected_original).to eq(0)
       expect(disconnected_remote1).to eq(0)

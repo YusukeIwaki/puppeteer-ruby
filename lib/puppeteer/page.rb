@@ -637,7 +637,7 @@ class Puppeteer::Page
     ).first
   end
 
-  private def wait_for_navigation(timeout: nil, wait_until: nil)
+  def wait_for_navigation(timeout: nil, wait_until: nil)
     main_frame.send(:wait_for_navigation, timeout: timeout, wait_until: wait_until)
   end
 
@@ -683,7 +683,7 @@ class Puppeteer::Page
     end
   end
 
-  private def wait_for_request(url: nil, predicate: nil, timeout: nil)
+  def wait_for_request(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
     end
@@ -717,7 +717,7 @@ class Puppeteer::Page
   # @param predicate [Proc(Puppeteer::Request -> Boolean)]
   define_async_method :async_wait_for_request
 
-  private def wait_for_response(url: nil, predicate: nil, timeout: nil)
+  def wait_for_response(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
     end

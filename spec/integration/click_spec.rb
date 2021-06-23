@@ -65,10 +65,9 @@ RSpec.describe Puppeteer::Page do
     page.javascript_enabled = false
     page.goto("#{server_prefix}/wrappedlink.html")
 
-    await_all(
-      page.async_wait_for_navigation,
-      page.async_click('a'),
-    )
+    page.wait_for_navigation do
+      page.click('a')
+    end
     expect(page.url).to eq("#{server_prefix}/wrappedlink.html#clicked")
   end
 

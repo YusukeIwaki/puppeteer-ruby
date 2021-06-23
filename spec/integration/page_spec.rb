@@ -100,10 +100,10 @@ RSpec.describe Puppeteer::Page do
   describe 'Page.Events.Load' do
     it 'should fire when expected' do
       Timeout.timeout(5) do
-        await_all(
-          future { page.goto("about:blank") },
-          resolvable_future { |f| page.once('load') { f.fulfill(nil) } },
-        )
+        load_promise = resolvable_future { |f| page.once('load') { f.fulfill(nil) } }
+        load_promise.with_waiting_for_complete do
+          page.goto("about:blank")
+        end
       end
     end
   end
