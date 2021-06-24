@@ -45,6 +45,23 @@ class Puppeteer::Tracing
     @recording = false
 
     stream = await stream_promise
-    Puppeteer::ProtocolStreamReader.new(client: @client, handle: stream, path: @path).read
+    chunks = Puppeteer::ProtocolStreamReader.new(client: @client, handle: stream).read_as_chunks
+
+    StringIO.open do |stringio|
+      if @path
+        File.open(@path, 'wb') do |f|
+          chunks.each do |chunk|
+            f.write(chunk)
+            stringio.write(chunk)
+          end
+        end
+      else
+        chunks.each do |chunk|
+          stringio.write(chunk)
+        end
+      end
+
+      stringio.string
+    end
   end
 end

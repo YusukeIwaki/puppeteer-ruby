@@ -15,17 +15,10 @@ class Puppeteer::Page
   # * @property {string|number=} height
   # * @property {boolean=} preferCSSPageSize
   # * @property {!{top?: string|number, bottom?: string|number, left?: string|number, right?: string|number}=} margin
-  # * @property {string=} path
   # */
   class PDFOptions
     # @params options [Hash]
     def initialize(options)
-      unless options[:path]
-        # Original puppeteer allows path = nil, however nothing to do without path actually.
-        # Also in most case, users forget to specify path parameter. So let's raise ArgumentError.
-        raise ArgumentError('"path" parameter must be specified.')
-      end
-
       @scale = options[:scale]
       @display_header_footer = options[:display_header_footer]
       @header_template = options[:header_template]
@@ -38,10 +31,7 @@ class Puppeteer::Page
       @height = options[:height]
       @prefer_css_page_size = options[:prefer_css_page_size]
       @margin = Margin.new(options[:margin] || {})
-      @path = options[:path]
     end
-
-    attr_reader :path
 
     class PaperSize
       def initialize(width:, height:)

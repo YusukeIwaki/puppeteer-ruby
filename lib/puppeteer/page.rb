@@ -1008,14 +1008,40 @@ class Puppeteer::Page
     end
   end
 
-  # @return [String]
-  def pdf(options = {})
+  # @return [Enumerable<String>]
+  def create_pdf_stream(options = {})
     pdf_options = PDFOptions.new(options)
     omit_background = options[:omit_background]
     set_transparent_background_color if omit_background
     result = @client.send_message('Page.printToPDF', pdf_options.page_print_args)
     reset_default_background_color if omit_background
-    Puppeteer::ProtocolStreamReader.new(client: @client, handle: result['stream'], path: pdf_options.path).read
+
+    Puppeteer::ProtocolStreamReader.new(
+      client: @client,
+      handle: result['stream'],
+    ).read_as_chunks
+  end
+
+  # @return [String]
+  def pdf(options = {})
+    chunks = create_pdf_stream(options)
+
+    StringIO.open do |stringio|
+      if options[:path]
+        File.open(options[:path], 'wb') do |f|
+          chunks.each do |chunk|
+            f.write(chunk)
+            stringio.write(chunk)
+          end
+        end
+      else
+        chunks.each do |chunk|
+          stringio.write(chunk)
+        end
+      end
+
+      stringio.string
+    end
   rescue => err
     if err.message.include?('PrintToPDF is not implemented')
       raise PrintToPdfIsNotImplementedError.new

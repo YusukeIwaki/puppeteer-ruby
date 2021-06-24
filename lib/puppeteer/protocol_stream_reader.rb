@@ -1,25 +1,14 @@
 class Puppeteer::ProtocolStreamReader
-  def initialize(client:, handle:, path:)
+  def initialize(client:, handle:)
     @client = client
     @handle = handle
-    @path = path
   end
 
-  def read
-    StringIO.open do |out|
-      if @path
-        File.open(@path, 'wb') do |file|
-          io_read do |data|
-            out.write(data)
-            file.write(data)
-          end
-        end
-      else
-        io_read { |data| out.write(data) }
-      end
+  # @returns [Enumerable<String>]
+  def read_as_chunks
+    Enumerator.new do |out|
+      io_read { |data| out << data }
       io_close
-
-      out.string
     end
   end
 
