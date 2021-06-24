@@ -39,15 +39,13 @@ RSpec.describe 'example' do
     }
     JAVASCRIPT
     page.evaluate(js, overlay)
-    data = page.pdf(
+    page.pdf(
+      path: '5.element-to-pdf.github.pdf',
       print_background: true,
       format: "letter",
       margin: { top: "1cm", left: "2cm", right: "3cm", bottom: "4cm" },
       omit_background: true,
     )
-    File.open('5.element-to-pdf.github.pdf', 'wb') do |f|
-      f.write(data)
-    end
   end
 
   it 'should input text and grab DOM elements' do

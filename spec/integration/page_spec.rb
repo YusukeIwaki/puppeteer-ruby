@@ -1294,9 +1294,28 @@ RSpec.describe Puppeteer::Page do
       Dir.mktmpdir do |tempdir|
         output_filepath = File.join(tempdir, "output.pdf")
         page.pdf(path: output_filepath)
-        puts output_filepath
         expect(File.read(output_filepath).size).to be > 0
       end
+    end
+
+    it 'can print to PDF without file', sinatra: true do
+      skip('Printing to pdf is currently only supported in headless') unless headless?
+      sinatra.get("/") { "<h1>It Works!</h1>" }
+      page.goto("#{server_prefix}/")
+
+      data = page.pdf
+      expect(data.size).to be > 0
+    end
+
+    it 'can print to PDF and stream the result', sinatra: true do
+      skip('Printing to pdf is currently only supported in headless') unless headless?
+      sinatra.get("/") { "<h1>It Works!</h1>" }
+      page.goto("#{server_prefix}/")
+
+      data_length = page.create_pdf_stream.inject(0) do |size, chunk|
+        size + chunk.size
+      end
+      expect(data_length).to be > 0
     end
   end
 
