@@ -767,6 +767,11 @@ class Puppeteer::Page
     end
   end
 
+  # Brings page to front (activates tab).
+  def bring_to_front
+    @client.send_message('Page.bringToFront')
+  end
+
   # @param device [Device]
   def emulate(device)
     self.viewport = device.viewport

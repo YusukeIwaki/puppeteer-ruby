@@ -70,7 +70,7 @@
 * addScriptTag => `#add_script_tag`
 * addStyleTag => `#add_style_tag`
 * authenticate
-* ~~bringToFront~~
+* bringToFront => `#bring_to_front`
 * browser
 * browserContext => `#browser_context`
 * click
