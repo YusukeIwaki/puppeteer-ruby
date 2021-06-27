@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.1...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.2...master)]
 
 * xxx
+
+### 0.34.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.1...0.34.2)]
+
+New features:
+
+* Add `Page#bring_to_front`.
 
 ### 0.34.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.0...0.34.1)]
 
