@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.2...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.3...master)]
 
 * xxx
+
+### 0.34.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.2...0.34.3)]
+
+Bugfix:
+
+* Fix wait_for_xxx's timeout error type.
 
 ### 0.34.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.1...0.34.2)]
 
