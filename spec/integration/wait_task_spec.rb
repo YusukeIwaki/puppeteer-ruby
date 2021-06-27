@@ -208,29 +208,25 @@ RSpec.describe Puppeteer::WaitTask do
       page.evaluate("() => document.querySelector('div').style.setProperty('display', 'none')")
       Timeout.timeout(1) { await promise }
     end
+
     it 'hidden should wait for removal' do
       page.content = '<div></div>'
       promise = page.async_wait_for_selector('div', hidden: true)
       page.evaluate("() => document.querySelector('div').remove()")
       Timeout.timeout(1) { await promise }
     end
+
     it 'should return null if waiting to hide non-existing element' do
       handle = page.wait_for_selector('non-existing', hidden: true)
       expect(handle).to be_nil
     end
-    #   it('should respect timeout', async () => {
-    #     const { page, puppeteer } = getTestState();
 
-    #     let error = null;
-    #     await page
-    #       .waitForSelector('div', { timeout: 10 })
-    #       .catch((error_) => (error = error_));
-    #     expect(error).toBeTruthy();
-    #     expect(error.message).toContain(
-    #       'waiting for selector `div` failed: timeout'
-    #     );
-    #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-    #   });
+    it 'should respect timeout' do
+      page.content = '<span></span>'
+      expect {
+        page.wait_for_selector('div', timeout: 10)
+      }.to raise_error(Puppeteer::TimeoutError)
+    end
     #   it('should have an error message specifically for awaiting an element to be hidden', async () => {
     #     const { page } = getTestState();
 

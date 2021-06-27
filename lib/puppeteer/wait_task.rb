@@ -3,7 +3,7 @@ class Puppeteer::WaitTask
 
   class TerminatedError < StandardError; end
 
-  class TimeoutError < StandardError
+  class TimeoutError < ::Puppeteer::TimeoutError
     def initialize(title:, timeout:)
       super("waiting for #{title} failed: timeout #{timeout}ms exceeded")
     end
