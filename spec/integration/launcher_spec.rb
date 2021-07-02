@@ -456,16 +456,7 @@ RSpec.describe Puppeteer::Launcher do
       expect(File.exist?(executable_path)).to eq(true)
     end
 
-    it 'is not a symbolic link', pending: Puppeteer.env.ci? do
-      # CircleCI image has symbolic link.
-      #
-      #     Failures:
-      #
-      # 1) Puppeteer::Launcher Puppeteer.executablePath should work
-      #    Failure/Error: expect(File.realpath(executable_path)).to eq(executable_path)
-      #
-      #      expected: "/usr/bin/google-chrome"
-      #           got: "/opt/google/chrome/google-chrome"
+    it 'is not a symbolic link', pending: Puppeteer.env.ci? && Puppeteer.env.firefox? do
       expect(File.realpath(executable_path)).to eq(executable_path)
     end
   end
