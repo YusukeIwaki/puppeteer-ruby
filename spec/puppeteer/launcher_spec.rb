@@ -2,6 +2,7 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::Launcher do
   before { skip unless Puppeteer.env.darwin? }
+
   let(:instance) {
     Puppeteer::Launcher.new(
       project_root: '/tmp',
