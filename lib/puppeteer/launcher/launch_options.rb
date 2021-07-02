@@ -32,6 +32,7 @@ module Puppeteer::Launcher
     # @property {!Object<string, string | undefined>=} env
     # @property {boolean=} pipe
     def initialize(options)
+      @channel = options[:channel]
       @executable_path = options[:executable_path]
       @ignore_default_args = options[:ignore_default_args] || false
       @handle_SIGINT = options[:handle_SIGINT] || true
@@ -43,7 +44,7 @@ module Puppeteer::Launcher
       @pipe = options[:pipe] || false
     end
 
-    attr_reader :executable_path, :ignore_default_args, :timeout, :env
+    attr_reader :channel, :executable_path, :ignore_default_args, :timeout, :env
 
     def handle_SIGINT?
       @handle_SIGINT

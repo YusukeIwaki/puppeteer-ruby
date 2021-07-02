@@ -2,7 +2,13 @@ require 'tmpdir'
 
 # https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts
 module Puppeteer::Launcher
-  class Firefox < Base
+  class Firefox
+    def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
+      @project_root = project_root
+      @preferred_revision = preferred_revision
+      @is_puppeteer_core = is_puppeteer_core
+    end
+
     # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions)=} options
     # @return {!Promise<!Browser>}
     def launch(options = {})
@@ -32,7 +38,12 @@ module Puppeteer::Launcher
         firefox_arguments << temporary_user_data_dir
       end
 
-      firefox_executable = @launch_options.executable_path || resolve_executable_path
+      firefox_executable =
+        if @launch_options.channel
+          executable_path_for_channel(@launch_options.channel.to_s)
+        else
+          @launch_options.executable_path || executable_path_for_channel('nightly')
+        end
       runner = Puppeteer::BrowserRunner.new(firefox_executable, firefox_arguments, temporary_user_data_dir)
       runner.start(
         handle_SIGHUP: @launch_options.handle_SIGHUP?,
@@ -123,8 +134,41 @@ module Puppeteer::Launcher
     end
 
     # @return {string}
-    def executable_path
-      resolve_executable_path
+    def executable_path(channel: nil)
+      if channel
+        executable_path_for_channel(channel.to_s)
+      else
+        executable_path_for_channel('firefox')
+      end
+    end
+
+    FIREFOX_EXECUTABLE_PATHS = {
+      windows: "#{ENV['PROGRAMFILES']}\\Firefox Nightly\\firefox.exe",
+      darwin: '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
+      linux: '/usr/bin/firefox',
+    }.freeze
+
+    # @param channel [String]
+    private def executable_path_for_channel(channel)
+      allowed = ['firefox', 'firefox-nightly', 'nightly']
+      unless allowed.include?(channel)
+        raise ArgumentError.new("Invalid channel: '#{channel}'. Allowed channel is #{allowed}")
+      end
+
+      firefox_path =
+        if Puppeteer.env.windows?
+          FIREFOX_EXECUTABLE_PATHS[:windows]
+        elsif Puppeteer.env.darwin?
+          FIREFOX_EXECUTABLE_PATHS[:darwin]
+        else
+          FIREFOX_EXECUTABLE_PATHS[:linux]
+        end
+
+      unless File.exist?(firefox_path)
+        raise "Nightly version of Firefox is not installed on this system.\nExpected path: #{firefox_path}"
+      end
+
+      firefox_path
     end
 
     def product

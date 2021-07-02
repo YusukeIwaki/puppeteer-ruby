@@ -1,4 +1,3 @@
-require_relative './launcher/base'
 require_relative './launcher/browser_options'
 require_relative './launcher/chrome'
 require_relative './launcher/chrome_arg_options'
