@@ -2,7 +2,13 @@ require 'tmpdir'
 
 # https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts
 module Puppeteer::Launcher
-  class Chrome < Base
+  class Chrome
+    def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
+      @project_root = project_root
+      @preferred_revision = preferred_revision
+      @is_puppeteer_core = is_puppeteer_core
+    end
+
     # @param {!(Launcher.LaunchOptions & Launcher.ChromeArgOptions & Launcher.BrowserOptions)=} options
     # @return {!Promise<!Browser>}
     def launch(options = {})
@@ -38,7 +44,12 @@ module Puppeteer::Launcher
         chrome_arguments << "--user-data-dir=#{temporary_user_data_dir}"
       end
 
-      chrome_executable = @launch_options.executable_path || resolve_executable_path
+      chrome_executable =
+        if @launch_options.channel
+          executable_path_for_channel(@launch_options.channel.to_s)
+        else
+          @launch_options.executable_path || executable_path_for_channel('chrome')
+        end
       use_pipe = chrome_arguments.include?('--remote-debugging-pipe')
       runner = Puppeteer::BrowserRunner.new(chrome_executable, chrome_arguments, temporary_user_data_dir)
       runner.start(
@@ -201,8 +212,57 @@ module Puppeteer::Launcher
     end
 
     # @return {string}
-    def executable_path
-      resolve_executable_path
+    def executable_path(channel: nil)
+      if channel
+        executable_path_for_channel(channel.to_s)
+      else
+        executable_path_for_channel('chrome')
+      end
+    end
+
+    CHROMIUM_CHANNELS = {
+      windows: {
+        'chrome' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome\\Application\\chrome.exe",
+        'chrome-beta' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome Beta\\Application\\chrome.exe",
+        'chrome-canary' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome SxS\\Application\\chrome.exe",
+        'chrome-dev' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome Dev\\Application\\chrome.exe",
+        'msedge' => "#{ENV['PROGRAMFILES(X86)']}\\Microsoft\\Edge\\Application\\msedge.exe",
+      },
+      darwin: {
+        'chrome' => '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        'chrome-beta' => '/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta',
+        'chrome-canary' => '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+        'chrome-dev' => '/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev',
+        'msedge' => '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+      },
+      linux: {
+        'chrome' => '/opt/google/chrome/chrome',
+        'chrome-beta' => '/opt/google/chrome-beta/chrome',
+        'chrome-dev' => '/opt/google/chrome-unstable/chrome',
+      },
+    }.freeze
+
+    # @param channel [String]
+    private def executable_path_for_channel(channel)
+      chrome_path_map =
+        if Puppeteer.env.windows?
+          CHROMIUM_CHANNELS[:windows]
+        elsif Puppeteer.env.darwin?
+          CHROMIUM_CHANNELS[:darwin]
+        else
+          CHROMIUM_CHANNELS[:linux]
+        end
+
+      chrome_path = chrome_path_map[channel]
+      unless chrome_path
+        raise ArgumentError.new("Invalid channel: '#{channel}'. Allowed channel is #{chrome_path_map.keys}")
+      end
+
+      unless File.exist?(chrome_path)
+        raise "#{channel} is not installed on this system.\nExpected path: #{chrome_path}"
+      end
+
+      chrome_path
     end
 
     def product

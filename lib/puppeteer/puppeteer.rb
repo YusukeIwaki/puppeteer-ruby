@@ -11,6 +11,7 @@ class Puppeteer::Puppeteer
   class NoViewport ; end
 
   # @param product [String]
+  # @param channel [String|Symbol]
   # @param executable_path [String]
   # @param ignore_default_args [Array<String>|nil]
   # @param handle_SIGINT [Boolean]
@@ -30,6 +31,7 @@ class Puppeteer::Puppeteer
   # @return [Puppeteer::Browser]
   def launch(
     product: nil,
+    channel: nil,
     executable_path: nil,
     ignore_default_args: nil,
     handle_SIGINT: nil,
@@ -48,6 +50,7 @@ class Puppeteer::Puppeteer
     slow_mo: nil
   )
     options = {
+      channel: channel&.to_s,
       executable_path: executable_path,
       ignore_default_args: ignore_default_args,
       handle_SIGINT: handle_SIGINT,
@@ -118,8 +121,8 @@ class Puppeteer::Puppeteer
   end
 
   # @return [String]
-  def executable_path
-    launcher.executable_path
+  def executable_path(channel: nil)
+    launcher.executable_path(channel: channel)
   end
 
   private def launcher
