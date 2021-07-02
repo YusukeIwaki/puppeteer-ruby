@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v10.0.0
-- puppeteer-ruby version: 0.34.3
+- Puppeteer version: v10.1.0
+- puppeteer-ruby version: 0.35.0
 
 ## Puppeteer
 
@@ -78,8 +78,10 @@
 * content
 * cookies
 * coverage
+* createPDFStream => `#create_pdf_stream`
 * deleteCookie => `#delete_cookie`
 * emulate
+* ~~emulateCPUThrottling~~
 * emulateIdleState => `#emulate_idle_state`
 * emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
@@ -97,6 +99,7 @@
 * goto
 * hover
 * isClosed => `#closed?`
+* ~~isDragInterceptionEnabled~~
 * isJavaScriptEnabled => `#javascript_enabled?`
 * keyboard
 * mainFrame => `#main_frame`
@@ -113,6 +116,7 @@
 * setCookie => `#set_cookie`
 * setDefaultNavigationTimeout => `#default_navigation_timeout=`
 * setDefaultTimeout => `#default_timeout=`
+* ~~setDragInterception~~
 * setExtraHTTPHeaders => `#extra_http_headers=`
 * setGeolocation => `#geolocation=`
 * setJavaScriptEnabled => `#javascript_enabled=`
@@ -162,6 +166,11 @@
 
 * click
 * down
+* ~~drag~~
+* ~~dragAndDrop~~
+* ~~dragEnter~~
+* ~~dragOver~~
+* ~~drop~~
 * move
 * up
 * wheel
@@ -260,8 +269,14 @@
 * boundingBox => `#bounding_box`
 * boxModel => `#box_model`
 * click
+* clickablePoint => `#clickable_point`
 * contentFrame => `#content_frame`
 * dispose
+* ~~drag~~
+* ~~dragAndDrop~~
+* ~~dragEnter~~
+* ~~dragOver~~
+* ~~drop~~
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * executionContext => `#execution_context`

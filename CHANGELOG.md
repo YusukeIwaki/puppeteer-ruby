@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.3...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.0...master)]
 
 * xxx
+
+### 0.35.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.3...0.35.0)]
+
+New features:
+
+* Add `channel` parameter for Puppeteer.launch. Now `channel: chrome` or `channel: chrome-canary` (chrome-beta, chrome-dev is also available) automatically detects the executablePath of Google Chrome. Windows/macOS users can also use `channel: msedge`.
 
 ### 0.34.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.2...0.34.3)]
 
