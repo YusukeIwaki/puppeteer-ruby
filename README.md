@@ -32,7 +32,7 @@ Or install it yourself as:
 require 'puppeteer'
 
 Puppeteer.launch(headless: false) do |browser|
-  page = browser.pages.first || browser.new_page
+  page = browser.new_page
   page.goto("https://github.com/YusukeIwaki")
   page.screenshot(path: "YusukeIwaki.png")
 end
@@ -44,7 +44,7 @@ end
 require 'puppeteer'
 
 Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=1280,800']) do |browser|
-  page = browser.pages.first || browser.new_page
+  page = browser.new_page
   page.viewport = Puppeteer::Viewport.new(width: 1280, height: 800)
   page.goto("https://github.com/", wait_until: 'domcontentloaded')
 
@@ -72,7 +72,7 @@ end
 require 'puppeteer'
 
 Puppeteer.launch do |browser|
-  page = browser.pages.last || browser.new_page
+  page = browser.new_page
   page.goto 'https://github.com/YusukeIwaki'
 
   # Get the "viewport" of the page, as reported by the page.
