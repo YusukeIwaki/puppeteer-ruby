@@ -2,6 +2,7 @@ version: 2.1
 
 rspec_chrome_job: &rspec_chrome_job
   steps:
+    - browser-tools/install-chrome
     - checkout
     - run:
         command: gem install bundler:2.2.3 && bundle install
@@ -16,22 +17,22 @@ rspec_chrome_job: &rspec_chrome_job
 jobs:
   rspec_chrome_ruby2_6:
     docker:
-      - image: circleci/ruby:2.6.6-buster-node-browsers
+      - image: cimg/ruby:2.6.7-browsers
     <<: *rspec_chrome_job
 
   rspec_chrome_ruby2_7:
     docker:
-      - image: circleci/ruby:2.7.2-buster-node-browsers
+      - image: cimg/ruby:2.7.4-browsers
     <<: *rspec_chrome_job
 
   rspec_chrome_ruby3_0:
     docker:
-      - image: circleci/ruby:3.0.0-buster-node-browsers
+      - image: cimg/ruby:3.0.0-browsers
     <<: *rspec_chrome_job
 
   rspec_firefox:
     docker:
-      - image: circleci/ruby:2.7.2-buster-node-browsers
+      - image: cimg/ruby:2.7.4-browsers
     steps:
       - checkout
       - run:
@@ -60,7 +61,7 @@ jobs:
 
   rspec_firefox_pending_check:
     docker:
-      - image: circleci/ruby:2.7.2-buster-node-browsers
+      - image: cimg/ruby:2.7.4-browsers
     steps:
       - checkout
       - run:
@@ -79,6 +80,9 @@ jobs:
               --format RspecJunitFormatter \
               --out test_results/rspec.xml \
               --format documentation spec/integration/
+
+orbs:
+  browser-tools: circleci/browser-tools@1.1.3
 
 workflows:
   ci:
