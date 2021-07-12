@@ -45,6 +45,12 @@ RSpec.configure do |config|
   if Puppeteer.env.debug? && !Puppeteer.env.ci?
     launch_options[:headless] = false
   end
+  if ENV['PUPPETEER_NO_SANDBOX_RSPEC']
+    args = launch_options[:args] || []
+    args << '--no-sandbox'
+    launch_options[:args] = args
+  end
+
 
   config.around(:each, type: :puppeteer) do |example|
     if ENV['PENDING_CHECK'] && !example.metadata[:pending]
@@ -92,7 +98,7 @@ RSpec.configure do |config|
         end
       else
         Puppeteer.launch(**launch_options) do |browser|
-          @puppeteer_page = browser.pages.first || browser.new_page
+          @puppeteer_page = browser.new_page
           example.run
         end
       end
