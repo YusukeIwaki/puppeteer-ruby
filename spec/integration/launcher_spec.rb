@@ -165,6 +165,9 @@ RSpec.describe Puppeteer::Launcher do
         ignore_default_args: true,
         args: ['--headless'], # without --headless, test is blocked by welcome dialog
       )
+      if ENV['PUPPETEER_NO_SANDBOX_RSPEC']
+        options[:args] << '--no-sandbox'
+      end
 
       Puppeteer.launch(**options) do |browser|
         page = browser.new_page
@@ -181,6 +184,9 @@ RSpec.describe Puppeteer::Launcher do
         ignore_default_args: [default_args[0], default_args[2]],
         args: ['--headless'],
       )
+      if ENV['PUPPETEER_NO_SANDBOX_RSPEC']
+        options[:args] << '--no-sandbox'
+      end
 
       Puppeteer.launch(**options) do |browser|
         args = browser.process.spawnargs
@@ -447,16 +453,16 @@ RSpec.describe Puppeteer::Launcher do
     end
   end
 
-  describe 'Puppeteer.executablePath', puppeteer: :browser do
+  describe 'Puppeteer.executablePath', puppeteer: :browser, skip: ENV['PUPPETEER_EXECUTABLE_PATH_RSPEC'] do
     subject(:executable_path) { Puppeteer.executable_path }
 
-    it 'returns browser executable path', pending: Puppeteer.env.ci? && Puppeteer.env.firefox? do
+    it 'returns browser executable path' do
       # @see .circleci/config.yml
       # firefox is not installed in /usr/bin/ in CI
       expect(File.exist?(executable_path)).to eq(true)
     end
 
-    it 'is not a symbolic link', pending: Puppeteer.env.ci? && Puppeteer.env.firefox? do
+    it 'is not a symbolic link' do
       expect(File.realpath(executable_path)).to eq(executable_path)
     end
   end
