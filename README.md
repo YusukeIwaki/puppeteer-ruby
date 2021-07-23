@@ -20,16 +20,12 @@ gem 'puppeteer-ruby'
 
 And then execute:
 
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install puppeteer-ruby
+    $ bundle install
 
 ### Capture a site
 
 ```ruby
-require 'puppeteer'
+require 'puppeteer-ruby'
 
 Puppeteer.launch(headless: false) do |browser|
   page = browser.new_page
@@ -38,10 +34,12 @@ Puppeteer.launch(headless: false) do |browser|
 end
 ```
 
+NOTE: `require 'puppeteer-ruby'` is not necessary in Rails.
+
 ### Simple scraping
 
 ```ruby
-require 'puppeteer'
+require 'puppeteer-ruby'
 
 Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=1280,800']) do |browser|
   page = browser.new_page
@@ -69,7 +67,7 @@ end
 ### Evaluate JavaScript
 
 ```ruby
-require 'puppeteer'
+require 'puppeteer-ruby'
 
 Puppeteer.launch do |browser|
   page = browser.new_page
