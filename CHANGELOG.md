@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.1...master)]
 
 * xxx
+
+### 0.35.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.0...0.35.1)]
+
+New features:
+
+* Allow Rails users to use this library without `require 'puppeteer'`.
 
 ### 0.35.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.34.3...0.35.0)]
 
