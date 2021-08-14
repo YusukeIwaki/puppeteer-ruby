@@ -40,7 +40,7 @@ module Puppeteer::DefineAsyncMethod
                 end
               end
 
-            async_block_call = Concurrent::Promises.future do
+            async_block_call = Concurrent::Promises.delay do
               block.call
             rescue => err
               Logger.new($stderr).warn(err)
