@@ -133,7 +133,7 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    it_fails_firefox 'user_data_dir option should restore cookies', sinatra: true do
+    it 'user_data_dir option should restore cookies', sinatra: true do
       Dir.mktmpdir do |user_data_dir|
         options = default_launch_options.merge(
           user_data_dir: user_data_dir,

@@ -3,11 +3,11 @@ module Puppeteer::ConcurrentRubyUtils
   module ConcurrentPromisesFutureExtension
     # Extension for describing 2 concurrent tasks smartly.
     #
-    # page.async_for_navigation.with_waiting_for_complete do
+    # page.async_wait_for_navigation.with_waiting_for_complete do
     #   page.click('#submit')
     # end
     def with_waiting_for_complete(&block)
-      async_block_call = Concurrent::Promises.future do
+      async_block_call = Concurrent::Promises.delay do
         block.call
       rescue => err
         Logger.new($stderr).warn(err)
