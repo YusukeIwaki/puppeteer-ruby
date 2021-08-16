@@ -5,7 +5,6 @@ module Puppeteer; end
 require 'puppeteer/env'
 
 # Custom data types.
-require 'puppeteer/device'
 require 'puppeteer/events'
 require 'puppeteer/errors'
 require 'puppeteer/geolocation'
@@ -44,6 +43,7 @@ require 'puppeteer/keyboard'
 require 'puppeteer/launcher'
 require 'puppeteer/lifecycle_watcher'
 require 'puppeteer/mouse'
+require 'puppeteer/network_conditions'
 require 'puppeteer/network_manager'
 require 'puppeteer/page'
 require 'puppeteer/protocol_stream_reader'

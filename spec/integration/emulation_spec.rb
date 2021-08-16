@@ -229,6 +229,18 @@ RSpec.describe 'Emulation' do
     end
   end
 
+  describe 'Page#emulate_network_conditions', skip: Puppeteer.env.firefox? do
+    it 'should change navigator.connection.effectiveType' do
+      expect(page.evaluate('window.navigator.connection.effectiveType')).to eq('4g')
+      page.emulate_network_conditions(Puppeteer.network_conditions.fast_3g)
+      expect(page.evaluate('window.navigator.connection.effectiveType')).to eq('3g')
+      page.emulate_network_conditions(Puppeteer.network_conditions.slow_3g)
+      expect(page.evaluate('window.navigator.connection.effectiveType')).to eq('2g')
+      page.emulate_network_conditions(nil)
+      expect(page.evaluate('window.navigator.connection.effectiveType')).to eq('4g')
+    end
+  end
+
   describe 'Page.emulateCPUThrottling', skip: Puppeteer.env.firefox? do
     it 'should change the CPU throttling rate successfully' do
       page.emulate_cpu_throttling(100)

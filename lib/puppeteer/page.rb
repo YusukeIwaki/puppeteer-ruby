@@ -270,6 +270,11 @@ class Puppeteer::Page
     @frame_manager.network_manager.offline_mode = enabled
   end
 
+  # @param network_condition [Puppeteer::NetworkCondition|nil]
+  def emulate_network_conditions(network_condition)
+    @frame_manager.network_manager.emulate_network_conditions(network_condition)
+  end
+
   # @param {number} timeout
   def default_navigation_timeout=(timeout)
     @timeout_settings.default_navigation_timeout = timeout

@@ -149,6 +149,11 @@ class Puppeteer::Puppeteer
   #   # ???
   # end
 
+  # @return [Puppeteer::NetworkConditions]
+  def network_conditions
+    Puppeteer::NetworkConditions
+  end
+
   # @param args [Array<String>]
   # @param user_data_dir [String]
   # @param devtools [Boolean]
