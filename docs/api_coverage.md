@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v10.1.0
+- Puppeteer version: v10.2.0
 - puppeteer-ruby version: 0.35.1
 
 ## Puppeteer
@@ -297,8 +297,12 @@
 ## ~~HTTPRequest~~
 
 * ~~abort~~
+* ~~abortErrorReason~~
 * ~~continue~~
+* ~~continueRequestOverrides~~
+* ~~enqueueInterceptAction~~
 * ~~failure~~
+* ~~finalizeInterceptions~~
 * ~~frame~~
 * ~~headers~~
 * ~~isNavigationRequest~~
@@ -308,6 +312,7 @@
 * ~~resourceType~~
 * ~~respond~~
 * ~~response~~
+* ~~responseForRequest~~
 * ~~url~~
 
 ## ~~HTTPResponse~~
