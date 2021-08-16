@@ -799,6 +799,15 @@ class Puppeteer::Page
     @client.send_message('Emulation.setEmulatedMedia', media: media_type_str)
   end
 
+  # @param factor [Number|nil] Factor at which the CPU will be throttled (2x, 2.5x. 3x, ...). Passing `nil` disables cpu throttling.
+  def emulate_cpu_throttling(factor)
+    if factor.nil? || factor >= 1
+      @client.send_message('Emulation.setCPUThrottlingRate', rate: factor || 1)
+    else
+      raise ArgumentError.new('Throttling rate should be greater or equal to 1')
+    end
+  end
+
   # @param features [Array]
   def emulate_media_features(features)
     if features.nil?

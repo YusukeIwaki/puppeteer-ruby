@@ -228,4 +228,11 @@ RSpec.describe 'Emulation' do
       expect { page.emulate_vision_deficiency('invalid') }.to raise_error(/Unsupported vision deficiency: invalid/)
     end
   end
+
+  describe 'Page.emulateCPUThrottling', skip: Puppeteer.env.firefox? do
+    it 'should change the CPU throttling rate successfully' do
+      page.emulate_cpu_throttling(100)
+      page.emulate_cpu_throttling(nil)
+    end
+  end
 end
