@@ -751,125 +751,91 @@ RSpec.describe Puppeteer::Page do
   #   });
   # });
 
-  # describeFailsFirefox('Page.exposeFunction', function () {
-  #   it('should work', async () => {
-  #     const { page } = getTestState();
+  describe 'Page#expose_function', skip: Puppeteer.env.firefox? do
+    it 'should work' do
+      page.expose_function('compute', ->(a, b) { a * b })
+      result = page.evaluate('async function() { return await globalThis.compute(9, 4) }')
+      expect(result).to eq(36)
+    end
 
-  #     await page.exposeFunction('compute', function (a, b) {
-  #       return a * b;
-  #     });
-  #     const result = await page.evaluate(async function () {
-  #       return await globalThis.compute(9, 4);
-  #     });
-  #     expect(result).toBe(36);
-  #   });
-  #   it('should throw exception in page context', async () => {
-  #     const { page } = getTestState();
+    it 'should throw exception in page context' do
+      page.expose_function('woof', -> { raise 'WOOF WOOF' })
+      message = page.evaluate(<<~JAVASCRIPT)
+      async () => {
+        try {
+          await globalThis.woof()
+          return null
+        } catch (error) {
+          return error.message
+        }
+      }
+      JAVASCRIPT
+      expect(message).to eq('WOOF WOOF')
+    end
 
-  #     await page.exposeFunction('woof', function () {
-  #       throw new Error('WOOF WOOF');
-  #     });
-  #     const { message, stack } = await page.evaluate(async () => {
-  #       try {
-  #         await globalThis.woof();
-  #       } catch (error) {
-  #         return { message: error.message, stack: error.stack };
-  #       }
-  #     });
-  #     expect(message).toBe('WOOF WOOF');
-  #     expect(stack).toContain(__filename);
-  #   });
-  #   it('should support throwing "null"', async () => {
-  #     const { page } = getTestState();
+    it 'should support throwing "null"' do
+      skip 'raise nil causes TypeError in Ruby'
 
-  #     await page.exposeFunction('woof', function () {
-  #       throw null;
-  #     });
-  #     const thrown = await page.evaluate(async () => {
-  #       try {
-  #         await globalThis.woof();
-  #       } catch (error) {
-  #         return error;
-  #       }
-  #     });
-  #     expect(thrown).toBe(null);
-  #   });
-  #   it('should be callable from-inside evaluateOnNewDocument', async () => {
-  #     const { page } = getTestState();
+      page.expose_function('woof', -> { raise nil })
+      thrown = page.evaluate(<<~JAVASCRIPT)
+      async () => {
+        try {
+          await globalThis.woof()
+          return "GOOD"
+        } catch (error) {
+          return error
+        }
+      }
+      JAVASCRIPT
+      expect(thrown).to be_nil
+    end
 
-  #     let called = false;
-  #     await page.exposeFunction('woof', function () {
-  #       called = true;
-  #     });
-  #     await page.evaluateOnNewDocument(() => globalThis.woof());
-  #     await page.reload();
-  #     expect(called).toBe(true);
-  #   });
-  #   it('should survive navigation', async () => {
-  #     const { page, server } = getTestState();
+    it 'should be callable from-inside evaluateOnNewDocument' do
+      called = false
+      page.expose_function('woof', -> { called = true })
+      page.evaluate_on_new_document('() => globalThis.woof()')
+      page.reload
+      expect(called).to eq(true)
+    end
 
-  #     await page.exposeFunction('compute', function (a, b) {
-  #       return a * b;
-  #     });
+    it 'should survive navigation', sinatra: true do
+      page.expose_function('compute', ->(a, b) { a * b })
+      page.goto(server_empty_page)
+      result = page.evaluate('async () => { return await globalThis.compute(9, 4) }')
+      expect(result).to eq(36)
+      page.reload
+      result = page.evaluate('async () => { return await globalThis.compute(9, 4) }')
+      expect(result).to eq(36)
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const result = await page.evaluate(async function () {
-  #       return await globalThis.compute(9, 4);
-  #     });
-  #     expect(result).toBe(36);
-  #   });
-  #   it('should await returned promise', async () => {
-  #     const { page } = getTestState();
+    it 'should await returned promise' do
+      skip "Ruby don't have async function"
+    end
 
-  #     await page.exposeFunction('compute', function (a, b) {
-  #       return Promise.resolve(a * b);
-  #     });
+    it 'should work on frames', sinatra: true do
+      page.expose_function('compute', ->(a, b) { a * b })
 
-  #     const result = await page.evaluate(async function () {
-  #       return await globalThis.compute(3, 5);
-  #     });
-  #     expect(result).toBe(15);
-  #   });
-  #   it('should work on frames', async () => {
-  #     const { page, server } = getTestState();
+      page.goto("#{server_prefix}/frames/nested-frames.html")
+      result = page.frames[1].evaluate('async () => { return await globalThis.compute(3, 5) }')
+      expect(result).to eq(15)
+    end
 
-  #     await page.exposeFunction('compute', function (a, b) {
-  #       return Promise.resolve(a * b);
-  #     });
+    it 'should work on frames before navigation', sinatra: true do
+      page.goto("#{server_prefix}/frames/nested-frames.html")
+      page.expose_function('compute', ->(a, b) { a * b })
+      result = page.frames[1].evaluate('async () => { return await globalThis.compute(3, 5) }')
+      expect(result).to eq(15)
+    end
 
-  #     await page.goto(server.PREFIX + '/frames/nested-frames.html');
-  #     const frame = page.frames()[1];
-  #     const result = await frame.evaluate(async function () {
-  #       return await globalThis.compute(3, 5);
-  #     });
-  #     expect(result).toBe(15);
-  #   });
-  #   it('should work on frames before navigation', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with complex objects' do
+      page.expose_function('complexObject', ->(a, b) {
+        { x: a['x'] + b['x'] }
+      })
 
-  #     await page.goto(server.PREFIX + '/frames/nested-frames.html');
-  #     await page.exposeFunction('compute', function (a, b) {
-  #       return Promise.resolve(a * b);
-  #     });
-
-  #     const frame = page.frames()[1];
-  #     const result = await frame.evaluate(async function () {
-  #       return await globalThis.compute(3, 5);
-  #     });
-  #     expect(result).toBe(15);
-  #   });
-  #   it('should work with complex objects', async () => {
-  #     const { page } = getTestState();
-
-  #     await page.exposeFunction('complexObject', function (a, b) {
-  #       return { x: a.x + b.x };
-  #     });
-  #     const result = await page.evaluate<() => Promise<{ x: number }>>(
-  #       async () => globalThis.complexObject({ x: 5 }, { x: 2 })
-  #     );
-  #     expect(result.x).toBe(7);
-  #   });
-  # });
+      result = page.evaluate('async () => { return await globalThis.complexObject({x:5}, {x:2}) }')
+      expect(result).to eq({ 'x' => 7 })
+    end
+  end
 
   describe 'Page.Events.PageError' do
     it 'should fire', sinatra: true do

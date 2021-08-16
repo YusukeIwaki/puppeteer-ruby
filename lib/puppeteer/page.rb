@@ -7,6 +7,7 @@ require_relative './page/screenshot_options'
 require_relative './page/screenshot_task_queue'
 
 class Puppeteer::Page
+  include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
@@ -102,7 +103,9 @@ class Puppeteer::Page
     @client.on('Runtime.consoleAPICalled') do |event|
       handle_console_api(event)
     end
-    # client.on('Runtime.bindingCalled', event => this._onBindingCalled(event));
+    @client.on('Runtime.bindingCalled') do |event|
+      handle_binding_called(event)
+    end
     @client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
     end
@@ -397,6 +400,51 @@ class Puppeteer::Page
     main_frame.add_style_tag(url: url, path: path, content: content)
   end
 
+  # @param name [String]
+  # @param puppeteer_function [Proc]
+  def expose_function(name, puppeteer_function)
+    if @page_bindings[name]
+      raise ArgumentError.new("Failed to add page binding with name `#{name}` already exists!")
+    end
+    @page_bindings[name] = puppeteer_function
+
+    add_page_binding = <<~JAVASCRIPT
+    function (type, bindingName) {
+      /* Cast window to any here as we're about to add properties to it
+      * via win[bindingName] which TypeScript doesn't like.
+      */
+      const win = window;
+      const binding = win[bindingName];
+
+      win[bindingName] = (...args) => {
+        const me = window[bindingName];
+        let callbacks = me.callbacks;
+        if (!callbacks) {
+          callbacks = new Map();
+          me.callbacks = callbacks;
+        }
+        const seq = (me.lastSeq || 0) + 1;
+        me.lastSeq = seq;
+        const promise = new Promise((resolve, reject) =>
+          callbacks.set(seq, { resolve, reject })
+        );
+        binding(JSON.stringify({ type, name: bindingName, seq, args }));
+        return promise;
+      };
+    }
+    JAVASCRIPT
+
+    source = JavaScriptFunction.new(add_page_binding, ['exposedFun', name]).source
+    @client.send_message('Runtime.addBinding', name: name)
+    @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
+
+    promises = @frame_manager.frames.map do |frame|
+      frame.async_evaluate("() => #{source}")
+    end
+    await_all(*promises)
+
+    nil
+  end
   # /**
   #  * @param {string} name
   #  * @param {Function} puppeteerFunction
@@ -511,56 +559,51 @@ class Puppeteer::Page
     add_console_message(event['type'], values, event['stackTrace'])
   end
 
-  # /**
-  #  * @param {!Protocol.Runtime.bindingCalledPayload} event
-  #  */
-  # async _onBindingCalled(event) {
-  #   const {name, seq, args} = JSON.parse(event.payload);
-  #   let expression = null;
-  #   try {
-  #     const result = await this._pageBindings.get(name)(...args);
-  #     expression = helper.evaluationString(deliverResult, name, seq, result);
-  #   } catch (error) {
-  #     if (error instanceof Error)
-  #       expression = helper.evaluationString(deliverError, name, seq, error.message, error.stack);
-  #     else
-  #       expression = helper.evaluationString(deliverErrorValue, name, seq, error);
-  #   }
-  #   this._client.send('Runtime.evaluate', { expression, contextId: event.executionContextId }).catch(debugError);
+  def handle_binding_called(event)
+    execution_context_id = event['executionContextId']
+    payload =
+      begin
+        JSON.parse(event['payload'])
+      rescue
+        # The binding was either called by something in the page or it was
+        # called before our wrapper was initialized.
+        return
+      end
+    name = payload['name']
+    seq = payload['seq']
+    args = payload['args']
 
-  #   /**
-  #    * @param {string} name
-  #    * @param {number} seq
-  #    * @param {*} result
-  #    */
-  #   function deliverResult(name, seq, result) {
-  #     window[name]['callbacks'].get(seq).resolve(result);
-  #     window[name]['callbacks'].delete(seq);
-  #   }
+    if payload['type'] != 'exposedFun' || !@page_bindings[name]
+      return
+    end
 
-  #   /**
-  #    * @param {string} name
-  #    * @param {number} seq
-  #    * @param {string} message
-  #    * @param {string} stack
-  #    */
-  #   function deliverError(name, seq, message, stack) {
-  #     const error = new Error(message);
-  #     error.stack = stack;
-  #     window[name]['callbacks'].get(seq).reject(error);
-  #     window[name]['callbacks'].delete(seq);
-  #   }
+    expression =
+      begin
+        result = @page_bindings[name].call(*args)
 
-  #   /**
-  #    * @param {string} name
-  #    * @param {number} seq
-  #    * @param {*} value
-  #    */
-  #   function deliverErrorValue(name, seq, value) {
-  #     window[name]['callbacks'].get(seq).reject(value);
-  #     window[name]['callbacks'].delete(seq);
-  #   }
-  # }
+        deliver_result = <<~JAVASCRIPT
+        function (name, seq, result) {
+          window[name].callbacks.get(seq).resolve(result);
+          window[name].callbacks.delete(seq);
+        }
+        JAVASCRIPT
+
+        JavaScriptFunction.new(deliver_result, [name, seq, result]).source
+      rescue => err
+        deliver_error = <<~JAVASCRIPT
+        function (name, seq, message) {
+          const error = new Error(message);
+          window[name].callbacks.get(seq).reject(error);
+          window[name].callbacks.delete(seq);
+        }
+        JAVASCRIPT
+        JavaScriptFunction.new(deliver_error, [name, seq, err.message]).source
+      end
+
+    @client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).rescue do |error|
+      debug_puts(error)
+    end
+  end
 
   private def add_console_message(type, args, stack_trace)
     text_tokens = args.map { |arg| arg.remote_object.value }
@@ -636,10 +679,9 @@ class Puppeteer::Page
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   # @return [Puppeteer::Response]
   def reload(timeout: nil, wait_until: nil)
-    await_all(
-      async_wait_for_navigation(timeout: timeout, wait_until: wait_until),
-      @client.async_send_message('Page.reload'),
-    ).first
+    wait_for_navigation(timeout: timeout, wait_until: wait_until) do
+      @client.send_message('Page.reload')
+    end
   end
 
   def wait_for_navigation(timeout: nil, wait_until: nil)
@@ -765,10 +807,9 @@ class Puppeteer::Page
     entries = history['entries']
     index = history['currentIndex'] + delta
     if_present(entries[index]) do |entry|
-      await_all(
-        async_wait_for_navigation(timeout: timeout, wait_until: wait_until),
-        @client.async_send_message('Page.navigateToHistoryEntry', entryId: entry['id']),
-      )
+      wait_for_navigation(timeout: timeout, wait_until: wait_until) do
+        @client.send_message('Page.navigateToHistoryEntry', entryId: entry['id'])
+      end
     end
   end
 
