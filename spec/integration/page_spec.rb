@@ -571,49 +571,43 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describeFailsFirefox('Page.metrics', function () {
-  #   it('should get metrics from a page', async () => {
-  #     const { page } = getTestState();
+  describe 'Page#metrics', skip: Puppeteer.env.firefox? do
+    def check_metrics(page_metrics)
+      aggregate_failures do
+        [
+          'Timestamp',
+          'Documents',
+          'Frames',
+          'JSEventListeners',
+          'Nodes',
+          'LayoutCount',
+          'RecalcStyleCount',
+          'LayoutDuration',
+          'RecalcStyleDuration',
+          'ScriptDuration',
+          'TaskDuration',
+          'JSHeapUsedSize',
+          'JSHeapTotalSize',
+        ].each do |name|
+          expect(page_metrics[name]).to be >= 0
+        end
+      end
+    end
 
-  #     await page.goto('about:blank');
-  #     const metrics = await page.metrics();
-  #     checkMetrics(metrics);
-  #   });
-  #   it('metrics event fired on console.timeStamp', async () => {
-  #     const { page } = getTestState();
+    it 'should get metrics from a page' do
+      page.goto('about:blank')
+      check_metrics(page.metrics)
+    end
 
-  #     const metricsPromise = new Promise<{ metrics: Metrics; title: string }>(
-  #       (fulfill) => page.once('metrics', fulfill)
-  #     );
-  #     await page.evaluate(() => console.timeStamp('test42'));
-  #     const metrics = await metricsPromise;
-  #     expect(metrics.title).toBe('test42');
-  #     checkMetrics(metrics.metrics);
-  #   });
-  #   function checkMetrics(metrics) {
-  #     const metricsToCheck = new Set([
-  #       'Timestamp',
-  #       'Documents',
-  #       'Frames',
-  #       'JSEventListeners',
-  #       'Nodes',
-  #       'LayoutCount',
-  #       'RecalcStyleCount',
-  #       'LayoutDuration',
-  #       'RecalcStyleDuration',
-  #       'ScriptDuration',
-  #       'TaskDuration',
-  #       'JSHeapUsedSize',
-  #       'JSHeapTotalSize',
-  #     ]);
-  #     for (const name in metrics) {
-  #       expect(metricsToCheck.has(name)).toBeTruthy();
-  #       expect(metrics[name]).toBeGreaterThanOrEqual(0);
-  #       metricsToCheck.delete(name);
-  #     }
-  #     expect(metricsToCheck.size).toBe(0);
-  #   }
-  # });
+    it 'metrics event fired on console.timeStamp' do
+      metrics_promise = resolvable_future { |f| page.once('metrics') { |event| f.fulfill(event) } }
+
+      page.evaluate('() => console.timeStamp("test42")')
+      metrics_event = metrics_promise.value!
+      expect(metrics_event.title).to eq('test42')
+      check_metrics(metrics_event.metrics)
+    end
+  end
 
   # describe('Page.waitForRequest', function () {
   #   it('should work', async () => {
