@@ -1,3 +1,5 @@
+require_relative './device'
+
 Puppeteer::DEVICES = Hash[
   [
     {

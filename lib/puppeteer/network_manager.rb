@@ -13,6 +13,46 @@ class Puppeteer::NetworkManager
     attr_reader :username, :password
   end
 
+  class InternalNetworkCondition
+    attr_writer :offline, :upload, :download, :latency
+
+    def initialize(client)
+      @client = client
+      @offline = false
+      @upload = -1
+      @download = -1
+      @latency = 0
+    end
+
+    def offline_mode=(value)
+      return if @offline == value
+      @offline = value
+      update_network_conditions
+    end
+
+    def network_condition=(network_condition)
+      if network_condition
+        @upload = network_condition.upload
+        @download = network_condition.download
+        @latency = network_condition.latency
+      else
+        @upload = -1
+        @download = -1
+        @latency = 0
+      end
+      update_network_conditions
+    end
+
+    private def update_network_conditions
+      @client.send_message('Network.emulateNetworkConditions',
+        offline: @offline,
+        latency: @latency,
+        downloadThroughput: @download,
+        uploadThroughput: @upload,
+      )
+    end
+  end
+
   # @param {!Puppeteer.CDPSession} client
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.FrameManager} frameManager
@@ -29,13 +69,12 @@ class Puppeteer::NetworkManager
 
     @extra_http_headers = {}
 
-    @offline = false
-
     @attempted_authentications = Set.new
     @user_request_interception_enabled = false
     @protocol_request_interception_enabled = false
     @user_cache_disabled = false
     @request_id_to_interception_id = {}
+    @internal_network_condition = InternalNetworkCondition.new(@client)
 
     @client.on_event('Fetch.requestPaused') do |event|
       handle_request_paused(event)
@@ -94,15 +133,12 @@ class Puppeteer::NetworkManager
 
   # @param value [TrueClass|FalseClass]
   def offline_mode=(value)
-    return if @offline == value
-    @offline = value
-    @client.send_message('Network.emulateNetworkConditions',
-      offline: @offline,
-      # values of 0 remove any active throttling. crbug.com/456324#c9
-      latency: 0,
-      downloadThroughput: -1,
-      uploadThroughput: -1,
-    )
+    @internal_network_condition.offline_mode=(value)
+  end
+
+  # @param network_condition [Puppeteer::NetworkCondition|nil]
+  def emulate_network_conditions(network_condition)
+    @internal_network_condition.network_condition = network_condition
   end
 
   # @param user_agent [String]
