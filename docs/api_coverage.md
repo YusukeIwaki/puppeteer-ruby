@@ -81,7 +81,7 @@
 * createPDFStream => `#create_pdf_stream`
 * deleteCookie => `#delete_cookie`
 * emulate
-* ~~emulateCPUThrottling~~
+* emulateCPUThrottling => `#emulate_cpu_throttling`
 * emulateIdleState => `#emulate_idle_state`
 * emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
