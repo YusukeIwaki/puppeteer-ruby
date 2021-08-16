@@ -91,7 +91,7 @@
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * evaluateOnNewDocument => `#evaluate_on_new_document`
-* ~~exposeFunction~~
+* exposeFunction => `#expose_function`
 * focus
 * frames
 * goBack => `#go_back`
