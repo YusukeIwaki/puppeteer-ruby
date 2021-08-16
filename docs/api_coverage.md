@@ -13,7 +13,7 @@
 * ~~errors~~
 * executablePath => `#executable_path`
 * launch
-* ~~networkConditions~~
+* networkConditions => `#network_conditions`
 * product
 * ~~registerCustomQueryHandler~~
 * ~~unregisterCustomQueryHandler~~
@@ -85,7 +85,7 @@
 * emulateIdleState => `#emulate_idle_state`
 * emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
-* ~~emulateNetworkConditions~~
+* emulateNetworkConditions => `#emulate_network_conditions`
 * emulateTimezone => `#emulate_timezone`
 * emulateVisionDeficiency => `#emulate_vision_deficiency`
 * evaluate
