@@ -47,6 +47,8 @@ class Puppeteer::Page
     @screenshot_task_queue = ScreenshotTaskQueue.new
 
     @workers = {}
+    @user_drag_interception_enabled = false
+
     @client.on_event('Target.attachedToTarget') do |event|
       if event['targetInfo']['type'] != 'worker'
         # If we don't detach from service workers, they will never die.
@@ -136,6 +138,11 @@ class Puppeteer::Page
       @client.async_send_message('Log.enable'),
     )
   end
+
+  def drag_interception_enabled?
+    @user_drag_interception_enabled
+  end
+  alias_method :drag_interception_enabled, :drag_interception_enabled?
 
   # @param event_name [Symbol]
   def on(event_name, &block)
@@ -267,6 +274,11 @@ class Puppeteer::Page
   # @param value [Bool]
   def request_interception=(value)
     @frame_manager.network_manager.request_interception = value
+  end
+
+  def drag_interception_enabled=(enabled)
+    @user_drag_interception_enabled = enabled
+    @client.send_message('Input.setInterceptDrags', enabled: enabled)
   end
 
   def offline_mode=(enabled)

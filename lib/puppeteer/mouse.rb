@@ -94,6 +94,8 @@ class Puppeteer::Mouse
     )
   end
 
+  define_async_method :async_up
+
   # Dispatches a `mousewheel` event.
   #
   # @param delta_x [Integer]
@@ -110,5 +112,56 @@ class Puppeteer::Mouse
     )
   end
 
-  define_async_method :async_up
+  def drag(start, target)
+    promise = resolvable_future do |f|
+      @client.once('Input.dragIntercepted') do |event|
+        f.fulfill(event['data'])
+      end
+    end
+    move(start.x, start.y)
+    down
+    move(target.x, target.y)
+    promise.value!
+  end
+
+  def drag_enter(target, data)
+    @client.send_message('Input.dispatchDragEvent',
+      type: 'dragEnter',
+      x: target.x,
+      y: target.y,
+      modifiers: @keyboard.modifiers,
+      data: data,
+    )
+  end
+
+  def drag_over(target, data)
+    @client.send_message('Input.dispatchDragEvent',
+      type: 'dragOver',
+      x: target.x,
+      y: target.y,
+      modifiers: @keyboard.modifiers,
+      data: data,
+    )
+  end
+
+  def drop(target, data)
+    @client.send_message('Input.dispatchDragEvent',
+      type: 'drop',
+      x: target.x,
+      y: target.y,
+      modifiers: @keyboard.modifiers,
+      data: data,
+    )
+  end
+
+  def drag_and_drop(start, target, delay: nil)
+    data = drag(start, target)
+    drag_enter(target, data)
+    drag_over(target, data)
+    if delay
+      sleep(delay / 1000.0)
+    end
+    drop(target, data)
+    up
+  end
 end
