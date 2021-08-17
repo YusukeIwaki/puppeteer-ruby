@@ -1,6 +1,15 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.1...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.36.0...master)]
 
 * xxx
+
+### 0.36.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.1...0.36.0)]
+
+New features:
+
+* Drag and Drop feature introduced in Puppeteer 10.1
+* `Page#emulateNetworkConditions`, `Page#emulateCPUThrottling`
+* `Page#exposeFunction`
+* Metrics
 
 ### 0.35.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.35.0...0.35.1)]
 

@@ -1,6 +1,6 @@
 # API coverages
 - Puppeteer version: v10.2.0
-- puppeteer-ruby version: 0.35.1
+- puppeteer-ruby version: 0.36.0
 
 ## Puppeteer
 
