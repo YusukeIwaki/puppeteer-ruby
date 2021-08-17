@@ -103,7 +103,7 @@
 * isJavaScriptEnabled => `#javascript_enabled?`
 * keyboard
 * mainFrame => `#main_frame`
-* ~~metrics~~
+* metrics
 * mouse
 * pdf
 * queryObjects => `#query_objects`

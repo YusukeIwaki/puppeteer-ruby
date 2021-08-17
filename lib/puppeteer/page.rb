@@ -2,6 +2,7 @@ require 'base64'
 require 'json'
 require "stringio"
 
+require_relative './page/metrics'
 require_relative './page/pdf_options'
 require_relative './page/screenshot_options'
 require_relative './page/screenshot_task_queue'
@@ -115,7 +116,9 @@ class Puppeteer::Page
     @client.on_event('Inspector.targetCrashed') do |event|
       handle_target_crashed
     end
-    # client.on('Performance.metrics', event => this._emitMetrics(event));
+    @client.on_event('Performance.metrics') do |event|
+      emit_event(PageEmittedEvents::Metrics, MetricsEvent.new(event))
+    end
     @client.on_event('Log.entryAdded') do |event|
       handle_log_entry_added(event)
     end
@@ -493,36 +496,10 @@ class Puppeteer::Page
     @frame_manager.network_manager.user_agent = user_agent
   end
 
-  # /**
-  #  * @return {!Promise<!Metrics>}
-  #  */
-  # async metrics() {
-  #   const response = await this._client.send('Performance.getMetrics');
-  #   return this._buildMetricsObject(response.metrics);
-  # }
-
-  # /**
-  #  * @param {!Protocol.Performance.metricsPayload} event
-  #  */
-  # _emitMetrics(event) {
-  #   this.emit(PageEmittedEvents::Metrics, {
-  #     title: event.title,
-  #     metrics: this._buildMetricsObject(event.metrics)
-  #   });
-  # }
-
-  # /**
-  #  * @param {?Array<!Protocol.Performance.Metric>} metrics
-  #  * @return {!Metrics}
-  #  */
-  # _buildMetricsObject(metrics) {
-  #   const result = {};
-  #   for (const metric of metrics || []) {
-  #     if (supportedMetrics.has(metric.name))
-  #       result[metric.name] = metric.value;
-  #   }
-  #   return result;
-  # }
+  def metrics
+    response = @client.send_message('Performance.getMetrics')
+    Metrics.new(response['metrics'])
+  end
 
   class PageError < StandardError ; end
 
