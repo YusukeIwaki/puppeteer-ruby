@@ -99,7 +99,7 @@
 * goto
 * hover
 * isClosed => `#closed?`
-* ~~isDragInterceptionEnabled~~
+* isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
 * keyboard
 * mainFrame => `#main_frame`
@@ -166,11 +166,11 @@
 
 * click
 * down
-* ~~drag~~
-* ~~dragAndDrop~~
-* ~~dragEnter~~
-* ~~dragOver~~
-* ~~drop~~
+* drag
+* dragAndDrop => `#drag_and_drop`
+* dragEnter => `#drag_enter`
+* dragOver => `#drag_over`
+* drop
 * move
 * up
 * wheel
@@ -272,11 +272,11 @@
 * clickablePoint => `#clickable_point`
 * contentFrame => `#content_frame`
 * dispose
-* ~~drag~~
-* ~~dragAndDrop~~
-* ~~dragEnter~~
-* ~~dragOver~~
-* ~~drop~~
+* drag
+* dragAndDrop => `#drag_and_drop`
+* dragEnter => `#drag_enter`
+* dragOver => `#drag_over`
+* drop
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * executionContext => `#execution_context`

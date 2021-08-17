@@ -147,6 +147,47 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_click
 
+  class DragInterceptionNotEnabledError < StandardError
+    def initialize
+      super('Drag Interception is not enabled!')
+    end
+  end
+
+  def drag(x:, y:)
+    unless @page.drag_interception_enabled?
+      raise DragInterceptionNotEnabledError.new
+    end
+    scroll_into_view_if_needed
+    start = clickable_point
+    @page.mouse.drag(start, Point.new(x: x, y: y))
+  end
+
+  def drag_enter(data)
+    scroll_into_view_if_needed
+    target = clickable_point
+    @page.mouse.drag_enter(target, data)
+  end
+
+  def drag_over(data)
+    scroll_into_view_if_needed
+    target = clickable_point
+    @page.mouse.drag_over(target, data)
+  end
+
+  def drop(data)
+    scroll_into_view_if_needed
+    target = clickable_point
+    @page.mouse.drop(target, data)
+  end
+
+  # @param target [ElementHandle]
+  def drag_and_drop(target, delay: nil)
+    scroll_into_view_if_needed
+    start_point = clickable_point
+    target_point = target.clickable_point
+    @page.mouse.drag_and_drop(start_point, target_point, delay: delay)
+  end
+
   # @return [Array<String>]
   def select(*values)
     if nonstring = values.find { |value| !value.is_a?(String) }
