@@ -66,17 +66,19 @@ require 'puppeteer/element_handle'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 module Puppeteer
-  module_function def method_missing(method, *args, **kwargs, &block)
-    @puppeteer ||= ::Puppeteer::Puppeteer.new(
-      project_root: __dir__,
-      preferred_revision: '706915',
-      is_puppeteer_core: true,
-    )
-
-    if kwargs.empty? # for Ruby < 2.7
-      @puppeteer.public_send(method, *args, &block)
-    else
-      @puppeteer.public_send(method, *args, **kwargs, &block)
+  @puppeteer ||= ::Puppeteer::Puppeteer.new(
+    project_root: __dir__,
+    preferred_revision: '706915',
+    is_puppeteer_core: true,
+  ).tap do |instance|
+    instance.public_methods(false).each do |method_name|
+      define_singleton_method(method_name) do |*args, **kwargs, &block|
+        if kwargs.empty? # for Ruby < 2.7
+          @puppeteer.public_send(method_name, *args, &block)
+        else
+          @puppeteer.public_send(method_name, *args, **kwargs, &block)
+        end
+      end
     end
   end
 end
