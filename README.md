@@ -156,6 +156,75 @@ RSpec.describe 'hotel.testplanisphere.dev', type: :feature do
 
 The detailed step of configuration can be found [here](https://github.com/YusukeIwaki/puppeteer-ruby-example/tree/master/_with_capybara-rspec).
 
+## :bulb: Use Puppeteer methods simply without Capybara::DSL
+
+We can also use puppeteer-ruby as it is without Capybara DSL. When you want to just test a Rails application simply with Puppeteer, refer this section.
+
+Also, if you have trouble with handling flaky/unstable testcases in existing feature/system specs, consider replacing Capybara::DSL with raw puppeteer-ruby codes like `page.wait_for_selector(...)` or `page.wait_for_navigation { ... }`.
+
+Capybara prepares test server even when Capybara DSL is not used.
+
+Sample configuration is shown below. You can use it by putting the file at `spec/support/puppeteer_ruby.rb` or another location where RSpec loads on initialization.
+
+```ruby
+RSpec.configure do |config|
+  require 'capybara'
+
+  # This driver only requests Capybara to launch test server.
+  # Remark that no Capybara::DSL is available with this driver.
+  class CapybaraNullDriver < Capybara::Driver::Base
+    def needs_server?
+      true
+    end
+  end
+
+  Capybara.register_driver(:null) { CapybaraNullDriver.new }
+
+  config.around(driver: :null) do |example|
+    Capybara.current_driver = :null
+
+    # Rails server is launched here,
+    # (at the first time of accessing Capybara.current_session.server)
+    @base_url = Capybara.current_session.server.base_url
+
+    require 'puppeteer'
+    launch_options = {
+      # Use launch options as you like.
+      channel: :chrome,
+      headless: false,
+    }
+    Puppeteer.launch(**launch_options) do |browser|
+      @puppeteer_page = browser.new_page
+      example.run
+    end
+
+    Capybara.reset_sessions!
+    Capybara.use_default_driver
+  end
+end
+```
+
+Now, we can work with integration test using `Puppeteer::Page` in puppeteer-ruby.
+
+```ruby
+RSpec.describe 'Sample integration tests', driver: :null do
+  let(:page) { @puppeteer_page }
+  let(:base_url) { @base_url }
+
+  it 'should work with Puppeteer' do
+    # null driver only launches server, and Capybara::DSL is unavailable.
+    expect { visit '/' }.to raise_error(/NotImplementedError/)
+
+    page.goto("#{base_url}/")
+
+    # Automation with Puppeteer
+    h1_text = page.eval_on_selector('h1', '(el) => el.textContent')
+    expect(h1_text).to eq('It works!')
+  end
+end
+```
+
+
 ## API
 
 https://yusukeiwaki.github.io/puppeteer-ruby-docs/
