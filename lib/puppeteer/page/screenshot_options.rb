@@ -15,7 +15,7 @@ class Puppeteer::Page
     # @params options [Hash]
     def initialize(options)
       if options[:type]
-        unless [:png, :jpeg].include?(options[:type].to_sym)
+        unless [:png, :jpeg, :webp].include?(options[:type].to_sym)
           raise ArgumentError.new("Unknown options.type value: #{options[:type]}")
         end
         @type = options[:type]
@@ -25,6 +25,8 @@ class Puppeteer::Page
           @type = 'png'
         elsif mime_types.include?('image/jpeg')
           @type = 'jpeg'
+        elsif mime_types.include?('image/webp')
+          @type = 'webp'
         else
           raise ArgumentError.new("Unsupported screenshot mime type resolved: #{mime_types}, path: #{options[:path]}")
         end
