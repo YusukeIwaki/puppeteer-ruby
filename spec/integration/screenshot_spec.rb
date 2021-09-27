@@ -104,7 +104,7 @@ RSpec.describe 'Screenshots' do
     #   expect(screenshot).toBeGolden('white.jpg');
     # });
 
-    it 'should work with webp' do
+    it_fails_firefox 'should work with webp' do
       screenshot = page.screenshot(type: :webp)
       expect(screenshot.length).to be >= 1000
       Dir.mktmpdir do |tmpdir|
