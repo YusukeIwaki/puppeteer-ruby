@@ -965,7 +965,7 @@ class Puppeteer::Page
     main_frame.title
   end
 
-  # @param type [String] "png"|"jpeg"
+  # @param type [String] "png"|"jpeg"|"webp"
   # @param path [String]
   # @param full_page [Boolean]
   # @param clip [Hash]

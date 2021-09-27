@@ -103,6 +103,16 @@ RSpec.describe 'Screenshots' do
     #   });
     #   expect(screenshot).toBeGolden('white.jpg');
     # });
+
+    it_fails_firefox 'should work with webp' do
+      screenshot = page.screenshot(type: :webp)
+      expect(screenshot.length).to be >= 1000
+      Dir.mktmpdir do |tmpdir|
+        path = File.join(tmpdir, 'image.webp')
+        page.screenshot(path: path)
+      end
+    end
+
     # it('should work with odd clip size on Retina displays', async () => {
     #   const { page } = getTestState();
 
