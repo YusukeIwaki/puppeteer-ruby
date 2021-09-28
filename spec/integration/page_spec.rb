@@ -1259,9 +1259,12 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  describe 'printing to PDF' do
-    it 'can print to PDF and save to file', sinatra: true do
+  describe 'printing to PDF', sinatra: true do
+    before {
       skip('Printing to pdf is currently only supported in headless') unless headless?
+    }
+
+    it 'can print to PDF and save to file' do
       sinatra.get("/") { "<h1>It Works!</h1>" }
       page.goto("#{server_prefix}/")
 
@@ -1272,8 +1275,7 @@ RSpec.describe Puppeteer::Page do
       end
     end
 
-    it 'can print to PDF without file', sinatra: true do
-      skip('Printing to pdf is currently only supported in headless') unless headless?
+    it 'can print to PDF without file' do
       sinatra.get("/") { "<h1>It Works!</h1>" }
       page.goto("#{server_prefix}/")
 
@@ -1281,8 +1283,7 @@ RSpec.describe Puppeteer::Page do
       expect(data.size).to be > 0
     end
 
-    it 'can print to PDF and stream the result', sinatra: true do
-      skip('Printing to pdf is currently only supported in headless') unless headless?
+    it 'can print to PDF and stream the result' do
       sinatra.get("/") { "<h1>It Works!</h1>" }
       page.goto("#{server_prefix}/")
 
@@ -1290,6 +1291,14 @@ RSpec.describe Puppeteer::Page do
         size + chunk.size
       end
       expect(data_length).to be > 0
+    end
+
+    it 'should respect timeout' do
+      page.goto("#{server_prefix}/pdf.html")
+
+      expect {
+        page.pdf(timeout: 1)
+      }.to raise_error(Puppeteer::TimeoutError)
     end
   end
 

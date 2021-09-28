@@ -223,7 +223,7 @@ class Puppeteer::Browser
   # @param predicate [Proc(Puppeteer::Target -> Boolean)]
   # @return [Puppeteer::Target]
   def wait_for_target(predicate:, timeout: nil)
-    timeout_in_sec = (timeout || 30000).to_i / 1000.0
+    timeout_helper = Puppeteer::TimeoutHelper.new('target', timeout_ms: timeout, default_timeout_ms: 30000)
     existing_target = targets.find { |target| predicate.call(target) }
     return existing_target if existing_target
 
@@ -241,15 +241,9 @@ class Puppeteer::Browser
     end
 
     begin
-      if timeout_in_sec > 0
-        Timeout.timeout(timeout_in_sec) do
-          target_promise.value!
-        end
-      else
+      timeout_helper.with_timeout do
         target_promise.value!
       end
-    rescue Timeout::Error
-      raise Puppeteer::TimeoutError.new("waiting for target failed: timeout #{timeout}ms exceeded")
     ensure
       remove_event_listener(*event_listening_ids)
     end
