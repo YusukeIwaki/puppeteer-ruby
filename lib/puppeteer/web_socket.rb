@@ -55,6 +55,7 @@ class Puppeteer::WebSocket
   def initialize(url:, max_payload_size:)
     @impl = DriverImpl.new(url)
     @driver = ::WebSocket::Driver.client(@impl, max_length: max_payload_size)
+    @driver.set_header('User-Agent', "Puppeteer #{Puppeteer::VERSION}")
 
     setup
     @driver.start
