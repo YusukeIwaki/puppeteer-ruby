@@ -27,11 +27,16 @@ class Puppeteer::Tracing
       option_categories << 'disabled-by-default-devtools.screenshot'
     end
 
+    ex_cat = option_categories.select { |cat| cat.start_with?('-') }.map { |cat| cat[1..-1] }
+    in_cat = option_categories.reject { |cat| cat.start_with?('-') }
     @path = path
     @recording = true
     @client.send_message('Tracing.start',
       transferMode: 'ReturnAsStream',
-      categories: option_categories.join(','),
+      traceConfig: {
+        excludedCategories: ex_cat,
+        includedCategories: in_cat,
+      },
     )
   end
 

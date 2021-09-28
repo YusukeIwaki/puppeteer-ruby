@@ -17,12 +17,14 @@ RSpec.describe 'Tracing', skip: Puppeteer.env.firefox? do
   it 'should run with custom categories if provided' do
     page.tracing.start(
       path: output_file,
-      categories: ['disabled-by-default-v8.cpu_profiler.hires'],
+      categories: ['-*', 'disabled-by-default-v8.cpu_profiler.hires'],
     )
     page.tracing.stop
 
     trace_json = JSON.parse(File.read(output_file))
-    expect(trace_json.dig('metadata', 'trace-config')).to include('disabled-by-default-v8.cpu_profiler.hires')
+    trace_config = JSON.parse(trace_json.dig('metadata', 'trace-config'))
+    expect(trace_config['included_categories']).to eq(['disabled-by-default-v8.cpu_profiler.hires'])
+    expect(trace_config['excluded_categories']).to eq(['*'])
   end
 
   it 'should throw if tracing on two pages' do
