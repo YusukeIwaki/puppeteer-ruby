@@ -1098,6 +1098,14 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate('() => globalThis.__injected')).to eq(35)
     end
 
+    it 'should add id when provided', sinatra: true do
+      page.goto(server_empty_page)
+      page.add_script_tag(content: 'window.__injected = 1;', id: 'one')
+      page.add_script_tag(url: '/injectedfile.js', id: 'two')
+      expect(page.query_selector('#one')).to be_a(Puppeteer::ElementHandle)
+      expect(page.query_selector('#two')).to be_a(Puppeteer::ElementHandle)
+    end
+
     #  @see https://github.com/puppeteer/puppeteer/issues/4840
     it 'should throw when added with content to the CSP page', sinatra: true, pending: true do
       page.goto("#{server_prefix}/csp.html")

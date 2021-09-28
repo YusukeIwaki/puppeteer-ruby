@@ -233,12 +233,13 @@ class Puppeteer::DOMWorld
   # @param url [String?]
   # @param path [String?]
   # @param content [String?]
+  # @param id [String?]
   # @param type [String?]
-  def add_script_tag(url: nil, path: nil, content: nil, type: nil)
+  def add_script_tag(url: nil, path: nil, content: nil, id: nil, type: nil)
     if url
       begin
         return execution_context.
-          evaluate_handle(ADD_SCRIPT_URL, url, type || '').
+          evaluate_handle(ADD_SCRIPT_URL, url, id, type || '').
           as_element
       rescue Puppeteer::ExecutionContext::EvaluationError # for Chrome
         raise "Loading script from #{url} failed"
@@ -251,13 +252,13 @@ class Puppeteer::DOMWorld
       contents = File.read(path)
       contents += "//# sourceURL=#{path.gsub(/\n/, '')}"
       return execution_context.
-        evaluate_handle(ADD_SCRIPT_CONTENT, contents, type || '').
+        evaluate_handle(ADD_SCRIPT_CONTENT, contents, id, type || 'text/javascript').
         as_element
     end
 
     if content
       return execution_context.
-        evaluate_handle(ADD_SCRIPT_CONTENT, content, type || '').
+        evaluate_handle(ADD_SCRIPT_CONTENT, content, id, type || 'text/javascript').
         as_element
     end
 
@@ -265,11 +266,11 @@ class Puppeteer::DOMWorld
   end
 
   ADD_SCRIPT_URL = <<~JAVASCRIPT
-  async (url, type) => {
+  async (url, id, type) => {
     const script = document.createElement('script');
     script.src = url;
-    if (type)
-      script.type = type;
+    if (id) script.id = id;
+    if (type) script.type = type;
     const promise = new Promise((res, rej) => {
       script.onload = res;
       script.onerror = rej;
@@ -281,11 +282,11 @@ class Puppeteer::DOMWorld
   JAVASCRIPT
 
   ADD_SCRIPT_CONTENT = <<~JAVASCRIPT
-  (content, type) => {
-    if (type === undefined) type = 'text/javascript';
+  (content, id, type) => {
     const script = document.createElement('script');
     script.type = type;
     script.text = content;
+    if (id) script.id = id;
     let error = null;
     script.onerror = e => error = e;
     document.head.appendChild(script);

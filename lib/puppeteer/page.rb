@@ -404,8 +404,9 @@ class Puppeteer::Page
   # @param path [String?]
   # @param content [String?]
   # @param type [String?]
-  def add_script_tag(url: nil, path: nil, content: nil, type: nil)
-    main_frame.add_script_tag(url: url, path: path, content: content, type: type)
+  # @param id [String?]
+  def add_script_tag(url: nil, path: nil, content: nil, type: nil, id: nil)
+    main_frame.add_script_tag(url: url, path: path, content: content, type: type, id: id)
   end
 
   # @param url [String?]
