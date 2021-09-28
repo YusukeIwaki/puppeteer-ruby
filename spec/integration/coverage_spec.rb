@@ -110,8 +110,8 @@ RSpec.describe 'Coverage specs' do
       end
     end
 
-    describe 'reset_on_navigation' do
-      it 'should report scripts across navigations when disabled', sinatra: true do
+    describe 'reset_on_navigation', sinatra: true do
+      it 'should report scripts across navigations when disabled' do
         coverage = page.coverage.js_coverage(reset_on_navigation: false) do
           page.goto("#{server_prefix}/jscoverage/multiple.html")
           page.goto(server_empty_page)
@@ -119,12 +119,31 @@ RSpec.describe 'Coverage specs' do
         expect(coverage.size).to eq(2)
       end
 
-      it 'should NOT report scripts across navigations when enabled', sinatra: true do
+      it 'should NOT report scripts across navigations when enabled' do
         coverage = page.coverage.js_coverage do # Enabled by default
           page.goto("#{server_prefix}/jscoverage/multiple.html")
           page.goto(server_empty_page)
         end
         expect(coverage).to be_empty
+      end
+    end
+
+    describe 'includeRawScriptCoverage', sinatra: true do
+      it 'should not include rawScriptCoverage field when disabled' do
+        coverage = page.coverage.js_coverage do
+          page.goto("#{server_prefix}/jscoverage/simple.html", wait_until: 'networkidle0')
+        end
+        expect(coverage.size).to eq(1)
+        expect(coverage.first).not_to respond_to(:raw_script_coverage)
+      end
+
+      it 'should include rawScriptCoverage field when enabled' do
+        coverage = page.coverage.js_coverage(include_raw_script_coverage: true) do
+          page.goto("#{server_prefix}/jscoverage/simple.html", wait_until: 'networkidle0')
+        end
+        expect(coverage.size).to eq(1)
+        expect(coverage.first).to respond_to(:raw_script_coverage)
+        expect(coverage.first.raw_script_coverage).to be_a(Hash)
       end
     end
 

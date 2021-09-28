@@ -12,6 +12,14 @@ class Puppeteer::JSCoverage
     attr_reader :url, :ranges, :text
   end
 
+  class ItemWithRawScriptCoverage < Item
+    def initialize(url:, ranges:, text:, raw_script_coverage:)
+      super(url: url, ranges: ranges, text: text)
+      @raw_script_coverage = raw_script_coverage
+    end
+    attr_reader :raw_script_coverage
+  end
+
   # @param client [Puppeteer::CDPSession]
   def initialize(client)
     @client = client
@@ -20,7 +28,10 @@ class Puppeteer::JSCoverage
     @script_sources = {}
   end
 
-  def start(reset_on_navigation: nil, report_anonymous_scripts: nil)
+  def start(
+        reset_on_navigation: nil,
+        report_anonymous_scripts: nil,
+        include_raw_script_coverage: nil)
     raise 'JSCoverage is already enabled' if @enabled
 
     @reset_on_navigation =
@@ -30,6 +41,7 @@ class Puppeteer::JSCoverage
         true
       end
     @report_anonymous_scripts = report_anonymous_scripts || false
+    @include_raw_script_coverage = include_raw_script_coverage || false
     @enabled = true
     @script_urls.clear
     @script_sources.clear
@@ -43,7 +55,7 @@ class Puppeteer::JSCoverage
     await_all(
       @client.async_send_message('Profiler.enable'),
       @client.async_send_message('Profiler.startPreciseCoverage',
-        callCount: false,
+        callCount: @include_raw_script_coverage,
         detailed: true,
       ),
       @client.async_send_message('Debugger.enable'),
@@ -107,11 +119,20 @@ class Puppeteer::JSCoverage
         end
       end
 
-      coverage << Item.new(
-        url: url,
-        ranges: convert_to_disjoint_ranges(flatten_ranges),
-        text: text,
-      )
+      if @include_raw_script_coverage
+        coverage << ItemWithRawScriptCoverage.new(
+          url: url,
+          ranges: convert_to_disjoint_ranges(flatten_ranges),
+          text: text,
+          raw_script_coverage: entry,
+        )
+      else
+        coverage << Item.new(
+          url: url,
+          ranges: convert_to_disjoint_ranges(flatten_ranges),
+          text: text,
+        )
+      end
     end
 
     coverage
