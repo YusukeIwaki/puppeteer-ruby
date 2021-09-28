@@ -210,7 +210,11 @@ RSpec.describe Puppeteer::ElementHandle do
       div_handle.click
       div_handle.click(offset: { x: 10, y: 15 })
 
-      expect(clicks.count).to eq(2)
+      Timeout.timeout(1) do
+        until clicks.count == 2
+          sleep 0.01
+        end
+      end
       expect(clicks[0]).to eq([45 + 60, 45 + 30]) # margin + middle point offset
       expect(clicks[1]).to eq([30 + 10, 30 + 15]) # margin + offset
     end
