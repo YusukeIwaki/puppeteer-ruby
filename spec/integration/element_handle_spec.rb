@@ -188,6 +188,91 @@ RSpec.describe Puppeteer::ElementHandle do
       br = page.query_selector('br')
       expect { br.click }.to raise_error(/Node is either not visible or not an HTMLElement/)
     end
+
+    it 'should work with offset' do
+      clicks = []
+      page.expose_function('reportClick', -> (x, y) { clicks << [x, y] })
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+        document.body.addEventListener('click', (e) => {
+          window.reportClick(e.clientX, e.clientY);
+        });
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+      div_handle.click
+      div_handle.click(offset: { x: 10, y: 15 })
+
+      expect(clicks.count).to eq(2)
+      expect(clicks[0]).to eq([45 + 60, 45 + 30]) # margin + middle point offset
+      expect(clicks[1]).to eq([30 + 10, 30 + 15]) # margin + offset
+    end
+  end
+
+  describe 'clickable_point' do
+    it 'should work' do
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+      }
+      JAVASCRIPT
+
+      page.evaluate(<<~JAVASCRIPT)
+      async () => {
+        return new Promise((resolve) => window.requestAnimationFrame(resolve));
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+      expect(div_handle.clickable_point).to eq({
+        x: 45 + 60, # margin + middle point offset
+        y: 45 + 30, # margin + middle point offset
+      })
+      expect(div_handle.clickable_point({ x: 10, y: 15 })).to eq({
+        x: 30 + 10, # margin + offset
+        y: 30 + 15, # margin + offset
+      })
+    end
+
+    it 'should work for iframes' do
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '10px';
+        document.body.style.margin = '10px';
+        document.body.innerHTML = `
+          <iframe style="border: none; margin: 0; padding: 0;" seamless sandbox srcdoc="<style>* { margin: 0; padding: 0;}</style><div style='cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;' />"></iframe>
+        `;
+      }
+      JAVASCRIPT
+
+      page.evaluate(<<~JAVASCRIPT)
+      async () => {
+        return new Promise((resolve) => window.requestAnimationFrame(resolve));
+      }
+      JAVASCRIPT
+
+      frame = page.frames[1]
+      div_handle = frame.query_selector('div')
+      expect(div_handle.clickable_point).to eq({
+        x: 20 + 45 + 60, # iframe pos + margin + middle point offset
+        y: 20 + 45 + 30, # iframe pos + margin + middle point offset
+      })
+      expect(div_handle.clickable_point({ x: 10, y: 15 })).to eq({
+        x: 20 + 30 + 10, # iframe pos + margin + offset
+        y: 20 + 30 + 15, # iframe pos + margin + offset
+      })
+    end
   end
 
   describe '#hover' do

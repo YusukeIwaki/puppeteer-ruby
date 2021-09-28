@@ -29,6 +29,13 @@ RSpec.describe Puppeteer::ElementHandle do
         expect(subject.y).to eq(19)
       }
     end
+
+    describe '==' do
+      subject { Puppeteer::ElementHandle::Point.new(x: 3, y: 4) }
+
+      it { is_expected.to eq({ x: 3, y: 4 }) }
+      it { is_expected.to eq(Puppeteer::ElementHandle::Point.new(x: 3, y: 4)) }
+    end
   end
 
   describe 'tap' do
