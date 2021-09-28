@@ -1060,11 +1060,20 @@ class Puppeteer::Page
 
   # @return [Enumerable<String>]
   def create_pdf_stream(options = {})
+    timeout_helper = Puppeteer::TimeoutHelper.new('Page.printToPDF',
+                      timeout_ms: options[:timeout],
+                      default_timeout_ms: 30000)
     pdf_options = PDFOptions.new(options)
     omit_background = options[:omit_background]
     set_transparent_background_color if omit_background
-    result = @client.send_message('Page.printToPDF', pdf_options.page_print_args)
-    reset_default_background_color if omit_background
+    result =
+      begin
+        timeout_helper.with_timeout do
+          @client.send_message('Page.printToPDF', pdf_options.page_print_args)
+        end
+      ensure
+        reset_default_background_color if omit_background
+      end
 
     Puppeteer::ProtocolStreamReader.new(
       client: @client,
