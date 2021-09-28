@@ -1,5 +1,6 @@
 require_relative './element_handle/bounding_box'
 require_relative './element_handle/box_model'
+require_relative './element_handle/offset'
 require_relative './element_handle/point'
 
 class Puppeteer::ElementHandle < Puppeteer::JSHandle
@@ -79,7 +80,9 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  def clickable_point
+  def clickable_point(offset = nil)
+    offset_param = Offset.from(offset)
+
     result =
       begin
         @remote_object.content_quads(@client)
@@ -103,6 +106,19 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
               select { |quad| compute_quad_area(quad) > 1 }
     if quads.empty?
       raise ElementNotVisibleError.new
+    end
+
+    if offset_param
+      # Return the point of the first quad identified by offset.
+      quad = quads.first
+      min_x = quad.map(&:x).min
+      min_y = quad.map(&:y).min
+      if min_x && min_y
+        return Point.new(
+          x: min_x + offset_param.x,
+          y: min_y + offset_param.y,
+        )
+      end
     end
 
     # Return the middle point of the first quad.
@@ -139,9 +155,10 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param delay [Number]
   # @param button [String] "left"|"right"|"middle"
   # @param click_count [Number]
-  def click(delay: nil, button: nil, click_count: nil)
+  # @param offset [Hash]
+  def click(delay: nil, button: nil, click_count: nil, offset: nil)
     scroll_into_view_if_needed
-    point = clickable_point
+    point = clickable_point(offset)
     @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count)
   end
 
