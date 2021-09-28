@@ -288,10 +288,12 @@ RSpec.describe Puppeteer::ElementHandle do
     end
   end
 
-  describe '#intersecting_viewport?' do
-    it 'should work', sinatra: true do
+  describe '#intersecting_viewport?', sinatra: true do
+    before {
       page.goto("#{server_prefix}/offscreenbuttons.html")
+    }
 
+    it 'should work' do
       10.times do |i|
         button = page.query_selector("#btn#{i}")
         # All but last button are visible.
@@ -299,6 +301,20 @@ RSpec.describe Puppeteer::ElementHandle do
       end
       button = page.query_selector("#btn10")
       expect(button.intersecting_viewport?).to eq(false)
+    end
+
+    it 'should work with threshold' do
+      # a button almost cannot be seen
+      # sometimes we expect to return false by isIntersectingViewport1
+      button = page.query_selector('#btn11')
+      expect(button.intersecting_viewport?(threshold: 0.001)).to eq(false)
+    end
+
+    it 'should work with threshold of 1' do
+      # a button almost cannot be seen
+      # sometimes we expect to return false by isIntersectingViewport1
+      button = page.query_selector('#btn0')
+      expect(button.intersecting_viewport?(threshold: 1)).to eq(true)
     end
   end
 

@@ -453,10 +453,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   define_async_method :async_Sx
 
   # in JS, #isIntersectingViewport.
+  # @param threshold [Float|nil]
   # @return [Boolean]
-  def intersecting_viewport?
+  def intersecting_viewport?(threshold: nil)
+    option_threshold = threshold || 0
     js = <<~JAVASCRIPT
-    async element => {
+    async (element, threshold) => {
       const visibleRatio = await new Promise(resolve => {
         const observer = new IntersectionObserver(entries => {
           resolve(entries[0].intersectionRatio);
@@ -464,11 +466,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         });
         observer.observe(element);
       });
-      return visibleRatio > 0;
+      if (threshold === 1) return visibleRatio === 1;
+      else return visibleRatio > threshold;
     }
     JAVASCRIPT
 
-    evaluate(js)
+    evaluate(js, option_threshold)
   end
 
   # @param quad [Array<Point>]
