@@ -292,6 +292,12 @@ RSpec.describe Puppeteer::Page do
 
       other_context.close
     end
+
+    it_fails_firefox 'should grant persistent-storage' do
+      expect(get_permission_for(page, 'persistent-storage')).to eq('prompt')
+      page.browser_context.override_permissions(server_empty_page, ['persistent-storage'])
+      expect(get_permission_for(page, "persistent-storage")).to eq("granted")
+    end
   end
 
   describe '#geolocation=' do
