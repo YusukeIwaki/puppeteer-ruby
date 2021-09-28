@@ -189,7 +189,7 @@ RSpec.describe Puppeteer::ElementHandle do
       expect { br.click }.to raise_error(/Node is either not visible or not an HTMLElement/)
     end
 
-    it 'should work with offset' do
+    it_fails_firefox 'should work with offset' do
       clicks = []
       page.expose_function('reportClick', -> (x, y) { clicks << [x, y] })
 
