@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v10.2.0
-- puppeteer-ruby version: 0.36.0
+- Puppeteer version: v10.4.0
+- puppeteer-ruby version: 0.37.0
 
 ## Puppeteer
 
@@ -136,6 +136,7 @@
 * waitForFileChooser => `#wait_for_file_chooser`
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
+* ~~waitForNetworkIdle~~
 * waitForRequest => `#wait_for_request`
 * waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`
