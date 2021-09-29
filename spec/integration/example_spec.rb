@@ -4,10 +4,23 @@ require 'spec_helper'
 require 'tmpdir'
 
 RSpec.describe 'example' do
+  def with_network_retry(max_retry: 2, timeout: 4, &block)
+    if max_retry <= 0
+      Timeout.timeout(timeout, &block)
+    else
+      begin
+        Timeout.timeout(timeout, &block)
+      rescue Timeout::Error
+        puts "Retry with { remaining: #{max_retry - 1}, timeout: #{timeout * 1.5} }"
+        with_network_retry(max_retry: max_retry - 1, timeout: timeout * 1.5, &block)
+      end
+    end
+  end
+
   it 'should take a screenshot' do
     skip if Puppeteer.env.ci? && !Puppeteer.env.windows?
 
-    page.goto('https://github.com/YusukeIwaki')
+    with_network_retry { page.goto('https://github.com/YusukeIwaki') }
     tmpdir = Dir.mktmpdir
     begin
       path = File.join(tmpdir, 'YusukeIwaki.png')
@@ -22,7 +35,7 @@ RSpec.describe 'example' do
     skip if Puppeteer.env.ci? && !Puppeteer.env.windows?
 
     page.viewport = Puppeteer::Viewport.new(width: 1200, height: 800, device_scale_factor: 2)
-    page.goto("https://github.com/YusukeIwaki")
+    with_network_retry { page.goto("https://github.com/YusukeIwaki") }
     page.wait_for_selector(".js-yearly-contributions")
     overlay = page.query_selector('.js-yearly-contributions')
 
@@ -52,7 +65,7 @@ RSpec.describe 'example' do
     skip if Puppeteer.env.ci? && !Puppeteer.env.windows?
 
     page.viewport = Puppeteer::Viewport.new(width: 1280, height: 800)
-    page.goto("https://github.com/", wait_until: 'domcontentloaded')
+    with_network_retry { page.goto("https://github.com/", wait_until: 'domcontentloaded') }
 
     form = page.query_selector("form.js-site-search-form")
     search_input = form.query_selector("input.header-search-input")
