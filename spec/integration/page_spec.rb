@@ -886,7 +886,7 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate('() => navigator.userAgent')).to include('iPhone')
     end
 
-    it 'should work with additional userAgentMetdata' do
+    it_fails_firefox 'should work with additional userAgentMetdata' do
       page.set_user_agent('MockBrowser',
         architecture: 'Mock1',
         mobile: false,
