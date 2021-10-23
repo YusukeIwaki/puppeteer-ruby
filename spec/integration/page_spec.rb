@@ -885,6 +885,40 @@ RSpec.describe Puppeteer::Page do
       page.user_agent = Puppeteer::Devices.iPhone_6.user_agent
       expect(page.evaluate('() => navigator.userAgent')).to include('iPhone')
     end
+
+    it_fails_firefox 'should work with additional userAgentMetdata' do
+      page.set_user_agent('MockBrowser',
+        architecture: 'Mock1',
+        mobile: false,
+        model: 'Mockbook',
+        platform: 'MockOS',
+        platformVersion: '3.1',
+      )
+
+      async_wait_for_request = resolvable_future do |f|
+        sinatra.get('/_empty.html') do
+          f.fulfill(request)
+          "EMPTY"
+        end
+      end
+      page.goto("#{server_prefix}/_empty.html")
+      request = await async_wait_for_request
+      expect(request.env['HTTP_USER_AGENT']).to eq('MockBrowser')
+
+      expect(page.evaluate('() => navigator.userAgentData.mobile')).to eq(false)
+      ua_data = page.evaluate(<<~JAVASCRIPT)
+      () => navigator.userAgentData.getHighEntropyValues([
+        'architecture',
+        'model',
+        'platform',
+        'platformVersion',
+      ])
+      JAVASCRIPT
+      expect(ua_data['architecture']).to eq('Mock1')
+      expect(ua_data['model']).to eq('Mockbook')
+      expect(ua_data['platform']).to eq('MockOS')
+      expect(ua_data['platformVersion']).to eq('3.1')
+    end
   end
 
   describe '#content=, set_content' do

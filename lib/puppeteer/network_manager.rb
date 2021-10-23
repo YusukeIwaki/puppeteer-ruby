@@ -142,9 +142,14 @@ class Puppeteer::NetworkManager
   end
 
   # @param user_agent [String]
-  def user_agent=(user_agent)
-    @client.send_message('Network.setUserAgentOverride', userAgent: user_agent)
+  # @param user_agent_metadata [Hash]
+  def set_user_agent(user_agent, user_agent_metadata = nil)
+    @client.send_message('Network.setUserAgentOverride', {
+      userAgent: user_agent,
+      userAgentMetadata: user_agent_metadata,
+    }.compact)
   end
+  alias_method :user_agent=, :set_user_agent
 
   def cache_enabled=(enabled)
     @user_cache_disabled = !enabled

@@ -461,37 +461,6 @@ class Puppeteer::Page
 
     nil
   end
-  # /**
-  #  * @param {string} name
-  #  * @param {Function} puppeteerFunction
-  #  */
-  # async exposeFunction(name, puppeteerFunction) {
-  #   if (this._pageBindings.has(name))
-  #     throw new Error(`Failed to add page binding with name ${name}: window['${name}'] already exists!`);
-  #   this._pageBindings.set(name, puppeteerFunction);
-
-  #   const expression = helper.evaluationString(addPageBinding, name);
-  #   await this._client.send('Runtime.addBinding', {name: name});
-  #   await this._client.send('Page.addScriptToEvaluateOnNewDocument', {source: expression});
-  #   await Promise.all(this.frames().map(frame => frame.evaluate(expression).catch(debugError)));
-
-  #   function addPageBinding(bindingName) {
-  #     const binding = window[bindingName];
-  #     window[bindingName] = (...args) => {
-  #       const me = window[bindingName];
-  #       let callbacks = me['callbacks'];
-  #       if (!callbacks) {
-  #         callbacks = new Map();
-  #         me['callbacks'] = callbacks;
-  #       }
-  #       const seq = (me['lastSeq'] || 0) + 1;
-  #       me['lastSeq'] = seq;
-  #       const promise = new Promise((resolve, reject) => callbacks.set(seq, {resolve, reject}));
-  #       binding(JSON.stringify({name: bindingName, seq, args}));
-  #       return promise;
-  #     };
-  #   }
-  # }
 
   # @param username [String?]
   # @param password [String?]
@@ -505,9 +474,11 @@ class Puppeteer::Page
   end
 
   # @param user_agent [String]
-  def user_agent=(user_agent)
-    @frame_manager.network_manager.user_agent = user_agent
+  # @param user_agent_metadata [Hash]
+  def set_user_agent(user_agent, user_agent_metadata = nil)
+    @frame_manager.network_manager.set_user_agent(user_agent, user_agent_metadata)
   end
+  alias_method :user_agent=, :set_user_agent
 
   def metrics
     response = @client.send_message('Performance.getMetrics')
