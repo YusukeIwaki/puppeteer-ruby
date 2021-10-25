@@ -35,9 +35,9 @@ module Puppeteer::Launcher
       @channel = options[:channel]
       @executable_path = options[:executable_path]
       @ignore_default_args = options[:ignore_default_args] || false
-      @handle_SIGINT = options[:handle_SIGINT] || true
-      @handle_SIGTERM = options[:handle_SIGTERM] || true
-      @handle_SIGHUP = options[:handle_SIGHUP] || true
+      @handle_SIGINT = options.fetch(:handle_SIGINT, true)
+      @handle_SIGTERM = options.fetch(:handle_SIGTERM, true)
+      @handle_SIGHUP = options.fetch(:handle_SIGHUP, true)
       @timeout = options[:timeout] || 30000
       @dumpio = options[:dumpio] || false
       @env = options[:env] || ENV
