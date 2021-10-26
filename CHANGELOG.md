@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.0...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.1...master)]
 
 - xxx
+
+### 0.37.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.0...0.37.1)]
+
+Bugfix:
+
+- Fix handle_SIGINT, handle_SIGTERM, handle_SIGHUP options to work with `false` value specified.
 
 ### 0.37.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.36.0...0.37.0)]
 
