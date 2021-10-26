@@ -94,7 +94,7 @@ class Puppeteer::BrowserRunner
         FileUtils.rm_rf(@temp_directory)
       end
     }
-    trap(:EXIT) do
+    at_exit do
       kill
     end
 
