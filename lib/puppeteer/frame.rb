@@ -28,7 +28,7 @@ class Puppeteer::Frame
   # @param rederer [String]
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
-  # @return [Puppeteer::Response]
+  # @return [Puppeteer::HTTPResponse]
   def goto(url, referer: nil, timeout: nil, wait_until: nil)
     @frame_manager.navigate_frame(self, url, referer: referer, timeout: timeout, wait_until: wait_until)
   end

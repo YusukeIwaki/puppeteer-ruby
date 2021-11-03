@@ -1,4 +1,4 @@
-class Puppeteer::Request
+class Puppeteer::HTTPRequest
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
 
@@ -16,7 +16,7 @@ class Puppeteer::Request
       @request.instance_variable_get(:@interception_id)
     end
 
-    # @param response [Puppeteer::Response]
+    # @param response [Puppeteer::HTTPResponse]
     def response=(response)
       @request.instance_variable_set(:@response, response)
     end

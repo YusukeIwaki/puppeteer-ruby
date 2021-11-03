@@ -82,7 +82,7 @@ class Puppeteer::FrameManager
   # @param frame [Puppeteer::Frame]
   # @param url [String]
   # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
-  # @return [Puppeteer::Response]
+  # @return [Puppeteer::HTTPResponse]
   def navigate_frame(frame, url, referer: nil, timeout: nil, wait_until: nil)
     assert_no_legacy_navigation_options(wait_until: wait_until)
 
@@ -132,7 +132,7 @@ class Puppeteer::FrameManager
 
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
-  # @return [Puppeteer::Response]
+  # @return [Puppeteer::HTTPResponse]
   def wait_for_frame_navigation(frame, timeout: nil, wait_until: nil)
     assert_no_legacy_navigation_options(wait_until: wait_until)
 

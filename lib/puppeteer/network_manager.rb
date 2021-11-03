@@ -251,7 +251,7 @@ class Puppeteer::NetworkManager
       end
     end
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::Request.new(@client, frame, interception_id, @user_request_interception_enabled, event, redirect_chain)
+    request = Puppeteer::HTTPRequest.new(@client, frame, interception_id, @user_request_interception_enabled, event, redirect_chain)
     @request_id_to_request[event['requestId']] = request
     emit_event(NetworkManagerEmittedEvents::Request, request)
   end
@@ -262,13 +262,13 @@ class Puppeteer::NetworkManager
     end
   end
 
-  # @param request [Puppeteer::Request]
+  # @param request [Puppeteer::HTTPRequest]
   # @param response_payload [Hash]
   private def handle_request_redirect(request, response_payload)
-    response = Puppeteer::Response.new(@client, request, response_payload)
+    response = Puppeteer::HTTPResponse.new(@client, request, response_payload)
     request.internal.response = response
     request.internal.redirect_chain << request
-    response.internal.body_loaded_promise.reject(Puppeteer::Response::Redirected.new)
+    response.internal.body_loaded_promise.reject(Puppeteer::HTTPResponse::Redirected.new)
     @request_id_to_request.delete(request.internal.request_id)
     @attempted_authentications.delete(request.internal.interception_id)
     emit_event(NetworkManagerEmittedEvents::Response, response)
@@ -281,7 +281,7 @@ class Puppeteer::NetworkManager
     # FileUpload sends a response without a matching request.
     return unless request
 
-    response = Puppeteer::Response.new(@client, request, event['response'])
+    response = Puppeteer::HTTPResponse.new(@client, request, event['response'])
     request.internal.response = response
     emit_event(NetworkManagerEmittedEvents::Response, response)
   end

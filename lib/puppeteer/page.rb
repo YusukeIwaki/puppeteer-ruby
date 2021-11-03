@@ -638,7 +638,7 @@ class Puppeteer::Page
 
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
-  # @return [Puppeteer::Response]
+  # @return [Puppeteer::HTTPResponse]
   def reload(timeout: nil, wait_until: nil)
     wait_for_navigation(timeout: timeout, wait_until: wait_until) do
       @client.send_message('Page.reload')
@@ -722,7 +722,7 @@ class Puppeteer::Page
   #  wait_for_request(predicate: -> (req){ req.url.start_with?('https://example.com/search') })
   #
   # @param url [String]
-  # @param predicate [Proc(Puppeteer::Request -> Boolean)]
+  # @param predicate [Proc(Puppeteer::HTTPRequest -> Boolean)]
   define_async_method :async_wait_for_request
 
   def wait_for_response(url: nil, predicate: nil, timeout: nil)
@@ -748,7 +748,7 @@ class Puppeteer::Page
   # @!method async_wait_for_response(url: nil, predicate: nil, timeout: nil)
   #
   # @param url [String]
-  # @param predicate [Proc(Puppeteer::Request -> Boolean)]
+  # @param predicate [Proc(Puppeteer::HTTPRequest -> Boolean)]
   define_async_method :async_wait_for_response
 
   # @param timeout [number|nil]
