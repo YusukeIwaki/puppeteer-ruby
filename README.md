@@ -25,7 +25,7 @@ And then execute:
 ### Capture a site
 
 ```ruby
-require 'puppeteer-ruby'
+require 'puppeteer'
 
 Puppeteer.launch(headless: false) do |browser|
   page = browser.new_page
@@ -34,12 +34,12 @@ Puppeteer.launch(headless: false) do |browser|
 end
 ```
 
-NOTE: `require 'puppeteer-ruby'` is not necessary in Rails.
+NOTE: `require 'puppeteer'` is not necessary in Rails.
 
 ### Simple scraping
 
 ```ruby
-require 'puppeteer-ruby'
+require 'puppeteer'
 
 Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=1280,800']) do |browser|
   page = browser.new_page
@@ -67,7 +67,7 @@ end
 ### Evaluate JavaScript
 
 ```ruby
-require 'puppeteer-ruby'
+require 'puppeteer'
 
 Puppeteer.launch do |browser|
   page = browser.new_page
