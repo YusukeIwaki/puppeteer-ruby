@@ -88,7 +88,7 @@ class Puppeteer::LifecycleWatcher
     check_lifecycle_complete
   end
 
-  # @param [Puppeteer::Request] request
+  # @param [Puppeteer::HTTPRequest] request
   def handle_request(request)
     return if request.frame != @frame || !request.navigation_request?
     @navigation_request = request
@@ -103,7 +103,7 @@ class Puppeteer::LifecycleWatcher
     check_lifecycle_complete
   end
 
-  # @return [Puppeteer::Response]
+  # @return [Puppeteer::HTTPResponse]
   def navigation_response
     if_present(@navigation_request) do |request|
       request.response

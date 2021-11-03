@@ -1,6 +1,6 @@
 require 'json'
 
-class Puppeteer::Response
+class Puppeteer::HTTPResponse
   include Puppeteer::IfPresent
 
   class Redirected < StandardError
@@ -29,7 +29,7 @@ class Puppeteer::Response
   end
 
   # @param client [Puppeteer::CDPSession]
-  # @param request [Puppeteer::Request]
+  # @param request [Puppeteer::HTTPRequest]
   # @param response_payload [Hash]
   def initialize(client, request, response_payload)
     @client = client

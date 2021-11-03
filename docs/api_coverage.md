@@ -295,43 +295,43 @@
 * type => `#type_text`
 * uploadFile => `#upload_file`
 
-## ~~HTTPRequest~~
+## HTTPRequest
 
-* ~~abort~~
+* abort
 * ~~abortErrorReason~~
-* ~~continue~~
+* continue
 * ~~continueRequestOverrides~~
 * ~~enqueueInterceptAction~~
-* ~~failure~~
+* failure
 * ~~finalizeInterceptions~~
-* ~~frame~~
-* ~~headers~~
-* ~~isNavigationRequest~~
-* ~~method~~
-* ~~postData~~
-* ~~redirectChain~~
-* ~~resourceType~~
-* ~~respond~~
-* ~~response~~
+* frame
+* headers
+* isNavigationRequest => `#navigation_request?`
+* method
+* postData => `#post_data`
+* redirectChain => `#redirect_chain`
+* resourceType => `#resource_type`
+* respond
+* response
 * ~~responseForRequest~~
-* ~~url~~
+* url
 
-## ~~HTTPResponse~~
+## HTTPResponse
 
-* ~~buffer~~
-* ~~frame~~
+* buffer
+* frame
 * ~~fromCache~~
 * ~~fromServiceWorker~~
-* ~~headers~~
-* ~~json~~
+* headers
+* json
 * ~~ok~~
-* ~~remoteAddress~~
-* ~~request~~
-* ~~securityDetails~~
-* ~~status~~
-* ~~statusText~~
-* ~~text~~
-* ~~url~~
+* remoteAddress => `#remote_address`
+* request
+* securityDetails => `#security_details`
+* status
+* statusText => `#status_text`
+* text
+* url
 
 ## ~~SecurityDetails~~
 
