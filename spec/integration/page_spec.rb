@@ -981,7 +981,7 @@ RSpec.describe Puppeteer::Page do
 
     it 'should work fast enough' do
       Timeout.timeout(5) do
-        50.times { |i| page.content = "<div>yo - #{i}</div>" }
+        25.times { |i| page.content = "<div>yo - #{i}</div>" }
       end
     end
 
