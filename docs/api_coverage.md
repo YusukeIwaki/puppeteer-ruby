@@ -298,12 +298,12 @@
 ## HTTPRequest
 
 * abort
-* ~~abortErrorReason~~
+* abortErrorReason => `#abort_error_reason`
 * continue
-* ~~continueRequestOverrides~~
-* ~~enqueueInterceptAction~~
+* continueRequestOverrides => `#continue_request_overrides`
+* enqueueInterceptAction => `#enqueue_intercept_action`
 * failure
-* ~~finalizeInterceptions~~
+* finalizeInterceptions => `#finalize_interceptions`
 * frame
 * headers
 * isNavigationRequest => `#navigation_request?`
@@ -313,7 +313,7 @@
 * resourceType => `#resource_type`
 * respond
 * response
-* ~~responseForRequest~~
+* responseForRequest => `#response_for_request`
 * url
 
 ## HTTPResponse
