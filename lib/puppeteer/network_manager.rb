@@ -254,6 +254,11 @@ class Puppeteer::NetworkManager
     request = Puppeteer::HTTPRequest.new(@client, frame, interception_id, @user_request_interception_enabled, event, redirect_chain)
     @request_id_to_request[event['requestId']] = request
     emit_event(NetworkManagerEmittedEvents::Request, request)
+    begin
+      request.finalize_interceptions
+    rescue => err
+      debug_puts(err)
+    end
   end
 
   private def handle_request_served_from_cache(event)

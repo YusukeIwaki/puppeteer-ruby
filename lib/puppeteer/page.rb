@@ -153,6 +153,12 @@ class Puppeteer::Page
       raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
     end
 
+    if event_name.to_s == 'request'
+      super('request') do |req|
+        req.enqueue_intercept_action(-> { block.call(req) })
+      end
+    end
+
     super(event_name.to_s, &block)
   end
 
