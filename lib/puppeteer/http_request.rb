@@ -223,7 +223,6 @@ class Puppeteer::HTTPRequest
         return
       end
       @current_strategy = :continue
-      return
     end
   end
 
@@ -274,7 +273,7 @@ class Puppeteer::HTTPRequest
       status: status,
       headers: headers,
       content_type: content_type,
-      body: body
+      body: body,
     }
 
     if @current_priority.nil? || priority > @current_priority
@@ -288,7 +287,6 @@ class Puppeteer::HTTPRequest
         return
       end
       @current_strategy = :respond
-      return
     end
   end
 
@@ -357,7 +355,6 @@ class Puppeteer::HTTPRequest
     if @current_priority.nil? || priority > @current_priority
       @current_strategy = :abort
       @current_priority = priority
-      return
     end
   end
 
