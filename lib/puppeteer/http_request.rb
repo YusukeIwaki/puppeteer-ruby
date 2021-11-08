@@ -56,6 +56,12 @@ class Puppeteer::HTTPRequest
     @post_data = event['request']['postData']
     @frame = frame
     @redirect_chain = redirect_chain
+    @continue_request_overrides = {}
+    @current_strategy = 'none'
+    @current_priority = nil
+    @intercept_actions = []
+    @initiator = event['initiator']
+
     @headers = {}
     event['request']['headers'].each do |key, value|
       @headers[key.downcase] = value
@@ -67,6 +73,76 @@ class Puppeteer::HTTPRequest
 
   attr_reader :internal
   attr_reader :url, :resource_type, :method, :post_data, :headers, :response, :frame
+
+  private def assert_interception_allowed
+    unless @allow_interception
+      raise InterceptionNotEnabledError.new
+    end
+  end
+
+  private def assert_interception_not_handled
+    if @interception_handled
+      raise AlreadyHandledError.new
+    end
+  end
+
+  # @returns the `ContinueRequestOverrides` that will be used
+  # if the interception is allowed to continue (ie, `abort()` and
+  # `respond()` aren't called).
+  def continue_request_overrides
+    assert_interception_allowed
+    @continue_request_overrides
+  end
+
+  # @returns The `ResponseForRequest` that gets used if the
+  # interception is allowed to respond (ie, `abort()` is not called).
+  def response_for_request
+    assert_interception_allowed
+    @response_for_request
+  end
+
+  # @returns the most recent reason for aborting the request
+  def abort_error_reason
+    assert_interception_allowed
+    @abort_error_reason
+  end
+
+  # @returns An array of the current intercept resolution strategy and priority
+  # `[strategy,priority]`. Strategy is one of: `abort`, `respond`, `continue`,
+  #  `disabled`, `none`, or `already-handled`.
+  def intercept_resolution
+    if !@allow_interception
+      ['disabled']
+    elsif @interception_handled
+      ['already-handled']
+    else
+      [@current_strategy, @current_priority]
+    end
+  end
+
+  # Adds an async request handler to the processing queue.
+  # Deferred handlers are not guaranteed to execute in any particular order,
+  # but they are guarnateed to resolve before the request interception
+  # is finalized.
+  #
+  # @param pending_handler [Proc]
+  def enqueue_intercept_action(pending_handler)
+    @intercept_actions << pending_handler
+  end
+
+  # Awaits pending interception handlers and then decides how to fulfill
+  # the request interception.
+  def finalize_interceptions
+    @intercept_actions.each(&:call)
+    case @intercept_resolution
+    when :abort
+      abort_impl(**@abort_error_reason)
+    when :respond
+      respond_impl(**@response_for_request)
+    when :continue
+      continue_impl(@continue_request_overrides)
+    end
+  end
 
   def navigation_request?
     @is_navigation_request
@@ -116,24 +192,43 @@ class Puppeteer::HTTPRequest
   #   end
   #
   # @param error_code [String|Symbol]
-  def continue(url: nil, method: nil, post_data: nil, headers: nil)
+  def continue(url: nil, method: nil, post_data: nil, headers: nil, priority: nil)
     # Request interception is not supported for data: urls.
     return if @url.start_with?('data:')
 
-    unless @allow_interception
-      raise InterceptionNotEnabledError.new
-    end
-    if @interception_handled
-      raise AlreadyHandledError.new
-    end
-    @interception_handled = true
+    assert_interception_allowed
+    assert_interception_not_handled
 
     overrides = {
       url: url,
       method: method,
-      post_data: post_data,
+      postData: post_data,
       headers: headers_to_array(headers),
     }.compact
+
+    if priority.nil?
+      continue_impl(overrides)
+      return
+    end
+
+    @continue_request_overrides = overrides
+    if @current_priority.nil? || priority > @current_priority
+      @current_strategy = :continue
+      @current_priority = priority
+      return
+    end
+
+    if priority == @current_priority
+      if @current_strategy == :abort || @current_strategy == :respond
+        return
+      end
+      @current_strategy = :continue
+    end
+  end
+
+  private def continue_impl(overrides)
+    @interception_handled = true
+
     begin
       @client.send_message('Fetch.continueRequest',
         requestId: @interception_id,
@@ -162,16 +257,40 @@ class Puppeteer::HTTPRequest
   # @param headers [Hash<String, String>]
   # @param content_type [String]
   # @param body [String]
-  def respond(status: nil, headers: nil, content_type: nil, body: nil)
+  def respond(status: nil, headers: nil, content_type: nil, body: nil, priority: nil)
     # Mocking responses for dataURL requests is not currently supported.
     return if @url.start_with?('data:')
 
-    unless @allow_interception
-      raise InterceptionNotEnabledError.new
+    assert_interception_allowed
+    assert_interception_not_handled
+
+    if priority.nil?
+      respond_impl(status: status, headers: headers, content_type: content_type, body: body)
+      return
     end
-    if @interception_handled
-      raise AlreadyHandledError.new
+
+    @response_for_request = {
+      status: status,
+      headers: headers,
+      content_type: content_type,
+      body: body,
+    }
+
+    if @current_priority.nil? || priority > @current_priority
+      @current_strategy = :respond
+      @current_priority = priority
+      return
     end
+
+    if priority == @current_priority
+      if @current_strategy == :abort
+        return
+      end
+      @current_strategy = :respond
+    end
+  end
+
+  private def respond_impl(status: nil, headers: nil, content_type: nil, body: nil)
     @interception_handled = true
 
     mock_response_headers = {}
@@ -191,6 +310,7 @@ class Puppeteer::HTTPRequest
       responseHeaders: headers_to_array(mock_response_headers),
       body: if_present(body) { |mock_body| Base64.strict_encode64(mock_body) },
     }.compact
+
     begin
       @client.send_message('Fetch.fulfillRequest',
         requestId: @interception_id,
@@ -216,7 +336,7 @@ class Puppeteer::HTTPRequest
   #   end
   #
   # @param error_code [String|Symbol]
-  def abort(error_code: :failed)
+  def abort(error_code: :failed, priority: nil)
     # Request interception is not supported for data: urls.
     return if @url.start_with?('data:')
 
@@ -224,12 +344,21 @@ class Puppeteer::HTTPRequest
     unless error_reason
       raise ArgumentError.new("Unknown error code: #{error_code}")
     end
-    unless @allow_interception
-      raise InterceptionNotEnabledError.new
+    assert_interception_allowed
+    assert_interception_not_handled
+
+    if priority.nil?
+      abort_impl(error_reason)
     end
-    if @interception_handled
-      raise AlreadyHandledError.new
+    @abort_error_reason = error_reason
+
+    if @current_priority.nil? || priority > @current_priority
+      @current_strategy = :abort
+      @current_priority = priority
     end
+  end
+
+  private def abort_impl(error_reason)
     @interception_handled = true
 
     begin
