@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 # https://github.com/puppeteer/puppeteer/blob/e2e98376b9a3fa9a2501ddc86ff6407f3b59887d/docs/api.md#cooperative-intercept-mode-and-legacy-intercept-mode
-RSpec.describe 'request interception example' do
+RSpec.describe 'request interception example', skip: Puppeteer.env.firefox? do
   example 'Legacy Mode prevails and the request is aborted', sinatra: true do
     # In this example, Legacy Mode prevails and the request is aborted immediately
     # because at least one handler omits priority when resolving the intercept:
