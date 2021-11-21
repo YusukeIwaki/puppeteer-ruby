@@ -674,11 +674,12 @@ class Puppeteer::Page
     @wait_for_network_manager_event_listener_ids[event_name] =
       @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
         if predicate.call(event_target)
-          promise.fulfill(nil)
+          promise.fulfill(event_target)
         end
       end
 
     begin
+      # Timeout.timeout(0) means "no limit" for timeout.
       Timeout.timeout(option_timeout / 1000.0) do
         await_any(promise, session_close_promise)
       end
