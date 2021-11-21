@@ -91,4 +91,17 @@ RSpec.describe 'example' do
   it 'should evaluate function returning object' do
     expect(page.evaluate('() => { return { a: 3, b: 4 } }')).to eq({ 'a' => 3, 'b' => 4 })
   end
+
+  it 'should work with waitForFunction with timeout: 0' do
+    page.content = '<body>Now Loading...</body>'
+    page.wait_for_function('() => document.querySelector("body").innerText.includes("Something")', timeout: 0) do
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        setTimeout(() => {
+          document.body.innerHTML = "<h1>It works!</h1><p>Something</p>"
+        }, 500)
+      }
+      JAVASCRIPT
+    end
+  end
 end

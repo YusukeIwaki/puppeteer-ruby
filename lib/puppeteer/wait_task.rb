@@ -37,7 +37,7 @@ class Puppeteer::WaitTask
 
     # Since page navigation requires us to re-install the pageScript, we should track
     # timeout on our end.
-    if timeout
+    if timeout && timeout > 0
       timeout_error = TimeoutError.new(title: title, timeout: timeout)
       Concurrent::Promises.schedule(timeout / 1000.0) { terminate(timeout_error) unless @timeout_cleared }
     end
