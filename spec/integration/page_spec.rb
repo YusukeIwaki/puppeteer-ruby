@@ -615,73 +615,63 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describe('Page.waitForRequest', function () {
-  #   it('should work', async () => {
-  #     const { page, server } = getTestState();
+  describe 'Page.waitForRequest', sinatra: true do
+    it 'should work' do
+      page.goto(server_empty_page)
+      request = page.wait_for_request(url: "#{server_prefix}/digits/2.png") do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(request.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [request] = await Promise.all([
-  #       page.waitForRequest(server.PREFIX + '/digits/2.png'),
-  #       page.evaluate(() => {
-  #         fetch('/digits/1.png');
-  #         fetch('/digits/2.png');
-  #         fetch('/digits/3.png');
-  #       }),
-  #     ]);
-  #     expect(request.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  #   it('should work with predicate', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with predicate' do
+      page.goto(server_empty_page)
+      predicate = ->(req) { req.url == "#{server_prefix}/digits/2.png" }
+      request = page.wait_for_request(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(request.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [request] = await Promise.all([
-  #       page.waitForRequest(
-  #         (request) => request.url() === server.PREFIX + '/digits/2.png'
-  #       ),
-  #       page.evaluate(() => {
-  #         fetch('/digits/1.png');
-  #         fetch('/digits/2.png');
-  #         fetch('/digits/3.png');
-  #       }),
-  #     ]);
-  #     expect(request.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  #   it('should respect timeout', async () => {
-  #     const { page, puppeteer } = getTestState();
+    it 'should respect timeout' do
+      page.goto(server_empty_page)
+      expect { page.wait_for_request(predicate: ->(_) { false }, timeout: 1) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
 
-  #     let error = null;
-  #     await page
-  #       .waitForRequest(() => false, { timeout: 1 })
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-  #   });
-  #   it('should respect default timeout', async () => {
-  #     const { page, puppeteer } = getTestState();
+    it 'should respect default timeout' do
+      page.goto(server_empty_page)
+      page.default_timeout = 1
+      expect { page.wait_for_request(predicate: ->(_) { false }) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
 
-  #     let error = null;
-  #     page.setDefaultTimeout(1);
-  #     await page
-  #       .waitForRequest(() => false)
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-  #   });
-  #   it('should work with no timeout', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [request] = await Promise.all([
-  #       page.waitForRequest(server.PREFIX + '/digits/2.png', { timeout: 0 }),
-  #       page.evaluate(() =>
-  #         setTimeout(() => {
-  #           fetch('/digits/1.png');
-  #           fetch('/digits/2.png');
-  #           fetch('/digits/3.png');
-  #         }, 50)
-  #       ),
-  #     ]);
-  #     expect(request.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  # });
+    it 'should work with no timeout' do
+      page.goto(server_empty_page)
+      request = page.wait_for_request(url: "#{server_prefix}/digits/2.png", timeout: 0) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(request.url).to eq("#{server_prefix}/digits/2.png")
+    end
+  end
 
   # describe('Page.waitForResponse', function () {
   #   it('should work', async () => {
