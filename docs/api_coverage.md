@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v10.4.0
-- puppeteer-ruby version: 0.37.1
+- Puppeteer version: v11.0.0
+- puppeteer-ruby version: 0.37.2
 
 ## Puppeteer
 
@@ -134,6 +134,7 @@
 * viewport
 * ~~waitFor~~
 * waitForFileChooser => `#wait_for_file_chooser`
+* ~~waitForFrame~~
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
 * ~~waitForNetworkIdle~~
@@ -226,6 +227,7 @@
 * goto
 * hover
 * isDetached => `#detached?`
+* ~~isOOPFrame~~
 * name
 * parentFrame => `#parent_frame`
 * select
@@ -306,6 +308,7 @@
 * finalizeInterceptions => `#finalize_interceptions`
 * frame
 * headers
+* ~~initiator~~
 * isNavigationRequest => `#navigation_request?`
 * method
 * postData => `#post_data`
@@ -357,6 +360,7 @@
 
 * connection
 * detach
+* ~~id~~
 * send
 
 ## Coverage

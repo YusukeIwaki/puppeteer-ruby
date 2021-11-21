@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.1...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.2...master)]
 
 - xxx
+
+### 0.37.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.1...0.37.2)]
+
+Bugfix:
+
+- `timeout: 0` did set the timeout value to zero. Now it disables the timeout as expected.
 
 ### 0.37.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.0...0.37.1)]
 
