@@ -42,7 +42,7 @@ module Puppeteer::Launcher
         if @launch_options.channel
           executable_path_for_channel(@launch_options.channel.to_s)
         else
-          @launch_options.executable_path || executable_path_for_channel('nightly')
+          @launch_options.executable_path || fallback_executable_path
         end
       runner = Puppeteer::BrowserRunner.new(firefox_executable, firefox_arguments, temporary_user_data_dir)
       runner.start(
@@ -138,7 +138,15 @@ module Puppeteer::Launcher
       if channel
         executable_path_for_channel(channel.to_s)
       else
+        fallback_executable_path
+      end
+    end
+
+    private def fallback_executable_path
+      if Puppeteer.env.windows? || Puppeteer.env.darwin?
         executable_path_for_channel('firefox')
+      else
+        Puppeteer::ExecutablePathFinder.new('firefox').find_first
       end
     end
 
