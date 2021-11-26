@@ -221,18 +221,7 @@ module Puppeteer::Launcher
     end
 
     private def fallback_executable_path
-      if Puppeteer.env.windows? || Puppeteer.env.darwin?
-        executable_path_for_channel('chrome')
-      else
-        Puppeteer::ExecutablePathFinder.new(
-          'google-chrome-stable',
-          'google-chrome',
-          'chrome',
-          'chromium-freeworld',
-          'chromium-browser',
-          'chromium',
-        ).find_first
-      end
+      executable_path_for_channel('chrome')
     end
 
     CHROMIUM_CHANNELS = {
@@ -251,7 +240,16 @@ module Puppeteer::Launcher
         'msedge' => '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
       },
       linux: {
-        'chrome' => '/opt/google/chrome/chrome',
+        'chrome' => -> {
+          Puppeteer::ExecutablePathFinder.new(
+            'google-chrome-stable',
+            'google-chrome',
+            'chrome',
+            'chromium-freeworld',
+            'chromium-browser',
+            'chromium',
+          ).find_first
+        },
         'chrome-beta' => '/opt/google/chrome-beta/chrome',
         'chrome-dev' => '/opt/google/chrome-unstable/chrome',
       },
@@ -269,6 +267,10 @@ module Puppeteer::Launcher
         end
 
       chrome_path = chrome_path_map[channel]
+      if chrome_path.is_a?(Proc)
+        chrome_path = chrome_path.call
+      end
+
       unless chrome_path
         raise ArgumentError.new("Invalid channel: '#{channel}'. Allowed channel is #{chrome_path_map.keys}")
       end
