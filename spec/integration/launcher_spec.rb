@@ -461,10 +461,6 @@ RSpec.describe Puppeteer::Launcher do
       # firefox is not installed in /usr/bin/ in CI
       expect(File.exist?(executable_path)).to eq(true)
     end
-
-    it 'is not a symbolic link' do
-      expect(File.realpath(executable_path)).to eq(executable_path)
-    end
   end
 
   describe 'Browser target events', puppeteer: :browser do

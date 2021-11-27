@@ -18,13 +18,11 @@ jobs:
       - name: RSpec
         run: bundle exec rspec --profile 10 --failure-exit-code 0 --format documentation spec/integration/
         env:
-          PUPPETEER_EXECUTABLE_PATH_RSPEC: /usr/bin/chromium-browser
           PUPPETEER_NO_SANDBOX_RSPEC: true
         timeout-minutes: 20
       - name: RSpec (Retry)
         run: bundle exec rspec --profile 10 --only-failures --format documentation spec/integration/
         env:
           DEBUG: 1
-          PUPPETEER_EXECUTABLE_PATH_RSPEC: /usr/bin/chromium-browser
           PUPPETEER_NO_SANDBOX_RSPEC: true
         timeout-minutes: 5

@@ -42,7 +42,7 @@ module Puppeteer::Launcher
         if @launch_options.channel
           executable_path_for_channel(@launch_options.channel.to_s)
         else
-          @launch_options.executable_path || executable_path_for_channel('nightly')
+          @launch_options.executable_path || fallback_executable_path
         end
       runner = Puppeteer::BrowserRunner.new(firefox_executable, firefox_arguments, temporary_user_data_dir)
       runner.start(
@@ -138,14 +138,18 @@ module Puppeteer::Launcher
       if channel
         executable_path_for_channel(channel.to_s)
       else
-        executable_path_for_channel('firefox')
+        fallback_executable_path
       end
+    end
+
+    private def fallback_executable_path
+      executable_path_for_channel('firefox')
     end
 
     FIREFOX_EXECUTABLE_PATHS = {
       windows: "#{ENV['PROGRAMFILES']}\\Firefox Nightly\\firefox.exe",
       darwin: '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
-      linux: '/usr/bin/firefox',
+      linux: -> { Puppeteer::ExecutablePathFinder.new('firefox').find_first },
     }.freeze
 
     # @param channel [String]
@@ -163,6 +167,9 @@ module Puppeteer::Launcher
         else
           FIREFOX_EXECUTABLE_PATHS[:linux]
         end
+      if firefox_path.is_a?(Proc)
+        firefox_path = firefox_path.call
+      end
 
       unless File.exist?(firefox_path)
         raise "Nightly version of Firefox is not installed on this system.\nExpected path: #{firefox_path}"
