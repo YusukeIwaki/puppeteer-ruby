@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.2...master)]
+### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.3...master)]
 
 - xxx
+
+### 0.37.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.2...0.37.3)]
+
+Improvement:
+
+- Improve the logic of detection of Chrome/Firefox executable path on Linux.
 
 ### 0.37.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.1...0.37.2)]
 
