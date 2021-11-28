@@ -41,7 +41,7 @@ NOTE: `require 'puppeteer-ruby'` is not necessary in Rails.
 ```ruby
 require 'puppeteer-ruby'
 
-Puppeteer.launch(headless: false, slow_mo: 50, args: ['--guest', '--window-size=1280,800']) do |browser|
+Puppeteer.launch(headless: false, slow_mo: 50, args: ['--window-size=1280,800']) do |browser|
   page = browser.new_page
   page.viewport = Puppeteer::Viewport.new(width: 1280, height: 800)
   page.goto("https://github.com/", wait_until: 'domcontentloaded')
