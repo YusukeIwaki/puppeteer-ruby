@@ -19,4 +19,5 @@
 /.rakeTasks
 
 diff-*.png
+*.github.pdf
 .envrc

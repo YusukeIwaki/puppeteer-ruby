@@ -323,7 +323,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  def screenshot(options = {})
+  def screenshot(type: nil, path: nil, full_page: nil, clip: nil, quality: nil, omit_background: nil, encoding: nil)
     needs_viewport_reset = false
 
     box = bounding_box
@@ -358,14 +358,16 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     page_x = layout_metrics["layoutViewport"]["pageX"]
     page_y = layout_metrics["layoutViewport"]["pageY"]
 
-    clip = {
-      x: page_x + box.x,
-      y: page_y + box.y,
-      width: box.width,
-      height: box.height,
-    }
+    if clip.nil?
+      clip = {
+        x: page_x + box.x,
+        y: page_y + box.y,
+        width: box.width,
+        height: box.height,
+      }
+    end
 
-    @page.screenshot({ clip: clip }.merge(options))
+    @page.screenshot(type: type, path: path, full_page: full_page, clip: clip, quality: quality, omit_background: omit_background, encoding: encoding)
   ensure
     if needs_viewport_reset
       @page.viewport = viewport
