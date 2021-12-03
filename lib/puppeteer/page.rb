@@ -50,19 +50,26 @@ class Puppeteer::Page
     @workers = {}
     @user_drag_interception_enabled = false
 
-    @client.on_event('Target.attachedToTarget') do |event|
-      if event['targetInfo']['type'] != 'worker'
+    @client.add_event_listener('Target.attachedToTarget') do |event|
+      if event['targetInfo']['type'] != 'worker' && event['targetInfo']['type'] != 'iframe'
         # If we don't detach from service workers, they will never die.
+        # We still want to attach to workers for emitting events.
+        # We still want to attach to iframes so sessions may interact with them.
+        # We detach from all other types out of an abundance of caution.
+        # See https://source.chromium.org/chromium/chromium/src/+/main:content/browser/devtools/devtools_agent_host_impl.cc?ss=chromium&q=f:devtools%20-f:out%20%22::kTypePage%5B%5D%22
+        # for the complete list of available types.
         @client.async_send_message('Target.detachFromTarget', sessionId: event['sessionId'])
         next
       end
 
-      session = Puppeteer::Connection.from_session(@client).session(event['sessionId']) # rubocop:disable Lint/UselessAssignment
-      #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
-      #   this._workers.set(event.sessionId, worker);
-      #   this.emit(PageEmittedEvents::WorkerCreated, worker);
+      if event['targetInfo']['type'] == 'worker'
+        session = Puppeteer::Connection.from_session(@client).session(event['sessionId']) # rubocop:disable Lint/UselessAssignment
+        #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
+        #   this._workers.set(event.sessionId, worker);
+        #   this.emit(PageEmittedEvents::WorkerCreated, worker);
+      end
     end
-    @client.on_event('Target.detachedFromTarget') do |event|
+    @client.add_event_listener('Target.detachedFromTarget') do |event|
       session_id = event['sessionId']
       worker = @workers[session_id]
       next unless worker
@@ -103,10 +110,10 @@ class Puppeteer::Page
     @client.on_event('Page.loadEventFired') do |event|
       emit_event(PageEmittedEvents::Load)
     end
-    @client.on('Runtime.consoleAPICalled') do |event|
+    @client.add_event_listener('Runtime.consoleAPICalled') do |event|
       handle_console_api(event)
     end
-    @client.on('Runtime.bindingCalled') do |event|
+    @client.add_event_listener('Runtime.bindingCalled') do |event|
       handle_binding_called(event)
     end
     @client.on_event('Page.javascriptDialogOpening') do |event|
@@ -518,7 +525,7 @@ class Puppeteer::Page
       return
     end
 
-    context = @frame_manager.execution_context_by_id(event['executionContextId'])
+    context = @frame_manager.execution_context_by_id(event['executionContextId'], @client)
     values = event['args'].map do |arg|
       remote_object = Puppeteer::RemoteObject.new(arg)
       Puppeteer::JSHandle.create(context: context, remote_object: remote_object)
@@ -664,19 +671,13 @@ class Puppeteer::Page
   private def wait_for_network_manager_event(event_name, predicate:, timeout:)
     option_timeout = timeout || @timeout_settings.timeout
 
-    @wait_for_network_manager_event_listener_ids ||= {}
-    if_present(@wait_for_network_manager_event_listener_ids[event_name]) do |listener_id|
-      @frame_manager.network_manager.remove_event_listener(listener_id)
-    end
-
     promise = resolvable_future
 
-    @wait_for_network_manager_event_listener_ids[event_name] =
-      @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
-        if predicate.call(event_target)
-          promise.fulfill(event_target)
-        end
+    listener_id = @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
+      if predicate.call(event_target)
+        promise.fulfill(event_target)
       end
+    end
 
     begin
       # Timeout.timeout(0) means "no limit" for timeout.
@@ -684,9 +685,36 @@ class Puppeteer::Page
         await_any(promise, session_close_promise)
       end
     rescue Timeout::Error
-      raise Puppeteer::TimeoutError.new("waiting for #{event_name} failed: timeout #{timeout}ms exceeded")
+      raise Puppeteer::TimeoutError.new("waiting for #{event_name} failed: timeout #{option_timeout}ms exceeded")
     ensure
-      @frame_manager.network_manager.remove_event_listener(@wait_for_network_manager_event_listener_ids[event_name])
+      @frame_manager.network_manager.remove_event_listener(listener_id)
+    end
+  end
+
+  private def wait_for_frame_manager_event(*event_names, predicate:, timeout:)
+    option_timeout = timeout || @timeout_settings.timeout
+
+    promise = resolvable_future
+
+    listener_ids = event_names.map do |event_name|
+      @frame_manager.add_event_listener(event_name) do |event_target|
+        if predicate.call(event_target)
+          promise.fulfill(event_target) unless promise.resolved?
+        end
+      end
+    end
+
+    begin
+      # Timeout.timeout(0) means "no limit" for timeout.
+      Timeout.timeout(option_timeout / 1000.0) do
+        await_any(promise, session_close_promise)
+      end
+    rescue Timeout::Error
+      raise Puppeteer::TimeoutError.new("waiting for #{event_names.join(" or ")} failed: timeout #{option_timeout}ms exceeded")
+    ensure
+      listener_ids.each do |listener_id|
+        @frame_manager.remove_event_listener(listener_id)
+      end
     end
   end
 
@@ -709,7 +737,7 @@ class Puppeteer::Page
       if url
         -> (request) { request.url == url }
       else
-        -> (request) { predicate.call(request) }
+        predicate
       end
 
     wait_for_network_manager_event(NetworkManagerEmittedEvents::Request,
@@ -743,7 +771,7 @@ class Puppeteer::Page
       if url
         -> (response) { response.url == url }
       else
-        -> (response) { predicate.call(response) }
+        predicate
       end
 
     wait_for_network_manager_event(NetworkManagerEmittedEvents::Response,
@@ -757,6 +785,34 @@ class Puppeteer::Page
   # @param url [String]
   # @param predicate [Proc(Puppeteer::HTTPRequest -> Boolean)]
   define_async_method :async_wait_for_response
+
+  def wait_for_frame(url: nil, predicate: nil, timeout: nil)
+    if !url && !predicate
+      raise ArgumentError.new('url or predicate must be specified')
+    end
+    if predicate && !predicate.is_a?(Proc)
+      raise ArgumentError.new('predicate must be a proc.')
+    end
+    frame_predicate =
+      if url
+        -> (frame) { frame.url == url }
+      else
+        predicate
+      end
+
+    wait_for_frame_manager_event(
+      FrameManagerEmittedEvents::FrameAttached,
+      FrameManagerEmittedEvents::FrameNavigated,
+      predicate: frame_predicate,
+      timeout: timeout,
+    )
+  end
+
+  # @!method async_wait_for_frame(url: nil, predicate: nil, timeout: nil)
+  #
+  # @param url [String]
+  # @param predicate [Proc(Puppeteer::Frame -> Boolean)]
+  define_async_method :async_wait_for_frame
 
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'

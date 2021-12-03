@@ -15,6 +15,11 @@ class Puppeteer::CDPSession
     @session_id = session_id
   end
 
+  # @internal
+  def id
+    @session_id
+  end
+
   attr_reader :connection
 
   # @param method [String]

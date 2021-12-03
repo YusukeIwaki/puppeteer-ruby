@@ -1,25 +1,47 @@
 class Puppeteer::Frame
   using Puppeteer::DefineAsyncMethod
 
-  # @param {!FrameManager} frameManager
-  # @param {!Puppeteer.CDPSession} client
-  # @param {?Frame} parentFrame
-  # @param {string} frameId
-  def initialize(frame_manager, client, parent_frame, frame_id)
+  # @param frame_manager [Puppeteer::FrameManager]
+  # @param parent_frame [Puppeteer::Frame|nil]
+  # @param frame_id [String]
+  # @param client [Puppeteer::CDPSession]
+  def initialize(frame_manager, parent_frame, frame_id, client)
     @frame_manager = frame_manager
-    @client = client
     @parent_frame = parent_frame
     @id = frame_id
     @detached = false
 
     @loader_id = ''
     @lifecycle_events = Set.new
-    @main_world = Puppeteer::DOMWorld.new(frame_manager, self, frame_manager.timeout_settings)
-    @secondary_world = Puppeteer::DOMWorld.new(frame_manager, self, frame_manager.timeout_settings)
     @child_frames = Set.new
     if parent_frame
       parent_frame._child_frames << self
     end
+
+    update_client(client)
+  end
+
+  def inspect
+    values = %i[id parent_frame detached loader_id lifecycle_events child_frames].map do |sym|
+      value = instance_variable_get(:"@#{sym}")
+      "@#{sym}=#{value}"
+    end
+    "#<Puppeteer::Frame #{values.join(' ')}>"
+  end
+
+  def _client
+    @client
+  end
+
+  # @param client [Puppeteer::CDPSession]
+  private def update_client(client)
+    @client = client
+    @main_world = Puppeteer::DOMWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
+    @secondary_world = Puppeteer::DOMWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
+  end
+
+  def oop_frame?
+    @client != @frame_manager.client
   end
 
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :secondary_world

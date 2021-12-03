@@ -27,50 +27,67 @@ class Puppeteer::FrameManager
     # @type {!Set<string>}
     @isolated_worlds = Set.new
 
-    @client.on_event('Page.frameAttached') do |event|
-      handle_frame_attached(event['frameId'], event['parentFrameId'])
+    setup_listeners(@client)
+  end
+
+  private def setup_listeners(client)
+    client.on_event('Page.frameAttached') do |event|
+      handle_frame_attached(client, event['frameId'], event['parentFrameId'])
     end
-    @client.on_event('Page.frameNavigated') do |event|
+    client.on_event('Page.frameNavigated') do |event|
       handle_frame_navigated(event['frame'])
     end
-    @client.on_event('Page.navigatedWithinDocument') do |event|
+    client.on_event('Page.navigatedWithinDocument') do |event|
       handle_frame_navigated_within_document(event['frameId'], event['url'])
     end
-    @client.on_event('Page.frameDetached') do |event|
-      handle_frame_detached(event['frameId'])
+    client.on_event('Page.frameDetached') do |event|
+      handle_frame_detached(event['frameId'], event['reason'])
     end
-    @client.on_event('Page.frameStoppedLoading') do |event|
+    client.on_event('Page.frameStoppedLoading') do |event|
       handle_frame_stopped_loading(event['frameId'])
     end
-    @client.on_event('Runtime.executionContextCreated') do |event|
-      handle_execution_context_created(event['context'])
+    client.on_event('Runtime.executionContextCreated') do |event|
+      handle_execution_context_created(event['context'], client)
     end
-    @client.on_event('Runtime.executionContextDestroyed') do |event|
-      handle_execution_context_destroyed(event['executionContextId'])
+    client.on_event('Runtime.executionContextDestroyed') do |event|
+      handle_execution_context_destroyed(event['executionContextId'], client)
     end
-    @client.on_event('Runtime.executionContextsCleared') do |event|
-      handle_execution_contexts_cleared
+    client.on_event('Runtime.executionContextsCleared') do |event|
+      handle_execution_contexts_cleared(client)
     end
-    @client.on_event('Page.lifecycleEvent') do |event|
+    client.on_event('Page.lifecycleEvent') do |event|
       handle_lifecycle_event(event)
+    end
+    client.on_event('Target.attachedToTarget') do |event|
+      handle_attached_to_target(event)
+    end
+    client.on_event('Target.detachedFromTarget') do |event|
+      handle_detached_from_target(event)
     end
   end
 
   attr_reader :client, :timeout_settings
 
-  private def init
+  private def init(cdp_session = nil)
+    client = cdp_session || @client
+
     results = await_all(
-      @client.async_send_message('Page.enable'),
-      @client.async_send_message('Page.getFrameTree'),
+      client.async_send_message('Page.enable'),
+      client.async_send_message('Page.getFrameTree'),
     )
     frame_tree = results.last['frameTree']
-    handle_frame_tree(frame_tree)
+    handle_frame_tree(client, frame_tree)
     await_all(
-      @client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
-      @client.async_send_message('Runtime.enable'),
+      client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
+      client.async_send_message('Runtime.enable'),
     )
-    ensure_isolated_world(UTILITY_WORLD_NAME)
-    @network_manager.init
+    ensure_isolated_world(client, UTILITY_WORLD_NAME)
+    @network_manager.init unless cdp_session
+  rescue => err
+    # The target might have been closed before the initialization finished.
+    return if err.message.include?('Target closed') || err.message.include?('Session closed')
+
+    raise
   end
 
   define_async_method :async_init
@@ -155,6 +172,28 @@ class Puppeteer::FrameManager
   end
 
   # @param event [Hash]
+  def handle_attached_to_target(event)
+    return if event['targetInfo']['type'] != 'iframe'
+
+    frame = @frames[event['targetInfo']['targetId']]
+    session = Puppeteer::Connection.from_session(@client).session(event['sessionId'])
+
+    frame.send(:update_client, session)
+    setup_listeners(session)
+    async_init(session)
+  end
+
+  # @param event [Hash]
+  def handle_detached_from_target(event)
+    frame = @frames[event['targetId']]
+    if frame && frame.oop_frame?
+      # When an OOP iframe is removed from the page, it
+      # will only get a Target.detachedFromTarget event.
+      remove_frame_recursively(frame)
+    end
+  end
+
+  # @param event [Hash]
   def handle_lifecycle_event(event)
     frame = @frames[event['frameId']]
     return if !frame
@@ -170,16 +209,17 @@ class Puppeteer::FrameManager
     emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
   end
 
+  # @param session [Puppeteer::CDPSession]
   # @param frame_tree [Hash]
-  def handle_frame_tree(frame_tree)
+  def handle_frame_tree(session, frame_tree)
     if frame_tree['frame']['parentId']
-      handle_frame_attached(frame_tree['frame']['id'], frame_tree['frame']['parentId'])
+      handle_frame_attached(session, frame_tree['frame']['id'], frame_tree['frame']['parentId'])
     end
     handle_frame_navigated(frame_tree['frame'])
     return if !frame_tree['childFrames']
 
     frame_tree['childFrames'].each do |child|
-      handle_frame_tree(child)
+      handle_frame_tree(session, child)
     end
   end
 
@@ -204,15 +244,25 @@ class Puppeteer::FrameManager
     @frames[frame_id]
   end
 
-  # @param {string} frameId
-  # @param {?string} parentFrameId
-  def handle_frame_attached(frame_id, parent_frame_id)
-    return if @frames.has_key?(frame_id)
+  # @param session [Puppeteer::CDPSession]
+  # @param frameId [String]
+  # @param parentFrameId [String|nil]
+  def handle_frame_attached(session, frame_id, parent_frame_id)
+    if @frames.has_key?(frame_id)
+      frame = @frames[frame_id]
+      if session && frame.oop_frame?
+        # If an OOP iframes becomes a normal iframe again
+        # it is first attached to the parent page before
+        # the target is removed.
+        frame.send(:update_client, session)
+      end
+      return
+    end
     if !parent_frame_id
       raise ArgymentError.new('parent_frame_id must not be nil')
     end
     parent_frame = @frames[parent_frame_id]
-    frame = Puppeteer::Frame.new(self, @client, parent_frame, frame_id)
+    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session)
     @frames[frame_id] = frame
 
     emit_event(FrameManagerEmittedEvents::FrameAttached, frame)
@@ -247,7 +297,7 @@ class Puppeteer::FrameManager
         frame.id = frame_payload['id']
       else
         # Initial main frame navigation.
-        frame = Puppeteer::Frame.new(self, @client, nil, frame_payload['id'])
+        frame = Puppeteer::Frame.new(self, nil, frame_payload['id'], @client)
       end
       @frames[frame_payload['id']] = frame
       @main_frame = frame
@@ -259,22 +309,26 @@ class Puppeteer::FrameManager
     emit_event(FrameManagerEmittedEvents::FrameNavigated, frame)
   end
 
+  # @param session [Puppeteer::CDPSession]
   # @param name [String]
-  def ensure_isolated_world(name)
-    return if @isolated_worlds.include?(name)
-    @isolated_worlds << name
+  private def ensure_isolated_world(session, name)
+    key = "#{session.id}:#{name}"
+    return if @isolated_worlds.include?(key)
+    @isolated_worlds << key
 
-    @client.send_message('Page.addScriptToEvaluateOnNewDocument',
+    session.send_message('Page.addScriptToEvaluateOnNewDocument',
       source: "//# sourceURL=#{Puppeteer::ExecutionContext::EVALUATION_SCRIPT_URL}",
       worldName: name,
     )
-    create_isolated_worlds_promises = frames.map do |frame|
-      @client.async_send_message('Page.createIsolatedWorld',
-        frameId: frame.id,
-        grantUniveralAccess: true,
-        worldName: name,
-      )
-    end
+    create_isolated_worlds_promises = frames.
+      select { |frame| frame._client == session }.
+      map do |frame|
+        session.async_send_message('Page.createIsolatedWorld',
+          frameId: frame.id,
+          grantUniveralAccess: true,
+          worldName: name,
+        )
+      end
     await_all(*create_isolated_worlds_promises)
   end
 
@@ -289,19 +343,31 @@ class Puppeteer::FrameManager
   end
 
   # @param frame_id [String]
-  def handle_frame_detached(frame_id)
+  # @param reason [String]
+  def handle_frame_detached(frame_id, reason)
     frame = @frames[frame_id]
-    if frame
-      remove_frame_recursively(frame)
+    if reason == 'remove'
+      # Only remove the frame if the reason for the detached event is
+      # an actual removement of the frame.
+      # For frames that become OOP iframes, the reason would be 'swap'.
+      if frame
+        remove_frame_recursively(frame)
+      end
     end
   end
 
   # @param context_payload [Hash]
-  def handle_execution_context_created(context_payload)
+  # @pram session [Puppeteer::CDPSession]
+  def handle_execution_context_created(context_payload, session)
     frame = if_present(context_payload.dig('auxData', 'frameId')) { |frame_id| @frames[frame_id] }
 
     world = nil
     if frame
+      # commented out the original implementation for allowing us to use Frame#evaluate on OOP iframe.
+      #
+      # # Only care about execution contexts created for the current session.
+      # return if @client != session
+
       if context_payload.dig('auxData', 'isDefault')
         world = frame.main_world
       elsif context_payload['name'] == UTILITY_WORLD_NAME && !frame.secondary_world.has_context?
@@ -316,34 +382,45 @@ class Puppeteer::FrameManager
       @isolated_worlds << context_payload['name']
     end
 
-    context = Puppeteer::ExecutionContext.new(@client, context_payload, world)
+    context = Puppeteer::ExecutionContext.new(frame._client || @client, context_payload, world)
     if world
       world.context = context
     end
-    @context_id_to_context[context_payload['id']] = context
+    key = "#{session.id}:#{context_payload['id']}"
+    @context_id_to_context[key] = context
   end
 
-  # @param {number} executionContextId
-  def handle_execution_context_destroyed(execution_context_id)
-    context = @context_id_to_context[execution_context_id]
+  # @param execution_context_id [Integer]
+  # @param session [Puppeteer::CDPSEssion]
+  def handle_execution_context_destroyed(execution_context_id, session)
+    key = "#{session.id}:#{execution_context_id}"
+    context = @context_id_to_context[key]
     return unless context
-    @context_id_to_context.delete(execution_context_id)
+    @context_id_to_context.delete(key)
     if context.world
       context.world.delete_context(execution_context_id)
     end
   end
 
-  def handle_execution_contexts_cleared
-    @context_id_to_context.each do |execution_context_id, context|
-      if context.world
-        context.world.delete_context(execution_context_id)
+  # @param session [Puppeteer::CDPSession]
+  def handle_execution_contexts_cleared(session)
+    @context_id_to_context.select! do |execution_context_id, context|
+      # Make sure to only clear execution contexts that belong
+      # to the current session.
+      if context.client != session
+        true # keep
+      else
+        if context.world
+          context.world.delete_context(execution_context_id)
+        end
+        false # remove
       end
     end
-    @context_id_to_context.clear
   end
 
-  def execution_context_by_id(context_id)
-    @context_id_to_context[context_id] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
+  def execution_context_by_id(context_id, session)
+    key = "#{session.id}:#{context_id}"
+    @context_id_to_context[key] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
   end
 
   # @param {!Frame} frame

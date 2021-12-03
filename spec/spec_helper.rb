@@ -69,6 +69,12 @@ RSpec.configure do |config|
     #   ]
     # end
 
+    if example.metadata[:enable_site_per_process_flag]
+      args = launch_options[:args] || []
+      args << '--site-per-process'
+      launch_options[:args] = args
+    end
+
     if example.metadata[:puppeteer].to_s == 'browser'
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
@@ -76,8 +82,8 @@ RSpec.configure do |config|
       end
     elsif example.metadata[:browser_context].to_s == 'incognito'
       Puppeteer.launch(**launch_options) do |browser|
-        context = browser.create_incognito_browser_context
-        @puppeteer_page = context.new_page
+        @puppeteer_browser_context = browser.create_incognito_browser_context
+        @puppeteer_page = @puppeteer_browser_context.new_page
         begin
           example.run
         ensure
@@ -128,6 +134,10 @@ RSpec.configure do |config|
 
     def browser
       @puppeteer_browser or raise NoMethodError.new('undefined method "browser" (If you intended to use puppeteer#browser, you have to add `puppeteer: :browser` to metadata.)')
+    end
+
+    def browser_context
+      @puppeteer_browser_context or raise NoMethodError.new('undefined method "browser_context"')
     end
 
     def page

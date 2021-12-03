@@ -119,6 +119,11 @@ class Puppeteer::Target
     end
   end
 
+  # @internal
+  def raw_type
+    @target_info.type
+  end
+
   # @return {!Puppeteer.Browser}
   def browser
     @browser_context.browser

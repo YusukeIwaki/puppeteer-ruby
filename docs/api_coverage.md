@@ -134,7 +134,7 @@
 * viewport
 * ~~waitFor~~
 * waitForFileChooser => `#wait_for_file_chooser`
-* ~~waitForFrame~~
+* waitForFrame => `#wait_for_frame`
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
 * ~~waitForNetworkIdle~~
@@ -227,7 +227,7 @@
 * goto
 * hover
 * isDetached => `#detached?`
-* ~~isOOPFrame~~
+* isOOPFrame => `#oop_frame?`
 * name
 * parentFrame => `#parent_frame`
 * select
@@ -360,7 +360,7 @@
 
 * connection
 * detach
-* ~~id~~
+* id
 * send
 
 ## Coverage
