@@ -42,7 +42,7 @@ RSpec.describe Puppeteer::Frame do
       detach_frame(page, 'frame1')
       expect {
         frame1.evaluate('() => 7 * 8')
-      }.to raise_error(/Execution Context is not available in detached frame/)
+      }.to raise_error(/Execution Context is not available in detached frame|Cannot find context/)
     end
   end
 
@@ -206,7 +206,7 @@ RSpec.describe Puppeteer::Frame do
       expect(page.frames.map(&:parent_frame)).to eq([nil, page.main_frame, page.main_frame])
     end
 
-    it 'should report different frame instance when frame re-attaches' do
+    it_fails_firefox 'should report different frame instance when frame re-attaches' do
       frame1 = attach_frame(page, 'frame1', server_empty_page)
       js = <<~JAVASCRIPT
       () => {
