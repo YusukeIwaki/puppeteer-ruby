@@ -34,9 +34,10 @@ module Puppeteer::Launcher
       if @headless.nil?
         @headless = !@devtools
       end
+      @debugging_port = options[:debugging_port] || 0
     end
 
-    attr_reader :args, :user_data_dir
+    attr_reader :args, :user_data_dir, :debugging_port
 
     def headless?
       @headless

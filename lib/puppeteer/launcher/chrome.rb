@@ -34,7 +34,7 @@ module Puppeteer::Launcher
         if @launch_options.pipe?
           chrome_arguments << '--remote-debugging-pipe'
         else
-          chrome_arguments << '--remote-debugging-port=0'
+          chrome_arguments << "--remote-debugging-port=#{@chrome_arg_options.debugging_port}"
         end
       end
 

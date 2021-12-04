@@ -28,7 +28,7 @@ module Puppeteer::Launcher
         end
 
       if firefox_arguments.none? { |arg| arg.start_with?('--remote-debugging-') }
-        firefox_arguments << '--remote-debugging-port=0'
+        firefox_arguments << "--remote-debugging-port=#{@chrome_arg_options.debugging_port}"
       end
 
       temporary_user_data_dir = nil
