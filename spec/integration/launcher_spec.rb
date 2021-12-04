@@ -260,6 +260,16 @@ RSpec.describe Puppeteer::Launcher do
         expect(screenshot.size).to be > 50000
       end
     end
+
+    it 'should set the debugging port' do
+      options = default_launch_options.merge(
+        debugging_port: 9999,
+      )
+
+      Puppeteer.launch(**options) do |browser|
+        expect(URI(browser.ws_endpoint).port).to eq(9999)
+      end
+    end
   end
 
   describe 'Puppeteer#default_args', puppeteer: :browser do
