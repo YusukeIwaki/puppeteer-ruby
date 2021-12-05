@@ -34,7 +34,7 @@ RSpec.describe 'network' do
         'type' => 'script',
         'stack' => include({
           'callFrames' => [
-            include({'url' => "#{server_prefix}/initiator.js"}),
+            include({ 'url' => "#{server_prefix}/initiator.js" }),
           ],
         }),
       })
@@ -42,7 +42,7 @@ RSpec.describe 'network' do
         'type' => 'script',
         'stack' => include({
           'callFrames' => [
-            include({'url' => "#{server_prefix}/initiator.js"}),
+            include({ 'url' => "#{server_prefix}/initiator.js" }),
           ],
         }),
       })
