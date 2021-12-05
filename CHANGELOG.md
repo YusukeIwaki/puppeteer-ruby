@@ -1,6 +1,12 @@
-### master [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.3...master)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.4...main)]
 
 - xxx
+
+### 0.37.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.3...0.37.4)]
+
+Bugfix:
+
+- Fix ElementHandle#screenshot to work.
 
 ### 0.37.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.2...0.37.3)]
 
