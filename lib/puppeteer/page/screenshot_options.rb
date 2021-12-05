@@ -34,7 +34,7 @@ class Puppeteer::Page
       @type ||= 'png'
 
       if options[:quality]
-        unless @type == 'jpeg'
+        if @type != 'jpeg' && @type != 'webp'
           raise ArgumentError.new("options.quality is unsupported for the #{@type} screenshots")
         end
         unless options[:quality].is_a?(Numeric)
