@@ -21,7 +21,8 @@ RSpec.describe 'OOPIF', **metadata do
   it 'should treat OOP iframes and normal iframes the same' do
     page.goto(server_empty_page)
 
-    page.wait_for_frame(predicate: ->(frame) { frame.url&.end_with?('/empty.html') }) do
+    predicate = ->(frame) { frame.url&.end_with?('/empty.html') }
+    page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
       attach_frame(page, 'frame2', "#{server_cross_process_prefix}/empty.html")
     end
@@ -30,7 +31,8 @@ RSpec.describe 'OOPIF', **metadata do
 
   it 'should track navigations within OOP iframes' do
     page.goto(server_empty_page)
-    frame = page.wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }) do
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', "#{server_cross_process_prefix}/empty.html")
     end
     expect(frame.url).to end_with('/empty.html')
@@ -41,7 +43,8 @@ RSpec.describe 'OOPIF', **metadata do
 
   it 'should support OOP iframes becoming normal iframes again' do
     page.goto(server_empty_page)
-    frame = page.wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }) do
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
     end
 
@@ -67,7 +70,8 @@ RSpec.describe 'OOPIF', **metadata do
 
   it 'should support OOP iframes getting detached' do
     page.goto(server_empty_page)
-    frame = page.wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }) do
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
       navigate_frame(page, 'frame1', "#{server_cross_process_prefix}/empty.html")
     end
@@ -78,7 +82,8 @@ RSpec.describe 'OOPIF', **metadata do
 
   it 'should keep track of a frames OOP state' do
     page.goto(server_empty_page)
-    frame = page.wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }) do
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
     end
 
@@ -89,7 +94,8 @@ RSpec.describe 'OOPIF', **metadata do
 
   it 'should support evaluating in oop iframes' do
     page.goto(server_empty_page)
-    frame = page.wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }) do
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
     end
     frame.evaluate("() => { _test = 'Test 123'; }")
@@ -99,7 +105,8 @@ RSpec.describe 'OOPIF', **metadata do
 
   it 'should provide access to elements' do
     page.goto(server_empty_page)
-    frame = page.wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }) do
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
     end
     frame.evaluate(<<~JAVASCRIPT)
@@ -113,7 +120,8 @@ RSpec.describe 'OOPIF', **metadata do
   end
 
   it 'should report oopif frames' do
-    frame = page.wait_for_frame(predicate: -> (frame) { frame.url&.end_with?('/oopif.html') }) do
+    predicate = -> (frame) { frame.url&.end_with?('/oopif.html') }
+    frame = page.wait_for_frame(predicate: predicate) do
       page.goto("#{server_prefix}/dynamic-oopif.html")
     end
     expect(frame).to be_oop_frame
@@ -122,7 +130,8 @@ RSpec.describe 'OOPIF', **metadata do
   end
 
   it 'should load oopif iframes with subresources and request interception' do
-    frame_promise = page.async_wait_for_frame(predicate: -> (frame) { frame.url&.end_with?('/oopif.html') })
+    predicate = -> (frame) { frame.url&.end_with?('/oopif.html') }
+    frame_promise = page.async_wait_for_frame(predicate: predicate)
     page.request_interception = true
     page.on('request') { |req| req.continue }
     page.goto("#{server_prefix}/dynamic-oopif.html")
@@ -131,7 +140,8 @@ RSpec.describe 'OOPIF', **metadata do
   end
 
   it 'should support frames within OOP iframes' do
-    oop_iframe = page.wait_for_frame(predicate: -> (frame) { frame.url&.end_with?('/oopif.html') }) do
+    predicate = -> (frame) { frame.url&.end_with?('/oopif.html') }
+    oop_iframe = page.wait_for_frame(predicate: predicate) do
       page.goto("#{server_prefix}/dynamic-oopif.html")
     end
     attach_frame(oop_iframe, 'frame1', "#{server_cross_process_prefix}/empty.html")
