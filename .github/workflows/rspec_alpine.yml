@@ -4,9 +4,13 @@ on: [pull_request]
 
 jobs:
   integration_test_with_alpine:
-    name: (Ruby2.7-alpine) Integration Test
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby_version: ['2.7', '3.0']
+    name: (Ruby${{ matrix.ruby_version }}-alpine) Integration Test
     runs-on: ubuntu-latest
-    container: ruby:2.7-alpine
+    container: ruby:${{ matrix.ruby_version }}-alpine
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2

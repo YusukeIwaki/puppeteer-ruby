@@ -51,6 +51,12 @@ RSpec.configure do |config|
     launch_options[:args] = args
   end
 
+  # Every browser automation test case should spend less than 15sec.
+  if Puppeteer.env.ci?
+    config.around(:each, type: :puppeteer) do |example|
+      Timeout.timeout(15) { example.run }
+    end
+  end
 
   config.around(:each, type: :puppeteer) do |example|
     if ENV['PENDING_CHECK'] && !example.metadata[:pending]
@@ -114,13 +120,6 @@ RSpec.configure do |config|
   # Unit test doesn't connect to internet. No need to wait for 30sec. Set it to 7.5sec.
   config.before(:each, type: :puppeteer) do
     stub_const("Puppeteer::TimeoutSettings::DEFAULT_TIMEOUT", 7500)
-  end
-
-  # Every browser automation test case should spend less than 15sec.
-  if Puppeteer.env.ci?
-    config.around(:each, type: :puppeteer) do |example|
-      Timeout.timeout(15) { example.run }
-    end
   end
 
   config.define_derived_metadata(file_path: %r(/spec/integration/)) do |metadata|
