@@ -30,9 +30,9 @@ jobs:
       - image: cimg/ruby:3.0.0-browsers
     <<: *rspec_chrome_job
 
-  rspec_chromium_alpine_2_7:
+  rspec_chromium_alpine_3_0:
     docker:
-      - image: ruby:2.7-alpine
+      - image: ruby:3.0-alpine
     steps:
       - run:
           command: apk add build-base chromium git
@@ -118,6 +118,6 @@ workflows:
       - rspec_chrome_ruby2_6
       - rspec_chrome_ruby2_7
       - rspec_chrome_ruby3_0
-      - rspec_chromium_alpine_2_7
+      - rspec_chromium_alpine_3_0
       - rspec_firefox
       - rspec_firefox_pending_check
