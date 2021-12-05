@@ -645,6 +645,26 @@ RSpec.describe Puppeteer::Page do
       expect(request.url).to eq("#{server_prefix}/digits/2.png")
     end
 
+    it 'should work even if nested' do
+      page.goto(server_empty_page)
+      promises = [
+        page.async_wait_for_request(url: "#{server_prefix}/digits/2.png"),
+        page.async_wait_for_request(url: "#{server_prefix}/digits/3.png"),
+      ]
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        fetch('/digits/1.png');
+        fetch('/digits/2.png');
+        fetch('/digits/3.png');
+      }
+      JAVASCRIPT
+      requests = await_all(*promises)
+      expect(requests.map(&:url)).to contain_exactly(
+        "#{server_prefix}/digits/2.png",
+        "#{server_prefix}/digits/3.png",
+      )
+    end
+
     it 'should respect timeout' do
       page.goto(server_empty_page)
       expect { page.wait_for_request(predicate: ->(_) { false }, timeout: 1) }.

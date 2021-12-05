@@ -45,10 +45,14 @@ class Puppeteer::DOMWorld
     end
   end
 
-  # @param {!Puppeteer.FrameManager} frameManager
-  # @param {!Puppeteer.Frame} frame
-  # @param {!Puppeteer.TimeoutSettings} timeoutSettings
-  def initialize(frame_manager, frame, timeout_settings)
+  # @param client [Puppeteer::CDPSession]
+  # @param frame_manager [Puppeteer::FrameManager]
+  # @param frame [Puppeteer::Frame]
+  # @param timeout_settings [Puppeteer::TimeoutSettings]
+  def initialize(client, frame_manager, frame, timeout_settings)
+    # Keep own reference to client because it might differ from the FrameManager's
+    # client for OOP iframes.
+    @client = client
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
@@ -58,7 +62,7 @@ class Puppeteer::DOMWorld
     @ctx_bindings = Set.new
     @detached = false
 
-    frame_manager.client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
+    @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
   attr_reader :frame

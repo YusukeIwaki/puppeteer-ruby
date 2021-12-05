@@ -69,6 +69,12 @@ RSpec.configure do |config|
     #   ]
     # end
 
+    if example.metadata[:enable_site_per_process_flag]
+      args = launch_options[:args] || []
+      args << '--site-per-process'
+      launch_options[:args] = args
+    end
+
     if example.metadata[:puppeteer].to_s == 'browser'
       Puppeteer.launch(**launch_options) do |browser|
         @puppeteer_browser = browser
@@ -76,8 +82,8 @@ RSpec.configure do |config|
       end
     elsif example.metadata[:browser_context].to_s == 'incognito'
       Puppeteer.launch(**launch_options) do |browser|
-        context = browser.create_incognito_browser_context
-        @puppeteer_page = context.new_page
+        @puppeteer_browser_context = browser.create_incognito_browser_context
+        @puppeteer_page = @puppeteer_browser_context.new_page
         begin
           example.run
         ensure
@@ -130,6 +136,10 @@ RSpec.configure do |config|
       @puppeteer_browser or raise NoMethodError.new('undefined method "browser" (If you intended to use puppeteer#browser, you have to add `puppeteer: :browser` to metadata.)')
     end
 
+    def browser_context
+      @puppeteer_browser_context or raise NoMethodError.new('undefined method "browser_context"')
+    end
+
     def page
       @puppeteer_page or raise NoMethodError.new('undefined method "page"')
     end
@@ -151,7 +161,9 @@ RSpec.configure do |config|
 
     sinatra_app = Sinatra.new
     sinatra_app.disable(:protection)
+    sinatra_app.set(:quiet, true)
     sinatra_app.set(:public_folder, File.join(__dir__, 'assets'))
+    sinatra_app.set(:logging, false)
     @server_prefix = "http://localhost:4567"
     @server_cross_process_prefix = "http://127.0.0.1:4567"
     @server_empty_page = "#{@server_prefix}/empty.html"
