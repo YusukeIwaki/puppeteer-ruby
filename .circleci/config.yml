@@ -30,6 +30,34 @@ jobs:
       - image: cimg/ruby:3.0.0-browsers
     <<: *rspec_chrome_job
 
+  rspec_chromium_alpine_3_0:
+    docker:
+      - image: ruby:3.0-alpine
+    steps:
+      - run:
+          command: apk add build-base chromium git
+      - checkout
+      - run:
+          command: gem install bundler:2.2.3 && bundle install
+      - run:
+          name: rspec
+          command: |
+            PUPPETEER_NO_SANDBOX_RSPEC=true \
+            DEBUG=1 bundle exec rspec --profile 10 \
+              --failure-exit-code 0 \
+              --format RspecJunitFormatter \
+              --out test_results/rspec.xml \
+              --format documentation \
+              spec/integration/
+      - run:
+          name: rspec (retry)
+          command: |
+            PUPPETEER_NO_SANDBOX_RSPEC=true \
+            DEBUG=1 bundle exec rspec \
+              --only-failures \
+              --format documentation \
+              spec/integration/
+
   rspec_firefox:
     docker:
       - image: cimg/ruby:2.7.4-browsers
@@ -90,5 +118,6 @@ workflows:
       - rspec_chrome_ruby2_6
       - rspec_chrome_ruby2_7
       - rspec_chrome_ruby3_0
+      - rspec_chromium_alpine_3_0
       - rspec_firefox
       - rspec_firefox_pending_check
