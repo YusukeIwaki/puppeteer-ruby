@@ -226,6 +226,13 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
+    it 'should pass the timeout parameter to browser.waitForTarget' do
+      options = default_launch_options.dup
+      options[:timeout] = 3210
+      expect_any_instance_of(Puppeteer::Browser).to receive(:wait_for_target).with(hash_including(timeout: 3210))
+      Puppeteer.launch(**options) { }
+    end
+
     it 'should set the default viewport' do
       options = default_launch_options.merge(
         default_viewport: Puppeteer::Viewport.new(
