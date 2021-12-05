@@ -228,7 +228,7 @@ module Puppeteer::Launcher
     end
 
     private def create_profile(extra_prefs = {})
-      Dir.mktmpdir('puppeteer_dev_firefox_profile-').tap do |profile_path|
+      Dir.mktmpdir('puppeteer_dev_firefox_profile-', ENV['PUPPETEER_TMP_DIR']).tap do |profile_path|
         server = 'dummy.test'
         default_preferences = {
           # Make sure Shield doesn't hit the network.

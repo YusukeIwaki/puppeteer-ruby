@@ -40,7 +40,7 @@ module Puppeteer::Launcher
 
       temporary_user_data_dir = nil
       if chrome_arguments.none? { |arg| arg.start_with?('--user-data-dir') }
-        temporary_user_data_dir = Dir.mktmpdir('puppeteer_dev_chrome_profile-')
+        temporary_user_data_dir = Dir.mktmpdir('puppeteer_dev_chrome_profile-', ENV['PUPPETEER_TMP_DIR'])
         chrome_arguments << "--user-data-dir=#{temporary_user_data_dir}"
       end
 
