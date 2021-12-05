@@ -72,7 +72,15 @@ class Puppeteer::HTTPRequest
   end
 
   attr_reader :internal
-  attr_reader :url, :resource_type, :method, :post_data, :headers, :response, :frame
+  attr_reader :url, :resource_type, :method, :post_data, :headers, :response, :frame, :initiator
+
+  def inspect
+    values = %i[request_id method url].map do |sym|
+      value = instance_variable_get(:"@#{sym}")
+      "@#{sym}=#{value}"
+    end
+    "#<Puppeteer::HTTPRequest #{values.join(' ')}>"
+  end
 
   private def assert_interception_allowed
     unless @allow_interception

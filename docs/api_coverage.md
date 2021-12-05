@@ -308,7 +308,7 @@
 * finalizeInterceptions => `#finalize_interceptions`
 * frame
 * headers
-* ~~initiator~~
+* initiator
 * isNavigationRequest => `#navigation_request?`
 * method
 * postData => `#post_data`
