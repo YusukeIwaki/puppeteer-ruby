@@ -161,7 +161,9 @@ RSpec.configure do |config|
 
     sinatra_app = Sinatra.new
     sinatra_app.disable(:protection)
+    sinatra_app.set(:quiet, true)
     sinatra_app.set(:public_folder, File.join(__dir__, 'assets'))
+    sinatra_app.set(:logging, false)
     @server_prefix = "http://localhost:4567"
     @server_cross_process_prefix = "http://127.0.0.1:4567"
     @server_empty_page = "#{@server_prefix}/empty.html"
