@@ -1,6 +1,18 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.4...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.38.0...main)]
 
 - xxx
+
+### 0.38.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.4...0.38.0)]
+
+New features:
+
+- Puppeteer 11.0 functionalities
+    * OOP iframe support
+    * Customize debugging port
+    * HTTPRequest#initiator
+    * Customize temp directory for user data
+    * Add webp to screenshot quality option allow list
+
 
 ### 0.37.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.3...0.37.4)]
 
