@@ -42,9 +42,10 @@ module Puppeteer::Launcher
       @dumpio = options[:dumpio] || false
       @env = options[:env] || ENV
       @pipe = options[:pipe] || false
+      @extra_prefs_firefox = options[:extra_prefs_firefox] || {}
     end
 
-    attr_reader :channel, :executable_path, :ignore_default_args, :timeout, :env
+    attr_reader :channel, :executable_path, :ignore_default_args, :timeout, :env, :extra_prefs_firefox
 
     def handle_SIGINT?
       @handle_SIGINT

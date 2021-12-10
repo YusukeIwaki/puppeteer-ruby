@@ -27,9 +27,6 @@ module Puppeteer::Launcher
           @chrome_arg_options.args.dup
         end
 
-      #
-      # let temporaryUserDataDir = null;
-
       if chrome_arguments.none? { |arg| arg.start_with?('--remote-debugging-') }
         if @launch_options.pipe?
           chrome_arguments << '--remote-debugging-pipe'
@@ -38,10 +35,17 @@ module Puppeteer::Launcher
         end
       end
 
-      temporary_user_data_dir = nil
-      if chrome_arguments.none? { |arg| arg.start_with?('--user-data-dir') }
-        temporary_user_data_dir = Dir.mktmpdir('puppeteer_dev_chrome_profile-', ENV['PUPPETEER_TMP_DIR'])
-        chrome_arguments << "--user-data-dir=#{temporary_user_data_dir}"
+      user_data_dir = chrome_arguments.find { |arg| arg.start_with?('--user-data-dir') }
+      if user_data_dir
+        user_data_dir = user_data_dir.split('=').last
+        unless File.exist?(user_data_dir)
+          raise ArgumentError.new("Chrome user data dir not found at '#{user_data_dir}'")
+        end
+        using_temp_user_data_dir = false
+      else
+        user_data_dir = Dir.mktmpdir('puppeteer_dev_chrome_profile-', ENV['PUPPETEER_TMP_DIR'])
+        chrome_arguments << "--user-data-dir=#{user_data_dir}"
+        using_temp_user_data_dir = true
       end
 
       chrome_executable =
@@ -51,7 +55,13 @@ module Puppeteer::Launcher
           @launch_options.executable_path || fallback_executable_path
         end
       use_pipe = chrome_arguments.include?('--remote-debugging-pipe')
-      runner = Puppeteer::BrowserRunner.new(chrome_executable, chrome_arguments, temporary_user_data_dir)
+      runner = Puppeteer::BrowserRunner.new(
+        false,
+        chrome_executable,
+        chrome_arguments,
+        user_data_dir,
+        using_temp_user_data_dir,
+      )
       runner.start(
         handle_SIGHUP: @launch_options.handle_SIGHUP?,
         handle_SIGTERM: @launch_options.handle_SIGTERM?,
