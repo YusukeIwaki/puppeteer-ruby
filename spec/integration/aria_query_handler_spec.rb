@@ -11,12 +11,14 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
 
     [
       'aria/Submit button and some spaces[role="button"]',
+      "aria/Submit button and some spaces[role='button']",
       'aria/  Submit button and some spaces[role="button"]',
       'aria/Submit button and some spaces  [role="button"]',
       'aria/Submit  button   and  some  spaces   [  role  =  "button" ] ',
       'aria/[role="button"]Submit button and some spaces',
       'aria/Submit button [role="button"]and some spaces',
       'aria/[name="  Submit  button and some  spaces"][role="button"]',
+      "aria/[name='  Submit  button and some  spaces'][role='button']",
       'aria/ignored[name="Submit  button and some  spaces"][role="button"]',
     ].each do |selector_value|
       context "selector=#{selector_value}" do

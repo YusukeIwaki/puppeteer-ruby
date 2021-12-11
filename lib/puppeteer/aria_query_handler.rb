@@ -7,10 +7,10 @@ class Puppeteer::AriaQueryHandler
   private def parse_aria_selector(selector)
     known_attributes = %w(name role)
     query_options = {}
-    attribute_regexp = /\[\s*(?<attribute>\w+)\s*=\s*"(?<value>\\.|[^"\\]*)"\s*\]/
+    attribute_regexp = /\[\s*(?<attribute>\w+)\s*=\s*(?<quote>"|')(?<value>\\.|.*?(?=\k<quote>))\k<quote>\s*\]/
     default_name = selector.gsub(attribute_regexp) do
       attribute = $1.strip
-      value = $2
+      value = $3
       unless known_attributes.include?(attribute)
         raise ArgumentError.new("Unkown aria attribute \"#{attribute}\" in selector")
       end
