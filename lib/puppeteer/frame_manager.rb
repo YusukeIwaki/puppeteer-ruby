@@ -382,7 +382,7 @@ class Puppeteer::FrameManager
       @isolated_worlds << context_payload['name']
     end
 
-    context = Puppeteer::ExecutionContext.new(frame._client || @client, context_payload, world)
+    context = Puppeteer::ExecutionContext.new(frame&._client || @client, context_payload, world)
     if world
       world.context = context
     end
