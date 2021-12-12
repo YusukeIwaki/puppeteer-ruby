@@ -54,33 +54,39 @@ module Puppeteer::Launcher
         pipe: @launch_options.pipe?,
       )
 
+      browser =
+        begin
+          connection = runner.setup_connection(
+            use_pipe: @launch_options.pipe?,
+            timeout: @launch_options.timeout,
+            slow_mo: @browser_options.slow_mo,
+            preferred_revision: @preferred_revision,
+          )
+
+          Puppeteer::Browser.create(
+            connection: connection,
+            context_ids: [],
+            ignore_https_errors: @browser_options.ignore_https_errors?,
+            default_viewport: @browser_options.default_viewport,
+            process: runner.proc,
+            close_callback: -> { runner.close },
+          )
+        rescue
+          runner.kill
+          raise
+        end
+
       begin
-        connection = runner.setup_connection(
-          use_pipe: @launch_options.pipe?,
-          timeout: @launch_options.timeout,
-          slow_mo: @browser_options.slow_mo,
-          preferred_revision: @preferred_revision,
-        )
-
-        browser = Puppeteer::Browser.create(
-          connection: connection,
-          context_ids: [],
-          ignore_https_errors: @browser_options.ignore_https_errors?,
-          default_viewport: @browser_options.default_viewport,
-          process: runner.proc,
-          close_callback: -> { runner.close },
-        )
-
         browser.wait_for_target(
           predicate: ->(target) { target.type == 'page' },
           timeout: @launch_options.timeout,
         )
-
-        browser
       rescue
-        runner.kill
+        browser.close
         raise
       end
+
+      browser
     end
 
     # @return [Puppeteer::Browser]
