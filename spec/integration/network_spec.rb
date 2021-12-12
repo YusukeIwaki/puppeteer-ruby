@@ -48,4 +48,16 @@ RSpec.describe 'network' do
       })
     end
   end
+
+  describe 'Response.statusText', sinatra: true do
+    it 'should work' do
+      sinatra.get('/cool') do
+        status 201
+        body 'It is cool'
+      end
+
+      response = page.goto("#{server_prefix}/cool")
+      expect(response.status_text).to eq(Rack::Utils::HTTP_STATUS_CODES[201])
+    end
+  end
 end
