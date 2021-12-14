@@ -209,7 +209,7 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    it 'should have custom URL when launching browser', pending: Puppeteer.env.ci? && Puppeteer.env.firefox?, sinatra: true do
+    it 'should have custom URL when launching browser', sinatra: true do
       options = default_launch_options.dup
       options[:args] ||= []
       options[:args] += [server_empty_page]
@@ -288,11 +288,17 @@ RSpec.describe Puppeteer::Launcher do
   describe 'Puppeteer#default_args', puppeteer: :browser do
     it 'returns default arguments' do
       if Puppeteer.env.firefox?
-        expect(Puppeteer.default_args).to include(
-          '--headless',
-          '--no-remote',
-          '--foreground',
-        )
+        expected_args =
+          if Puppeteer.env.darwin?
+            %w(--headless --no-remote --foreground)
+          elsif Puppeteer.env.windows?
+            %w(--headless --no-remote --wait-for-browser)
+          else
+            %w(--headless --no-remote)
+          end
+        unexpected_args = %w(--headless --no-remote --foreground --wait-for-browser) - expected_args
+        expect(Puppeteer.default_args).to include(*expected_args)
+        expect(Puppeteer.default_args).not_to include(*unexpected_args)
       else
         expect(Puppeteer.default_args).to include(
           '--no-first-run',
