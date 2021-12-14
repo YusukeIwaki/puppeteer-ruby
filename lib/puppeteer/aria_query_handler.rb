@@ -39,7 +39,7 @@ class Puppeteer::AriaQueryHandler
   def wait_for(dom_world, selector, visible: nil, hidden: nil, timeout: nil)
     binding_function = Puppeteer::DOMWorld::BindingFunction.new(
       name: 'ariaQuerySelector',
-      proc: -> (selector) { query_one(dom_world.send(:document), selector) },
+      proc: -> (sel) { query_one(dom_world.send(:document), sel) },
     )
     dom_world.send(:wait_for_selector_in_page,
       '(_, selector) => globalThis.ariaQuerySelector(selector)',

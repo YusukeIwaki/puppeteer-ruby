@@ -259,7 +259,7 @@ RSpec.describe 'Screenshots' do
         transform: rotateZ(200deg);">&nbsp;</div>
         CONTENT
       element_handle = page.S('div')
-      expect(element_handle.screenshot).to be_golden('screenshot-element-rotate.png');
+      expect(element_handle.screenshot).to be_golden('screenshot-element-rotate.png')
     end
 
     it_fails_firefox 'should fail to screenshot a detached element' do

@@ -47,17 +47,17 @@ RSpec.describe Puppeteer::Launcher::LaunchOptions do
 
   describe "disabled signal handlers" do
     it 'handle_SIGINT can be disabled' do
-      opts = Puppeteer::Launcher::LaunchOptions.new({handle_SIGINT: false})
+      opts = Puppeteer::Launcher::LaunchOptions.new({ handle_SIGINT: false })
       expect(opts.handle_SIGINT?).to eq(false)
     end
 
     it 'handle_SIGTERM can be disabled' do
-      opts = Puppeteer::Launcher::LaunchOptions.new({handle_SIGTERM: false})
+      opts = Puppeteer::Launcher::LaunchOptions.new({ handle_SIGTERM: false })
       expect(opts.handle_SIGTERM?).to eq(false)
     end
 
     it 'handle_SIGHUP can be disabled' do
-      opts = Puppeteer::Launcher::LaunchOptions.new({handle_SIGHUP: false})
+      opts = Puppeteer::Launcher::LaunchOptions.new({ handle_SIGHUP: false })
       expect(opts.handle_SIGHUP?).to eq(false)
     end
   end

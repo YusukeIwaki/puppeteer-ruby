@@ -149,6 +149,8 @@ Style/MethodCallWithArgsParentheses:
     # utils
     - debug_print
     - debug_puts
+    - exit
+    - puts
 
 Style/MethodCallWithoutArgsParentheses:
   Enabled: true
