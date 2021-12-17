@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.38.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.39.0...main)]
 
 - xxx
+
+### 0.39.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.38.0...0.39.0)]
+
+New features:
+
+- Puppeteer 12.0 functionalities
 
 ### 0.38.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.4...0.38.0)]
 
