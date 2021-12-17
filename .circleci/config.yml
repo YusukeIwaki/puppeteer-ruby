@@ -66,10 +66,10 @@ jobs:
       - run:
           command: gem install bundler:2.2.3 && bundle install
       - run:
-          name: install firefox-nightly
+          name: install firefox-dev
           command: |
-            wget -O nightly.tar.bz2 "https://download.mozilla.org/?product=firefox-nightly-latest-ssl&os=linux64&lang=en-US"
-            tar xf nightly.tar.bz2
+            wget -O _firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-devedition-latest-ssl&os=linux64&lang=en-US"
+            tar xf _firefox.tar.bz2
       - run:
           name: rspec
           command: |
@@ -95,10 +95,10 @@ jobs:
       - run:
           command: gem install bundler:2.2.3 && bundle install
       - run:
-          name: install firefox-nightly
+          name: install firefox-dev
           command: |
-            wget -O nightly.tar.bz2 "https://download.mozilla.org/?product=firefox-nightly-latest-ssl&os=linux64&lang=en-US"
-            tar xf nightly.tar.bz2
+            wget -O _firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-devedition-latest-ssl&os=linux64&lang=en-US"
+            tar xf _firefox.tar.bz2
       - run:
           name: rspec
           command: |
