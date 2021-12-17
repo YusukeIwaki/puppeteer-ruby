@@ -4,13 +4,17 @@ require 'timeout'
 
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
 class Puppeteer::BrowserRunner
+  include Puppeteer::DebugPrint
+
   # @param {string} executablePath
   # @param {!Array<string>} processArguments
   # @param {string=} tempDirectory
-  def initialize(executable_path, process_arguments, temp_directory)
+  def initialize(for_firefox, executable_path, process_arguments, user_data_dir, using_temp_user_data_dir)
+    @for_firefox = for_firefox
     @executable_path = executable_path
     @process_arguments = process_arguments
-    @temp_directory = temp_directory
+    @user_data_dir = user_data_dir
+    @using_temp_user_data_dir = using_temp_user_data_dir
     @proc = nil
     @connection = nil
     @closed = true
@@ -90,8 +94,8 @@ class Puppeteer::BrowserRunner
     @process_closing = -> {
       @proc.dispose
       @closed = true
-      if @temp_directory
-        FileUtils.rm_rf(@temp_directory)
+      if @using_temp_user_data_dir
+        FileUtils.rm_rf(@user_data_dir)
       end
     }
     at_exit do
@@ -122,7 +126,7 @@ class Puppeteer::BrowserRunner
   def close
     return if @closed
 
-    if @temp_directory
+    if @using_temp_user_data_dir && !@for_firefox
       kill
     elsif @connection
       begin
@@ -137,11 +141,18 @@ class Puppeteer::BrowserRunner
 
   # @return {Promise}
   def kill
-    if @temp_directory
-      FileUtils.rm_rf(@temp_directory)
-    end
-    unless @closed
-      @proc.kill
+    # If the process failed to launch (for example if the browser executable path
+    # is invalid), then the process does not get a pid assigned. A call to
+    # `proc.kill` would error, as the `pid` to-be-killed can not be found.
+    @proc&.kill
+
+    # Attempt to remove temporary profile directory to avoid littering.
+    begin
+      if @using_temp_user_data_dir
+        FileUtils.rm_rf(@temp_directory)
+      end
+    rescue => err
+      debug_puts(err)
     end
   end
 
