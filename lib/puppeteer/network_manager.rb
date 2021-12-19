@@ -234,8 +234,24 @@ class Puppeteer::NetworkManager
     end
 
     request_id = event['networkId']
+    return unless request_id
+
     interception_id = event['requestId']
-    if request_id && (request_will_be_sent_event = @request_id_to_request_with_be_sent_event.delete(request_id))
+    request_will_be_sent_event = @request_id_to_request_with_be_sent_event[request_id]
+
+    # redirect requests have the same `requestId`
+    if request_will_be_sent_event
+      if request_will_be_sent_event['request']['url'] != event['request']['url']
+        request_id_to_request_with_be_sent_event.delete(request_id)
+        request_will_be_sent_event = nil
+      end
+      if request_will_be_sent_event['request']['method'] != event['request']['method']
+        request_id_to_request_with_be_sent_event.delete(request_id)
+        request_will_be_sent_event = nil
+      end
+    end
+
+    if request_will_be_sent_event
       handle_request(request_will_be_sent_event, interception_id)
     else
       @request_id_to_interception_id[request_id] = interception_id
