@@ -116,15 +116,14 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
       Timeout.timeout(1) { page.wait_for_selector('aria/[role="button"]') }
     end
 
-    # it('should work independently of `exposeFunction`', async () => {
-    #   const { page, server } = getTestState();
-    #   await page.goto(server.EMPTY_PAGE);
-    #   await page.exposeFunction('ariaQuerySelector', (a, b) => a + b);
-    #   await page.evaluate(addElement, 'button');
-    #   await page.waitForSelector('aria/[role="button"]');
-    #   const result = await page.evaluate('globalThis.ariaQuerySelector(2,8)');
-    #   expect(result).toBe(10);
-    # });
+    it 'should work independently of `exposeFunction`' do
+      page.goto(server_empty_page)
+      page.expose_function('ariaQuerySelector', -> (a, b) { a + b })
+      page.evaluate(add_element, 'button')
+      page.wait_for_selector('aria/[role="button"]')
+      result = page.evaluate('globalThis.ariaQuerySelector(2,8)')
+      expect(result).to eq(10)
+    end
 
     # it('should work with removed MutationObserver', async () => {
     #   const { page } = getTestState();
@@ -230,27 +229,22 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
     #   expect(imgFound).toBe(true);
     # });
 
-    # it('should wait for visible', async () => {
-    #   const { page } = getTestState();
+    it 'should wait for visible' do
+      div_found = false
+      wait_for_selector_promise = page.async_wait_for_selector('aria/name', visible: true).then { div_found = true }
+      page.content = "<div aria-label='name' style='display: none; visibility: hidden;'>1</div>"
 
-    #   let divFound = false;
-    #   const waitForSelector = page
-    #     .waitForSelector('aria/name', { visible: true })
-    #     .then(() => (divFound = true));
-    #   await page.setContent(
-    #     `<div aria-label='name' style='display: none; visibility: hidden;'>1</div>`
-    #   );
-    #   expect(divFound).toBe(false);
-    #   await page.evaluate(() =>
-    #     document.querySelector('div').style.removeProperty('display')
-    #   );
-    #   expect(divFound).toBe(false);
-    #   await page.evaluate(() =>
-    #     document.querySelector('div').style.removeProperty('visibility')
-    #   );
-    #   expect(await waitForSelector).toBe(true);
-    #   expect(divFound).toBe(true);
-    # });
+      expect(div_found).to eq(false)
+      page.evaluate(<<~JAVASCRIPT)
+      () => document.querySelector('div').style.removeProperty('display')
+      JAVASCRIPT
+      expect(div_found).to eq(false)
+      page.evaluate(<<~JAVASCRIPT)
+      () => document.querySelector('div').style.removeProperty('visibility')
+      JAVASCRIPT
+      await wait_for_selector_promise
+      expect(div_found).to eq(true)
+    end
 
     # it('should wait for visible recursively', async () => {
     #   const { page } = getTestState();
