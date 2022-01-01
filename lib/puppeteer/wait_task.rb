@@ -67,24 +67,14 @@ class Puppeteer::WaitTask
     return if @terminated || run_count != @run_count
 
     begin
-      if @root
-        success = @root.evaluate_handle(
-          WAIT_FOR_PREDICATE_PAGE_FUNCTION,
-          @predicate_body,
-          @polling,
-          @timeout,
-          *@args,
-        )
-      else
-        success = context.evaluate_handle(
-          WAIT_FOR_PREDICATE_PAGE_FUNCTION,
-          nil,
-          @predicate_body,
-          @polling,
-          @timeout,
-          *@args,
-        )
-      end
+      success = context.evaluate_handle(
+        WAIT_FOR_PREDICATE_PAGE_FUNCTION,
+        @root,
+        @predicate_body,
+        @polling,
+        @timeout,
+        *@args,
+      )
     rescue => err
       error = err
     end

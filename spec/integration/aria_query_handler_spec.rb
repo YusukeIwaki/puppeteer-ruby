@@ -93,6 +93,19 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
       Timeout.timeout(1) { page.wait_for_selector('aria/[role="button"]') }
     end
 
+    it 'should return the element handle' do
+      page.evaluate(<<~JAVASCRIPT)
+        () => (document.body.innerHTML = `<div></div>`)
+      JAVASCRIPT
+      element = page.query_selector('div')
+      inner_element = element.wait_for_selector('aria/test') do
+        element.evaluate(<<~JAVASCRIPT)
+          el => el.innerHTML="<p><button>test</button></p>"
+        JAVASCRIPT
+      end
+      expect(inner_element.evaluate('el => el.outerHTML')).to eq('<button>test</button>')
+    end
+
     it 'should persist query handler bindings across reloads' do
       page.goto(server_empty_page)
       page.evaluate(add_element, 'button')
@@ -372,9 +385,9 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
     # });
 
     it 'should return the element handle' do
-      promise = page.async_wait_for_selector('aria/zombo')
-      page.content = "<div aria-label='zombo'>anything</div>"
-      result = await promise
+      result = page.wait_for_selector('aria/zombo') do
+        page.content = "<div aria-label='zombo'>anything</div>"
+      end
       expect(result).to be_a(Puppeteer::ElementHandle)
       expect(page.evaluate('(x) => x.textContent', result)).to eq('anything')
     end

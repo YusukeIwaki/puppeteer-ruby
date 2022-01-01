@@ -58,7 +58,18 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # (30 seconds). Pass `0` to disable timeout. The default value can be changed
   # by using the {@link Page.setDefaultTimeout} method.
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    @context.world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout, root: self)
+    frame = @context.frame
+
+    secondary_world = frame.secondary_world
+    adopted_root = secondary_world.execution_context.adopt_element_handle(self)
+    handle = secondary_world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout, root: adopted_root)
+    adopted_root.dispose
+    return nil unless handle
+
+    main_world = frame.main_world
+    result = main_world.execution_context.adopt_element_handle(handle)
+    handle.dispose
+    result
   end
 
   define_async_method :async_wait_for_selector
