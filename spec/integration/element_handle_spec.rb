@@ -279,6 +279,26 @@ RSpec.describe Puppeteer::ElementHandle do
     end
   end
 
+  describe '#wait_for_selector' do
+    it 'should wait correctly with waitForSelector on an element' do
+      element = page.wait_for_selector('.foo') do
+        # Set the page content after the waitFor has been started.
+        page.content = '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
+      end
+
+      inner_element = element.wait_for_selector('.bar') do
+        element.evaluate(<<~JAVASCRIPT)
+        (el) => {
+          el.innerHTML = '<div class="bar">bar1</div>';
+        }
+        JAVASCRIPT
+      end
+      expect(inner_element).not_to be_nil
+      text = inner_element.evaluate('el => el.innerText')
+      expect(text).to eq('bar1')
+    end
+  end
+
   describe '#hover' do
     it 'should work', sinatra: true do
       page.goto("#{server_prefix}/input/scrollable.html")
@@ -423,7 +443,32 @@ RSpec.describe Puppeteer::ElementHandle do
 
   #     expect(element).toBeDefined();
   #   });
+  # it('should wait correctly with waitForSelector on an element', async () => {
+  #   const { page, puppeteer } = getTestState();
+  #   puppeteer.registerCustomQueryHandler('getByClass', {
+  #     queryOne: (element, selector) => element.querySelector(`.${selector}`),
+  #   });
+  #   const waitFor = page.waitForSelector('getByClass/foo');
 
+  #   // Set the page content after the waitFor has been started.
+  #   await page.setContent(
+  #     '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
+  #   );
+  #   let element = await waitFor;
+  #   expect(element).toBeDefined();
+
+  #   const innerWaitFor = element.waitForSelector('getByClass/bar');
+
+  #   await element.evaluate((el) => {
+  #     el.innerHTML = '<div class="bar">bar1</div>';
+  #   });
+
+  #   element = await innerWaitFor;
+  #   expect(element).toBeDefined();
+  #   expect(
+  #     await element.evaluate((el: HTMLElement) => el.innerText)
+  #   ).toStrictEqual('bar1');
+  # });
   #   it('should wait correctly with waitFor', async () => {
   #     /* page.waitFor is deprecated so we silence the warning to avoid test noise */
   #     sinon.stub(console, 'warn').callsFake(() => {});

@@ -9,7 +9,7 @@ class Puppeteer::WaitTask
     end
   end
 
-  def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil)
+  def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil, root: nil)
     if polling.is_a?(String)
       if polling != 'raf' && polling != 'mutation'
         raise ArgumentError.new("Unknown polling option: #{polling}")
@@ -25,6 +25,7 @@ class Puppeteer::WaitTask
     @dom_world = dom_world
     @polling = polling
     @timeout = timeout
+    @root = root
     @predicate_body = "return (#{predicate_body})(...args);"
     @args = args
     @binding_function = binding_function
@@ -68,6 +69,7 @@ class Puppeteer::WaitTask
     begin
       success = context.evaluate_handle(
         WAIT_FOR_PREDICATE_PAGE_FUNCTION,
+        @root,
         @predicate_body,
         @polling,
         @timeout,
@@ -121,8 +123,9 @@ class Puppeteer::WaitTask
   private define_async_method :async_rerun
 
   WAIT_FOR_PREDICATE_PAGE_FUNCTION = <<~JAVASCRIPT
-  async function _(predicateBody, polling, timeout, ...args) {
+  async function _(root, predicateBody, polling, timeout, ...args) {
       const predicate = new Function('...args', predicateBody);
+      root = root || document
       let timedOut = false;
       if (timeout)
           setTimeout(() => (timedOut = true), timeout);
@@ -136,7 +139,7 @@ class Puppeteer::WaitTask
        * @return {!Promise<*>}
        */
       async function pollMutation() {
-          const success = await predicate(...args);
+          const success = await predicate(root, ...args);
           if (success) return Promise.resolve(success);
           let fulfill;
           const result = new Promise((x) => (fulfill = x));
@@ -145,13 +148,13 @@ class Puppeteer::WaitTask
                   observer.disconnect();
                   fulfill();
               }
-              const success = await predicate(...args);
+              const success = await predicate(root, ...args);
               if (success) {
                   observer.disconnect();
                   fulfill(success);
               }
           });
-          observer.observe(document, {
+          observer.observe(root, {
               childList: true,
               subtree: true,
               attributes: true,
@@ -168,7 +171,7 @@ class Puppeteer::WaitTask
                   fulfill();
                   return;
               }
-              const success = await predicate(...args);
+              const success = await predicate(root, ...args);
               if (success) fulfill(success);
               else requestAnimationFrame(onRaf);
           }
@@ -183,7 +186,7 @@ class Puppeteer::WaitTask
                   fulfill();
                   return;
               }
-              const success = await predicate(...args);
+              const success = await predicate(root, ...args);
               if (success) fulfill(success);
               else setTimeout(onTimeout, pollInterval);
           }

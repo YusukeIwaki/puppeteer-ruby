@@ -36,6 +36,14 @@ class Puppeteer::JSHandle
 
   attr_reader :context, :remote_object
 
+  def inspect
+    values = %i[context remote_object disposed].map do |sym|
+      value = instance_variable_get(:"@#{sym}")
+      "@#{sym}=#{value}"
+    end
+    "#<Puppeteer::JSHandle #{values.join(' ')}>"
+  end
+
   # @return [Puppeteer::ExecutionContext]
   def execution_context
     @context

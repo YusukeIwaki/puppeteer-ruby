@@ -20,6 +20,60 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @disposed = false
   end
 
+  def inspect
+    values = %i[context remote_object page disposed].map do |sym|
+      value = instance_variable_get(:"@#{sym}")
+      "@#{sym}=#{value}"
+    end
+    "#<Puppeteer::ElementHandle #{values.join(' ')}>"
+  end
+
+  #
+  # Wait for the `selector` to appear within the element. If at the moment of calling the
+  # method the `selector` already exists, the method will return immediately. If
+  # the `selector` doesn't appear after the `timeout` milliseconds of waiting, the
+  # function will throw.
+  #
+  # This method does not work across navigations or if the element is detached from DOM.
+  #
+  # @param selector - A
+  # {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
+  # of an element to wait for
+  # @param options - Optional waiting parameters
+  # @returns Promise which resolves when element specified by selector string
+  # is added to DOM. Resolves to `null` if waiting for hidden: `true` and
+  # selector is not found in DOM.
+  # @remarks
+  # The optional parameters in `options` are:
+  #
+  # - `visible`: wait for the selected element to be present in DOM and to be
+  # visible, i.e. to not have `display: none` or `visibility: hidden` CSS
+  # properties. Defaults to `false`.
+  #
+  # - `hidden`: wait for the selected element to not be found in the DOM or to be hidden,
+  # i.e. have `display: none` or `visibility: hidden` CSS properties. Defaults to
+  # `false`.
+  #
+  # - `timeout`: maximum time to wait in milliseconds. Defaults to `30000`
+  # (30 seconds). Pass `0` to disable timeout. The default value can be changed
+  # by using the {@link Page.setDefaultTimeout} method.
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
+    frame = @context.frame
+
+    secondary_world = frame.secondary_world
+    adopted_root = secondary_world.execution_context.adopt_element_handle(self)
+    handle = secondary_world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout, root: adopted_root)
+    adopted_root.dispose
+    return nil unless handle
+
+    main_world = frame.main_world
+    result = main_world.execution_context.adopt_element_handle(handle)
+    handle.dispose
+    result
+  end
+
+  define_async_method :async_wait_for_selector
+
   def as_element
     self
   end
