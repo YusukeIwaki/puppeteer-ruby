@@ -21,12 +21,12 @@ class Puppeteer::CustomQueryHandler
     nil
   end
 
-  def wait_for(dom_world, selector, visible: nil, hidden: nil, timeout: nil)
+  def wait_for(dom_world, selector, visible: nil, hidden: nil, timeout: nil, root: nil)
     unless @query_one
       raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
     end
 
-    dom_world.send(:wait_for_selector_in_page, @query_one, selector, visible: visible, hidden: hidden, timeout: timeout)
+    dom_world.send(:wait_for_selector_in_page, @query_one, selector, visible: visible, hidden: hidden, timeout: timeout, root: root)
   end
 
   def query_all(element, selector)

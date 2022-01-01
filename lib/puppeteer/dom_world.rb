@@ -420,10 +420,10 @@ class Puppeteer::DOMWorld
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil, root: nil)
     # call wait_for_selector_in_page with custom query selector.
     query_selector_manager = Puppeteer::QueryHandlerManager.instance
-    query_selector_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
+    query_selector_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout, root: root)
   end
 
   private def binding_identifier(name, context)
@@ -497,10 +497,11 @@ class Puppeteer::DOMWorld
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  private def wait_for_selector_in_page(query_one, selector, visible: nil, hidden: nil, timeout: nil, binding_function: nil)
+  private def wait_for_selector_in_page(query_one, selector, visible: nil, hidden: nil, timeout: nil, root: nil, binding_function: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
     option_timeout = timeout || @timeout_settings.timeout
+    option_root = root
 
     polling =
       if option_wait_for_visible || option_wait_for_hidden
@@ -511,11 +512,11 @@ class Puppeteer::DOMWorld
     title = "selector #{selector}#{option_wait_for_hidden ? 'to be hidden' : ''}"
 
     selector_predicate = make_predicate_string(
-      predicate_arg_def: '(selector, waitForVisible, waitForHidden)',
+      predicate_arg_def: '(root, selector, waitForVisible, waitForHidden)',
       predicate_query_handler: query_one,
       async: true,
       predicate_body: <<~JAVASCRIPT
-        const node = await predicateQueryHandler(document, selector)
+        const node = await predicateQueryHandler(root, selector)
         return checkWaitForOptions(node, waitForVisible, waitForHidden);
       JAVASCRIPT
     )
@@ -527,6 +528,7 @@ class Puppeteer::DOMWorld
       polling: polling,
       timeout: option_timeout,
       args: [selector, option_wait_for_visible, option_wait_for_hidden],
+      root: option_root,
       binding_function: binding_function,
     )
     handle = wait_task.await_promise
@@ -541,10 +543,11 @@ class Puppeteer::DOMWorld
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil, root: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
     option_timeout = timeout || @timeout_settings.timeout
+    option_root = root
 
     polling =
       if option_wait_for_visible || option_wait_for_hidden
@@ -555,9 +558,9 @@ class Puppeteer::DOMWorld
     title = "XPath #{xpath}#{option_wait_for_hidden ? 'to be hidden' : ''}"
 
     xpath_predicate = make_predicate_string(
-      predicate_arg_def: '(selector, waitForVisible, waitForHidden)',
+      predicate_arg_def: '(root, selector, waitForVisible, waitForHidden)',
       predicate_body: <<~JAVASCRIPT
-        const node = document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        const node = document.evaluate(selector, root, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         return checkWaitForOptions(node, waitForVisible, waitForHidden);
       JAVASCRIPT
     )
@@ -569,6 +572,7 @@ class Puppeteer::DOMWorld
       polling: polling,
       timeout: option_timeout,
       args: [xpath, option_wait_for_visible, option_wait_for_hidden],
+      root: option_root,
     )
     handle = wait_task.await_promise
     unless handle.as_element
