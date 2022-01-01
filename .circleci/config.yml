@@ -5,7 +5,7 @@ rspec_chrome_job: &rspec_chrome_job
     - browser-tools/install-chrome
     - checkout
     - run:
-        command: gem install bundler:2.2.3 && bundle install
+        command: gem install bundler:2.3.4 && bundle install
     - run:
         name: rspec
         command: |
@@ -38,7 +38,7 @@ jobs:
           command: apk add build-base chromium git
       - checkout
       - run:
-          command: gem install bundler:2.2.3 && bundle install
+          command: gem install bundler:2.3.4 && bundle install
       - run:
           name: rspec
           command: |
@@ -64,7 +64,7 @@ jobs:
     steps:
       - checkout
       - run:
-          command: gem install bundler:2.2.3 && bundle install
+          command: gem install bundler:2.3.4 && bundle install
       - run:
           name: install firefox-dev
           command: |
@@ -93,7 +93,7 @@ jobs:
     steps:
       - checkout
       - run:
-          command: gem install bundler:2.2.3 && bundle install
+          command: gem install bundler:2.3.4 && bundle install
       - run:
           name: install firefox-dev
           command: |

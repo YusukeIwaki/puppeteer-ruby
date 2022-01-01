@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           gem uninstall bundler
-          gem install bundler -v 2.2.3
+          gem install bundler -v 2.3.4
           bundle install
 
       - name: Deploy Configuration

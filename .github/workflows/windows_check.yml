@@ -13,7 +13,7 @@ jobs:
       - name: Install dependencies
         run: |
           gem uninstall bundler
-          gem install bundler -v 2.2.3
+          gem install bundler -v 2.3.4
           bundle install
       - uses: browser-actions/setup-edge@latest
       - name: Check example
@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           gem uninstall bundler
-          gem install bundler -v 2.2.3
+          gem install bundler -v 2.3.4
           bundle install
       - uses: browser-actions/setup-chrome@latest
       - name: Check example
