@@ -31,7 +31,8 @@ class Puppeteer::HTTPResponse
   # @param client [Puppeteer::CDPSession]
   # @param request [Puppeteer::HTTPRequest]
   # @param response_payload [Hash]
-  def initialize(client, request, response_payload)
+  # @param extra_info [Hash|nil]
+  def initialize(client, request, response_payload, extra_info)
     @client = client
     @request = request
 
@@ -41,14 +42,15 @@ class Puppeteer::HTTPResponse
       port: response_payload['remotePort'],
     )
 
-    @status = response_payload['status']
-    @status_text = response_payload['statusText']
+    @status_text = parse_štatus_text_from_extra_info(extra_info) || response_payload['statusText']
     @url = request.url
     @from_disk_cache = !!response_payload['fromDiskCache']
     @from_service_worker = !!response_payload['fromServiceWorker']
 
+    @status = extra_info ? extra_info['statusCode'] : response_payload['status']
     @headers = {}
-    response_payload['headers'].each do |key, value|
+    headers = extra_info ? extra_info['headers'] : response_payload['headers']
+    headers.each do |key, value|
       @headers[key.downcase] = value
     end
     @security_details = if_present(response_payload['securityDetails']) do |security_payload|
@@ -61,6 +63,25 @@ class Puppeteer::HTTPResponse
   attr_reader :internal
 
   attr_reader :remote_address, :url, :status, :status_text, :headers, :security_details, :request
+
+  def inspect
+    values = %i[remote_address url status status_text headers security_details request].map do |sym|
+      value = instance_variable_get(:"@#{sym}")
+      "@#{sym}=#{value}"
+    end
+    "#<Puppeteer::HTTPRequest #{values.join(' ')}>"
+  end
+
+  private def parse_štatus_text_from_extra_info(extra_info)
+    return nil if !extra_info || !extra_info['headersText']
+    first_line = extra_info['headersText'].split("\r").first
+    return nil unless first_line
+    /[^ ]* [^ ]* (.*)/.match(first_line) do |m|
+      return m[1]
+    end
+
+    nil
+  end
 
   # @return [Boolean]
   def ok?

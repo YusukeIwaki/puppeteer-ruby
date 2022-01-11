@@ -81,6 +81,7 @@ module NetworkManagerEmittedEvents ; end
 
 {
   Request: EventsDefinitionUtils.symbol('NetworkManager.Request'),
+  RequestServedFromCache: EventsDefinitionUtils.symbol('NetworkManager.RequestServedFromCache'),
   Response: EventsDefinitionUtils.symbol('NetworkManager.Response'),
   RequestFailed: EventsDefinitionUtils.symbol('NetworkManager.RequestFailed'),
   RequestFinished: EventsDefinitionUtils.symbol('NetworkManager.RequestFinished'),

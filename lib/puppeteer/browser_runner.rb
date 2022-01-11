@@ -149,7 +149,7 @@ class Puppeteer::BrowserRunner
     # Attempt to remove temporary profile directory to avoid littering.
     begin
       if @using_temp_user_data_dir
-        FileUtils.rm_rf(@temp_directory)
+        FileUtils.rm_rf(@user_data_dir)
       end
     rescue => err
       debug_puts(err)
