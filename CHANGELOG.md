@@ -1,6 +1,14 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.39.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.0...main)]
 
 - xxx
+
+### 0.40.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.39.0...0.40.0)]
+
+New features:
+
+- Puppeteer 13.0, 13.1 functionalities
+- Support Ruby 3.1
+
 
 ### 0.39.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.38.0...0.39.0)]
 
