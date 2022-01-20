@@ -367,7 +367,7 @@ class Puppeteer::NetworkManager
 
       unless extra_info
         # Wait until we get the corresponding ExtraInfo event.
-        @network_event_manager.enqueue_event_group(event['requestId'], QueuedEventGroup.new(event))
+        @network_event_manager.enqueue_event_group(event['requestId'], QueuedEventGroup.new(response_received_event: event))
         return
       end
     end
