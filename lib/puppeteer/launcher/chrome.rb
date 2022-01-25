@@ -286,15 +286,15 @@ module Puppeteer::Launcher
         end
 
       chrome_path = chrome_path_map[channel]
-      if chrome_path.is_a?(Proc)
-        chrome_path = chrome_path.call
-      end
-
       unless chrome_path
         raise ArgumentError.new("Invalid channel: '#{channel}'. Allowed channel is #{chrome_path_map.keys}")
       end
 
-      unless File.exist?(chrome_path)
+      if chrome_path.is_a?(Proc)
+        chrome_path = chrome_path.call
+      end
+
+      if !chrome_path || !File.exist?(chrome_path)
         raise "#{channel} is not installed on this system.\nExpected path: #{chrome_path}"
       end
 

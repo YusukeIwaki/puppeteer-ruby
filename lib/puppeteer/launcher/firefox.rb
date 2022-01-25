@@ -195,7 +195,7 @@ module Puppeteer::Launcher
         firefox_path = firefox_path.call
       end
 
-      unless File.exist?(firefox_path)
+      if !firefox_path || !File.exist?(firefox_path)
         raise "Nightly version of Firefox is not installed on this system.\nExpected path: #{firefox_path}"
       end
 
