@@ -1,6 +1,6 @@
 # API coverages
 - Puppeteer version: v13.0.1
-- puppeteer-ruby version: 0.40.0
+- puppeteer-ruby version: 0.40.1
 
 ## Puppeteer
 
@@ -296,6 +296,7 @@
 * ~~toString~~
 * type => `#type_text`
 * uploadFile => `#upload_file`
+* waitForSelector => `#wait_for_selector`
 
 ## HTTPRequest
 
@@ -309,6 +310,8 @@
 * frame
 * headers
 * initiator
+* ~~interceptResolutionState~~
+* ~~isInterceptResolutionHandled~~
 * isNavigationRequest => `#navigation_request?`
 * method
 * postData => `#post_data`

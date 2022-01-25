@@ -1,6 +1,14 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.1...main)]
 
 - xxx
+
+### 0.40.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.0...0.40.1)]
+
+Bugfix:
+
+- Fix error on reload [#190](https://github.com/YusukeIwaki/puppeteer-ruby/pull/190)
+- Fix error message on failing to find Chrome executable.
+- Fix apidoc
 
 ### 0.40.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.39.0...0.40.0)]
 
