@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Launcher do
-  before { skip unless Puppeteer.env.darwin? }
-
   let(:instance) {
     Puppeteer::Launcher.new(
       project_root: '/tmp',
@@ -13,6 +11,8 @@ RSpec.describe Puppeteer::Launcher do
   }
 
   describe 'executable_path' do
+    before { skip unless Puppeteer.env.darwin? }
+
     subject { instance.executable_path(channel: channel) }
 
     context 'chrome' do
@@ -64,6 +64,36 @@ RSpec.describe Puppeteer::Launcher do
         let(:channel) { 'nightly' }
 
         it { is_expected.to eq('/Applications/Firefox Nightly.app/Contents/MacOS/firefox') }
+      end
+    end
+  end
+
+  describe 'executable_path detection' do
+    before {
+      skip if Puppeteer.env.windows? || Puppeteer.env.darwin?
+    }
+
+    subject { instance.executable_path(channel: channel) }
+
+    context 'chrome' do
+      let(:product) { 'chrome' }
+
+      context 'path finder cannot find chrome' do
+        subject { instance.executable_path }
+        before {
+          allow_any_instance_of(Puppeteer::ExecutablePathFinder).to receive(:find_first).and_return(nil)
+        }
+
+        it { expect { subject }.to raise_error(/chrome is not installed on this system.\nExpected path/) }
+      end
+
+      context 'path finder find chrome' do
+        subject { instance.executable_path }
+        before {
+          allow_any_instance_of(Puppeteer::ExecutablePathFinder).to receive(:find_first).and_return('./unknown')
+        }
+
+        it { expect { subject }.to raise_error(/chrome is not installed on this system.\nExpected path: .\/unknown/) }
       end
     end
   end
