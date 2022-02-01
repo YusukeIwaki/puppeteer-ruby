@@ -96,7 +96,7 @@ class Puppeteer::NetworkEventManager
     @request_paused_map[network_request_id]
   end
 
-  def fotget_request_paused(network_request_id)
+  def forget_request_paused(network_request_id)
     @request_paused_map.delete(network_request_id)
   end
 
