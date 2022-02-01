@@ -1,6 +1,13 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.2...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.3...main)]
 
 - xxx
+
+### 0.40.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.2...0.40.3)]
+
+Bugfix:
+
+- Prevent `Ctrl+C` from stopping Chrome [#196](https://github.com/YusukeIwaki/puppeteer-ruby/pull/196)
+
 
 ### 0.40.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.1...0.40.2)]
 
