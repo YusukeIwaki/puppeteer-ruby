@@ -31,7 +31,9 @@ class Puppeteer::BrowserRunner
           [executable_path]
         end
 
-      stdin, @stdout, @stderr, @thread = Open3.popen3(env, executable_path, *args)
+      popen3_args = args || []
+      popen3_args << { pgroup: true } unless Puppeteer.env.windows?
+      stdin, @stdout, @stderr, @thread = Open3.popen3(env, executable_path, *popen3_args)
       stdin.close
       @pid = @thread.pid
     rescue Errno::ENOENT => err
