@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.1...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.2...main)]
 
 - xxx
+
+### 0.40.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.1...0.40.2)]
+
+Bugfix:
+
+- Fix crash on setting response listener [#195](https://github.com/YusukeIwaki/puppeteer-ruby/pull/195)
 
 ### 0.40.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.0...0.40.1)]
 
