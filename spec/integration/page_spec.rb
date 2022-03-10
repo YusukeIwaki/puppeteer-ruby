@@ -429,39 +429,35 @@ RSpec.describe Puppeteer::Page do
   #     expect(await message.args()[1].jsonValue()).toEqual(5);
   #     expect(await message.args()[2].jsonValue()).toEqual({ foo: 'bar' });
   #   });
-  #   it('should work for different console API calls', async () => {
-  #     const { page } = getTestState();
-
-  #     const messages = [];
-  #     page.on('console', (msg) => messages.push(msg));
-  #     // All console events will be reported before `page.evaluate` is finished.
-  #     await page.evaluate(() => {
-  #       // A pair of time/timeEnd generates only one Console API call.
-  #       console.time('calling console.time');
-  #       console.timeEnd('calling console.time');
-  #       console.trace('calling console.trace');
-  #       console.dir('calling console.dir');
-  #       console.warn('calling console.warn');
-  #       console.error('calling console.error');
-  #       console.log(Promise.resolve('should not wait until resolved!'));
-  #     });
-  #     expect(messages.map((msg) => msg.type())).toEqual([
-  #       'timeEnd',
-  #       'trace',
-  #       'dir',
-  #       'warning',
-  #       'error',
-  #       'log',
-  #     ]);
-  #     expect(messages[0].text()).toContain('calling console.time');
-  #     expect(messages.slice(1).map((msg) => msg.text())).toEqual([
-  #       'calling console.trace',
-  #       'calling console.dir',
-  #       'calling console.warn',
-  #       'calling console.error',
-  #       'JSHandle@promise',
-  #     ]);
-  #   });
+  it 'should work for different console API calls' do
+    messages = []
+    page.on('console') do |m|
+      messages << m
+    end
+    # All console events will be reported before `page.evaluate` is finished.
+    page.evaluate(<<~JAVASCRIPT)
+    () => {
+      // A pair of time/timeEnd generates only one Console API call.
+      console.time('calling console.time');
+      console.timeEnd('calling console.time');
+      console.trace('calling console.trace');
+      console.dir('calling console.dir');
+      console.warn('calling console.warn');
+      console.error('calling console.error');
+      console.log(Promise.resolve('should not wait until resolved!'));
+    }
+    JAVASCRIPT
+    expect(messages.map(&:log_type)).to eq(%w[timeEnd trace dir warning error log])
+    #     expect(messages[0].text()).toContain('calling console.time');
+    #     expect(messages.slice(1).map((msg) => msg.text())).toEqual([
+    #       'calling console.trace',
+    #       'calling console.dir',
+    #       'calling console.warn',
+    #       'calling console.error',
+    #       'JSHandle@promise',
+    #     ]);
+    #   });
+  end
   #   it('should not fail for window object', async () => {
   #     const { page } = getTestState();
 
@@ -505,39 +501,37 @@ RSpec.describe Puppeteer::Page do
   #       lineNumber: undefined,
   #     });
   #   });
-  #   it('should have location and stack trace for console API calls', async () => {
-  #     const { page, server, isChrome } = getTestState();
+  it 'should have location and stack trace for console API calls', sinatra: true do
+    page.goto(server_empty_page)
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [message] = await Promise.all([
-  #       waitEvent(page, 'console'),
-  #       page.goto(server.PREFIX + '/consolelog.html'),
-  #     ]);
-  #     expect(message.text()).toBe('yellow');
-  #     expect(message.type()).toBe('log');
-  #     expect(message.location()).toEqual({
-  #       url: server.PREFIX + '/consolelog.html',
-  #       lineNumber: 8,
-  #       columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
-  #     });
-  #     expect(message.stackTrace()).toEqual([
-  #       {
-  #         url: server.PREFIX + '/consolelog.html',
-  #         lineNumber: 8,
-  #         columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
-  #       },
-  #       {
-  #         url: server.PREFIX + '/consolelog.html',
-  #         lineNumber: 11,
-  #         columnNumber: 8,
-  #       },
-  #       {
-  #         url: server.PREFIX + '/consolelog.html',
-  #         lineNumber: 13,
-  #         columnNumber: 6,
-  #       },
-  #     ]);
-  #   });
+    message = await_all(
+      resolvable_future { |f| page.once('console') { |m| f.fulfill(m) } },
+      Concurrent::Promises.future { page.goto("#{server_prefix}/consolelog.html") },
+    ).first
+    expect(message.log_type).to eq('log')
+    #   expect(message.location()).toEqual({
+    #     url: server.PREFIX + '/consolelog.html',
+    #     lineNumber: 8,
+    #     columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
+    #   });
+    #   expect(message.stackTrace()).toEqual([
+    #     {
+    #       url: server.PREFIX + '/consolelog.html',
+    #       lineNumber: 8,
+    #       columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
+    #     },
+    #     {
+    #       url: server.PREFIX + '/consolelog.html',
+    #       lineNumber: 11,
+    #       columnNumber: 8,
+    #     },
+    #     {
+    #       url: server.PREFIX + '/consolelog.html',
+    #       lineNumber: 13,
+    #       columnNumber: 6,
+    #     },
+    #   ]);
+  end
   #   // @see https://github.com/puppeteer/puppeteer/issues/3865
   #   it('should not throw when there are console messages in detached iframes', async () => {
   #     const { page, server } = getTestState();
