@@ -204,7 +204,7 @@
 
 * args
 * location
-* ~~stackTrace~~
+* stackTrace => `#stack_trace`
 * text
 * ~~type~~
 

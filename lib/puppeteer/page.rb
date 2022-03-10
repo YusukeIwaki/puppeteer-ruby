@@ -508,6 +508,7 @@ class Puppeteer::Page
   end
 
   private def handle_console_api(event)
+    puts "~~~~~~~~~~~~~~#{event}"
     if event['executionContextId'] == 0
       # DevTools protocol stores the last 1000 console messages. These
       # messages are always reported even for removed execution contexts. In
@@ -582,18 +583,19 @@ class Puppeteer::Page
   private def add_console_message(type, args, stack_trace)
     text_tokens = args.map { |arg| arg.remote_object.value }
 
-    call_frame = stack_trace['callFrames']&.first
-    location =
-      if call_frame
-        Puppeteer::ConsoleMessage::Location.new(
-          url: call_frame['url'],
-          line_number: call_frame['lineNumber'],
-          column_number: call_frame['columnNumber'],
-        )
+    stack_trace_locations =
+      if stack_trace && stack_trace['callFrames']
+        stack_trace['callFrames'].map do |call_frame|
+          Puppeteer::ConsoleMessage::Location.new(
+            url: call_frame['url'],
+            line_number: call_frame['lineNumber'],
+            column_number: call_frame['columnNumber'],
+          )
+        end
       else
-        nil
+        []
       end
-    console_message = Puppeteer::ConsoleMessage.new(type, text_tokens.join(' '), args, location)
+    console_message = Puppeteer::ConsoleMessage.new(type, text_tokens.join(' '), args, stack_trace_locations)
     emit_event(PageEmittedEvents::Console, console_message)
   end
 
