@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.3...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.4...main)]
 
 - xxx
+
+### 0.40.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.3...0.40.4)]
+
+Bugfix:
+
+- Fix warning on handling console message.
 
 ### 0.40.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.2...0.40.3)]
 

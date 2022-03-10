@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v13.0.1
-- puppeteer-ruby version: 0.40.3
+- Puppeteer version: v13.5.1
+- puppeteer-ruby version: 0.40.4
 
 ## Puppeteer
 
@@ -337,6 +337,7 @@
 * status
 * statusText => `#status_text`
 * text
+* ~~timing~~
 * url
 
 ## ~~SecurityDetails~~
