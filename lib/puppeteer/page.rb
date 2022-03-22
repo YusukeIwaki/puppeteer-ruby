@@ -404,7 +404,7 @@ class Puppeteer::Page
     items = cookies.map do |cookie|
       (starts_with_http ? { url: page_url } : {}).merge(cookie).tap do |item|
         raise ArgumentError.new("Blank page can not have cookie \"#{item[:name]}\"") if item[:url] == "about:blank"
-        raise ArgumetnError.new("Data URL page can not have cookie \"#{item[:name]}\"") if item[:url]&.start_with?("data:")
+        raise ArgumentError.new("Data URL page can not have cookie \"#{item[:name]}\"") if item[:url]&.start_with?("data:")
       end
     end
     delete_cookie(*items)
