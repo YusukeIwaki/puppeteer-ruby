@@ -227,7 +227,7 @@ class Puppeteer::Page
     @client.send_message('Emulation.setGeolocationOverride', geolocation.to_h)
   end
 
-  attr_reader :javascript_enabled, :target
+  attr_reader :javascript_enabled, :target, :client
   alias_method :javascript_enabled?, :javascript_enabled
 
   def browser

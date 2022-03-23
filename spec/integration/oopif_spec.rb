@@ -153,4 +153,46 @@ RSpec.describe 'OOPIF', **metadata do
     detach_frame(oop_iframe, 'frame1')
     expect(oop_iframe.child_frames).to be_empty
   end
+
+  it 'clickablePoint, boundingBox, boxModel should work for elements inside OOPIFs' do
+    page.goto(server_empty_page)
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
+      attach_frame(page, 'frame1', "#{server_cross_process_prefix}/empty.html")
+    end
+
+    page.evaluate(<<~JAVASCRIPT)
+    () => {
+      document.body.style.border = '50px solid black';
+      document.body.style.margin = '50px';
+      document.body.style.padding = '50px';
+    }
+    JAVASCRIPT
+    frame.evaluate(<<~JAVASCRIPT)
+    () => {
+      const button = document.createElement('button');
+      button.id = 'test-button';
+      button.innerText = 'click';
+      document.body.appendChild(button);
+    }
+    JAVASCRIPT
+
+    button = frame.wait_for_selector('#test-button', visible: true)
+
+    result = button.clickable_point
+    expect(result.x).to be > 150 # padding + margin + border left
+    expect(result.y).to be > 150 # padding + margin + border top
+
+    result_box_model = button.box_model
+    %i(content border margin padding).each do |attr_name|
+      result_box_model.send(attr_name).each do |part|
+        expect(part.x).to be > 150 # padding + margin + border left
+        expect(part.y).to be > 150 # padding + margin + border top
+      end
+    end
+
+    result_bounding_box = button.bounding_box
+    expect(result_bounding_box.x).to be > 150 # padding + margin + border left
+    expect(result_bounding_box.y).to be > 150 # padding + margin + border top
+  end
 end
