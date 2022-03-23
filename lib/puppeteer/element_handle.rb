@@ -159,13 +159,9 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         next
       end
       backend_node_id = parent._client.send_message('DOM.getFrameOwner', frameId: frame.id)['backendNodeId']
-      quads = parent._client.send_message('DOM.getContentQuads', backendNodeId: backend_node_id)['quads']
-      if !quads || quads.empty?
-        break
-      end
-      protocol_quads = quads.map { |quad| from_protocol_quad(quad) }
-      top_left_corner = protocol_quads.first.first
-      offset = offset + top_left_corner
+      result = parent._client.send_message('DOM.getBoxModel', backendNodeId: backend_node_id)
+      break unless result
+      offset = BoxModel.new(result['model'], offset: offset).content.first
       frame = parent
     end
     offset
@@ -199,10 +195,10 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     client_width = layout_viewport["clientWidth"]
     client_height = layout_viewport["clientHeight"]
 
-    offset = oopif_offsets(@frame)
+    oopif_offset = oopif_offsets(@frame)
     quads = result["quads"].
               map { |quad| from_protocol_quad(quad) }.
-              map { |quad| apply_offsets_to_quad(quad, offset) }.
+              map { |quad| apply_offsets_to_quad(quad, oopif_offset) }.
               map { |quad| intersect_quad_with_viewport(quad, client_width, client_height) }.
               select { |quad| compute_quad_area(quad) > 1 }
     if quads.empty?
