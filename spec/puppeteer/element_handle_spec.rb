@@ -44,6 +44,7 @@ RSpec.describe Puppeteer::ElementHandle do
         context: double(Puppeteer::ExecutionContext),
         client: double(Puppeteer::CDPSession),
         remote_object: double(Puppeteer::RemoteObject),
+        frame: double(Puppeteer::Frame),
         page: double(Puppeteer::Page),
         frame_manager: double(Puppeteer::FrameManager),
       )

@@ -11,10 +11,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param context [Puppeteer::ExecutionContext]
   # @param client [Puppeteer::CDPSession]
   # @param remote_object [Puppeteer::RemoteObject]
+  # @param frame [Puppeteer::Frame]
   # @param page [Puppeteer::Page]
   # @param frame_manager [Puppeteer::FrameManager]
-  def initialize(context:, client:, remote_object:, page:, frame_manager:)
+  def initialize(context:, client:, remote_object:, frame:, page:, frame_manager:)
     super(context: context, client: client, remote_object: remote_object)
+    @frame = frame
     @page = page
     @frame_manager = frame_manager
     @disposed = false
@@ -134,6 +136,41 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
+  class ElementNotClickableError < StandardError
+    def initialize
+      super("Node is either not clickable or not an HTMLElement")
+    end
+  end
+
+  # @param quad [Array<Array<Point>>]]
+  # @param offset [Point]
+  private def apply_offsets_to_quad(quad, offset)
+    quad.map { |part| part + offset }
+  end
+
+  # @param frame [Puppeteer::Frame]
+  # @return [Point]
+  private def oopif_offsets(frame)
+    offset = Point.new(x: 0, y: 0)
+    while frame.parent_frame
+      parent = frame.parent_frame
+      unless frame.oop_frame?
+        frame = parent
+        next
+      end
+      backend_node_id = parent._client.send_message('DOM.getFrameOwner', frameId: frame.id)['backendNodeId']
+      quads = parent._client.send_message('DOM.getContentQuads', backendNodeId: backend_node_id)['quads']
+      if !quads || quads.empty?
+        break
+      end
+      protocol_quads = quads.map { |quad| from_protocol_quad(quad) }
+      top_left_corner = protocol_quads.first.first
+      offset = offset + top_left_corner
+      frame = parent
+    end
+    offset
+  end
+
   def clickable_point(offset = nil)
     offset_param = Offset.from(offset)
 
@@ -150,12 +187,22 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
 
     # Filter out quads that have too small area to click into.
-    layout_metrics = @client.send_message('Page.getLayoutMetrics')
-    client_width = layout_metrics["layoutViewport"]["clientWidth"]
-    client_height = layout_metrics["layoutViewport"]["clientHeight"]
+    layout_metrics = @page.client.send_message('Page.getLayoutMetrics')
 
+    if result.empty? || result["quads"].empty?
+      raise ElementNotClickableError.new
+    end
+
+    # Filter out quads that have too small area to click into.
+    # Fallback to `layoutViewport` in case of using Firefox.
+    layout_viewport = layout_metrics["cssLayoutViewport"] || layout_metrics["layoutViewport"]
+    client_width = layout_viewport["clientWidth"]
+    client_height = layout_viewport["clientHeight"]
+
+    offset = oopif_offsets(@frame)
     quads = result["quads"].
               map { |quad| from_protocol_quad(quad) }.
+              map { |quad| apply_offsets_to_quad(quad, offset) }.
               map { |quad| intersect_quad_with_viewport(quad, client_width, client_height) }.
               select { |quad| compute_quad_area(quad) > 1 }
     if quads.empty?
@@ -357,13 +404,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @return [BoundingBox|nil]
   def bounding_box
     if_present(box_model) do |result_model|
+      offset = oopif_offsets(@frame)
       quads = result_model.border
 
       x = quads.map(&:x).min
       y = quads.map(&:y).min
       BoundingBox.new(
-        x: x,
-        y: y,
+        x: x + offset.x,
+        y: y + offset.y,
         width: quads.map(&:x).max - x,
         height: quads.map(&:y).max - y,
       )
@@ -373,7 +421,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @return [BoxModel|nil]
   def box_model
     if_present(@remote_object.box_model(@client)) do |result|
-      BoxModel.new(result['model'])
+      BoxModel.new(result['model'], offset: oopif_offsets(@frame))
     end
   end
 

@@ -12,6 +12,7 @@ class Puppeteer::JSHandle
         context: context,
         client: context.client,
         remote_object: remote_object,
+        frame: frame,
         page: frame_manager.page,
         frame_manager: frame_manager,
       )

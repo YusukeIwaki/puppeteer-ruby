@@ -178,7 +178,7 @@ class Puppeteer::FrameManager
     frame = @frames[event['targetInfo']['targetId']]
     session = Puppeteer::Connection.from_session(@client).session(event['sessionId'])
 
-    frame.send(:update_client, session)
+    frame&.send(:update_client, session)
     setup_listeners(session)
     async_init(session)
   end
