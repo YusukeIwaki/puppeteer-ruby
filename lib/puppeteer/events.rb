@@ -96,6 +96,7 @@ module FrameManagerEmittedEvents ; end
   FrameAttached: EventsDefinitionUtils.symbol('FrameManager.FrameAttached'),
   FrameNavigated: EventsDefinitionUtils.symbol('FrameManager.FrameNavigated'),
   FrameDetached: EventsDefinitionUtils.symbol('FrameManager.FrameDetached'),
+  FrameSwapped: EventsDefinitionUtils.symbol('FrameManager.FrameSwapped'),
   LifecycleEvent: EventsDefinitionUtils.symbol('FrameManager.LifecycleEvent'),
   FrameNavigatedWithinDocument: EventsDefinitionUtils.symbol('FrameManager.FrameNavigatedWithinDocument'),
   ExecutionContextCreated: EventsDefinitionUtils.symbol('FrameManager.ExecutionContextCreated'),

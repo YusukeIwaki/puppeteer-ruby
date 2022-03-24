@@ -508,7 +508,6 @@ class Puppeteer::Page
   end
 
   private def handle_console_api(event)
-    puts "~~~~~~~~~~~~~~#{event}"
     if event['executionContextId'] == 0
       # DevTools protocol stores the last 1000 console messages. These
       # messages are always reported even for removed execution contexts. In

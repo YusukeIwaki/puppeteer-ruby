@@ -353,6 +353,8 @@ class Puppeteer::FrameManager
       if frame
         remove_frame_recursively(frame)
       end
+    elsif reason == 'swap'
+      emit_event(FrameManagerEmittedEvents::FrameSwapped, frame)
     end
   end
 

@@ -80,6 +80,22 @@ RSpec.describe 'OOPIF', **metadata do
     expect(page.frames.size).to eq(1)
   end
 
+  it 'should support wait for navigation for transitions from local to OOPIF' do
+    page.goto(server_empty_page)
+    predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
+    frame = page.wait_for_frame(predicate: predicate) do
+      attach_frame(page, 'frame1', server_empty_page)
+    end
+    expect(frame).not_to be_oop_frame
+
+    frame.wait_for_navigation do
+      navigate_frame(page, 'frame1', "#{server_cross_process_prefix}/empty.html")
+    end
+    expect(frame).to be_oop_frame
+    detach_frame(page, 'frame1')
+    expect(page.frames.count).to eq(1)
+  end
+
   it 'should keep track of a frames OOP state' do
     page.goto(server_empty_page)
     predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }

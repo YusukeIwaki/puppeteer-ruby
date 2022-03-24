@@ -77,6 +77,7 @@ class Puppeteer::LifecycleWatcher
         check_lifecycle_complete
       end,
       @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameNavigatedWithinDocument, &method(:navigated_within_document)),
+      @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameSwapped, &method(:handle_frame_swapped)),
       @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameDetached, &method(:handle_frame_detached)),
     ]
     @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Request, &method(:handle_request))
@@ -142,11 +143,21 @@ class Puppeteer::LifecycleWatcher
     check_lifecycle_complete
   end
 
+  private def handle_frame_swapped(frame)
+    return if frame != @frame
+    @swapped = true
+    check_lifecycle_complete
+  end
+
   private def check_lifecycle_complete
     # We expect navigation to commit.
     return unless @expected_lifecycle.completed?(@frame)
     @lifecycle_promise.fulfill(true) if @lifecycle_promise.pending?
     if @frame.loader_id == @initial_loader_id && !@has_same_document_navigation
+      if @swapped
+        @swapped = false
+        @new_document_navigation_promise.fulfill(true)
+      end
       return
     end
     if @has_same_document_navigation && @same_document_navigation_promise.pending?
