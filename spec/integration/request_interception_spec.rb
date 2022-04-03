@@ -1,5 +1,42 @@
 require 'spec_helper'
 
+RSpec.describe 'request interception', skip: Puppeteer.env.firefox? do
+  it 'should intercept', sinatra: true do
+    page.request_interception = true
+
+    page.on('request') do |request|
+      if request.url.include?('favicon.ico')
+        request.continue
+        next
+      end
+
+      expect(request.url).to include('/empty.html')
+      expect(request.headers['user-agent']).not_to be_nil
+      expect(request.method).to eq('GET')
+      expect(request.post_data).to be_nil
+      expect(request.navigation_request?).to eq(true)
+      expect(request.resource_type).to eq('document')
+
+      request.continue
+    end
+    response = page.goto(server_empty_page)
+    expect(response.ok?).to eq(true)
+  end
+
+  it 'should indicate alreay-handled if an intercept has been handled', sinatra: true do
+    page.request_interception = true
+    page.on('request', &:continue)
+    page.on('request') do |request|
+      expect(request.intercept_resolution_handled?).to eq(true)
+    end
+    page.on('request') do |request|
+      expect(request.intercept_resolution_state.action).to eq('already-handled')
+    end
+
+    page.goto(server_empty_page)
+  end
+end
+
 # https://github.com/puppeteer/puppeteer/blob/e2e98376b9a3fa9a2501ddc86ff6407f3b59887d/docs/api.md#cooperative-intercept-mode-and-legacy-intercept-mode
 RSpec.describe 'request interception example', skip: Puppeteer.env.firefox? do
   example 'Legacy Mode prevails and the request is aborted', sinatra: true do
@@ -14,7 +51,7 @@ RSpec.describe 'request interception example', skip: Puppeteer.env.firefox? do
     end
     page.on('request') do |request|
       # ['already-handled'], meaning a legacy resolution has taken place
-      expect(request.intercept_resolution).to eq(['already-handled'])
+      expect(request.intercept_resolution_state.action).to eq('already-handled')
 
       # Cooperative Mode: votes for continue at priority 0.
       # Ultimately throws an exception after all handlers have finished
@@ -41,7 +78,8 @@ RSpec.describe 'request interception example', skip: Puppeteer.env.firefox? do
     end
     page.on('request') do |request|
       # ['abort', 0], meaning an abort @ 0 is the current winning resolution
-      expect(request.intercept_resolution).to eq([:abort, 0])
+      expect(request.intercept_resolution_state.action).to eq('abort')
+      expect(request.intercept_resolution_state.priority).to eq(0)
 
       # Legacy Mode: intercept continues immediately.
       request.continue
@@ -69,7 +107,8 @@ RSpec.describe 'request interception example', skip: Puppeteer.env.firefox? do
     end
     page.on('request') do |request|
       # ['continue', 5], because continue @ 5 > abort @ 0
-      expect(request.intercept_resolution).to eq([:continue, 5])
+      expect(request.intercept_resolution_state.action).to eq('continue')
+      expect(request.intercept_resolution_state.priority).to eq(5)
 
       request.continue
     end
@@ -108,7 +147,8 @@ RSpec.describe 'request interception example', skip: Puppeteer.env.firefox? do
     end
     page.on('request') do |request|
       # ['continue', 5], because continue @ 5 > abort @ 0
-      expect(request.intercept_resolution).to eq([:respond, 15])
+      expect(request.intercept_resolution_state.action).to eq('respond')
+      expect(request.intercept_resolution_state.priority).to eq(15)
 
       request.continue
     end
