@@ -217,6 +217,7 @@ class Puppeteer::NetworkManager
       # CDP may have sent a Fetch.requestPaused event already. Check for it.
       if_present(@network_event_manager.get_request_paused(network_request_id)) do |request_paused_event|
         fetch_request_id = request_paused_event['requestId']
+        patch_request_event_headers(event, request_paused_event)
         handle_request(event, fetch_request_id)
         @network_event_manager.forget_request_paused(network_request_id)
       end
@@ -277,10 +278,17 @@ class Puppeteer::NetworkManager
     end
 
     if request_will_be_sent_event
+      patch_request_event_headers(request_will_be_sent_event, event)
       handle_request(request_will_be_sent_event, fetch_request_id)
     else
       @network_event_manager.store_request_paused(network_request_id, event)
     end
+  end
+
+  private def patch_request_event_headers(request_will_be_sent_event, request_paused_event)
+    request_will_be_sent_event['request']['headers'].merge!(
+      # includes extra headers, like: Accept, Origin
+      request_paused_event['request']['headers'])
   end
 
   private def handle_request(event, fetch_request_id)
