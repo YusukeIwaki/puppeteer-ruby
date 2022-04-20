@@ -2,6 +2,8 @@ class Puppeteer::HTTPRequest
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
 
+  DEFAULT_INTERCEPT_RESOLUTION_PRIORITY = 0
+
   # defines some methods used only in NetworkManager, Response
   class InternalAccessor
     def initialize(request)
@@ -38,6 +40,43 @@ class Puppeteer::HTTPRequest
     end
   end
 
+  class InterceptResolutionState
+    def self.abort(priority: nil)
+      new(action: 'abort', priority: priority)
+    end
+
+    def self.respond(priority: nil)
+      new(action: 'respond', priority: priority)
+    end
+
+    def self.continue(priority: nil)
+      new(action: 'continue', priority: priority)
+    end
+
+    def self.disabled(priority: nil)
+      new(action: 'disabled', priority: priority)
+    end
+
+    def self.none(priority: nil)
+      new(action: 'none', priority: priority)
+    end
+
+    def self.already_handled(priority: nil)
+      new(action: 'already-handled', priority: priority)
+    end
+
+    private def initialize(action:, priority:)
+      @action = action
+      @priority = priority
+    end
+
+    def priority_unspecified?
+      @priority.nil?
+    end
+
+    attr_reader :action, :priority
+  end
+
   # @param client [Puppeteer::CDPSession]
   # @param frame [Puppeteer::Frame]
   # @param interception_id [string|nil]
@@ -57,9 +96,8 @@ class Puppeteer::HTTPRequest
     @frame = frame
     @redirect_chain = redirect_chain
     @continue_request_overrides = {}
-    @current_strategy = 'none'
-    @current_priority = nil
-    @intercept_actions = []
+    @intercept_resolution_state = InterceptResolutionState.none
+    @intercept_handlers = []
     @initiator = event['initiator']
 
     @headers = {}
@@ -115,17 +153,27 @@ class Puppeteer::HTTPRequest
     @abort_error_reason
   end
 
-  # @returns An array of the current intercept resolution strategy and priority
-  # `[strategy,priority]`. Strategy is one of: `abort`, `respond`, `continue`,
-  #  `disabled`, `none`, or `already-handled`.
-  def intercept_resolution
+  # @returns An InterceptResolutionState object describing the current resolution
+  #  action and priority.
+  #
+  #  InterceptResolutionState contains:
+  #    action: InterceptResolutionAction
+  #    priority?: number
+  #
+  #  InterceptResolutionAction is one of: `abort`, `respond`, `continue`,
+  #  `disabled`, `none`, or `alreay-handled`
+  def intercept_resolution_state
     if !@allow_interception
-      ['disabled']
+      InterceptResolutionState.disabled
     elsif @interception_handled
-      ['already-handled']
+      InterceptResolutionState.already_handled
     else
-      [@current_strategy, @current_priority]
+      @intercept_resolution_state.dup
     end
+  end
+
+  def intercept_resolution_handled?
+    @interception_handled
   end
 
   # Adds an async request handler to the processing queue.
@@ -135,19 +183,19 @@ class Puppeteer::HTTPRequest
   #
   # @param pending_handler [Proc]
   def enqueue_intercept_action(pending_handler)
-    @intercept_actions << pending_handler
+    @intercept_handlers << pending_handler
   end
 
   # Awaits pending interception handlers and then decides how to fulfill
   # the request interception.
   def finalize_interceptions
-    @intercept_actions.each(&:call)
-    case @intercept_resolution
-    when :abort
+    @intercept_handlers.each(&:call)
+    case @intercept_resolution.action
+    when 'abort'
       abort_impl(**@abort_error_reason)
-    when :respond
+    when 'respond'
       respond_impl(**@response_for_request)
-    when :continue
+    when 'continue'
       continue_impl(@continue_request_overrides)
     end
   end
@@ -220,17 +268,16 @@ class Puppeteer::HTTPRequest
     end
 
     @continue_request_overrides = overrides
-    if @current_priority.nil? || priority > @current_priority
-      @current_strategy = :continue
-      @current_priority = priority
+    if @intercept_resolution_state.priority_unspecified? || priority > @intercept_resolution_state.priority
+      @intercept_resolution_state = InterceptResolutionState.continue(priority: priority)
       return
     end
 
-    if priority == @current_priority
-      if @current_strategy == :abort || @current_strategy == :respond
+    if priority == @intercept_resolution_state.priority
+      if @intercept_resolution_state.action == :abort || @intercept_resolution_state.action == :respond
         return
       end
-      @current_strategy = :continue
+      @intercept_resolution_state = InterceptResolutionState.continue(priority: priority)
     end
   end
 
@@ -284,17 +331,16 @@ class Puppeteer::HTTPRequest
       body: body,
     }
 
-    if @current_priority.nil? || priority > @current_priority
-      @current_strategy = :respond
-      @current_priority = priority
+    if @intercept_resolution_state.priority_unspecified? || priority > @intercept_resolution_state.priority
+      @intercept_resolution_state = InterceptResolutionState.respond(priority: priority)
       return
     end
 
-    if priority == @current_priority
-      if @current_strategy == :abort
+    if priority == @intercept_resolution_state.priority
+      if @intercept_resolution_state.action == :abort
         return
       end
-      @current_strategy = :respond
+      @intercept_resolution_state = InterceptResolutionState.respond(priority: priority)
     end
   end
 
@@ -360,9 +406,8 @@ class Puppeteer::HTTPRequest
     end
     @abort_error_reason = error_reason
 
-    if @current_priority.nil? || priority > @current_priority
-      @current_strategy = :abort
-      @current_priority = priority
+    if @intercept_resolution_state.priority_unspecified? || priority > @intercept_resolution_state.priority
+      @intercept_resolution_state = InterceptResolutionState.abort(priority: priority)
     end
   end
 

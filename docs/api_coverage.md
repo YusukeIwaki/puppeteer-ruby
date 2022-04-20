@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v13.5.1
-- puppeteer-ruby version: 0.40.4
+- Puppeteer version: v13.5.2
+- puppeteer-ruby version: 0.40.5
 
 ## Puppeteer
 
@@ -310,8 +310,8 @@
 * frame
 * headers
 * initiator
-* ~~interceptResolutionState~~
-* ~~isInterceptResolutionHandled~~
+* interceptResolutionState => `#intercept_resolution_state`
+* isInterceptResolutionHandled => `#intercept_resolution_handled?`
 * isNavigationRequest => `#navigation_request?`
 * method
 * postData => `#post_data`
