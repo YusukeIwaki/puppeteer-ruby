@@ -389,7 +389,18 @@ class Puppeteer::Page
     @client.send_message('Network.getCookies', urls: (urls.empty? ? [url] : urls))['cookies']
   end
 
+  # check if each cookie element has required fields ('name' and 'value')
+  private def assert_cookie_params(cookies, requires:)
+    return if cookies.all? do |cookie|
+      requires.all? { |field_name| cookie[field_name] || cookie[field_name.to_s] }
+    end
+
+    raise ArgumentError.new("Each coookie must have #{requires.join(" and ")} attribute.")
+  end
+
   def delete_cookie(*cookies)
+    assert_cookie_params(cookies, requires: %i(name))
+
     page_url = url
     starts_with_http = page_url.start_with?("http")
     cookies.each do |cookie|
@@ -399,6 +410,8 @@ class Puppeteer::Page
   end
 
   def set_cookie(*cookies)
+    assert_cookie_params(cookies, requires: %i(name value))
+
     page_url = url
     starts_with_http = page_url.start_with?("http")
     items = cookies.map do |cookie|

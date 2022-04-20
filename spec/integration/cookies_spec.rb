@@ -2,6 +2,12 @@ require 'spec_helper'
 
 RSpec.describe 'cookies' do
   describe 'Page#cookies', sinatra: true do
+    it 'should fail if specifying wrong cookie' do
+      expect { page.set_cookie(token: '123456') }.to raise_error(/Each coookie must have name and value attribute./)
+      expect { page.set_cookie({ token1: '123456', token2: '234567' }) }.to raise_error(/Each coookie must have name and value attribute./)
+      expect { page.set_cookie({ name: 'token1', value: '123456' }, { token2: '234567' }) }.to raise_error(/Each coookie must have name and value attribute./)
+    end
+
     it 'should return no cookies in pristine browser context' do
       page.goto(server_empty_page)
       expect(page.cookies).to eq([])
