@@ -12,6 +12,7 @@ RSpec.describe 'request interception', skip: Puppeteer.env.firefox? do
 
       expect(request.url).to include('/empty.html')
       expect(request.headers['user-agent']).not_to be_nil
+      expect(request.headers['accept']).not_to be_nil
       expect(request.method).to eq('GET')
       expect(request.post_data).to be_nil
       expect(request.navigation_request?).to eq(true)
