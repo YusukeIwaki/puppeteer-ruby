@@ -1,6 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.5...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.6...main)]
 
 - xxx
+
+### 0.40.6 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.5...0.40.6)]
+
+- Port Puppeteer v13.1-v13.5 features mainly for request interception.
 
 ### 0.40.5 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.4...0.40.5)]
 
