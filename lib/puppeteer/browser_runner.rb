@@ -128,7 +128,7 @@ class Puppeteer::BrowserRunner
   def close
     return if @closed
 
-    if @using_temp_user_data_dir && !@for_firefox
+    if @using_temp_user_data_dir
       kill
     elsif @connection
       begin
