@@ -108,10 +108,6 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # This test fails on Firefox on CI consistently but cannot be replicated
-  # locally. Skipping for now to unblock the Mitt release and given FF support
-  # isn't fully done yet but raising an issue to ask the FF folks to have a
-  # look at this.
   describe 'removing and adding event handlers' do
     it 'should correctly fire event handlers as they are added and then removed', pending: 'Page#off is not implemented', sinatra: true do
       handler = double('ResponseHandler')
