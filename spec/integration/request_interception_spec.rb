@@ -36,6 +36,34 @@ RSpec.describe 'request interception', skip: Puppeteer.env.firefox? do
 
     page.goto(server_empty_page)
   end
+
+  it 'should allow mocking multiple headers with same key', sinatra: true do
+    page.request_interception = true
+    page.on('request') do |request|
+      request.respond(
+        status: 200,
+        headers: {
+          foo: 'bar',
+          arr: ['1', '2'],
+          'set-cookie': ['first=1', 'second=2'],
+        },
+        body: 'Hello world',
+      )
+    end
+
+    response = page.goto(server_empty_page)
+    cookies = page.cookies
+    first_cookie = cookies.find { |cookie| cookie['name'] == 'first' }
+    second_cookie = cookies.find { |cookie| cookie['name'] == 'second' }
+
+    expect(response.status).to eq(200)
+    expect(response.headers['foo']).to eq('bar')
+    expect(response.headers['arr']).to eq("1\n2")
+    # request.respond() will not trigger Network.responseReceivedExtraInfo
+    # fail to get 'set-cookie' header from response
+    expect(first_cookie['value']).to eq('1')
+    expect(second_cookie['value']).to eq('2')
+  end
 end
 
 # https://github.com/puppeteer/puppeteer/blob/e2e98376b9a3fa9a2501ddc86ff6407f3b59887d/docs/api.md#cooperative-intercept-mode-and-legacy-intercept-mode

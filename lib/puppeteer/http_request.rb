@@ -217,8 +217,14 @@ class Puppeteer::HTTPRequest
   private def headers_to_array(headers)
     return nil unless headers
 
-    headers.map do |key, value|
-      { name: key, value: value.to_s }
+    headers.flat_map do |key, value|
+      if value.is_a?(Enumerable)
+        value.map do |v|
+          { name: key, value: v.to_s }
+        end
+      else
+        { name: key, value: value.to_s }
+      end
     end
   end
 
@@ -349,7 +355,12 @@ class Puppeteer::HTTPRequest
 
     mock_response_headers = {}
     headers&.each do |key, value|
-      mock_response_headers[key.downcase] = value
+      mock_response_headers[key.downcase] =
+        if value.is_a?(Enumerable)
+          value.map(&:to_s)
+        else
+          value.to_s
+        end
     end
     if content_type
       mock_response_headers['content-type'] = content_type
