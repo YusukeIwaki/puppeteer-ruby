@@ -395,6 +395,7 @@ class Puppeteer::NetworkManager
     # We may have skipped response and loading events because we didn't have
     # this ExtraInfo event yet. If so, emit those events now.
     if_present(@network_event_manager.get_queued_event_group(event['requestId'])) do |queued_events|
+      @network_event_manager.forget_queued_event_group(event['requestId'])
       emit_response_event(queued_events.response_received_event, event)
       if_present(queued_events.loading_finished_event) do |loading_finished_event|
         emit_loading_finished(loading_finished_event)
