@@ -119,4 +119,8 @@ class Puppeteer::NetworkEventManager
   def get_queued_event_group(network_request_id)
     @queued_event_group_map[network_request_id]
   end
+
+  def forget_queued_event_group(network_request_id)
+    @queued_event_group_map.delete(network_request_id)
+  end
 end
