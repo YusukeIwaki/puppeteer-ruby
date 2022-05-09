@@ -190,7 +190,7 @@ class Puppeteer::HTTPRequest
   # the request interception.
   def finalize_interceptions
     @intercept_handlers.each(&:call)
-    case @intercept_resolution.action
+    case intercept_resolution_state.action
     when 'abort'
       abort_impl(**@abort_error_reason)
     when 'respond'
