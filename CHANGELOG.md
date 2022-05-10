@@ -1,6 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.6...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.7...main)]
 
 - xxx
+
+### 0.40.7 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.6...0.40.7)]
+
+- Port Puppeteer v13.6-v13.7 features.
 
 ### 0.40.6 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.5...0.40.6)]
 
