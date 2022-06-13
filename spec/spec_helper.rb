@@ -78,6 +78,7 @@ RSpec.configure do |config|
     if example.metadata[:enable_site_per_process_flag]
       args = launch_options[:args] || []
       args << '--site-per-process'
+      args << '--host-rules=MAP * 127.0.0.1'
       launch_options[:args] = args
     end
 
@@ -150,7 +151,7 @@ RSpec.configure do |config|
   config.include PuppeteerMethods, type: :puppeteer
 
   test_with_sinatra = Module.new do
-    attr_reader :server_prefix, :server_cross_process_prefix, :server_empty_page, :sinatra
+    attr_reader :server_port, :server_prefix, :server_cross_process_prefix, :server_empty_page, :sinatra
   end
   config.include(test_with_sinatra, sinatra: true)
   config.around(sinatra: true) do |example|
@@ -163,8 +164,9 @@ RSpec.configure do |config|
     sinatra_app.set(:quiet, true)
     sinatra_app.set(:public_folder, File.join(__dir__, 'assets'))
     sinatra_app.set(:logging, false)
-    @server_prefix = "http://localhost:4567"
-    @server_cross_process_prefix = "http://127.0.0.1:4567"
+    @server_port = 4567
+    @server_prefix = "http://localhost:#{@server_port}"
+    @server_cross_process_prefix = "http://127.0.0.1:#{@server_port}"
     @server_empty_page = "#{@server_prefix}/empty.html"
 
     sinatra_app.get('/_ping') { '_pong' }

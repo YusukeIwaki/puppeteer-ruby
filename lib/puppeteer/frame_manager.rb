@@ -75,6 +75,13 @@ class Puppeteer::FrameManager
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
     )
+    if cdp_session
+      cdp_session.send_message('Target.setAutoAttach', {
+        autoAttach: true,
+        waitForDebuggerOnStart: false,
+        flatten: true,
+      })
+    end
     frame_tree = results.last['frameTree']
     handle_frame_tree(client, frame_tree)
     await_all(

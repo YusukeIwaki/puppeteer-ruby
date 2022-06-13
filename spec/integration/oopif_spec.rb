@@ -145,6 +145,16 @@ RSpec.describe 'OOPIF', **metadata do
     expect(page.frames.size).to eq(2)
   end
 
+  it 'should wait for inner OOPIFs' do
+    predicate = -> (frame) { frame.url&.end_with?('/inner-frame2.html') }
+    frame2 = page.wait_for_frame(predicate: predicate) do
+      page.goto("http://mainframe:#{server_port}/main-frame.html")
+    end
+    expect(oopifs(browser_context).size).to eq(2)
+    expect(page.frames.count { |frame| frame.oop_frame? }).to eq(2)
+    expect(frame2.evaluate('() => document.querySelectorAll("button").length')).to eq(1)
+  end
+
   it 'should load oopif iframes with subresources and request interception' do
     predicate = -> (frame) { frame.url&.end_with?('/oopif.html') }
     frame_promise = page.async_wait_for_frame(predicate: predicate)
