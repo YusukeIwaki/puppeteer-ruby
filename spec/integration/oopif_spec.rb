@@ -221,4 +221,12 @@ RSpec.describe 'OOPIF', **metadata do
     expect(result_bounding_box.x).to be > 150 # padding + margin + border left
     expect(result_bounding_box.y).to be > 150 # padding + margin + border top
   end
+
+  it 'should resolve immediately if the frame already exists' do
+    page.goto(server_empty_page)
+    attach_frame(page, 'frame2', "#{server_cross_process_prefix}/empty.html")
+    predicate = ->(frame) { frame.url&.end_with?('/empty.html') }
+    frame = page.wait_for_frame(predicate: predicate)
+    expect(frame.url).to end_with("/empty.html")
+  end
 end
