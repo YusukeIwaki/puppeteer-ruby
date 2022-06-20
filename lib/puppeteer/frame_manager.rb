@@ -78,7 +78,7 @@ class Puppeteer::FrameManager
         autoAttach: true,
         waitForDebuggerOnStart: false,
         flatten: true,
-      })
+      }),
     ].compact
     results = await_all(*promises)
     frame_tree = results[1]['frameTree']
