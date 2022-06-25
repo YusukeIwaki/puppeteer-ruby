@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v13.5.2
+- Puppeteer version: v15.1.1
 - puppeteer-ruby version: 0.40.7
 
 ## Puppeteer
@@ -297,6 +297,7 @@
 * type => `#type_text`
 * uploadFile => `#upload_file`
 * waitForSelector => `#wait_for_selector`
+* ~~waitForXPath~~
 
 ## HTTPRequest
 
