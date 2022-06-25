@@ -71,11 +71,17 @@ class Puppeteer::FrameManager
   private def init(cdp_session = nil)
     client = cdp_session || @client
 
-    results = await_all(
+    promises = [
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
-    )
-    frame_tree = results.last['frameTree']
+      cdp_session&.async_send_message('Target.setAutoAttach', {
+        autoAttach: true,
+        waitForDebuggerOnStart: false,
+        flatten: true,
+      }),
+    ].compact
+    results = await_all(*promises)
+    frame_tree = results[1]['frameTree']
     handle_frame_tree(client, frame_tree)
     await_all(
       client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),

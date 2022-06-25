@@ -145,6 +145,16 @@ RSpec.describe 'OOPIF', **metadata do
     expect(page.frames.size).to eq(2)
   end
 
+  it 'should wait for inner OOPIFs' do
+    predicate = -> (frame) { frame.url&.end_with?('/inner-frame2.html') }
+    frame2 = page.wait_for_frame(predicate: predicate) do
+      page.goto("http://mainframe:#{server_port}/main-frame.html")
+    end
+    expect(oopifs(browser_context).size).to eq(2)
+    expect(page.frames.count { |frame| frame.oop_frame? }).to eq(2)
+    expect(frame2.evaluate('() => document.querySelectorAll("button").length')).to eq(1)
+  end
+
   it 'should load oopif iframes with subresources and request interception' do
     predicate = -> (frame) { frame.url&.end_with?('/oopif.html') }
     frame_promise = page.async_wait_for_frame(predicate: predicate)
@@ -210,5 +220,13 @@ RSpec.describe 'OOPIF', **metadata do
     result_bounding_box = button.bounding_box
     expect(result_bounding_box.x).to be > 150 # padding + margin + border left
     expect(result_bounding_box.y).to be > 150 # padding + margin + border top
+  end
+
+  it 'should resolve immediately if the frame already exists' do
+    page.goto(server_empty_page)
+    attach_frame(page, 'frame2', "#{server_cross_process_prefix}/empty.html")
+    predicate = ->(frame) { frame.url&.end_with?('/empty.html') }
+    frame = page.wait_for_frame(predicate: predicate)
+    expect(frame.url).to end_with("/empty.html")
   end
 end

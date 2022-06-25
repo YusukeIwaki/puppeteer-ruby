@@ -814,6 +814,10 @@ class Puppeteer::Page
         predicate
       end
 
+    frames.each do |frame|
+      return frame if frame_predicate.call(frame)
+    end
+
     wait_for_frame_manager_event(
       FrameManagerEmittedEvents::FrameAttached,
       FrameManagerEmittedEvents::FrameNavigated,
