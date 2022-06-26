@@ -299,6 +299,27 @@ RSpec.describe Puppeteer::ElementHandle do
     end
   end
 
+  describe '#wait_for_xpath' do
+    it 'should wait correctly with waitForXPath on an element' do
+      # Set the page content after the waitFor has been started.
+      page.content = <<~HTML
+        `<div id=el1>
+          el1
+          <div id=el2>
+            el2
+          </div>
+        </div>
+        <div id=el3>
+          el3
+        </div>`
+      HTML
+
+      el2 = page.wait_for_selector('#el1')
+      expect(el2.wait_for_xpath('//div').evaluate('el => el.id')).to eq('el2')
+      expect(el2.wait_for_xpath('.//div').evaluate('el => el.id')).to eq('el2')
+    end
+  end
+
   describe '#hover' do
     it 'should work', sinatra: true do
       page.goto("#{server_prefix}/input/scrollable.html")

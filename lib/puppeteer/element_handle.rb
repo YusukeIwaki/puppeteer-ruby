@@ -76,6 +76,81 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_wait_for_selector
 
+  # Wait for the `xpath` within the element. If at the moment of calling the
+  # method the `xpath` already exists, the method will return immediately. If
+  # the `xpath` doesn't appear after the `timeout` milliseconds of waiting, the
+  # function will throw.
+  #
+  # If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.
+  #
+  # This method works across navigation
+  # ```js
+  # const puppeteer = require('puppeteer');
+  # (async () => {
+  # const browser = await puppeteer.launch();
+  # const page = await browser.newPage();
+  # let currentURL;
+  # page
+  # .waitForXPath('//img')
+  # .then(() => console.log('First URL with image: ' + currentURL));
+  # for (currentURL of [
+  # 'https://example.com',
+  # 'https://google.com',
+  # 'https://bbc.com',
+  # ]) {
+  # await page.goto(currentURL);
+  # }
+  # await browser.close();
+  # })();
+  # ```
+  # @param xpath - A
+  # {@link https://developer.mozilla.org/en-US/docs/Web/XPath | xpath} of an
+  # element to wait for
+  # @param options - Optional waiting parameters
+  # @returns Promise which resolves when element specified by xpath string is
+  # added to DOM. Resolves to `null` if waiting for `hidden: true` and xpath is
+  # not found in DOM.
+  # @remarks
+  # The optional Argument `options` have properties:
+  #
+  # - `visible`: A boolean to wait for element to be present in DOM and to be
+  # visible, i.e. to not have `display: none` or `visibility: hidden` CSS
+  # properties. Defaults to `false`.
+  #
+  # - `hidden`: A boolean wait for element to not be found in the DOM or to be
+  # hidden, i.e. have `display: none` or `visibility: hidden` CSS properties.
+  # Defaults to `false`.
+  #
+  # - `timeout`: A number which is maximum time to wait for in milliseconds.
+  # Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default
+  # value can be changed by using the {@link Page.setDefaultTimeout} method.
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+    frame = @context.frame
+
+    secondary_world = frame.secondary_world
+    adopted_root = secondary_world.execution_context.adopt_element_handle(self)
+    param_xpath =
+      if xpath.start_with?('//')
+        ".#{xpath}"
+      else
+        xpath
+      end
+    unless param_xpath.start_with?('.//')
+      adopted_root.dispose
+      raise ArgumentError.new("Unsupported xpath expression: #{xpath}")
+    end
+    handle = secondary_world.wait_for_xpath(param_xpath, visible: visible, hidden: hidden, timeout: timeout, root: adopted_root)
+    adopted_root.dispose
+    return nil unless handle
+
+    main_world = frame.main_world
+    result = main_world.execution_context.adopt_element_handle(handle)
+    handle.dispose
+    result
+  end
+
+  define_async_method :async_wait_for_xpath
+
   def as_element
     self
   end
