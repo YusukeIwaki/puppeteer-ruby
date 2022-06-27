@@ -297,7 +297,7 @@
 * type => `#type_text`
 * uploadFile => `#upload_file`
 * waitForSelector => `#wait_for_selector`
-* ~~waitForXPath~~
+* waitForXPath => `#wait_for_xpath`
 
 ## HTTPRequest
 
