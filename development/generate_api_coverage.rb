@@ -269,13 +269,13 @@ class UnimplementedMethodPresenter
   end
 end
 
-raw_md = RawApiMdReader.new('v13.5.2').read
+raw_md = RawApiMdReader.new('v15.1.1').read
 class_docs = ApiMdParser.new(raw_md).parse
 
 
 File.open(File.join('.', 'docs', 'api_coverage.md'), 'w') do |f|
   f.write("# API coverages\n")
-  f.write("- Puppeteer version: v13.5.2\n")
+  f.write("- Puppeteer version: v15.1.1\n")
   f.write("- puppeteer-ruby version: #{Puppeteer::VERSION}\n")
 end
 
