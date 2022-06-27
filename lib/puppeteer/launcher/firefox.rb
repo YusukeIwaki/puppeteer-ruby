@@ -85,6 +85,8 @@ module Puppeteer::Launcher
             default_viewport: @browser_options.default_viewport,
             process: runner.proc,
             close_callback: -> { runner.close },
+            target_filter_callback: nil,
+            is_page_target_callback: nil,
           )
         rescue
           runner.kill
@@ -132,6 +134,8 @@ module Puppeteer::Launcher
         default_viewport: @browser_options.default_viewport,
         process: nil,
         close_callback: -> { connection.send_message('Browser.close') },
+        target_filter_callback: nil,
+        is_page_target_callback: nil,
       )
     end
 
