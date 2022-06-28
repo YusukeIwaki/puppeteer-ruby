@@ -13,7 +13,14 @@ class Puppeteer::Browser
   # @param {?Puppeteer.Viewport} defaultViewport
   # @param process [Puppeteer::BrowserRunner::BrowserProcess|NilClass]
   # @param {function()=} closeCallback
-  def self.create(connection:, context_ids:, ignore_https_errors:, default_viewport:, process:, close_callback:)
+  def self.create(connection:,
+                  context_ids:,
+                  ignore_https_errors:,
+                  default_viewport:,
+                  process:,
+                  close_callback:,
+                  target_filter_callback:,
+                  is_page_target_callback:)
     browser = Puppeteer::Browser.new(
       connection: connection,
       context_ids: context_ids,
@@ -21,6 +28,8 @@ class Puppeteer::Browser
       default_viewport: default_viewport,
       process: process,
       close_callback: close_callback,
+      target_filter_callback: target_filter_callback,
+      is_page_target_callback: is_page_target_callback,
     )
     connection.send_message('Target.setDiscoverTargets', discover: true)
     browser
@@ -32,12 +41,21 @@ class Puppeteer::Browser
   # @param {?Puppeteer.Viewport} defaultViewport
   # @param {?Puppeteer.ChildProcess} process
   # @param {(function():Promise)=} closeCallback
-  def initialize(connection:, context_ids:, ignore_https_errors:, default_viewport:, process:, close_callback:)
+  def initialize(connection:,
+                 context_ids:,
+                 ignore_https_errors:,
+                 default_viewport:,
+                 process:,
+                 close_callback:,
+                 target_filter_callback:,
+                 is_page_target_callback:)
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
     @process = process
     @connection = connection
     @close_callback = close_callback
+    @target_filter_callback = target_filter_callback || method(:default_target_filter_callback)
+    @is_page_target_callback = is_page_target_callback || method(:default_is_page_target_callback)
 
     @default_context = Puppeteer::BrowserContext.new(@connection, self, nil)
     @contexts = {}
@@ -52,6 +70,14 @@ class Puppeteer::Browser
     @connection.on_event('Target.targetCreated', &method(:handle_target_created))
     @connection.on_event('Target.targetDestroyed', &method(:handle_target_destroyed))
     @connection.on_event('Target.targetInfoChanged', &method(:handle_target_info_changed))
+  end
+
+  private def default_target_filter_callback(target_info)
+    true
+  end
+
+  private def default_is_page_target_callback(target_info)
+    ['page', 'background_page', 'webview'].include?(target_info.type)
   end
 
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
@@ -119,12 +145,16 @@ class Puppeteer::Browser
     if @targets[target_info.target_id]
       raise TargetAlreadyExistError.new
     end
+
+    return unless @target_filter_callback.call(target_info)
+
     target = Puppeteer::Target.new(
       target_info: target_info,
       browser_context: context,
       session_factory: -> { @connection.create_session(target_info) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
+      is_page_target_callback: @is_page_target_callback,
     )
     @targets[target_info.target_id] = target
     if_present(@wait_for_creating_targets.delete(target_info.target_id)) do |promise|

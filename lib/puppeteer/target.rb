@@ -18,14 +18,19 @@ class Puppeteer::Target
   # @param {!function():!Promise<!Puppeteer.CDPSession>} sessionFactory
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
-  def initialize(target_info:, browser_context:, session_factory:, ignore_https_errors:, default_viewport:)
+  def initialize(target_info:,
+                 browser_context:,
+                 session_factory:,
+                 ignore_https_errors:,
+                 default_viewport:,
+                 is_page_target_callback:)
     @target_info = target_info
     @browser_context = browser_context
     @target_id = target_info.target_id
     @session_factory = session_factory
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
-
+    @is_page_target_callback = is_page_target_callback
 
     #    /** @type {?Promise<!Puppeteer.Page>} */
     #    this._pagePromise = null;
@@ -37,7 +42,7 @@ class Puppeteer::Target
     end
     @is_closed_promise = resolvable_future
 
-    @is_initialized = @target_info.type != 'page' || !@target_info.url.empty?
+    @is_initialized = !@is_page_target_callback.call(@target_info) || !@target_info.url.empty?
 
     if @is_initialized
       @initialize_callback_promise.fulfill(true)
@@ -83,7 +88,7 @@ class Puppeteer::Target
   end
 
   def page
-    if ['page', 'background_page', 'webview'].include?(@target_info.type) && @page.nil?
+    if @is_page_target_callback.call(@target_info) && @page.nil?
       client = @session_factory.call
       @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport)
     end
@@ -145,7 +150,7 @@ class Puppeteer::Target
   def handle_target_info_changed(target_info)
     @target_info = target_info
 
-    if !@is_initialized && (@target_info.type != 'page' || !@target_info.url.empty?)
+    if !@is_initialized && (!@is_page_target_callback.call(@target_info) || !@target_info.url.empty?)
       @is_initialized = true
       @initialize_callback_promise.fulfill(true)
     end
