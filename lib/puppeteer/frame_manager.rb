@@ -43,6 +43,9 @@ class Puppeteer::FrameManager
     client.on_event('Page.frameDetached') do |event|
       handle_frame_detached(event['frameId'], event['reason'])
     end
+    client.on_event('Page.frameStartedLoading') do |event|
+      handle_frame_started_loading(event['frameId'])
+    end
     client.on_event('Page.frameStoppedLoading') do |event|
       handle_frame_stopped_loading(event['frameId'])
     end
@@ -207,7 +210,14 @@ class Puppeteer::FrameManager
     emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
   end
 
-  # @param {string} frameId
+  # @param frame_id [String]
+  def handle_frame_started_loading(frame_id)
+    frame = @frames[frame_id]
+    return if !frame
+    frame.handle_loading_started
+  end
+
+  # @param frame_id [String]
   def handle_frame_stopped_loading(frame_id)
     frame = @frames[frame_id]
     return if !frame

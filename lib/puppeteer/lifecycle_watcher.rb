@@ -43,7 +43,7 @@ class Puppeteer::LifecycleWatcher
       if expected_lifecycle.any? { |event| !frame.lifecycle_events.include?(event) }
         return false
       end
-      if frame.child_frames.any? { |child| !completed?(child) }
+      if frame.child_frames.any? { |child| child.has_started_loading? && !completed?(child) }
         return false
       end
       true
