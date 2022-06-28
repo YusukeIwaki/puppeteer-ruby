@@ -10,6 +10,7 @@ class Puppeteer::Frame
     @parent_frame = parent_frame
     @id = frame_id
     @detached = false
+    @has_started_loading = false
 
     @loader_id = ''
     @lifecycle_events = Set.new
@@ -45,6 +46,10 @@ class Puppeteer::Frame
   end
 
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :secondary_world
+
+  def has_started_loading?
+    @has_started_loading
+  end
 
   # @param url [String]
   # @param rederer [String]
@@ -314,6 +319,10 @@ class Puppeteer::Frame
       @lifecycle_events.clear
     end
     @lifecycle_events << name
+  end
+
+  def handle_loading_started
+    @has_started_loading = true
   end
 
   def handle_loading_stopped

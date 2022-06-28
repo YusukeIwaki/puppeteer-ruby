@@ -231,5 +231,12 @@ RSpec.describe Puppeteer::Frame do
       expect(page.frames.size).to eq(2)
       expect(page.frames.last.url).to eq("#{server_prefix}/frames/frame.html?param=value#fragment")
     end
+
+    it_fails_firefox 'should support lazy frames' do
+      page.viewport = Puppeteer::Viewport.new(width: 1000, height: 1000)
+      page.goto("#{server_prefix}/frames/lazy-frame.html")
+
+      expect(page.frames.map { |frame| frame.has_started_loading? }).to eq([true, true, false])
+    end
   end
 end

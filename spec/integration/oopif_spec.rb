@@ -222,6 +222,12 @@ RSpec.describe 'OOPIF', **metadata do
     expect(result_bounding_box.y).to be > 150 # padding + margin + border top
   end
 
+  it 'should support lazy OOP frames' do
+    page.goto("#{server_prefix}/lazy-oopif-frame.html")
+    page.viewport = Puppeteer::Viewport.new(width: 1000, height: 1000)
+    expect(page.frames.map { |frame| frame.has_started_loading? }).to eq([true, true, false])
+  end
+
   it 'should resolve immediately if the frame already exists' do
     page.goto(server_empty_page)
     attach_frame(page, 'frame2', "#{server_cross_process_prefix}/empty.html")
