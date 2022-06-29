@@ -1455,13 +1455,11 @@ RSpec.describe Puppeteer::Page do
   #     );
   #     expect(result.length).toEqual(1);
   #   });
-  #   it('should return [] on no values', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     const result = await page.select('select');
-  #     expect(result).toEqual([]);
-  #   });
+  it 'should return [] on no values', sinatra: true do
+    page.goto("#{server_prefix}/input/select.html")
+    result = page.select('select')
+    expect(result).to eq([])
+  end
   #   it('should deselect all options when passed no values for a multiple select', async () => {
   #     const { page, server } = getTestState();
 
@@ -1477,20 +1475,15 @@ RSpec.describe Puppeteer::Page do
   #       )
   #     ).toEqual(true);
   #   });
-  #   it('should deselect all options when passed no values for a select without multiple', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.select('select', 'blue', 'black', 'magenta');
-  #     await page.select('select');
-  #     expect(
-  #       await page.$eval('select', (select: HTMLSelectElement) =>
-  #         Array.from(select.options).every(
-  #           (option: HTMLOptionElement) => !option.selected
-  #         )
-  #       )
-  #     ).toEqual(true);
-  #   });
+  it 'should deselect all options when passed no values for a select without multiple', sinatra: true do
+    page.goto("#{server_prefix}/input/select.html")
+    page.select('select', 'blue', 'black', 'magenta')
+    page.select('select')
+    first_selected = page.eval_on_selector('select', <<~JAVASCRIPT)
+    (select) => Array.from(select.options).filter((option) => option.selected)[0].value
+    JAVASCRIPT
+    expect(first_selected).to eq('')
+  end
   #   it('should throw if passed in non-strings', async () => {
   #     const { page } = getTestState();
 
