@@ -161,12 +161,30 @@ RSpec.describe 'input tests' do
       pprt_png = File.join('spec', 'assets', 'pptr.png')
       expect { chooser.accept([filepath, pprt_png]) }.to raise_error(/Multiple file uploads only work with <input type=file multiple>/)
     end
-    it_fails_firefox 'should fail for non-existent files' do
+    it_fails_firefox 'should succeed even for non-existent files' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')
       end
-      expect { chooser.accept(['file-does-not-exist.txt']) }.to raise_error(/file-does-not-exist.txt does not exist or is not readable/)
+      chooser.accept(['file-does-not-exist.txt'])
+    end
+    it 'should error on read of non-existent files' do
+      page.content = '<input type=file>'
+      future {
+        chooser = page.wait_for_file_chooser
+        chooser.accept(['file-does-not-exist.txt'])
+      }
+      js = <<~JAVASCRIPT
+      async (picker) => {
+        picker.click();
+        await new Promise((x) => (picker.oninput = x));
+        const reader = new FileReader();
+        const promise = new Promise((fulfill) => (reader.onerror = fulfill));
+        reader.readAsText(picker.files[0]);
+        return promise.then(() => false);
+      }
+      JAVASCRIPT
+      expect(page.eval_on_selector('input', js)).to eq(false)
     end
     it_fails_firefox 'should fail when accepting file chooser twice' do
       page.content = '<input type=file>'

@@ -412,10 +412,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
       raise ArgumentError.new('Multiple file uploads only work with <input type=file multiple>')
     end
 
-    if error_path = file_paths.find { |file_path| !File.exist?(file_path) }
-      raise ArgumentError.new("#{error_path} does not exist or is not readable")
-    end
-
     backend_node_id = @remote_object.node_info(@client)["node"]["backendNodeId"]
 
     # The zero-length array is a special case, it seems that DOM.setFileInputFiles does
