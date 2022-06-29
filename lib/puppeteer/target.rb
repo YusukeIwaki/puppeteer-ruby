@@ -49,7 +49,7 @@ class Puppeteer::Target
     end
   end
 
-  attr_reader :target_id, :initialized_promise, :is_closed_promise
+  attr_reader :target_id, :target_info, :initialized_promise, :is_closed_promise
 
   def closed_callback
     @is_closed_promise.fulfill(true)
