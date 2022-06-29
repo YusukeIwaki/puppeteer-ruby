@@ -80,6 +80,8 @@ class Puppeteer::Browser
     ['page', 'background_page', 'webview'].include?(target_info.type)
   end
 
+  attr_reader :is_page_target_callback
+
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
   def on(event_name, &block)
     unless BrowserEmittedEvents.values.include?(event_name.to_s)

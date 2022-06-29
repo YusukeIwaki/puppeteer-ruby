@@ -50,7 +50,9 @@ class Puppeteer::BrowserContext
 
   # @return {!Promise<!Array<!Puppeteer.Page>>}
   def pages
-    targets.select { |target| target.type == 'page' }.map(&:page).reject { |page| !page }
+    targets.select { |target|
+      target.type == 'page' || (target.type == 'other' && @browser.is_page_target_callback&.call(target.target_info))
+    }.map(&:page).reject { |page| !page }
   end
 
   def incognito?
