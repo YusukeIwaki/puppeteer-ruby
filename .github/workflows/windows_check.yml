@@ -4,6 +4,7 @@ jobs:
   windows_edge_rspec:
     name: RSpec on Windows / Edge
     runs-on: windows-latest
+    if: false
     steps:
       - name: Check out code
         uses: actions/checkout@v2

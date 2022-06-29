@@ -134,5 +134,5 @@ workflows:
       - rspec_chrome_ruby3_1
       - rspec_chromium_alpine_3_0
       - rspec_chromium_alpine_3_1
-      - rspec_firefox
-      - rspec_firefox_pending_check
+      # - rspec_firefox
+      # - rspec_firefox_pending_check
