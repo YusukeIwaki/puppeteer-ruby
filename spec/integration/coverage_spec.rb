@@ -236,6 +236,15 @@ RSpec.describe 'Coverage specs' do
       end
     end
 
+    it 'should work with empty stylesheets', sinatra: true do
+      coverage = page.coverage.css_coverage do
+        page.goto("#{server_prefix}/csscoverage/empty.html")
+      end
+
+      expect(coverage.size).to eq(1)
+      expect(coverage.first.text).to eq('')
+    end
+
     it 'should ignore injected stylesheets' do
       coverage = page.coverage.css_coverage do
         page.add_style_tag(content: 'body { margin: 10px;}')
