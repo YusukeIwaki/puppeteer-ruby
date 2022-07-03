@@ -40,6 +40,7 @@ RSpec.configure do |config|
 
   launch_options = {
     product: Puppeteer.env.product,
+    channel: ENV['PUPPETEER_CHANNEL_RSPEC'],
     executable_path: ENV['PUPPETEER_EXECUTABLE_PATH_RSPEC'],
   }.compact
   if Puppeteer.env.debug? && !Puppeteer.env.ci?
