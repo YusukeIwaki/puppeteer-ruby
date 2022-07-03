@@ -1,6 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.7...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.41.0...main)]
 
 - xxx
+
+### 0.41.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.7...0.41.0)]
+
+- Port Puppeteer v14.0-v15.2 features, including `ElementHandle#wait_for_xpath`
 
 ### 0.40.7 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.6...0.40.7)]
 
