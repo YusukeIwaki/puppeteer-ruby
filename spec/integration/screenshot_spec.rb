@@ -142,6 +142,16 @@ RSpec.describe 'Screenshots' do
     #     'screenshot-sanity.png'
     #   );
     # });
+
+    it 'should work in "fromSurface: false" mode' do
+      skip if headless?
+
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
+      page.goto("#{server_prefix}/grid.html")
+
+      screenshot = page.screenshot(from_surface: false)
+      expect(screenshot.length).to be >= 1000
+    end
   end
 
   # Regression spec for # https://github.com/YusukeIwaki/puppeteer-ruby/issues/96

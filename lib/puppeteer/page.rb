@@ -1025,7 +1025,15 @@ class Puppeteer::Page
   # @param quality [Integer]
   # @param omit_background [Boolean]
   # @param encoding [String]
-  def screenshot(type: nil, path: nil, full_page: nil, clip: nil, quality: nil, omit_background: nil, encoding: nil)
+  def screenshot(type: nil,
+                 path: nil,
+                 full_page: nil,
+                 clip: nil,
+                 quality: nil,
+                 omit_background: nil,
+                 encoding: nil,
+                 capture_beyond_viewport: nil,
+                 from_surface: nil)
     options = {
       type: type,
       path: path,
@@ -1034,6 +1042,8 @@ class Puppeteer::Page
       quality:  quality,
       omit_background: omit_background,
       encoding: encoding,
+      capture_beyond_viewport: capture_beyond_viewport,
+      from_surface: from_surface,
     }.compact
     screenshot_options = ScreenshotOptions.new(options)
 
@@ -1062,18 +1072,20 @@ class Puppeteer::Page
       # Overwrite clip for full page at all times.
       clip = { x: 0, y: 0, width: width, height: height, scale: 1 }
 
-      screen_orientation =
-        if @viewport&.landscape?
-          { angle: 90, type: 'landscapePrimary' }
-        else
-          { angle: 0, type: 'portraitPrimary' }
-        end
-      @client.send_message('Emulation.setDeviceMetricsOverride',
-        mobile: @viewport&.mobile? || false,
-        width: width,
-        height: height,
-        deviceScaleFactor: @viewport&.device_scale_factor || 1,
-        screenOrientation: screen_orientation)
+      unless screenshot_options.capture_beyond_viewport?
+        screen_orientation =
+          if @viewport&.landscape?
+            { angle: 90, type: 'landscapePrimary' }
+          else
+            { angle: 0, type: 'portraitPrimary' }
+          end
+        @client.send_message('Emulation.setDeviceMetricsOverride',
+          mobile: @viewport&.mobile? || false,
+          width: width,
+          height: height,
+          deviceScaleFactor: @viewport&.device_scale_factor || 1,
+          screenOrientation: screen_orientation)
+      end
     end
 
     should_set_default_background = screenshot_options.omit_background? && format == 'png'
@@ -1082,6 +1094,8 @@ class Puppeteer::Page
       format: format,
       quality: screenshot_options.quality,
       clip: clip,
+      captureBeyondViewport: screenshot_options.capture_beyond_viewport?,
+      fromSurface: screenshot_options.from_surface?,
     }.compact
     result = @client.send_message('Page.captureScreenshot', screenshot_params)
     reset_default_background_color if should_set_default_background
