@@ -4,7 +4,6 @@ jobs:
   windows_edge_rspec:
     name: RSpec on Windows / Edge
     runs-on: windows-latest
-    if: false
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -20,6 +19,7 @@ jobs:
       - name: Check example
         run: bundle exec rspec spec/integration/example_spec.rb
         env:
+          PUPPETEER_TIMEOUT_RSPEC: 50
           PUPPETEER_EXECUTABLE_PATH_RSPEC: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
 
   windows_chrome_rspec:
@@ -39,3 +39,5 @@ jobs:
       - uses: browser-actions/setup-chrome@latest
       - name: Check example
         run: bundle exec rspec spec/integration/example_spec.rb
+        env:
+          PUPPETEER_TIMEOUT_RSPEC: 30

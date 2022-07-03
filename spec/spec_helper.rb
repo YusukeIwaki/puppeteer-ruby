@@ -53,8 +53,9 @@ RSpec.configure do |config|
 
   # Every browser automation test case should spend less than 15sec.
   if Puppeteer.env.ci?
+    timeout_sec = (ENV['PUPPETEER_TIMEOUT_RSPEC'] || 15).to_i
     config.around(:each, type: :puppeteer) do |example|
-      Timeout.timeout(15) { example.run }
+      Timeout.timeout(timeout_sec) { example.run }
     end
   end
 
