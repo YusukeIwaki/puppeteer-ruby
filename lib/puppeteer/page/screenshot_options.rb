@@ -2,15 +2,49 @@ require 'mime/types'
 
 class Puppeteer::Page
   # /**
-  #  * @typedef {Object} ScreenshotOptions
-  #  * @property {string=} type
-  #  * @property {string=} path
-  #  * @property {boolean=} fullPage
-  #  * @property {{x: number, y: number, width: number, height: number}=} clip
-  #  * @property {number=} quality
-  #  * @property {boolean=} omitBackground
-  #  * @property {string=} encoding
-  #  */
+  # * @defaultValue 'png'
+  # */
+  # type?: 'png' | 'jpeg' | 'webp';
+  # /**
+  # * The file path to save the image to. The screenshot type will be inferred
+  # * from file extension. If path is a relative path, then it is resolved
+  # * relative to current working directory. If no path is provided, the image
+  # * won't be saved to the disk.
+  # */
+  # path?: string;
+  # /**
+  # * When true, takes a screenshot of the full page.
+  # * @defaultValue false
+  # */
+  # fullPage?: boolean;
+  # /**
+  # * An object which specifies the clipping region of the page.
+  # */
+  # clip?: ScreenshotClip;
+  # /**
+  # * Quality of the image, between 0-100. Not applicable to `png` images.
+  # */
+  # quality?: number;
+  # /**
+  # * Hides default white background and allows capturing screenshots with transparency.
+  # * @defaultValue false
+  # */
+  # omitBackground?: boolean;
+  # /**
+  # * Encoding of the image.
+  # * @defaultValue 'binary'
+  # */
+  # encoding?: 'base64' | 'binary';
+  # /**
+  # * Capture the screenshot beyond the viewport.
+  # * @defaultValue true
+  # */
+  # captureBeyondViewport?: boolean;
+  # /**
+  # * Capture the screenshot from the surface, rather than the view.
+  # * @defaultValue true
+  # */
+  # fromSurface?: boolean;
   class ScreenshotOptions
     # @params options [Hash]
     def initialize(options)
@@ -65,6 +99,18 @@ class Puppeteer::Page
       @clip = options[:clip]
       @omit_background = options[:omit_background]
       @encoding = options[:encoding]
+      @capture_beyond_viewport =
+        if options[:capture_beyond_viewport].nil?
+          true
+        else
+          options[:capture_beyond_viewport]
+        end
+      @from_surface =
+        if options[:from_surface].nil?
+          true
+        else
+          options[:from_surface]
+        end
     end
 
     attr_reader :type, :quality, :path, :clip, :encoding
@@ -75,6 +121,14 @@ class Puppeteer::Page
 
     def omit_background?
       @omit_background
+    end
+
+    def capture_beyond_viewport?
+      @capture_beyond_viewport
+    end
+
+    def from_surface?
+      @from_surface
     end
   end
 end

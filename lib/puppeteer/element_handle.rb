@@ -505,7 +505,15 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  def screenshot(type: nil, path: nil, full_page: nil, clip: nil, quality: nil, omit_background: nil, encoding: nil)
+  def screenshot(type: nil,
+                 path: nil,
+                 full_page: nil,
+                 clip: nil,
+                 quality: nil,
+                 omit_background: nil,
+                 encoding: nil,
+                 capture_beyond_viewport: nil,
+                 from_surface: nil)
     needs_viewport_reset = false
 
     box = bounding_box
@@ -549,7 +557,17 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
       }
     end
 
-    @page.screenshot(type: type, path: path, full_page: full_page, clip: clip, quality: quality, omit_background: omit_background, encoding: encoding)
+    @page.screenshot(
+      type: type,
+      path: path,
+      full_page:
+      full_page,
+      clip: clip,
+      quality: quality,
+      omit_background: omit_background,
+      encoding: encoding,
+      capture_beyond_viewport: capture_beyond_viewport,
+      from_surface: from_surface)
   ensure
     if needs_viewport_reset
       @page.viewport = viewport
