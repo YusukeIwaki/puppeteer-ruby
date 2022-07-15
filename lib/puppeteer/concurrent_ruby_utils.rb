@@ -7,14 +7,14 @@ module Puppeteer::ConcurrentRubyUtils
     #   page.click('#submit')
     # end
     def with_waiting_for_complete(&block)
-      async_block_call = Concurrent::Promises.delay do
+      async_block_call = Puppeteer::Concurrent.delay do
         block.call
       rescue => err
         Logger.new($stderr).warn(err)
         raise err
       end
 
-      Concurrent::Promises.zip(self, async_block_call).value!.first
+      Puppeteer::Concurrent.zip(self, async_block_call).value!.first
     end
   end
 
@@ -29,7 +29,7 @@ module Puppeteer::ConcurrentRubyUtils
         raise ArgumentError.new("All argument must be a Future: #{args}")
       end
 
-      Concurrent::Promises.zip(*args).value!
+      Puppeteer::Concurrent.zip(*args).value!
     end
   end
 
@@ -44,7 +44,7 @@ module Puppeteer::ConcurrentRubyUtils
         raise ArgumentError.new("All argument must be a Future: #{args}")
       end
 
-      Concurrent::Promises.any(*args).value!
+      Puppeteer::Concurrent.any(*args).value!
     end
   end
 
@@ -58,7 +58,7 @@ module Puppeteer::ConcurrentRubyUtils
   end
 
   def future(*args, &block)
-    Concurrent::Promises.future(*args) do |*block_args|
+    Puppeteer::Concurrent.future(*args) do |*block_args|
       block.call(*block_args)
     rescue Puppeteer::TimeoutError
       # suppress error logging
@@ -70,7 +70,7 @@ module Puppeteer::ConcurrentRubyUtils
   end
 
   def resolvable_future(&block)
-    future = Concurrent::Promises.resolvable_future
+    future = Puppeteer::Concurrent.resolvable_future
     if block
       block.call(future)
     end

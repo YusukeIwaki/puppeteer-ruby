@@ -11,6 +11,7 @@ require 'puppeteer/geolocation'
 require 'puppeteer/viewport'
 
 # Modules
+require 'puppeteer/concurrent'
 require 'puppeteer/concurrent_ruby_utils'
 require 'puppeteer/define_async_method'
 require 'puppeteer/debug_print'

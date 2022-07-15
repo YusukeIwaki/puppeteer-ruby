@@ -25,14 +25,14 @@ module Puppeteer::DefineAsyncMethod
           if block
             async_method_call =
               if kwargs.empty? # for Ruby 2.6
-                Puppeteer::Concurrent.future(executor: thread_pool) do
+                Puppeteer::Concurrent.future do
                   original_method.bind(self).call(*args)
                 rescue => err
                   Logger.new($stderr).warn(err)
                   raise err
                 end
               else
-                Puppeteer::Concurrent.future(executor: thread_pool) do
+                Puppeteer::Concurrent.future do
                   original_method.bind(self).call(*args, **kwargs)
                 rescue => err
                   Logger.new($stderr).warn(err)
@@ -40,7 +40,7 @@ module Puppeteer::DefineAsyncMethod
                 end
               end
 
-            async_block_call = Puppeteer::Concurrent.delay(executor: thread_pool) do
+            async_block_call = Puppeteer::Concurrent.delay do
               block.call
             rescue => err
               Logger.new($stderr).warn(err)
@@ -63,14 +63,14 @@ module Puppeteer::DefineAsyncMethod
 
       define_method(async_method_name) do |*args, **kwargs|
         if kwargs.empty? # for Ruby 2.6
-          Puppeteer::Concurrent.future(executor: thread_pool) do
+          Puppeteer::Concurrent.future do
             original_method.bind(self).call(*args)
           rescue => err
             Logger.new($stderr).warn(err)
             raise err
           end.extend(Puppeteer::ConcurrentRubyUtils::ConcurrentPromisesFutureExtension)
         else
-          Puppeteer::Concurrent.future(executor: thread_pool) do
+          Puppeteer::Concurrent.future do
             original_method.bind(self).call(*args, **kwargs)
           rescue => err
             Logger.new($stderr).warn(err)

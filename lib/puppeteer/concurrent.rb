@@ -1,7 +1,9 @@
 module Puppeteer::Concurrent
   extend Concurrent::Promises::FactoryMethods
 
-  @thread_pool = Concurrent::FixedThreadPool.new(5)
+  POOL_SIZE = 8
+
+  @thread_pool = Concurrent::FixedThreadPool.new(POOL_SIZE)
 
   def self.default_executor
     @thread_pool
