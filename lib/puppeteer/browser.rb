@@ -2,6 +2,7 @@ require 'thread'
 require 'timeout'
 
 class Puppeteer::Browser
+  include Puppeteer::ThreadPool
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
   include Puppeteer::IfPresent

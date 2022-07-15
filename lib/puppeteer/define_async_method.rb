@@ -25,14 +25,14 @@ module Puppeteer::DefineAsyncMethod
           if block
             async_method_call =
               if kwargs.empty? # for Ruby 2.6
-                Concurrent::Promises.future do
+                Puppeteer::Concurrent.future(executor: thread_pool) do
                   original_method.bind(self).call(*args)
                 rescue => err
                   Logger.new($stderr).warn(err)
                   raise err
                 end
               else
-                Concurrent::Promises.future do
+                Puppeteer::Concurrent.future(executor: thread_pool) do
                   original_method.bind(self).call(*args, **kwargs)
                 rescue => err
                   Logger.new($stderr).warn(err)
@@ -40,14 +40,14 @@ module Puppeteer::DefineAsyncMethod
                 end
               end
 
-            async_block_call = Concurrent::Promises.delay do
+            async_block_call = Puppeteer::Concurrent.delay(executor: thread_pool) do
               block.call
             rescue => err
               Logger.new($stderr).warn(err)
               raise err
             end
 
-            Concurrent::Promises.zip(
+            Puppeteer::Concurrent.zip(
               async_method_call,
               async_block_call,
             ).value!.first
@@ -63,14 +63,14 @@ module Puppeteer::DefineAsyncMethod
 
       define_method(async_method_name) do |*args, **kwargs|
         if kwargs.empty? # for Ruby 2.6
-          Concurrent::Promises.future do
+          Puppeteer::Concurrent.future(executor: thread_pool) do
             original_method.bind(self).call(*args)
           rescue => err
             Logger.new($stderr).warn(err)
             raise err
           end.extend(Puppeteer::ConcurrentRubyUtils::ConcurrentPromisesFutureExtension)
         else
-          Concurrent::Promises.future do
+          Puppeteer::Concurrent.future(executor: thread_pool) do
             original_method.bind(self).call(*args, **kwargs)
           rescue => err
             Logger.new($stderr).warn(err)
