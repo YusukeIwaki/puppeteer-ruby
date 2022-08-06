@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rollbar'
   spec.add_development_dependency 'rspec', '~> 3.11.0'
   spec.add_development_dependency 'rspec_junit_formatter' # for CircleCI.
-  spec.add_development_dependency 'rubocop', '~> 1.32.0'
+  spec.add_development_dependency 'rubocop', '~> 1.33.0'
   spec.add_development_dependency 'rubocop-rspec'
   spec.add_development_dependency 'sinatra'
   spec.add_development_dependency 'webrick'
