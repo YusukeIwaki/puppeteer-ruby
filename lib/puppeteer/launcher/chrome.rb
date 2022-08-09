@@ -255,7 +255,7 @@ module Puppeteer::Launcher
         'chrome-beta' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome Beta\\Application\\chrome.exe",
         'chrome-canary' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome SxS\\Application\\chrome.exe",
         'chrome-dev' => "#{ENV['PROGRAMFILES']}\\Google\\Chrome Dev\\Application\\chrome.exe",
-        'chromium' => "#{ENV['HOME']}\\AppData\Local\Chromium\Application\chrome.exe",
+        'chromium' => "#{ENV['HOME']}\\AppData\\Local\\Chromium\\Application\\chrome.exe",
         'msedge' => "#{ENV['PROGRAMFILES(X86)']}\\Microsoft\\Edge\\Application\\msedge.exe",
       },
       darwin: {
