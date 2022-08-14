@@ -8,11 +8,9 @@
 * connect
 * ~~createBrowserFetcher~~
 * ~~customQueryHandlerNames~~
-* ~~DEFAULT_INTERCEPT_RESOLUTION_PRIORITY~~
 * defaultArgs => `#default_args`
 * devices
 * ~~errors~~
-* ~~EVALUATION_SCRIPT_URL~~
 * executablePath => `#executable_path`
 * launch
 * networkConditions => `#network_conditions`
@@ -365,22 +363,6 @@
 
 ## ~~ProtocolError~~
 
-
-## Puppeteer
-
-* ~~clearCustomQueryHandlers~~
-* connect
-* ~~customQueryHandlerNames~~
-* ~~registerCustomQueryHandler~~
-* ~~unregisterCustomQueryHandler~~
-
-## ~~PuppeteerNode~~
-
-* ~~connect~~
-* ~~createBrowserFetcher~~
-* ~~defaultArgs~~
-* ~~executablePath~~
-* ~~launch~~
 
 ## ~~SecurityDetails~~
 

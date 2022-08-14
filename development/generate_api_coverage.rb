@@ -21,6 +21,18 @@ class Member
     }.compact.inspect
   end
 
+  def class?
+    @kind == 'Class'
+  end
+
+  def method?
+    @kind == 'Method' || @kind == 'Function'
+  end
+
+  def property?
+    @kind == 'Variable' && @name =~ /^[a-z]/
+  end
+
   def members
     @__members ||= @members.map do |json|
       Member.new(json)
@@ -34,22 +46,23 @@ class ApiDocJsonParser
     @root = Member.new(json)
   end
 
-  def parse
-    Enumerator.new do |data|
-      puppeteer_entrypoint = @root.members.first
-      data << ClassDoc.new('Puppeteer', method_docs_for(puppeteer_entrypoint))
+  def puppeteer_doc
+    ClassDoc.new('Puppeteer', method_docs_for(puppeteer_entrypoint))
+  end
 
-      puppeteer_entrypoint.members.each do |member|
-        if member.kind == 'Class'
-          data << ClassDoc.new(member.name, method_docs_for(member))
-        end
-      end
+  def class_docs
+    puppeteer_entrypoint.members.filter_map do |member|
+      ClassDoc.new(member.name, method_docs_for(member)) if member.class?
     end
+  end
+
+  private def puppeteer_entrypoint
+    @root.members.first
   end
 
   private def method_docs_for(member)
     member.members.filter_map do |m|
-      MethodDoc.new(m.name) if %w(Method Function Variable).include?(m.kind)
+      MethodDoc.new(m.name) if m.method? || m.property?
     end
   end
 end
@@ -211,8 +224,10 @@ class UnimplementedMethodPresenter
 end
 
 apidoc_content = File.read(File.join(__dir__, 'puppeteer.api.json'))
-class_docs = ApiDocJsonParser.new(apidoc_content).parse
-
+parser = ApiDocJsonParser.new(apidoc_content)
+class_docs = parser.class_docs
+class_docs.delete_if { |doc| doc.name.start_with?('Puppeteer') }
+class_docs.unshift(parser.puppeteer_doc)
 
 File.open(File.join('.', 'docs', 'api_coverage.md'), 'w') do |f|
   f.write("# API coverages\n")
