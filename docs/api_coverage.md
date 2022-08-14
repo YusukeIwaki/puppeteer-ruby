@@ -8,26 +8,20 @@
 * connect
 * ~~createBrowserFetcher~~
 * ~~customQueryHandlerNames~~
+* ~~DEFAULT_INTERCEPT_RESOLUTION_PRIORITY~~
 * defaultArgs => `#default_args`
 * devices
 * ~~errors~~
+* ~~EVALUATION_SCRIPT_URL~~
 * executablePath => `#executable_path`
 * launch
 * networkConditions => `#network_conditions`
-* product
 * ~~registerCustomQueryHandler~~
 * ~~unregisterCustomQueryHandler~~
 
-## ~~BrowserFetcher~~
+## ~~Accessibility~~
 
-* ~~canDownload~~
-* ~~download~~
-* ~~host~~
-* ~~localRevisions~~
-* ~~platform~~
-* ~~product~~
-* ~~remove~~
-* ~~revisionInfo~~
+* ~~snapshot~~
 
 ## Browser
 
@@ -59,138 +53,55 @@
 * targets
 * waitForTarget => `#wait_for_target`
 
-## Page
+## ~~BrowserFetcher~~
 
-* $ => `#query_selector`
-* $$ => `#query_selector_all`
-* $$eval => `#eval_on_selector_all`
-* $eval => `#eval_on_selector`
-* $x => `#Sx`
-* accessibility
-* addScriptTag => `#add_script_tag`
-* addStyleTag => `#add_style_tag`
-* authenticate
-* bringToFront => `#bring_to_front`
-* browser
-* browserContext => `#browser_context`
-* click
-* close
-* content
-* cookies
-* coverage
-* createPDFStream => `#create_pdf_stream`
-* deleteCookie => `#delete_cookie`
-* emulate
-* emulateCPUThrottling => `#emulate_cpu_throttling`
-* emulateIdleState => `#emulate_idle_state`
-* emulateMediaFeatures => `#emulate_media_features`
-* emulateMediaType => `#emulate_media_type`
-* emulateNetworkConditions => `#emulate_network_conditions`
-* emulateTimezone => `#emulate_timezone`
-* emulateVisionDeficiency => `#emulate_vision_deficiency`
-* evaluate
-* evaluateHandle => `#evaluate_handle`
-* evaluateOnNewDocument => `#evaluate_on_new_document`
-* exposeFunction => `#expose_function`
-* focus
-* frames
-* goBack => `#go_back`
-* goForward => `#go_forward`
-* goto
-* hover
-* isClosed => `#closed?`
-* isDragInterceptionEnabled => `#drag_interception_enabled?`
-* isJavaScriptEnabled => `#javascript_enabled?`
-* keyboard
-* mainFrame => `#main_frame`
-* metrics
-* mouse
-* pdf
-* queryObjects => `#query_objects`
-* reload
-* screenshot
-* select
-* setBypassCSP => `#bypass_csp=`
-* setCacheEnabled => `#cache_enabled=`
-* setContent => `#content=`
-* setCookie => `#set_cookie`
-* setDefaultNavigationTimeout => `#default_navigation_timeout=`
-* setDefaultTimeout => `#default_timeout=`
-* ~~setDragInterception~~
-* setExtraHTTPHeaders => `#extra_http_headers=`
-* setGeolocation => `#geolocation=`
-* setJavaScriptEnabled => `#javascript_enabled=`
-* setOfflineMode => `#offline_mode=`
-* setRequestInterception => `#request_interception=`
-* setUserAgent => `#user_agent=`
-* setViewport => `#viewport=`
-* tap
-* target
-* title
-* ~~touchscreen~~
-* tracing
-* type => `#type_text`
+* ~~canDownload~~
+* ~~download~~
+* ~~host~~
+* ~~localRevisions~~
+* ~~platform~~
+* ~~product~~
+* ~~remove~~
+* ~~revisionInfo~~
+
+## CDPSession
+
+* connection
+* detach
+* id
+* send
+
+## Connection
+
+* createSession => `#create_session`
+* dispose
+* ~~fromSession~~
+* send
+* session
 * url
-* viewport
-* ~~waitFor~~
-* waitForFileChooser => `#wait_for_file_chooser`
-* waitForFrame => `#wait_for_frame`
-* waitForFunction => `#wait_for_function`
-* waitForNavigation => `#wait_for_navigation`
-* ~~waitForNetworkIdle~~
-* waitForRequest => `#wait_for_request`
-* waitForResponse => `#wait_for_response`
-* waitForSelector => `#wait_for_selector`
-* waitForTimeout => `#wait_for_timeout`
-* waitForXPath => `#wait_for_xpath`
-* workers
 
-## ~~WebWorker~~
+## ConsoleMessage
 
-* ~~evaluate~~
-* ~~evaluateHandle~~
-* ~~executionContext~~
-* ~~url~~
+* args
+* location
+* stackTrace => `#stack_trace`
+* text
+* ~~type~~
 
-## ~~Accessibility~~
+## Coverage
 
-* ~~snapshot~~
+* startCSSCoverage => `#start_css_coverage`
+* startJSCoverage => `#start_js_coverage`
+* stopCSSCoverage => `#stop_css_coverage`
+* stopJSCoverage => `#stop_js_coverage`
 
-## Keyboard
-
-* down
-* press
-* sendCharacter => `#send_character`
-* type => `#type_text`
-* up
-
-## Mouse
-
-* click
-* down
-* drag
-* dragAndDrop => `#drag_and_drop`
-* dragEnter => `#drag_enter`
-* dragOver => `#drag_over`
-* drop
-* move
-* up
-* wheel
-
-## ~~Touchscreen~~
-
-* ~~tap~~
-
-## Tracing
+## CSSCoverage
 
 * start
 * stop
 
-## FileChooser
+## ~~CustomError~~
 
-* accept
-* cancel
-* isMultiple => `#multiple?`
 
 ## Dialog
 
@@ -200,13 +111,59 @@
 * message
 * type
 
-## ConsoleMessage
+## ElementHandle
 
-* args
-* location
-* stackTrace => `#stack_trace`
-* text
-* ~~type~~
+* $ => `#query_selector`
+* $$ => `#query_selector_all`
+* $$eval => `#eval_on_selector_all`
+* $eval => `#eval_on_selector`
+* $x => `#Sx`
+* asElement => `#as_element`
+* boundingBox => `#bounding_box`
+* boxModel => `#box_model`
+* click
+* clickablePoint => `#clickable_point`
+* contentFrame => `#content_frame`
+* drag
+* dragAndDrop => `#drag_and_drop`
+* dragEnter => `#drag_enter`
+* dragOver => `#drag_over`
+* drop
+* focus
+* hover
+* isIntersectingViewport => `#intersecting_viewport?`
+* press
+* screenshot
+* select
+* tap
+* type => `#type_text`
+* uploadFile => `#upload_file`
+* waitForSelector => `#wait_for_selector`
+* waitForXPath => `#wait_for_xpath`
+
+## ~~EventEmitter~~
+
+* ~~addListener~~
+* ~~emit~~
+* ~~listenerCount~~
+* ~~off~~
+* ~~on~~
+* ~~once~~
+* ~~removeAllListeners~~
+* ~~removeListener~~
+
+## ExecutionContext
+
+* evaluate
+* evaluateHandle => `#evaluate_handle`
+* frame
+* ~~queryObjects~~
+
+## FileChooser
+
+* accept
+* cancel
+* isMultiple => `#multiple?`
 
 ## Frame
 
@@ -236,67 +193,10 @@
 * title
 * type => `#type_text`
 * url
-* ~~waitFor~~
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
 * waitForSelector => `#wait_for_selector`
 * waitForTimeout => `#wait_for_timeout`
-* waitForXPath => `#wait_for_xpath`
-
-## ExecutionContext
-
-* evaluate
-* evaluateHandle => `#evaluate_handle`
-* frame
-* ~~queryObjects~~
-
-## JSHandle
-
-* asElement => `#as_element`
-* dispose
-* evaluate
-* evaluateHandle => `#evaluate_handle`
-* executionContext => `#execution_context`
-* getProperties => `#properties`
-* getProperty => `#[]`
-* jsonValue => `#json_value`
-
-## ElementHandle
-
-* $ => `#query_selector`
-* $$ => `#query_selector_all`
-* $$eval => `#eval_on_selector_all`
-* $eval => `#eval_on_selector`
-* $x => `#Sx`
-* asElement => `#as_element`
-* boundingBox => `#bounding_box`
-* boxModel => `#box_model`
-* click
-* clickablePoint => `#clickable_point`
-* contentFrame => `#content_frame`
-* dispose
-* drag
-* dragAndDrop => `#drag_and_drop`
-* dragEnter => `#drag_enter`
-* dragOver => `#drag_over`
-* drop
-* evaluate
-* evaluateHandle => `#evaluate_handle`
-* executionContext => `#execution_context`
-* focus
-* getProperties => `#properties`
-* getProperty => `#[]`
-* hover
-* isIntersectingViewport => `#intersecting_viewport?`
-* jsonValue => `#json_value`
-* press
-* screenshot
-* select
-* tap
-* ~~toString~~
-* type => `#type_text`
-* uploadFile => `#upload_file`
-* waitForSelector => `#wait_for_selector`
 * waitForXPath => `#wait_for_xpath`
 
 ## HTTPRequest
@@ -341,6 +241,147 @@
 * ~~timing~~
 * url
 
+## JSCoverage
+
+* start
+* stop
+
+## JSHandle
+
+* asElement => `#as_element`
+* dispose
+* evaluate
+* evaluateHandle => `#evaluate_handle`
+* executionContext => `#execution_context`
+* getProperties => `#properties`
+* getProperty => `#[]`
+* getProperty => `#[]`
+* jsonValue => `#json_value`
+* remoteObject => `#remote_object`
+* ~~toString~~
+
+## Keyboard
+
+* down
+* press
+* sendCharacter => `#send_character`
+* type => `#type_text`
+* up
+
+## Mouse
+
+* click
+* down
+* drag
+* dragAndDrop => `#drag_and_drop`
+* dragEnter => `#drag_enter`
+* dragOver => `#drag_over`
+* drop
+* move
+* up
+* wheel
+
+## Page
+
+* $ => `#query_selector`
+* $$ => `#query_selector_all`
+* $$eval => `#eval_on_selector_all`
+* $eval => `#eval_on_selector`
+* $x => `#Sx`
+* addScriptTag => `#add_script_tag`
+* addStyleTag => `#add_style_tag`
+* authenticate
+* bringToFront => `#bring_to_front`
+* browser
+* browserContext => `#browser_context`
+* click
+* close
+* content
+* cookies
+* createPDFStream => `#create_pdf_stream`
+* deleteCookie => `#delete_cookie`
+* emulate
+* emulateCPUThrottling => `#emulate_cpu_throttling`
+* emulateIdleState => `#emulate_idle_state`
+* emulateMediaFeatures => `#emulate_media_features`
+* emulateMediaType => `#emulate_media_type`
+* emulateNetworkConditions => `#emulate_network_conditions`
+* emulateTimezone => `#emulate_timezone`
+* emulateVisionDeficiency => `#emulate_vision_deficiency`
+* evaluate
+* evaluateHandle => `#evaluate_handle`
+* evaluateOnNewDocument => `#evaluate_on_new_document`
+* exposeFunction => `#expose_function`
+* focus
+* frames
+* goBack => `#go_back`
+* goForward => `#go_forward`
+* goto
+* hover
+* isClosed => `#closed?`
+* isDragInterceptionEnabled => `#drag_interception_enabled?`
+* isJavaScriptEnabled => `#javascript_enabled?`
+* mainFrame => `#main_frame`
+* metrics
+* ~~off~~
+* on
+* once
+* pdf
+* queryObjects => `#query_objects`
+* reload
+* screenshot
+* select
+* setBypassCSP => `#bypass_csp=`
+* setCacheEnabled => `#cache_enabled=`
+* setContent => `#content=`
+* setCookie => `#set_cookie`
+* setDefaultNavigationTimeout => `#default_navigation_timeout=`
+* setDefaultTimeout => `#default_timeout=`
+* ~~setDragInterception~~
+* setExtraHTTPHeaders => `#extra_http_headers=`
+* setGeolocation => `#geolocation=`
+* setJavaScriptEnabled => `#javascript_enabled=`
+* setOfflineMode => `#offline_mode=`
+* setRequestInterception => `#request_interception=`
+* setUserAgent => `#user_agent=`
+* setViewport => `#viewport=`
+* tap
+* target
+* title
+* type => `#type_text`
+* url
+* viewport
+* waitForFileChooser => `#wait_for_file_chooser`
+* waitForFrame => `#wait_for_frame`
+* waitForFunction => `#wait_for_function`
+* waitForNavigation => `#wait_for_navigation`
+* ~~waitForNetworkIdle~~
+* waitForRequest => `#wait_for_request`
+* waitForResponse => `#wait_for_response`
+* waitForSelector => `#wait_for_selector`
+* waitForTimeout => `#wait_for_timeout`
+* waitForXPath => `#wait_for_xpath`
+* workers
+
+## ~~ProtocolError~~
+
+
+## Puppeteer
+
+* ~~clearCustomQueryHandlers~~
+* connect
+* ~~customQueryHandlerNames~~
+* ~~registerCustomQueryHandler~~
+* ~~unregisterCustomQueryHandler~~
+
+## ~~PuppeteerNode~~
+
+* ~~connect~~
+* ~~createBrowserFetcher~~
+* ~~defaultArgs~~
+* ~~executablePath~~
+* ~~launch~~
+
 ## ~~SecurityDetails~~
 
 * ~~issuer~~
@@ -361,30 +402,21 @@
 * url
 * ~~worker~~
 
-## CDPSession
-
-* connection
-* detach
-* id
-* send
-
-## Coverage
-
-* startCSSCoverage => `#start_css_coverage`
-* startJSCoverage => `#start_js_coverage`
-* stopCSSCoverage => `#stop_css_coverage`
-* stopJSCoverage => `#stop_js_coverage`
-
 ## TimeoutError
 
 
-## ~~EventEmitter~~
+## ~~Touchscreen~~
 
-* ~~addListener~~
-* ~~emit~~
-* ~~listenerCount~~
-* ~~off~~
-* ~~on~~
-* ~~once~~
-* ~~removeAllListeners~~
-* ~~removeListener~~
+* ~~tap~~
+
+## Tracing
+
+* start
+* stop
+
+## ~~WebWorker~~
+
+* ~~evaluate~~
+* ~~evaluateHandle~~
+* ~~executionContext~~
+* ~~url~~
