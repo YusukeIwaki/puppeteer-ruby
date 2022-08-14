@@ -7,11 +7,29 @@ jobs:
     name: documents updated
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: 3.1
         bundler-cache: true
-    - run: |
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        path: puppeteer
+        repository: puppeteer/puppeteer
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Check puppeteer.api.json is updated
+      run: |
+        cd puppeteer
+        git checkout v$(cat ../development/DOCS_VERSION)
+        npm install && npm run build
+        cd ../
+        cp puppeteer/docs/puppeteer.api.json development/puppeteer.api.json
+        rm -rf puppeteer
+        git diff --exit-code
+    - name: Check api_coverage doc is updated
+      run: |
         bundle exec ruby development/generate_api_coverage.rb
         git diff --exit-code
