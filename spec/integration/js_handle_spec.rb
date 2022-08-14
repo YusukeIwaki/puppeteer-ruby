@@ -7,6 +7,11 @@ RSpec.describe Puppeteer::JSHandle do
       expect(window_handle).to be_a(Puppeteer::JSHandle)
     end
 
+    it 'should return the RemoteObject' do
+      window_handle = page.evaluate_handle('() => window')
+      expect(window_handle.remote_object).to be_a(Puppeteer::RemoteObject)
+    end
+
     it 'should accept object handle as an argument' do
       navigator_handle = page.evaluate_handle('() => navigator')
       text = page.evaluate('(e) => e.userAgent', navigator_handle)
