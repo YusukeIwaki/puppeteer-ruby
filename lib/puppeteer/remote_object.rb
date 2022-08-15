@@ -176,4 +176,8 @@ class Puppeteer::RemoteObject
   def set_file_input_files(client, files, backend_node_id)
     client.send_message('DOM.setFileInputFiles', objectId: @object_id, files: files, backendNodeId: backend_node_id)
   end
+
+  def scroll_into_view_if_needed(client)
+    client.send_message('DOM.scrollIntoViewIfNeeded', objectId: @object_id)
+  end
 end
