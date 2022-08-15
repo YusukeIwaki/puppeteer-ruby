@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v15.2.0
-- puppeteer-ruby version: 0.41.0
+- Puppeteer version: v15.5.0
+- puppeteer-ruby version: 0.42.0
 
 ## Puppeteer
 
@@ -184,6 +184,7 @@
 * isDetached => `#detached?`
 * isOOPFrame => `#oop_frame?`
 * name
+* page
 * parentFrame => `#parent_frame`
 * select
 * setContent => `#set_content`

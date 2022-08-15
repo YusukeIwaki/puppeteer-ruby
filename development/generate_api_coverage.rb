@@ -223,6 +223,7 @@ class UnimplementedMethodPresenter
   end
 end
 
+apiversion_content = File.read(File.join(__dir__, 'DOCS_VERSION')).strip
 apidoc_content = File.read(File.join(__dir__, 'puppeteer.api.json'))
 parser = ApiDocJsonParser.new(apidoc_content)
 class_docs = parser.class_docs
@@ -231,7 +232,7 @@ class_docs.unshift(parser.puppeteer_doc)
 
 File.open(File.join('.', 'docs', 'api_coverage.md'), 'w') do |f|
   f.write("# API coverages\n")
-  f.write("- Puppeteer version: v15.2.0\n")
+  f.write("- Puppeteer version: v#{apiversion_content}\n")
   f.write("- puppeteer-ruby version: #{Puppeteer::VERSION}\n")
 end
 

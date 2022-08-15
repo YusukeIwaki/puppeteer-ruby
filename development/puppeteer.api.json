@@ -11712,6 +11712,36 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer!Frame#page:member(1)",
+              "docComment": "/**\n * @returns a page associated with the frame.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "page(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Page",
+                  "canonicalReference": "puppeteer!Page:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "page"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer!Frame#parentFrame:member(1)",
               "docComment": "/**\n * @returns the parent `Frame`, if any. Detached and main frames return `null`.\n */\n",
               "excerptTokens": [
