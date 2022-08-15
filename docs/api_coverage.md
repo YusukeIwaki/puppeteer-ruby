@@ -184,6 +184,7 @@
 * isDetached => `#detached?`
 * isOOPFrame => `#oop_frame?`
 * name
+* page
 * parentFrame => `#parent_frame`
 * select
 * setContent => `#set_content`
