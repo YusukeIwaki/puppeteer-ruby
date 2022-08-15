@@ -177,7 +177,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         return false;
       }
     JAVASCRIPT
-    error = evaluate(js, @page.javascript_enabled) # returns String or false
+    error = evaluate(js) # returns String or false
     if error
       raise ScrollIntoViewError.new(error)
     end
