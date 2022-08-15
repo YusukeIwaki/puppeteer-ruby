@@ -287,7 +287,7 @@ RSpec.describe Puppeteer::Launcher do
         screenshot = element_handle.screenshot
 
         # FIXME: It would be better to check the height of this screenshot here.
-        expect(screenshot.size).to be > 1000
+        expect(screenshot.size).to be > 100
       end
     end
 
