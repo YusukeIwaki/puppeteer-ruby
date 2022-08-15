@@ -569,7 +569,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
       capture_beyond_viewport: capture_beyond_viewport,
       from_surface: from_surface)
   ensure
-    if needs_viewport_reset
+    if needs_viewport_reset && viewport
       @page.viewport = viewport
     end
   end

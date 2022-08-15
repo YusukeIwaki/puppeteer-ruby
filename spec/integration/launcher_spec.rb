@@ -274,6 +274,23 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
+    it 'should take Element screenshots when defaultViewport is null', sinatra: true do
+      options = default_launch_options.merge(
+        default_viewport: nil,
+      )
+
+      Puppeteer.launch(**options) do |browser|
+        page = browser.new_page
+        page.goto("#{server_prefix}/grid.html")
+        page.evaluate('() => window.scrollBy(50, 100)')
+        element_handle = page.query_selector('.box:nth-of-type(3)')
+        screenshot = element_handle.screenshot
+
+        # FIXME: It would be better to check the height of this screenshot here.
+        expect(screenshot.size).to be > 1000
+      end
+    end
+
     it 'should set the debugging port' do
       options = default_launch_options.merge(
         debugging_port: 9999,
