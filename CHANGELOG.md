@@ -1,6 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.41.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.42.0...main)]
 
 - xxx
+
+### 0.42.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.41.0...0.42.0)]
+
+- Port Puppeteer v15.3-v15.5 features, including `Frame#page`
 
 ### 0.41.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.7...0.41.0)]
 
