@@ -46,6 +46,13 @@ RSpec.describe Puppeteer::Frame do
     end
   end
 
+  describe '#page' do
+    it 'should retrieve the page from a frame', sinatra: true do
+      page.goto(server_empty_page)
+      expect(page.main_frame.page).to eq(page)
+    end
+  end
+
   describe 'Frame Management', sinatra: true do
     include Utils::AttachFrame
     include Utils::DetachFrame

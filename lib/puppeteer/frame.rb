@@ -41,6 +41,10 @@ class Puppeteer::Frame
     @secondary_world = Puppeteer::DOMWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
   end
 
+  def page
+    @frame_manager.page
+  end
+
   def oop_frame?
     @client != @frame_manager.client
   end
