@@ -169,37 +169,25 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   def scroll_into_view_if_needed
     js = <<~JAVASCRIPT
-      async(element, pageJavascriptEnabled) => {
+      async(element) => {
         if (!element.isConnected)
           return 'Node is detached from document';
         if (element.nodeType !== Node.ELEMENT_NODE)
           return 'Node is not of type HTMLElement';
-
-        if (element.scrollIntoViewIfNeeded) {
-          element.scrollIntoViewIfNeeded({block: 'center', inline: 'center', behavior: 'instant'});
-        } else {
-          // force-scroll if page's javascript is disabled.
-          if (!pageJavascriptEnabled) {
-            element.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'});
-            return false;
-          }
-          const visibleRatio = await new Promise(resolve => {
-            const observer = new IntersectionObserver(entries => {
-              resolve(entries[0].intersectionRatio);
-              observer.disconnect();
-            });
-            observer.observe(element);
-          });
-          if (visibleRatio !== 1.0)
-            element.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'});
-        }
         return false;
       }
     JAVASCRIPT
-    error = evaluate(js, @page.javascript_enabled) # returns String or false
+    error = evaluate(js) # returns String or false
     if error
       raise ScrollIntoViewError.new(error)
     end
+    begin
+      @remote_object.scroll_into_view_if_needed(@client)
+    rescue => err
+      # Just ignore 'Node does not have a layout object' for backward-compatibility.
+      raise unless err.message =~ /Node does not have a layout object/
+    end
+
     # clickpoint is often calculated before scrolling is completed.
     # So, just sleep about 10 frames
     sleep 0.16

@@ -111,7 +111,7 @@ RSpec.describe Puppeteer::Page do
     page.goto("#{server_prefix}/offscreenbuttons.html")
     messages = []
     page.on('console') do |message|
-      messages << message.text
+      messages << message.text if message.log_type == 'log'
     end
     11.times do |i|
       # We might've scrolled to click a button - reset to (0, 0).
