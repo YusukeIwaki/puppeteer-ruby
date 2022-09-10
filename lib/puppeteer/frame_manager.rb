@@ -61,12 +61,6 @@ class Puppeteer::FrameManager
     client.on_event('Page.lifecycleEvent') do |event|
       handle_lifecycle_event(event)
     end
-    client.on_event('Target.attachedToTarget') do |event|
-      handle_attached_to_target(event)
-    end
-    client.on_event('Target.detachedFromTarget') do |event|
-      handle_detached_from_target(event)
-    end
   end
 
   attr_reader :client, :timeout_settings
@@ -77,11 +71,6 @@ class Puppeteer::FrameManager
     promises = [
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
-      cdp_session&.async_send_message('Target.setAutoAttach', {
-        autoAttach: true,
-        waitForDebuggerOnStart: false,
-        flatten: true,
-      }),
     ].compact
     results = await_all(*promises)
     frame_tree = results[1]['frameTree']
@@ -125,7 +114,6 @@ class Puppeteer::FrameManager
     begin
       navigate = future do
         result = @client.send_message('Page.navigate', navigate_params)
-        loader_id = result['loaderId']
 
         if result['errorText']
           raise NavigationError.new("#{result['errorText']} at #{url}")
@@ -175,20 +163,19 @@ class Puppeteer::FrameManager
   end
 
   # @param event [Hash]
-  def handle_attached_to_target(event)
-    return if event['targetInfo']['type'] != 'iframe'
+  def handle_attached_to_target(target)
+    return if target.target_info.type != 'iframe'
 
-    frame = @frames[event['targetInfo']['targetId']]
-    session = Puppeteer::Connection.from_session(@client).session(event['sessionId'])
-
+    frame = @frames[target.target_info.target_id]
+    session = target.session
     frame&.send(:update_client, session)
     setup_listeners(session)
     async_init(session)
   end
 
   # @param event [Hash]
-  def handle_detached_from_target(event)
-    frame = @frames[event['targetId']]
+  def handle_detached_from_target(target)
+    frame = @frames[target.target_id]
     if frame && frame.oop_frame?
       # When an OOP iframe is removed from the page, it
       # will only get a Target.detachedFromTarget event.
@@ -272,6 +259,9 @@ class Puppeteer::FrameManager
       raise ArgymentError.new('parent_frame_id must not be nil')
     end
     parent_frame = @frames[parent_frame_id]
+    if !parent_frame
+      raise ArgymentError.new("parent_frame #{parent_frame_id} not found")
+    end
     frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session)
     @frames[frame_id] = frame
 

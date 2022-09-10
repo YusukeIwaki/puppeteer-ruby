@@ -81,6 +81,7 @@ module Puppeteer::Launcher
           )
 
           Puppeteer::Browser.create(
+            product: product,
             connection: connection,
             context_ids: [],
             ignore_https_errors: @browser_options.ignore_https_errors?,
@@ -203,6 +204,7 @@ module Puppeteer::Launcher
       browser_context_ids = result['browserContextIds']
 
       Puppeteer::Browser.create(
+        product: product,
         connection: connection,
         context_ids: browser_context_ids,
         ignore_https_errors: @browser_options.ignore_https_errors?,
@@ -211,7 +213,7 @@ module Puppeteer::Launcher
         close_callback: -> { connection.send_message('Browser.close') },
         target_filter_callback: @browser_options.target_filter,
         is_page_target_callback: @browser_options.is_page_target,
-      )
+      ).tap(&:pages)
     end
 
     # @return [Puppeteer::Connection]

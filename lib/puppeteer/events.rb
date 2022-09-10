@@ -182,3 +182,12 @@ module PageEmittedEvents ; end
   # {https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API WebWorker} is destroyed by the page.
   WorkerDestroyed: 'workerdestroyed',
 }.define_const_into(PageEmittedEvents)
+
+module TargetManagerEmittedEvents ; end
+
+{
+  TargetDiscovered: 'targetDiscovered',
+  TargetAvailable: 'targetAvailable',
+  TargetGone: 'targetGone',
+  TargetChanged: 'targetChanged',
+}.define_const_into(TargetManagerEmittedEvents)

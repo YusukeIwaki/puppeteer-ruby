@@ -19,11 +19,15 @@ class Puppeteer::Target
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
   def initialize(target_info:,
+                 session:,
                  browser_context:,
+                 target_manager:,
                  session_factory:,
                  ignore_https_errors:,
                  default_viewport:,
                  is_page_target_callback:)
+    @session = session
+    @target_manager = target_manager
     @target_info = target_info
     @browser_context = browser_context
     @target_id = target_info.target_id
@@ -83,13 +87,22 @@ class Puppeteer::Target
     @is_initialized
   end
 
+  # @return [CDPSession|nil]
+  def session
+    @session
+  end
+
   def create_cdp_session
     @session_factory.call
   end
 
+  def target_manager
+    @target_manager
+  end
+
   def page
     if @is_page_target_callback.call(@target_info) && @page.nil?
-      client = @session_factory.call
+      client = @session || @session_factory.call
       @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport)
     end
     @page
