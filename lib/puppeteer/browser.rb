@@ -326,12 +326,12 @@ class Puppeteer::Browser
 
   # @return [String]
   def version
-    get_version.product
+    Version.fetch(@connection).product
   end
 
   # @return [String]
   def user_agent
-    get_version.user_agent
+    Version.fetch(@connection).user_agent
   end
 
   def close
@@ -349,6 +349,10 @@ class Puppeteer::Browser
   end
 
   class Version
+    def self.fetch(connection)
+      new(connection.send_message('Browser.getVersion'))
+    end
+
     def initialize(hash)
       @protocol_version = hash['protocolVersion']
       @product = hash['product']
@@ -358,9 +362,5 @@ class Puppeteer::Browser
     end
 
     attr_reader :protocol_version, :product, :revision, :user_agent, :js_version
-  end
-
-  private def get_version
-    Version.new(@connection.send_message('Browser.getVersion'))
   end
 end
