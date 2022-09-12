@@ -110,11 +110,13 @@ class Puppeteer::FrameManager
     option_timeout = timeout || @timeout_settings.navigation_timeout
 
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
+    ensure_new_document_navigation = false
 
     begin
       navigate = future do
         result = @client.send_message('Page.navigate', navigate_params)
-
+        loader_id = result['loaderId']
+        ensure_new_document_navigation = !!loader_id
         if result['errorText']
           raise NavigationError.new("#{result['errorText']} at #{url}")
         end
@@ -125,9 +127,12 @@ class Puppeteer::FrameManager
       )
 
       await_any(
-        watcher.new_document_navigation_promise,
-        watcher.same_document_navigation_promise,
         watcher.timeout_or_termination_promise,
+        if ensure_new_document_navigation
+          watcher.new_document_navigation_promise
+        else
+          watcher.same_document_navigation_promise
+        end,
       )
     rescue Puppeteer::TimeoutError => err
       raise NavigationError.new(err)

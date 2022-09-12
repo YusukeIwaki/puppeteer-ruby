@@ -65,6 +65,7 @@ class Puppeteer::LifecycleWatcher
     @expected_lifecycle = ExpectedLifecycle.new(wait_until)
     @frame_manager = frame_manager
     @frame = frame
+    @initial_loader_id = frame.loader_id
     @timeout = timeout
 
     @listener_ids = {}
@@ -162,7 +163,7 @@ class Puppeteer::LifecycleWatcher
     if @has_same_document_navigation && @same_document_navigation_promise.pending?
       @same_document_navigation_promise.fulfill(true)
     end
-    if (@swapped || @new_document_navigation) && @new_document_navigation_promise.pending?
+    if (@swapped || @frame.loader_id != @initial_loader_id) && @new_document_navigation_promise.pending?
       @new_document_navigation_promise.fulfill(true)
     end
   end
