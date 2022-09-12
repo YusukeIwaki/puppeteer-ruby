@@ -2,7 +2,7 @@ require_relative './browser'
 require_relative './launcher/browser_options'
 
 class Puppeteer::BrowserConnector
-  def initialize(**options)
+  def initialize(options)
     @browser_options = Puppeteer::Launcher::BrowserOptions.new(options)
     @browser_ws_endpoint = options[:browser_ws_endpoint]
     @browser_url = options[:browser_url]
