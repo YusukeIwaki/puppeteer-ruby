@@ -58,6 +58,7 @@ class Puppeteer::Connection
 
     @sessions = Concurrent::Hash.new
     @closed = false
+    @manually_attached = Set.new
   end
 
   # used only in Browser#connected?
@@ -243,12 +244,22 @@ class Puppeteer::Connection
       session_id = message['params']['sessionId']
       session = Puppeteer::CDPSession.new(self, message['params']['targetInfo']['type'], session_id)
       @sessions[session_id] = session
+      emit_event('sessionattached', session)
+      if message['sessionId']
+        parent_session = @sessions[message['sessionId']]
+        parent_session&.emit_event('sessionattached', session)
+      end
     when 'Target.detachedFromTarget'
       session_id = message['params']['sessionId']
       session = @sessions[session_id]
       if session
         session.handle_closed
         @sessions.delete(session_id)
+        emit_event('sessiondetached', session)
+        if message['sessionId']
+          parent_session = @sessions[message['sessionId']]
+          parent_session&.emit_event('sessiondetached', session)
+        end
       end
     end
 
@@ -307,9 +318,14 @@ class Puppeteer::Connection
     @transport.close
   end
 
+  def auto_attached?(target_id)
+    @manually_attached.include?(target_id)
+  end
+
   # @param {Protocol.Target.TargetInfo} targetInfo
   # @return [CDPSession]
   def create_session(target_info)
+    @manually_attached << target_info.target_id
     result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
     @sessions[session_id]

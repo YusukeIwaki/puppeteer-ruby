@@ -50,33 +50,11 @@ class Puppeteer::Page
     @workers = {}
     @user_drag_interception_enabled = false
 
-    @client.add_event_listener('Target.attachedToTarget') do |event|
-      if event['targetInfo']['type'] != 'worker' && event['targetInfo']['type'] != 'iframe'
-        # If we don't detach from service workers, they will never die.
-        # We still want to attach to workers for emitting events.
-        # We still want to attach to iframes so sessions may interact with them.
-        # We detach from all other types out of an abundance of caution.
-        # See https://source.chromium.org/chromium/chromium/src/+/main:content/browser/devtools/devtools_agent_host_impl.cc?ss=chromium&q=f:devtools%20-f:out%20%22::kTypePage%5B%5D%22
-        # for the complete list of available types.
-        @client.async_send_message('Target.detachFromTarget', sessionId: event['sessionId'])
-        next
-      end
-
-      if event['targetInfo']['type'] == 'worker'
-        session = Puppeteer::Connection.from_session(@client).session(event['sessionId']) # rubocop:disable Lint/UselessAssignment
-        #   const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
-        #   this._workers.set(event.sessionId, worker);
-        #   this.emit(PageEmittedEvents::WorkerCreated, worker);
-      end
-    end
-    @client.add_event_listener('Target.detachedFromTarget') do |event|
-      session_id = event['sessionId']
-      worker = @workers[session_id]
-      next unless worker
-
-      emit_event(PageEmittedEvents::WorkerDestroyed, worker)
-      @workers.delete(session_id)
-    end
+    @target.target_manager.add_target_interceptor(@client, method(:handle_attached_to_target))
+    @target_gone_listener_id = @target.target_manager.add_event_listener(
+      TargetManagerEmittedEvents::TargetGone,
+      &method(:handle_detached_from_target)
+    )
 
     @frame_manager.on_event(FrameManagerEmittedEvents::FrameAttached) do |event|
       emit_event(PageEmittedEvents::FrameAttached, event)
@@ -135,15 +113,46 @@ class Puppeteer::Page
       handle_file_chooser(event)
     end
     @target.is_closed_promise.then do
+      @target.target_manager.remove_target_interceptor(@client, method(:handle_attached_to_target))
+      @target.target_manager.remove_event_listener(@target_gone_listener_id)
+
       emit_event(PageEmittedEvents::Close)
       @closed = true
+    end
+  end
+
+  private def handle_detached_from_target(target)
+    session_id = target.session&.id
+    @frame_manager.handle_detached_from_target(target)
+    return unless session_id
+    worker = @workers.delete(session_id)
+    return unless worker
+    emit_event(PageEmittedEvents::WorkerDestroyed, worker)
+  end
+
+  private def handle_attached_to_target(target, _)
+    @frame_manager.handle_attached_to_target(target)
+    if target.raw_type == 'worker'
+      #   const session = createdTarget._session();
+      #   assert(session);
+      #   const worker = new WebWorker(
+      #     session,
+      #     createdTarget.url(),
+      #     this.#addConsoleMessage.bind(this),
+      #     this.#handleException.bind(this)
+      #   );
+      #   this.#workers.set(session.id(), worker);
+      #   this.emit(PageEmittedEvents.WorkerCreated, worker);
+    end
+
+    if target.session
+      @target.target_manager.add_target_interceptor(target.session, method(:handle_attached_to_target))
     end
   end
 
   def init
     await_all(
       @frame_manager.async_init,
-      @client.async_send_message('Target.setAutoAttach', autoAttach: true, waitForDebuggerOnStart: false, flatten: true),
       @client.async_send_message('Performance.enable'),
       @client.async_send_message('Log.enable'),
     )

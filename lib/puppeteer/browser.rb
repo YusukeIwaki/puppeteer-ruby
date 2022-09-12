@@ -7,13 +7,15 @@ class Puppeteer::Browser
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
 
+  # @param product [String|nil] 'chrome' or 'firefox'
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
   # @param process [Puppeteer::BrowserRunner::BrowserProcess|NilClass]
   # @param {function()=} closeCallback
-  def self.create(connection:,
+  def self.create(product:,
+                  connection:,
                   context_ids:,
                   ignore_https_errors:,
                   default_viewport:,
@@ -22,6 +24,7 @@ class Puppeteer::Browser
                   target_filter_callback:,
                   is_page_target_callback:)
     browser = Puppeteer::Browser.new(
+      product: product,
       connection: connection,
       context_ids: context_ids,
       ignore_https_errors: ignore_https_errors,
@@ -31,17 +34,19 @@ class Puppeteer::Browser
       target_filter_callback: target_filter_callback,
       is_page_target_callback: is_page_target_callback,
     )
-    connection.send_message('Target.setDiscoverTargets', discover: true)
+    browser.send(:attach)
     browser
   end
 
+  # @param product [String|nil] 'chrome' or 'firefox'
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
   # @param {?Puppeteer.ChildProcess} process
   # @param {(function():Promise)=} closeCallback
-  def initialize(connection:,
+  def initialize(product:,
+                 connection:,
                  context_ids:,
                  ignore_https_errors:,
                  default_viewport:,
@@ -49,6 +54,7 @@ class Puppeteer::Browser
                  close_callback:,
                  target_filter_callback:,
                  is_page_target_callback:)
+    @product = product || 'chrome'
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
     @process = process
@@ -56,20 +62,26 @@ class Puppeteer::Browser
     @close_callback = close_callback
     @target_filter_callback = target_filter_callback || method(:default_target_filter_callback)
     @is_page_target_callback = is_page_target_callback || method(:default_is_page_target_callback)
-
     @default_context = Puppeteer::BrowserContext.new(@connection, self, nil)
     @contexts = {}
+
     context_ids.each do |context_id|
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self, context_id)
     end
-    @targets = {}
-    @wait_for_creating_targets = {}
-    @connection.on_event(ConnectionEmittedEvents::Disconnected) do
-      emit_event(BrowserEmittedEvents::Disconnected)
+
+    if @product == 'firefox'
+      @target_manager = Puppeteer::FirefoxTargetManager.new(
+        connection: connection,
+        target_factory: method(:create_target),
+        target_filter_callback: @target_filter_callback,
+      )
+    else
+      @target_manager = Puppeteer::ChromeTargetManager.new(
+        connection: connection,
+        target_factory: method(:create_target),
+        target_filter_callback: @target_filter_callback,
+      )
     end
-    @connection.on_event('Target.targetCreated', &method(:handle_target_created))
-    @connection.on_event('Target.targetDestroyed', &method(:handle_target_destroyed))
-    @connection.on_event('Target.targetInfoChanged', &method(:handle_target_info_changed))
   end
 
   private def default_target_filter_callback(target_info)
@@ -100,9 +112,43 @@ class Puppeteer::Browser
     super(event_name.to_s, &block)
   end
 
+  private def attach
+    @connection_event_listeners ||= []
+    @connection_event_listeners << @connection.add_event_listener(ConnectionEmittedEvents::Disconnected) do
+      emit_event(BrowserEmittedEvents::Disconnected)
+    end
+    @target_manager_event_listeners ||= []
+    @target_manager.add_event_listener(
+      TargetManagerEmittedEvents::TargetAvailable,
+      &method(:handle_attached_to_target)
+    )
+    @target_manager.add_event_listener(
+      TargetManagerEmittedEvents::TargetGone,
+      &method(:handle_detached_from_target)
+    )
+    @target_manager.add_event_listener(
+      TargetManagerEmittedEvents::TargetChanged,
+      &method(:handle_target_changed)
+    )
+    @target_manager.add_event_listener(
+      TargetManagerEmittedEvents::TargetDiscovered,
+      &method(:handle_target_discovered)
+    )
+    @target_manager.init
+  end
+
+  private def detach
+    @connection.remove_event_listener(*@connection_event_listeners)
+    @target_manager.remove_event_listener(*@target_manager_event_listeners)
+  end
+
   # @return [Puppeteer::BrowserRunner::BrowserProcess]
   def process
     @process
+  end
+
+  private def target_manager
+    @target_manager
   end
 
   # @return [Puppeteer::BrowserContext]
@@ -123,19 +169,16 @@ class Puppeteer::Browser
 
   # @param context_id [String]
   def dispose_context(context_id)
+    return unless context_id
     @connection.send_message('Target.disposeBrowserContext', browserContextId: context_id)
     @contexts.delete(context_id)
   end
 
-  class TargetAlreadyExistError < StandardError
-    def initialize
-      super('Target should not exist before targetCreated')
-    end
-  end
+  class MissingBrowserContextError < StandardError ; end
 
-  # @param {!Protocol.Target.targetCreatedPayload} event
-  def handle_target_created(event)
-    target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
+  # @param target_info [Puppeteer::Target::TargetInfo]
+  # @param session [CDPSession|nil]
+  def create_target(target_info, session)
     browser_context_id = target_info.browser_context_id
     context =
       if browser_context_id && @contexts.has_key?(browser_context_id)
@@ -144,56 +187,39 @@ class Puppeteer::Browser
         @default_context
       end
 
-    if @targets[target_info.target_id]
-      raise TargetAlreadyExistError.new
+    unless context
+      raise MissingBrowserContextError.new('Missing browser context')
     end
 
-    return unless @target_filter_callback.call(target_info)
-
-    target = Puppeteer::Target.new(
+    Puppeteer::Target.new(
       target_info: target_info,
+      session: session,
       browser_context: context,
+      target_manager: @target_manager,
       session_factory: -> { @connection.create_session(target_info) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
       is_page_target_callback: @is_page_target_callback,
     )
-    @targets[target_info.target_id] = target
-    if_present(@wait_for_creating_targets.delete(target_info.target_id)) do |promise|
-      promise.fulfill(target)
-    end
-    if await target.initialized_promise
+  end
+
+  private def handle_attached_to_target(target)
+    if target.initialized_promise.value!
       emit_event(BrowserEmittedEvents::TargetCreated, target)
-      context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
+      target.browser_context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
     end
   end
 
-  # @param {{targetId: string}} event
-  def handle_target_destroyed(event)
-    target_id = event['targetId']
-    target = @targets[target_id]
+  private def handle_detached_from_target(target)
     target.ignore_initialize_callback_promise
-    @targets.delete(target_id)
-    if_present(@wait_for_creating_targets.delete(target_id)) do |promise|
-      promise.reject('target destroyed')
-    end
     target.closed_callback
-    if await target.initialized_promise
+    if target.initialized_promise.value!
       emit_event(BrowserEmittedEvents::TargetDestroyed, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetDestroyed, target)
     end
   end
 
-  class TargetNotExistError < StandardError
-    def initialize
-      super('target should exist before targetInfoChanged')
-    end
-  end
-
-  # @param {!Protocol.Target.targetInfoChangedPayload} event
-  def handle_target_info_changed(event)
-    target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
-    target = @targets[target_info.target_id] or raise TargetNotExistError.new
+  private def handle_target_changed(target, target_info)
     previous_url = target.url
     was_initialized = target.initialized?
     target.handle_target_info_changed(target_info)
@@ -201,6 +227,10 @@ class Puppeteer::Browser
       emit_event(BrowserEmittedEvents::TargetChanged, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetChanged, target)
     end
+  end
+
+  private def handle_target_discovered(target_info)
+    emit_event('targetdiscovered', target_info)
   end
 
   # @return [String]
@@ -212,44 +242,47 @@ class Puppeteer::Browser
     @default_context.new_page
   end
 
+  class MissingTargetError < StandardError ; end
+  class CreatePageError < StandardError ; end
+
   # @param {?string} contextId
   # @return {!Promise<!Puppeteer.Page>}
   def create_page_in_context(context_id)
-    create_target_params = { url: 'about:blank' }
-    if context_id
-      create_target_params[:browserContextId] = context_id
-    end
+    create_target_params = {
+      url: 'about:blank',
+      browserContextId: context_id,
+    }.compact
     result = @connection.send_message('Target.createTarget', **create_target_params)
     target_id = result['targetId']
-    target = @targets[target_id]
+    target = @target_manager.available_targets[target_id]
     unless target
-      # Target.targetCreated is often notified before the response of Target.createdTarget.
-      # https://github.com/YusukeIwaki/puppeteer-ruby/issues/91
-      # D, [2021-04-07T03:00:10.125241 #187] DEBUG -- : SEND >> {"method":"Target.createTarget","params":{"url":"about:blank","browserContextId":"56A86FC3391B50180CF9A6450A0D8C21"},"id":3}
-      # D, [2021-04-07T03:00:10.142396 #187] DEBUG -- : RECV << {"id"=>3, "result"=>{"targetId"=>"A518447C415A1A3E1A8979454A155632"}}
-      # D, [2021-04-07T03:00:10.145360 #187] DEBUG -- : RECV << {"method"=>"Target.targetCreated", "params"=>{"targetInfo"=>{"targetId"=>"A518447C415A1A3E1A8979454A155632", "type"=>"page", "title"=>"", "url"=>"", "attached"=>false, "canAccessOpener"=>false, "browserContextId"=>"56A86FC3391B50180CF9A6450A0D8C21"}}}
-      # This is just a workaround logic...
-      @wait_for_creating_targets[target_id] = resolvable_future
-      target = await @wait_for_creating_targets[target_id]
+      raise MissingTargetError.new("Missing target for page (id = #{target_id})")
     end
-    await target.initialized_promise
-    await target.page
+    unless target.initialized_promise.value!
+      raise CreatePageError.new("Failed to create target for page (id = #{target_id})")
+    end
+    page = target.page
+    unless page
+      raise CreatePageError.new("Failed to create a page for context (id = #{context_id})")
+    end
+    page
   end
 
-  # @return {!Array<!Target>}
+  # All active targets inside the Browser. In case of multiple browser contexts, returns
+  # an array with all the targets in all browser contexts.
   def targets
-    @targets.values.select { |target| target.initialized? }
+    @target_manager.available_targets.values.select { |target| target.initialized? }
   end
 
 
-  # @return {!Target}
+  # The target associated with the browser.
   def target
-    targets.find { |target| target.type == 'browser' }
+    targets.find { |target| target.type == 'browser' } or raise 'Browser target is not found'
   end
 
   # used only in Target#opener
   private def find_target_by_id(target_id)
-    @targets[target_id]
+    @target_manager.available_targets[target_id]
   end
 
   # @param predicate [Proc(Puppeteer::Target -> Boolean)]
@@ -307,6 +340,7 @@ class Puppeteer::Browser
   end
 
   def disconnect
+    @target_manager.dispose
     @connection.dispose
   end
 
