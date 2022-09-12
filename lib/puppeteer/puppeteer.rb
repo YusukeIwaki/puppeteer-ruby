@@ -110,7 +110,7 @@ class Puppeteer::Puppeteer
       default_viewport: default_viewport,
       slow_mo: slow_mo,
     }.compact
-    browser = launcher.connect(options)
+    browser = Puppeteer::BrowserConnector.new(options).connect_to_browser
     if block_given?
       begin
         yield(browser)
