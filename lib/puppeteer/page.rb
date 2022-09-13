@@ -152,7 +152,7 @@ class Puppeteer::Page
 
   def init
     await_all(
-      @frame_manager.async_init,
+      @frame_manager.async_init(@target.target_id),
       @client.async_send_message('Performance.enable'),
       @client.async_send_message('Log.enable'),
     )

@@ -27,6 +27,13 @@ class Puppeteer::FrameManager
     # @type {!Set<string>}
     @isolated_worlds = Set.new
 
+    # Keeps track of OOPIF targets/frames (target ID == frame ID for OOPIFs)
+    # that are being initialized.
+    @frames_pending_target_init = {}
+
+    # Keeps track of frames that are in the process of being attached in #onFrameAttached.
+    @frames_pending_attachment = {}
+
     setup_listeners(@client)
   end
 
@@ -65,7 +72,8 @@ class Puppeteer::FrameManager
 
   attr_reader :client, :timeout_settings
 
-  private def init(cdp_session = nil)
+  private def init(target_id, cdp_session = nil)
+    @frames_pending_target_init[target_id] ||= resolvable_future
     client = cdp_session || @client
 
     promises = [
@@ -86,6 +94,8 @@ class Puppeteer::FrameManager
     return if err.message.include?('Target closed') || err.message.include?('Session closed')
 
     raise
+  ensure
+    @frames_pending_target_init.delete(target_id)&.fulfill(nil)
   end
 
   define_async_method :async_init
@@ -170,7 +180,7 @@ class Puppeteer::FrameManager
     session = target.session
     frame&.send(:update_client, session)
     setup_listeners(session)
-    async_init(session)
+    async_init(target.target_info.target_id, session)
   end
 
   # @param event [Hash]
@@ -243,7 +253,7 @@ class Puppeteer::FrameManager
 
   # @param session [Puppeteer::CDPSession]
   # @param frameId [String]
-  # @param parentFrameId [String|nil]
+  # @param parentFrameId [String]
   def handle_frame_attached(session, frame_id, parent_frame_id)
     if @frames.has_key?(frame_id)
       frame = @frames[frame_id]
@@ -255,31 +265,57 @@ class Puppeteer::FrameManager
       end
       return
     end
-    if !parent_frame_id
-      raise ArgymentError.new('parent_frame_id must not be nil')
-    end
     parent_frame = @frames[parent_frame_id]
-    if !parent_frame
-      raise ArgymentError.new("parent_frame #{parent_frame_id} not found")
+    if parent_frame
+      attach_child_frame(parent_frame, parent_frame_id, frame_id, session)
+      return
     end
-    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session)
-    @frames[frame_id] = frame
 
+    if @frames_pending_target_init[parent_frame_id]
+      @frames_pending_attachment[frame_id] ||= resolvable_future
+      @frames_pending_target_init[parent_frame_id].then do |_|
+        attach_child_frame(@frames[parent_frame_id], parent_frame_id, frame_id, session)
+        @frames_pending_attachment.delete(frame_id)&.fulfill(nil)
+      end
+      return
+    end
+
+    raise FrameNotFoundError.new("Parent frame #{parent_frame_id} not found.")
+  end
+
+  class FrameNotFoundError < StandardError ; end
+
+  private def attach_child_frame(parent_frame, parent_frame_id, frame_id, session)
+    unless parent_frame
+      raise FrameNotFoundError.new("Parent frame #{parent_frame_id} not found.")
+    end
+
+    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session)
+    @frames[frame.id] = frame
     emit_event(FrameManagerEmittedEvents::FrameAttached, frame)
+    frame
   end
 
   # @param frame_payload [Hash]
   def handle_frame_navigated(frame_payload)
+    frame_id = frame_payload['id']
     is_main_frame = !frame_payload['parentId']
-    frame =
-      if is_main_frame
-        @main_frame
-      else
-        @frames[frame_payload['id']]
-      end
 
+
+    if @frames_pending_attachment[frame_id]
+      @frames_pending_attachment[frame_id].then do |_|
+        frame = is_main_frame ? @main_frame : @frames[frame_id]
+        reattach_frame(frame, frame_id, is_main_frame, frame_payload)
+      end
+    else
+      frame = is_main_frame ? @main_frame : @frames[frame_id]
+      reattach_frame(frame, frame_id, is_main_frame, frame_payload)
+    end
+  end
+
+  private def reattach_frame(frame, frame_id, is_main_frame, frame_payload)
     if !is_main_frame && !frame
-      raise ArgumentError.new('We either navigate top level or have old version of the navigated frame')
+      raise "Missing frame isMainFrame=#{is_main_frame}, frameId=#{frame_id}"
     end
 
     # Detach all child frames first.
@@ -294,12 +330,12 @@ class Puppeteer::FrameManager
       if frame
         # Update frame id to retain frame identity on cross-process navigation.
         @frames.delete(frame.id)
-        frame.id = frame_payload['id']
+        frame.id = frame_id
       else
         # Initial main frame navigation.
-        frame = Puppeteer::Frame.new(self, nil, frame_payload['id'], @client)
+        frame = Puppeteer::Frame.new(self, nil, frame_id, @client)
       end
-      @frames[frame_payload['id']] = frame
+      @frames[frame_id] = frame
       @main_frame = frame
     end
 
