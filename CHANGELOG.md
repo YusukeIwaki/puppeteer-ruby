@@ -1,6 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.42.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.0...main)]
 
 - xxx
+
+### 0.43.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.42.0...0.43.0)]
+
+- Port Puppeteer v16.0 features. Increasing stability.
 
 ### 0.42.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.41.0...0.42.0)]
 
