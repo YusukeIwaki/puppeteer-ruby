@@ -129,7 +129,7 @@ class Puppeteer::ChromeTargetManager
       # Special case (https://crbug.com/1338156): currently, shared_workers
       # don't get auto-attached. This should be removed once the auto-attach
       # works.
-      @connection.create_session(target_info)
+      @connection.create_session(target_info, auto_attach_emulated: true)
     end
   end
 
@@ -185,6 +185,8 @@ class Puppeteer::ChromeTargetManager
       end
     }
 
+    return unless @connection.auto_attached?(target_info.target_id)
+
     # Special case for service workers: being attached to service workers will
     # prevent them from ever being destroyed. Therefore, we silently detach
     # from service workers unless the connection was manually created via
@@ -212,6 +214,8 @@ class Puppeteer::ChromeTargetManager
       return
     end
 
+    is_existing_target = @attached_targets_by_target_id.has_key?(target_info.target_id)
+
     target = @attached_targets_by_target_id[target_info.target_id] || @target_factory.call(target_info, session)
     setup_attachment_listeners(session)
 
@@ -233,7 +237,9 @@ class Puppeteer::ChromeTargetManager
     end
 
     @target_ids_for_init.delete(target.target_id)
-    future { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }
+    unless is_existing_target
+      future { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }
+    end
     finish_initialization_if_ready
 
     future do

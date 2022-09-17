@@ -93,7 +93,7 @@ class Puppeteer::Target
   end
 
   def create_cdp_session
-    @session_factory.call
+    @session_factory.call(false)
   end
 
   def target_manager
@@ -102,7 +102,7 @@ class Puppeteer::Target
 
   def page
     if @is_page_target_callback.call(@target_info) && @page.nil?
-      client = @session || @session_factory.call
+      client = @session || @session_factory.call(true)
       @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport)
     end
     @page
