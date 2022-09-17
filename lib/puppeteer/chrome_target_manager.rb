@@ -1,4 +1,5 @@
 class Puppeteer::ChromeTargetManager
+  include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
   def initialize(connection:, target_factory:, target_filter_callback:)
@@ -39,20 +40,28 @@ class Puppeteer::ChromeTargetManager
         { type: 'tab', exclude: true },
         {},
       ],
-    })
+    }).then do
+      store_existing_targets_for_init
+    end.rescue do |err|
+      debug_puts(err)
+    end
   end
 
-  def init
+  private def store_existing_targets_for_init
     @discovered_targets_by_target_id.each do |target_id, target_info|
-      if @target_filter_callback.call(target_info)
+      if @target_filter_callback.call(target_info) && target_info.type != 'browser'
         @target_ids_for_init << target_id
       end
     end
+  end
+
+  def init
     @connection.send_message('Target.setAutoAttach', {
       waitForDebuggerOnStart: true,
       flatten: true,
       autoAttach: true,
     })
+    finish_initialization_if_ready
     @initialize_promise.value!
   end
 
@@ -225,10 +234,7 @@ class Puppeteer::ChromeTargetManager
 
     @target_ids_for_init.delete(target.target_id)
     future { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }
-
-    if @target_ids_for_init.empty?
-      @initialize_promise.fulfill(nil) unless @initialize_promise.resolved?
-    end
+    finish_initialization_if_ready
 
     future do
       # TODO: the browser might be shutting down here. What do we do with the error?
@@ -245,8 +251,8 @@ class Puppeteer::ChromeTargetManager
     end
   end
 
-  private def finish_initialization_if_ready(target_id)
-    @target_ids_for_init.delete(target_id)
+  private def finish_initialization_if_ready(target_id = nil)
+    @target_ids_for_init.delete(target_id) if target_id
     if @target_ids_for_init.empty?
       @initialize_promise.fulfill(nil) unless @initialize_promise.resolved?
     end
