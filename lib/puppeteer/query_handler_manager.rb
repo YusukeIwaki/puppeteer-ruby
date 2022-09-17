@@ -6,6 +6,7 @@ class Puppeteer::QueryHandlerManager
   def query_handlers
     @query_handlers ||= {
       aria: Puppeteer::AriaQueryHandler.new,
+      xpath: xpath_handler,
     }
   end
 
@@ -13,6 +14,40 @@ class Puppeteer::QueryHandlerManager
     @default_handler ||= Puppeteer::CustomQueryHandler.new(
       query_one: '(element, selector) => element.querySelector(selector)',
       query_all: '(element, selector) => element.querySelectorAll(selector)',
+    )
+  end
+
+  private def xpath_handler
+    @xpath_handler ||= Puppeteer::CustomQueryHandler.new(
+      query_one: <<~JAVASCRIPT,
+      (element, selector) => {
+        const doc = element.ownerDocument || document;
+        const result = doc.evaluate(
+          selector,
+          element,
+          null,
+          XPathResult.FIRST_ORDERED_NODE_TYPE
+        );
+        return result.singleNodeValue;
+      }
+      JAVASCRIPT
+      query_all: <<~JAVASCRIPT,
+      (element, selector) => {
+        const doc = element.ownerDocument || document;
+        const iterator = doc.evaluate(
+          selector,
+          element,
+          null,
+          XPathResult.ORDERED_NODE_ITERATOR_TYPE
+        );
+        const array = [];
+        let item;
+        while ((item = iterator.iterateNext())) {
+          array.push(item);
+        }
+        return array;
+      }
+      JAVASCRIPT
     )
   end
 

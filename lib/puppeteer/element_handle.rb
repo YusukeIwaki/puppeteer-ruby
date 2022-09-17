@@ -125,28 +125,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default
   # value can be changed by using the {@link Page.setDefaultTimeout} method.
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
-    frame = @context.frame
-
-    secondary_world = frame.secondary_world
-    adopted_root = secondary_world.execution_context.adopt_element_handle(self)
     param_xpath =
       if xpath.start_with?('//')
         ".#{xpath}"
       else
         xpath
       end
-    unless param_xpath.start_with?('.//')
-      adopted_root.dispose
-      raise ArgumentError.new("Unsupported xpath expression: #{xpath}")
-    end
-    handle = secondary_world.wait_for_xpath(param_xpath, visible: visible, hidden: hidden, timeout: timeout, root: adopted_root)
-    adopted_root.dispose
-    return nil unless handle
 
-    main_world = frame.main_world
-    result = main_world.execution_context.adopt_element_handle(handle)
-    handle.dispose
-    result
+    wait_for_selector("xpath/#{param_xpath}", visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_xpath
@@ -623,21 +609,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param expression [String]
   # @return [Array<ElementHandle>]
   def Sx(expression)
-    fn = <<~JAVASCRIPT
-    (element, expression) => {
-      const document = element.ownerDocument || element;
-      const iterator = document.evaluate(expression, element, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
-      const array = [];
-      let item;
-      while ((item = iterator.iterateNext()))
-        array.push(item);
-      return array;
-    }
-    JAVASCRIPT
-    handles = evaluate_handle(fn, expression)
-    properties = handles.properties
-    handles.dispose
-    properties.values.map(&:as_element).compact
+    param_xpath =
+      if expression.start_with?('//')
+        ".#{expression}"
+      else
+        expression
+      end
+
+    query_selector_all("xpath/#{param_xpath}")
   end
 
   define_async_method :async_Sx
