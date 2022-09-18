@@ -81,7 +81,10 @@ class Puppeteer::LifecycleWatcher
       @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameSwapped, &method(:handle_frame_swapped)),
       @frame_manager.add_event_listener(FrameManagerEmittedEvents::FrameDetached, &method(:handle_frame_detached)),
     ]
-    @listener_ids['network_manager'] = @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Request, &method(:handle_request))
+    @listener_ids['network_manager'] = [
+      @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Request, &method(:handle_request)),
+      @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Response, &method(:handle_response)),
+    ]
 
     @same_document_navigation_promise = resolvable_future
     @lifecycle_promise = resolvable_future
@@ -90,10 +93,24 @@ class Puppeteer::LifecycleWatcher
     check_lifecycle_complete
   end
 
+  class AnotherRequestReceivedError < StandardError ; end
+
   # @param [Puppeteer::HTTPRequest] request
   def handle_request(request)
     return if request.frame != @frame || !request.navigation_request?
     @navigation_request = request
+    @navigation_response_received&.reject(AnotherRequestReceivedError.new('New navigation request was received'))
+    @navigation_response_received = resolvable_future
+    if request.response && !@navigation_response_received.resolved?
+      @navigation_response_received.fulfill(nil)
+    end
+  end
+
+  # @param [Puppeteer::HTTPResponse] response
+  def handle_response(response)
+    return if @navigation_request&.internal&.request_id  != response.request.internal.request_id
+
+    @navigation_response_received.fulfill(nil) unless @navigation_response_received.resolved?
   end
 
   # @param frame [Puppeteer::Frame]
@@ -107,6 +124,8 @@ class Puppeteer::LifecycleWatcher
 
   # @return [Puppeteer::HTTPResponse]
   def navigation_response
+    # Continue with a possibly null response.
+    @navigation_response_received.value! rescue nil
     if_present(@navigation_request) do |request|
       request.response
     end
@@ -175,8 +194,8 @@ class Puppeteer::LifecycleWatcher
     if_present(@listener_ids['frame_manager']) do |ids|
       @frame_manager.remove_event_listener(*ids)
     end
-    if_present(@listener_ids['network_manager']) do |id|
-      @frame_manager.network_manager.remove_event_listener(id)
+    if_present(@listener_ids['network_manager']) do |ids|
+      @frame_manager.network_manager.remove_event_listener(*ids)
     end
   end
 end

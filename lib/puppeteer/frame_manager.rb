@@ -144,13 +144,13 @@ class Puppeteer::FrameManager
           watcher.same_document_navigation_promise
         end,
       )
+
+      watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
       raise NavigationError.new(err)
     ensure
       watcher.dispose
     end
-
-    watcher.navigation_response
   end
 
   # @param timeout [number|nil]
@@ -168,13 +168,13 @@ class Puppeteer::FrameManager
         watcher.same_document_navigation_promise,
         watcher.new_document_navigation_promise,
       )
+
+      watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
       raise NavigationError.new(err)
     ensure
       watcher.dispose
     end
-
-    watcher.navigation_response
   end
 
   # @param event [Hash]
