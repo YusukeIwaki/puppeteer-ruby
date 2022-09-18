@@ -539,49 +539,6 @@ class Puppeteer::DOMWorld
     handle.as_element
   end
 
-  # @param xpath [String]
-  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
-  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
-  # @param timeout [Integer]
-  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil, root: nil)
-    option_wait_for_visible = visible || false
-    option_wait_for_hidden = hidden || false
-    option_timeout = timeout || @timeout_settings.timeout
-    option_root = root
-
-    polling =
-      if option_wait_for_visible || option_wait_for_hidden
-        'raf'
-      else
-        'mutation'
-      end
-    title = "XPath #{xpath}#{option_wait_for_hidden ? 'to be hidden' : ''}"
-
-    xpath_predicate = make_predicate_string(
-      predicate_arg_def: '(root, selector, waitForVisible, waitForHidden)',
-      predicate_body: <<~JAVASCRIPT
-        const node = document.evaluate(selector, root, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        return checkWaitForOptions(node, waitForVisible, waitForHidden);
-      JAVASCRIPT
-    )
-
-    wait_task = Puppeteer::WaitTask.new(
-      dom_world: self,
-      predicate_body: xpath_predicate,
-      title: title,
-      polling: polling,
-      timeout: option_timeout,
-      args: [xpath, option_wait_for_visible, option_wait_for_hidden],
-      root: option_root,
-    )
-    handle = wait_task.await_promise
-    unless handle.as_element
-      handle.dispose
-      return nil
-    end
-    handle.as_element
-  end
-
   # @param page_function [String]
   # @param args [Array]
   # @param polling [Integer|String]

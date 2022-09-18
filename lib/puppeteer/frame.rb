@@ -106,7 +106,14 @@ class Puppeteer::Frame
   # @param {string} expression
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
   def Sx(expression)
-    @main_world.Sx(expression)
+    param_xpath =
+      if expression.start_with?('//')
+        ".#{expression}"
+      else
+        expression
+      end
+
+    query_selector_all("xpath/#{param_xpath}")
   end
 
   define_async_method :async_Sx
@@ -274,14 +281,14 @@ class Puppeteer::Frame
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
-    handle = @secondary_world.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
-    if !handle
-      return nil
-    end
-    main_execution_context = @main_world.execution_context
-    result = main_execution_context.adopt_element_handle(handle)
-    handle.dispose
-    result
+    param_xpath =
+      if xpath.start_with?('//')
+        ".#{xpath}"
+      else
+        xpath
+      end
+
+    wait_for_selector("xpath/#{param_xpath}", visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_xpath
