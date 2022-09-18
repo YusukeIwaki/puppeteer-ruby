@@ -11,23 +11,28 @@ RSpec.describe Puppeteer::CDPSession do
     expect(foo).to eq('bar')
   end
 
-  context 'with empty page', sinatra: true do
-    before {
-      sinatra.get('/') { 'Hello' }
-    }
+  it 'should not report created targets for custom CDP sessions', puppeteer: :browser do
+    called = false
+    browser.browser_contexts.first.on('targetcreated') do |target|
+      raise 'Too many targets created' if called
+      called = true
 
-    it 'should send events' do
-      client = page.target.create_cdp_session
-
-      client.send_message('Network.enable')
-
-      events = []
-      client.on('Network.requestWillBeSent') do |event|
-        events << event
-      end
-      page.goto("#{server_prefix}/")
-      expect(events.size).to eq(1)
+      target.create_cdp_session
     end
+    browser.new_page
+  end
+
+  it 'should send events', sinatra: true do
+    client = page.target.create_cdp_session
+
+    client.send_message('Network.enable')
+
+    events = []
+    client.on('Network.requestWillBeSent') do |event|
+      events << event
+    end
+    page.goto(server_empty_page)
+    expect(events.size).to eq(1)
   end
 
   # it('should enable and disable domains independently', async () => {

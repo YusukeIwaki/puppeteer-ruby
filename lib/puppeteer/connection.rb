@@ -319,15 +319,18 @@ class Puppeteer::Connection
   end
 
   def auto_attached?(target_id)
-    @manually_attached.include?(target_id)
+    !@manually_attached.include?(target_id)
   end
 
   # @param {Protocol.Target.TargetInfo} targetInfo
   # @return [CDPSession]
-  def create_session(target_info)
-    @manually_attached << target_info.target_id
+  def create_session(target_info, auto_attach_emulated: false)
+    unless auto_attach_emulated
+      @manually_attached << target_info.target_id
+    end
     result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
+    @manually_attached.delete(target_info.target_id)
     @sessions[session_id]
   end
 end

@@ -196,7 +196,7 @@ class Puppeteer::Browser
       session: session,
       browser_context: context,
       target_manager: @target_manager,
-      session_factory: -> { @connection.create_session(target_info) },
+      session_factory: -> (auto_attach_emulated) { @connection.create_session(target_info, auto_attach_emulated: auto_attach_emulated) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
       is_page_target_callback: @is_page_target_callback,
