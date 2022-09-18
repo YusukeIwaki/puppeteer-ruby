@@ -1,6 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.1...main)]
 
 - xxx
+
+### 0.43.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.0...0.43.1)]
+
+- Port Puppeteer v16.1 features, including bugfix and XPath query handler.
 
 ### 0.43.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.42.0...0.43.0)]
 
