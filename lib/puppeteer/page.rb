@@ -191,8 +191,7 @@ class Puppeteer::Page
     return if @file_chooser_interceptors.empty?
 
     frame = @frame_manager.frame(event['frameId'])
-    context = frame.execution_context
-    element = context.adopt_backend_node_id(event['backendNodeId'])
+    element = frame.main_world.adopt_backend_node(event['backendNodeId'])
     interceptors = @file_chooser_interceptors.to_a
     @file_chooser_interceptors.clear
     file_chooser = Puppeteer::FileChooser.new(element, event)

@@ -13,7 +13,6 @@ RSpec.describe Puppeteer::Frame do
       contexts = frames.map(&:execution_context)
       expect(contexts).to all(be_truthy)
       expect(contexts.first).not_to eq(contexts.last)
-      expect(contexts.map(&:frame)).to eq(frames)
 
       contexts.each_with_index do |context, i|
         context.evaluate("() => (globalThis.a = #{i + 1})")

@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v16.2.0
+- Puppeteer version: v17.1.3
 - puppeteer-ruby version: 0.43.1
 
 ## Puppeteer
@@ -150,13 +150,6 @@
 * ~~removeAllListeners~~
 * ~~removeListener~~
 
-## ExecutionContext
-
-* evaluate
-* evaluateHandle => `#evaluate_handle`
-* frame
-* ~~queryObjects~~
-
 ## FileChooser
 
 * accept
@@ -172,12 +165,12 @@
 * $x => `#Sx`
 * addScriptTag => `#add_script_tag`
 * addStyleTag => `#add_style_tag`
+* addStyleTag => `#add_style_tag`
 * childFrames => `#child_frames`
 * click
 * content
 * evaluate
 * evaluateHandle => `#evaluate_handle`
-* executionContext => `#execution_context`
 * focus
 * goto
 * hover
@@ -251,7 +244,6 @@
 * dispose
 * evaluate
 * evaluateHandle => `#evaluate_handle`
-* executionContext => `#execution_context`
 * getProperties => `#properties`
 * getProperty => `#[]`
 * getProperty => `#[]`
@@ -289,6 +281,7 @@
 * $x => `#Sx`
 * addScriptTag => `#add_script_tag`
 * addStyleTag => `#add_style_tag`
+* addStyleTag => `#add_style_tag`
 * authenticate
 * bringToFront => `#bring_to_front`
 * browser
@@ -313,6 +306,7 @@
 * exposeFunction => `#expose_function`
 * focus
 * frames
+* ~~getDefaultTimeout~~
 * goBack => `#go_back`
 * goForward => `#go_forward`
 * goto
@@ -401,5 +395,4 @@
 
 * ~~evaluate~~
 * ~~evaluateHandle~~
-* ~~executionContext~~
 * ~~url~~

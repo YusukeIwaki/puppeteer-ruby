@@ -61,8 +61,8 @@ class Puppeteer::QueryHandlerManager
       @query_handler.query_one(element_handle, @selector)
     end
 
-    def wait_for(dom_world, visible:, hidden:, timeout:, root:)
-      @query_handler.wait_for(dom_world, @selector, visible: visible, hidden: hidden, timeout: timeout, root: root)
+    def wait_for(element_or_frame, visible:, hidden:, timeout:)
+      @query_handler.wait_for(element_or_frame, @selector, visible: visible, hidden: hidden, timeout: timeout)
     end
 
     def query_all(element_handle)

@@ -5,16 +5,12 @@ class Puppeteer::JSHandle
   # @param context [Puppeteer::ExecutionContext]
   # @param remote_object [Puppeteer::RemoteObject]
   def self.create(context:, remote_object:)
-    frame = context.frame
-    if remote_object.sub_type == 'node' && frame
-      frame_manager = frame.frame_manager
+    if remote_object.sub_type == 'node' && context.world
       Puppeteer::ElementHandle.new(
         context: context,
         client: context.client,
         remote_object: remote_object,
-        frame: frame,
-        page: frame_manager.page,
-        frame_manager: frame_manager,
+        frame: context.world.frame,
       )
     else
       Puppeteer::JSHandle.new(
