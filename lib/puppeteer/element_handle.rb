@@ -609,14 +609,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param expression [String]
   # @return [Array<ElementHandle>]
   def Sx(expression)
-    param_xpath =
-      if expression.start_with?('//')
-        ".#{expression}"
-      else
-        expression
-      end
-
-    query_selector_all("xpath/#{param_xpath}")
+    query_selector_all("xpath/#{expression}")
   end
 
   define_async_method :async_Sx
