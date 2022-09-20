@@ -12,15 +12,15 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param client [Puppeteer::CDPSession]
   # @param remote_object [Puppeteer::RemoteObject]
   # @param frame [Puppeteer::Frame]
-  # @param page [Puppeteer::Page]
-  # @param frame_manager [Puppeteer::FrameManager]
-  def initialize(context:, client:, remote_object:, frame:, page:, frame_manager:)
+  def initialize(context:, client:, remote_object:, frame:)
     super(context: context, client: client, remote_object: remote_object)
     @frame = frame
-    @page = page
-    @frame_manager = frame_manager
+    @page = frame.page
+    @frame_manager = frame.frame_manager
     @disposed = false
   end
+
+  attr_reader :page, :frame, :frame_manager
 
   def inspect
     values = %i[context remote_object page disposed].map do |sym|
@@ -60,18 +60,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # (30 seconds). Pass `0` to disable timeout. The default value can be changed
   # by using the {@link Page.setDefaultTimeout} method.
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    frame = @context.frame
-
-    secondary_world = frame.secondary_world
-    adopted_root = secondary_world.execution_context.adopt_element_handle(self)
-    handle = secondary_world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout, root: adopted_root)
-    adopted_root.dispose
-    return nil unless handle
-
-    main_world = frame.main_world
-    result = main_world.execution_context.adopt_element_handle(handle)
-    handle.dispose
-    result
+    query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_selector
@@ -653,6 +642,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # used in AriaQueryHandler
   def query_ax_tree(accessible_name: nil, role: nil)
     @remote_object.query_ax_tree(@client,
-    accessible_name: accessible_name, role: role)
+      accessible_name: accessible_name, role: role)
   end
 end

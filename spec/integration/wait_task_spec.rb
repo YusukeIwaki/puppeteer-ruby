@@ -109,7 +109,7 @@ RSpec.describe Puppeteer::WaitTask do
       other_frame.evaluate(add_element, 'div')
       page.evaluate(add_element, 'div')
       handle = await watchdog
-      expect(handle.execution_context.frame).to eq(page.main_frame)
+      expect(handle.frame).to eq(page.main_frame)
     end
 
     it 'should run in specified frame', sinatra: true do
@@ -122,7 +122,7 @@ RSpec.describe Puppeteer::WaitTask do
       frame1.evaluate(add_element, 'div')
       frame2.evaluate(add_element, 'div')
       handle = await promise
-      expect(handle.execution_context.frame).to eq(frame2)
+      expect(handle.frame).to eq(frame2)
     end
 
     it_fails_firefox 'should throw when frame is detached', sinatra: true do

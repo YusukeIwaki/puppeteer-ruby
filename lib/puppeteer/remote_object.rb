@@ -105,8 +105,8 @@ class Puppeteer::RemoteObject
       role: role,
     }.compact)
 
-    result['nodes'].reject do |node|
-      node['role']['value'] == 'text'
+    result['nodes'].select do |node|
+      node['role'] && node['role']['value'] != 'StaticText'
     end
   end
 

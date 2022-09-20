@@ -413,11 +413,11 @@ class Puppeteer::FrameManager
 
       if context_payload.dig('auxData', 'isDefault')
         world = frame.main_world
-      elsif context_payload['name'] == UTILITY_WORLD_NAME && !frame.secondary_world.has_context?
+      elsif context_payload['name'] == UTILITY_WORLD_NAME && !frame.puppeteer_world.has_context?
         # In case of multiple sessions to the same target, there's a race between
         # connections so we might end up creating multiple isolated worlds.
         # We can use either.
-        world = frame.secondary_world
+        world = frame.puppeteer_world
       end
     end
 

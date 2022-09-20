@@ -1,7 +1,7 @@
 require 'thread'
 
-# https://github.com/puppeteer/puppeteer/blob/master/src/DOMWorld.js
-class Puppeteer::DOMWorld
+# https://github.com/puppeteer/puppeteer/blob/master/src/IsolaatedWorld.js
+class Puppeteer::IsolaatedWorld
   using Puppeteer::DefineAsyncMethod
 
   class BindingFunction
@@ -152,7 +152,7 @@ class Puppeteer::DOMWorld
     raise 'Bug of puppeteer-ruby...'
   end
 
-  private def document
+  def document
     @document ||= evaluate_document.as_element
   end
 
@@ -416,16 +416,6 @@ class Puppeteer::DOMWorld
     handle.dispose
   end
 
-  # @param selector [String]
-  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
-  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
-  # @param timeout [Integer]
-  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil, root: nil)
-    # call wait_for_selector_in_page with custom query selector.
-    query_selector_manager = Puppeteer::QueryHandlerManager.instance
-    query_selector_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout, root: root)
-  end
-
   private def binding_identifier(name, context)
     "#{name}_#{context.send(:_context_id)}"
   end
@@ -497,7 +487,7 @@ class Puppeteer::DOMWorld
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  private def wait_for_selector_in_page(query_one, selector, visible: nil, hidden: nil, timeout: nil, root: nil, binding_function: nil)
+  private def wait_for_selector_in_page(query_one, root, selector, visible: nil, hidden: nil, timeout: nil, binding_function: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
     option_timeout = timeout || @timeout_settings.timeout
@@ -531,12 +521,7 @@ class Puppeteer::DOMWorld
       root: option_root,
       binding_function: binding_function,
     )
-    handle = wait_task.await_promise
-    unless handle.as_element
-      handle.dispose
-      return nil
-    end
-    handle.as_element
+    wait_task.await_promise
   end
 
   # @param page_function [String]
@@ -600,5 +585,36 @@ class Puppeteer::DOMWorld
         }
     }
     JAVASCRIPT
+  end
+
+  # @param backend_node_id [Integer]
+  # @return [Puppeteer::ElementHandle]
+  def adopt_backend_node(backend_node_id)
+    response = @client.send_message('DOM.resolveNode',
+      backendNodeId: backend_node_id,
+      executionContextId: execution_context.send(:_context_id),
+    )
+    Puppeteer::JSHandle.create(
+      context: execution_context,
+      remote_object: Puppeteer::RemoteObject.new(response["object"]),
+    )
+  end
+  private define_async_method :async_adopt_backend_node
+
+  # @param element_handle [Puppeteer::ElementHandle]
+  # @return [Puppeteer::ElementHandle]
+  def adopt_handle(element_handle)
+    if element_handle.execution_context == execution_context
+      raise ArgumentError.new('Cannot adopt handle that already belongs to this execution context')
+    end
+
+    node_info = element_handle.remote_object.node_info(@client)
+    adopt_backend_node(node_info["node"]["backendNodeId"])
+  end
+
+  def transfer_handle(element_handle)
+    result = adopt_handle(element_handle)
+    element_handle.dispose
+    result
   end
 end

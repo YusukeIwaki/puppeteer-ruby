@@ -37,8 +37,8 @@ class Puppeteer::Frame
   # @param client [Puppeteer::CDPSession]
   private def update_client(client)
     @client = client
-    @main_world = Puppeteer::DOMWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
-    @secondary_world = Puppeteer::DOMWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
+    @main_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
+    @puppeteer_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
   end
 
   def page
@@ -49,7 +49,7 @@ class Puppeteer::Frame
     @client != @frame_manager.client
   end
 
-  attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :secondary_world
+  attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world
 
   def has_started_loading?
     @has_started_loading
@@ -154,14 +154,14 @@ class Puppeteer::Frame
 
   # @return [String]
   def content
-    @secondary_world.content
+    @puppeteer_world.content
   end
 
   # @param html [String]
   # @param timeout [Integer]
   # @param wait_until [String|Array<String>]
   def set_content(html, timeout: nil, wait_until: nil)
-    @secondary_world.set_content(html, timeout: timeout, wait_until: wait_until)
+    @puppeteer_world.set_content(html, timeout: timeout, wait_until: wait_until)
   end
 
   # @return [String]
@@ -212,35 +212,35 @@ class Puppeteer::Frame
   # @param button [String] "left"|"right"|"middle"
   # @param click_count [Number]
   def click(selector, delay: nil, button: nil, click_count: nil)
-    @secondary_world.click(selector, delay: delay, button: button, click_count: click_count)
+    @puppeteer_world.click(selector, delay: delay, button: button, click_count: click_count)
   end
 
   define_async_method :async_click
 
   # @param {string} selector
   def focus(selector)
-    @secondary_world.focus(selector)
+    @puppeteer_world.focus(selector)
   end
 
   define_async_method :async_focus
 
   # @param {string} selector
   def hover(selector)
-    @secondary_world.hover(selector)
+    @puppeteer_world.hover(selector)
   end
 
   # @param {string} selector
   # @param {!Array<string>} values
   # @return {!Promise<!Array<string>>}
   def select(selector, *values)
-    @secondary_world.select(selector, *values)
+    @puppeteer_world.select(selector, *values)
   end
 
   define_async_method :async_select
 
   # @param {string} selector
   def tap(selector)
-    @secondary_world.tap(selector)
+    @puppeteer_world.tap(selector)
   end
 
   define_async_method :async_tap
@@ -259,14 +259,8 @@ class Puppeteer::Frame
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    handle = @secondary_world.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
-    if !handle
-      return nil
-    end
-    main_execution_context = @main_world.execution_context
-    result = main_execution_context.adopt_element_handle(handle)
-    handle.dispose
-    result
+    query_handler_manager = Puppeteer::QueryHandlerManager.instance
+    query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_selector
@@ -306,7 +300,7 @@ class Puppeteer::Frame
 
   # @return [String]
   def title
-    @secondary_world.title
+    @puppeteer_world.title
   end
 
   # @param frame_payload [Hash]
@@ -344,7 +338,7 @@ class Puppeteer::Frame
   def detach
     @detached = true
     @main_world.detach
-    @secondary_world.detach
+    @puppeteer_world.detach
     if @parent_frame
       @parent_frame._child_frames.delete(self)
     end

@@ -3454,7 +3454,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!ClickOptions#offset:member",
-              "docComment": "/**\n * Offset for the clickable point relative to the top-left corder of the border box.\n */\n",
+              "docComment": "/**\n * Offset for the clickable point relative to the top-left corner of the border box.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5497,7 +5497,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Coverage#startJSCoverage:member(1)",
-              "docComment": "/**\n * @remarks\n *\n * Anonymous scripts are ones that don't have an associated url. These are scripts that are dynamically created on the page using `eval` or `new Function`. If `reportAnonymousScripts` is set to `true`, anonymous scripts will have `pptr://__puppeteer_evaluation_script__` as their URL.\n *\n * @param options - Set of configurable options for coverage defaults to `resetOnNavigation : true, reportAnonymousScripts : false`\n *\n * @returns Promise that resolves when coverage is started.\n */\n",
+              "docComment": "/**\n * @remarks\n *\n * Anonymous scripts are ones that don't have an associated url. These are scripts that are dynamically created on the page using `eval` or `new Function`. If `reportAnonymousScripts` is set to `true`, anonymous scripts URL will start with `debugger://VM` (unless a magic //# sourceURL comment is present, in which case that will the be URL).\n *\n * @param options - Set of configurable options for coverage defaults to `resetOnNavigation : true, reportAnonymousScripts : false`\n *\n * @returns Promise that resolves when coverage is started.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -8200,6 +8200,36 @@
               "name": "focus"
             },
             {
+              "kind": "Property",
+              "canonicalReference": "puppeteer!ElementHandle#frame:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get frame(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Frame",
+                  "canonicalReference": "puppeteer!Frame:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "frame",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false
+            },
+            {
               "kind": "Method",
               "canonicalReference": "puppeteer!ElementHandle#hover:member(1)",
               "docComment": "/**\n * This method scrolls element into view if needed, and then uses {@link Page.mouse} to hover over the center of the element. If the element is detached from DOM, the method throws an error.\n */\n",
@@ -8804,21 +8834,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Exclude",
-                  "canonicalReference": "!Exclude:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
                   "text": "WaitForSelectorOptions",
                   "canonicalReference": "puppeteer!WaitForSelectorOptions:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", 'root'>"
                 },
                 {
                   "kind": "Content",
@@ -8871,8 +8888,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 10,
-                "endIndex": 16
+                "startIndex": 7,
+                "endIndex": 13
               },
               "releaseTag": "Public",
               "isProtected": false,
@@ -8890,7 +8907,7 @@
                   "parameterName": "options",
                   "parameterTypeTokenRange": {
                     "startIndex": 5,
-                    "endIndex": 9
+                    "endIndex": 6
                   },
                   "isOptional": true
                 }
@@ -9697,434 +9714,6 @@
             "startIndex": 1,
             "endIndex": 2
           }
-        },
-        {
-          "kind": "Class",
-          "canonicalReference": "puppeteer!ExecutionContext:class",
-          "docComment": "/**\n * @remarks\n *\n * Besides pages, execution contexts can be found in {@link WebWorker | workers}.\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `ExecutionContext` class.\n *\n * @deprecated\n *\n * Do not use directly.\n *\n * Represents a context for JavaScript execution.\n *\n * @example\n *\n * A {@link Page} can have several execution contexts:\n *\n * - Each {@link Frame} of a {@link Page | page} has a \"default\" execution context that is always created after frame is attached to DOM. This context is returned by the {@link Frame.executionContext} method. - Each {@link https://developer.chrome.com/extensions | Chrome extensions} creates additional execution contexts to isolate their code.\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare class ExecutionContext "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "ExecutionContext",
-          "preserveMemberOrder": false,
-          "members": [
-            {
-              "kind": "Method",
-              "canonicalReference": "puppeteer!ExecutionContext#evaluate:member(1)",
-              "docComment": "/**\n * Evaluates the given function.\n *\n * @param pageFunction - The function to evaluate.\n *\n * @param args - Additional arguments to pass into the function.\n *\n * @returns The result of evaluating the function. If the result is an object, a vanilla object containing the serializable properties of the result is returned.\n *\n * @example\n * ```ts\n * const executionContext = await page.mainFrame().executionContext();\n * const result = await executionContext.evaluate(() => Promise.resolve(8 * 7))* ;\n * console.log(result); // prints \"56\"\n * ```\n *\n * @example\n *\n * A string can also be passed in instead of a function:\n * ```ts\n * console.log(await executionContext.evaluate('1 + 2')); // prints \"3\"\n * ```\n *\n * @example\n *\n * Handles can also be passed as `args`. They resolve to their referenced object:\n * ```ts\n * const oneHandle = await executionContext.evaluateHandle(() => 1);\n * const twoHandle = await executionContext.evaluateHandle(() => 2);\n * const result = await executionContext.evaluate(\n *   (a, b) => a + b,\n *   oneHandle,\n *   twoHandle\n * );\n * await oneHandle.dispose();\n * await twoHandle.dispose();\n * console.log(result); // prints '3'.\n * ```\n *\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "evaluate<Params extends "
-                },
-                {
-                  "kind": "Content",
-                  "text": "unknown[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", Func extends "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "EvaluateFunc",
-                  "canonicalReference": "puppeteer!EvaluateFunc:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Params>"
-                },
-                {
-                  "kind": "Content",
-                  "text": " = "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "EvaluateFunc",
-                  "canonicalReference": "puppeteer!EvaluateFunc:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Params>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">(pageFunction: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "Func | string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", ...args: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "Params"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Awaited",
-                  "canonicalReference": "!Awaited:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ReturnType",
-                  "canonicalReference": "!ReturnType:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Func>>>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "typeParameters": [
-                {
-                  "typeParameterName": "Params",
-                  "constraintTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "defaultTypeTokenRange": {
-                    "startIndex": 0,
-                    "endIndex": 0
-                  }
-                },
-                {
-                  "typeParameterName": "Func",
-                  "constraintTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 5
-                  },
-                  "defaultTypeTokenRange": {
-                    "startIndex": 6,
-                    "endIndex": 8
-                  }
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 13,
-                "endIndex": 19
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "pageFunction",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 9,
-                    "endIndex": 10
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "args",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 11,
-                    "endIndex": 12
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "name": "evaluate"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "puppeteer!ExecutionContext#evaluateHandle:member(1)",
-              "docComment": "/**\n * Evaluates the given function.\n *\n * Unlike {@link ExecutionContext.evaluate | evaluate}, this method returns a handle to the result of the function.\n *\n * This method may be better suited if the object cannot be serialized (e.g. `Map`) and requires further manipulation.\n *\n * @param pageFunction - The function to evaluate.\n *\n * @param args - Additional arguments to pass into the function.\n *\n * @returns A {@link JSHandle | handle} to the result of evaluating the function. If the result is a `Node`, then this will return an {@link ElementHandle | element handle}.\n *\n * @example\n * ```ts\n * const context = await page.mainFrame().executionContext();\n * const handle: JSHandle<typeof globalThis> = await context.evaluateHandle(\n *   () => Promise.resolve(self)\n * );\n * ```\n *\n * @example\n *\n * A string can also be passed in instead of a function.\n * ```ts\n * const handle: JSHandle<number> = await context.evaluateHandle('1 + 2');\n * ```\n *\n * @example\n *\n * Handles can also be passed as `args`. They resolve to their referenced object:\n * ```ts\n * const bodyHandle: ElementHandle<HTMLBodyElement> =\n *   await context.evaluateHandle(() => {\n *     return document.body;\n *   });\n * const stringHandle: JSHandle<string> = await context.evaluateHandle(\n *   body => body.innerHTML,\n *   body\n * );\n * console.log(await stringHandle.jsonValue()); // prints body's innerHTML\n * // Always dispose your garbage! :)\n * await bodyHandle.dispose();\n * await stringHandle.dispose();\n * ```\n *\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "evaluateHandle<Params extends "
-                },
-                {
-                  "kind": "Content",
-                  "text": "unknown[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", Func extends "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "EvaluateFunc",
-                  "canonicalReference": "puppeteer!EvaluateFunc:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Params>"
-                },
-                {
-                  "kind": "Content",
-                  "text": " = "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "EvaluateFunc",
-                  "canonicalReference": "puppeteer!EvaluateFunc:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Params>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">(pageFunction: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "Func | string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", ...args: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "Params"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "HandleFor",
-                  "canonicalReference": "puppeteer!HandleFor:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Awaited",
-                  "canonicalReference": "!Awaited:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ReturnType",
-                  "canonicalReference": "!ReturnType:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Func>>>>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "typeParameters": [
-                {
-                  "typeParameterName": "Params",
-                  "constraintTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "defaultTypeTokenRange": {
-                    "startIndex": 0,
-                    "endIndex": 0
-                  }
-                },
-                {
-                  "typeParameterName": "Func",
-                  "constraintTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 5
-                  },
-                  "defaultTypeTokenRange": {
-                    "startIndex": 6,
-                    "endIndex": 8
-                  }
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 13,
-                "endIndex": 21
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "pageFunction",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 9,
-                    "endIndex": 10
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "args",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 11,
-                    "endIndex": 12
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "name": "evaluateHandle"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "puppeteer!ExecutionContext#frame:member(1)",
-              "docComment": "/**\n * @remarks\n *\n * Not every execution context is associated with a frame. For example, {@link WebWorker | workers} have execution contexts that are not associated with frames.\n *\n * @returns The frame associated with this execution context.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "frame(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Frame",
-                  "canonicalReference": "puppeteer!Frame:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | null"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "name": "frame"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "puppeteer!ExecutionContext#queryObjects:member(1)",
-              "docComment": "/**\n * Iterates through the JavaScript heap and finds all the objects with the given prototype.\n *\n * @param prototypeHandle - a handle to the object prototype\n *\n * @returns A handle to an array of objects with the given prototype.\n *\n * @example\n * ```ts\n * // Create a Map object\n * await page.evaluate(() => (window.map = new Map()));\n * // Get a handle to the Map object prototype\n * const mapPrototype = await page.evaluateHandle(() => Map.prototype);\n * // Query all map instances into an array\n * const mapInstances = await page.queryObjects(mapPrototype);\n * // Count amount of map objects in heap\n * const count = await page.evaluate(maps => maps.length, mapInstances);\n * await mapInstances.dispose();\n * await mapPrototype.dispose();\n * ```\n *\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "queryObjects<Prototype>(prototypeHandle: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "JSHandle",
-                  "canonicalReference": "puppeteer!JSHandle:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Prototype>"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "HandleFor",
-                  "canonicalReference": "puppeteer!HandleFor:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<Prototype[]>>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "typeParameters": [
-                {
-                  "typeParameterName": "Prototype",
-                  "constraintTokenRange": {
-                    "startIndex": 0,
-                    "endIndex": 0
-                  },
-                  "defaultTypeTokenRange": {
-                    "startIndex": 0,
-                    "endIndex": 0
-                  }
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 4,
-                "endIndex": 8
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "prototypeHandle",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 3
-                  },
-                  "isOptional": false
-                }
-              ],
-              "isOptional": false,
-              "name": "queryObjects"
-            }
-          ],
-          "implementsTokenRanges": []
         },
         {
           "kind": "Class",
@@ -11019,7 +10608,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Frame#addScriptTag:member(1)",
-              "docComment": "/**\n * Adds a `<script>` tag into the page with the desired url or content.\n *\n * @param options - Options for the script.\n *\n * @returns a promise that resolves to the added tag when the script's `onload` event fires or when the script content was injected into the frame.\n */\n",
+              "docComment": "/**\n * Adds a `<script>` tag into the page with the desired url or content.\n *\n * @param options - Options for the script.\n *\n * @returns An {@link ElementHandle | element handle} to the injected `<script>` element.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -11090,7 +10679,91 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Frame#addStyleTag:member(1)",
-              "docComment": "/**\n * Adds a `<link rel=\"stylesheet\">` tag into the page with the desired url or a `<style type=\"text/css\">` tag with the content.\n *\n * @param options - Options for the style link.\n *\n * @returns a promise that resolves to the added tag when the stylesheets's `onload` event fires or when the CSS content was injected into the frame.\n */\n",
+              "docComment": "/**\n * Adds a `<link rel=\"stylesheet\">` tag into the page with the desired URL or a `<style type=\"text/css\">` tag with the content.\n *\n * @returns An {@link ElementHandle | element handle} to the loaded `<link>` or `<style>` element.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addStyleTag(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Omit",
+                  "canonicalReference": "!Omit:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FrameAddStyleTagOptions",
+                  "canonicalReference": "puppeteer!FrameAddStyleTagOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", 'url'>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ElementHandle",
+                  "canonicalReference": "puppeteer!ElementHandle:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLStyleElement",
+                  "canonicalReference": "!HTMLStyleElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "name": "addStyleTag"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer!Frame#addStyleTag:member(2)",
+              "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -11125,15 +10798,6 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "HTMLStyleElement",
-                  "canonicalReference": "!HTMLStyleElement:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | "
-                },
-                {
-                  "kind": "Reference",
                   "text": "HTMLLinkElement",
                   "canonicalReference": "!HTMLLinkElement:interface"
                 },
@@ -11149,11 +10813,11 @@
               "isStatic": false,
               "returnTypeTokenRange": {
                 "startIndex": 3,
-                "endIndex": 11
+                "endIndex": 9
               },
               "releaseTag": "Public",
               "isProtected": false,
-              "overloadIndex": 1,
+              "overloadIndex": 2,
               "parameters": [
                 {
                   "parameterName": "options",
@@ -11610,50 +11274,6 @@
               ],
               "isOptional": false,
               "name": "evaluateHandle"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "puppeteer!Frame#executionContext:member(1)",
-              "docComment": "/**\n * @deprecated\n *\n * Do not use the execution context directly.\n *\n * @returns a promise that resolves to the frame's default execution context.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "executionContext(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecutionContext",
-                  "canonicalReference": "puppeteer!ExecutionContext:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "name": "executionContext"
             },
             {
               "kind": "Method",
@@ -12881,7 +12501,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!FrameAddScriptTagOptions#content:member",
-              "docComment": "/**\n * Raw JavaScript content to be injected into the frame.\n */\n",
+              "docComment": "/**\n * JavaScript to be injected into the frame.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12907,8 +12527,35 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer!FrameAddScriptTagOptions#id:member",
+              "docComment": "/**\n * Sets the `id` of the script.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "id?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer!FrameAddScriptTagOptions#path:member",
-              "docComment": "/**\n * The path to a JavaScript file to be injected into the frame.\n *\n * @remarks\n *\n * If `path` is a relative path, it is resolved relative to the current working directory (`process.cwd()` in Node.js).\n */\n",
+              "docComment": "/**\n * Path to a JavaScript file to be injected into the frame.\n *\n * @remarks\n *\n * If `path` is a relative path, it is resolved relative to the current working directory (`process.cwd()` in Node.js).\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12935,7 +12582,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!FrameAddScriptTagOptions#type:member",
-              "docComment": "/**\n * Set the script's `type`. Use `module` in order to load an ES2015 module.\n */\n",
+              "docComment": "/**\n * Sets the `type` of the script. Use `module` in order to load an ES2015 module.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12962,7 +12609,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!FrameAddScriptTagOptions#url:member",
-              "docComment": "/**\n * the URL of the script to be added.\n */\n",
+              "docComment": "/**\n * URL of the script to be added.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -15920,37 +15567,6 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "puppeteer!JSHandle#executionContext:member(1)",
-              "docComment": "/**\n * @returns The execution context the handle belongs to.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "executionContext(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecutionContext",
-                  "canonicalReference": "puppeteer!ExecutionContext:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "name": "executionContext"
-            },
-            {
-              "kind": "Method",
               "canonicalReference": "puppeteer!JSHandle#getProperties:member(1)",
               "docComment": "/**\n * Gets a map of handles representing the properties of the current handle.\n *\n * @example\n * ```ts\n * const listHandle = await page.evaluateHandle(() => document.body.children);\n * const properties = await listHandle.getProperties();\n * const children = [];\n * for (const property of properties.values()) {\n *   const element = property.asElement();\n *   if (element) {\n *     children.push(element);\n *   }\n * }\n * children; // holds elementHandles to all children of document.body\n * ```\n *\n */\n",
               "excerptTokens": [
@@ -18634,7 +18250,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!Offset#x:member",
-              "docComment": "/**\n * x-offset for the clickable point relative to the top-left corder of the border box.\n */\n",
+              "docComment": "/**\n * x-offset for the clickable point relative to the top-left corner of the border box.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -18661,7 +18277,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!Offset#y:member",
-              "docComment": "/**\n * y-offset for the clickable point relative to the top-left corder of the border box.\n */\n",
+              "docComment": "/**\n * y-offset for the clickable point relative to the top-left corner of the border box.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -19444,15 +19060,16 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#addScriptTag:member(1)",
-              "docComment": "/**\n * Adds a `<script>` tag into the page with the desired URL or content.\n *\n * @remarks\n *\n * Shortcut for {@link Frame.addScriptTag | page.mainFrame().addScriptTag(options)}.\n *\n * @returns Promise which resolves to the added tag when the script's onload fires or when the script content was injected into frame.\n */\n",
+              "docComment": "/**\n * Adds a `<script>` tag into the page with the desired URL or content.\n *\n * @remarks\n *\n * Shortcut for {@link Frame.addScriptTag | page.mainFrame().addScriptTag(options)}.\n *\n * @param options - Options for the script.\n *\n * @returns An {@link ElementHandle | element handle} to the injected `<script>` element.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
                   "text": "addScriptTag(options: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "{\n        url?: string;\n        path?: string;\n        content?: string;\n        type?: string;\n        id?: string;\n    }"
+                  "kind": "Reference",
+                  "text": "FrameAddScriptTagOptions",
+                  "canonicalReference": "puppeteer!FrameAddScriptTagOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -19514,15 +19131,29 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#addStyleTag:member(1)",
-              "docComment": "/**\n * Adds a `<link rel=\"stylesheet\">` tag into the page with the desired URL or a `<style type=\"text/css\">` tag with the content.\n *\n * @returns Promise which resolves to the added tag when the stylesheet's onload fires or when the CSS content was injected into frame.\n */\n",
+              "docComment": "/**\n * Adds a `<link rel=\"stylesheet\">` tag into the page with the desired URL or a `<style type=\"text/css\">` tag with the content.\n *\n * Shortcut for {@link Frame.addStyleTag | page.mainFrame().addStyleTag(options)}.\n *\n * @returns An {@link ElementHandle | element handle} to the injected `<link>` or `<style>` element.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
                   "text": "addStyleTag(options: "
                 },
                 {
+                  "kind": "Reference",
+                  "text": "Omit",
+                  "canonicalReference": "!Omit:type"
+                },
+                {
                   "kind": "Content",
-                  "text": "{\n        url?: string;\n        path?: string;\n        content?: string;\n    }"
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FrameAddStyleTagOptions",
+                  "canonicalReference": "puppeteer!FrameAddStyleTagOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", 'url'>"
                 },
                 {
                   "kind": "Content",
@@ -19548,8 +19179,79 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Node",
-                  "canonicalReference": "!Node:interface"
+                  "text": "HTMLStyleElement",
+                  "canonicalReference": "!HTMLStyleElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "name": "addStyleTag"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer!Page#addStyleTag:member(2)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addStyleTag(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FrameAddStyleTagOptions",
+                  "canonicalReference": "puppeteer!FrameAddStyleTagOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ElementHandle",
+                  "canonicalReference": "puppeteer!ElementHandle:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLLinkElement",
+                  "canonicalReference": "!HTMLLinkElement:interface"
                 },
                 {
                   "kind": "Content",
@@ -19567,7 +19269,7 @@
               },
               "releaseTag": "Public",
               "isProtected": false,
-              "overloadIndex": 1,
+              "overloadIndex": 2,
               "parameters": [
                 {
                   "parameterName": "options",
@@ -20845,7 +20547,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#evaluateOnNewDocument:member(1)",
-              "docComment": "/**\n * Adds a function which would be invoked in one of the following scenarios:\n *\n * - whenever the page is navigated\n *\n * - whenever the child frame is attached or navigated. In this case, the function is invoked in the context of the newly attached frame.\n *\n * The function is invoked after the document was created but before any of its scripts were run. This is useful to amend the JavaScript environment, e.g. to seed `Math.random`.\n *\n * @param pageFunction - Function to be evaluated in browser context\n *\n * @param args - Arguments to pass to `pageFunction`\n *\n * @example\n *\n * An example of overriding the navigator.languages property before the page loads:\n * ```ts\n * // preload.js\n *\n * // overwrite the `languages` property to use a custom getter\n * Object.defineProperty(navigator, 'languages', {\n * get: function () {\n * return ['en-US', 'en', 'bn'];\n * },\n * });\n *\n * // In your puppeteer script, assuming the preload.js file is\n * in same folder of our script\n * const preloadFile = fs.readFileSync('./preload.js', 'utf8');\n * await page.evaluateOnNewDocument(preloadFile);\n * ```\n *\n */\n",
+              "docComment": "/**\n * Adds a function which would be invoked in one of the following scenarios:\n *\n * - whenever the page is navigated\n *\n * - whenever the child frame is attached or navigated. In this case, the function is invoked in the context of the newly attached frame.\n *\n * The function is invoked after the document was created but before any of its scripts were run. This is useful to amend the JavaScript environment, e.g. to seed `Math.random`.\n *\n * @param pageFunction - Function to be evaluated in browser context\n *\n * @param args - Arguments to pass to `pageFunction`\n *\n * @example\n *\n * An example of overriding the navigator.languages property before the page loads:\n * ```ts\n * // preload.js\n *\n * // overwrite the `languages` property to use a custom getter\n * Object.defineProperty(navigator, 'languages', {\n *   get: function () {\n *     return ['en-US', 'en', 'bn'];\n *   },\n * });\n *\n * // In your puppeteer script, assuming the preload.js file is\n * // in same folder of our script.\n * const preloadFile = fs.readFileSync('./preload.js', 'utf8');\n * await page.evaluateOnNewDocument(preloadFile);\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -21126,6 +20828,36 @@
               "parameters": [],
               "isOptional": false,
               "name": "frames"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer!Page#getDefaultTimeout:member(1)",
+              "docComment": "/**\n * @returns Maximum time in milliseconds.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getDefaultTimeout(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "name": "getDefaultTimeout"
             },
             {
               "kind": "Method",
@@ -21972,7 +21704,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#queryObjects:member(1)",
-              "docComment": "/**\n * This method iterates the JavaScript heap and finds all objects with the given prototype.\n *\n * @remarks\n *\n * Shortcut for {@link ExecutionContext.queryObjects | page.mainFrame().executionContext().queryObjects(prototypeHandle)}.\n *\n * @param prototypeHandle - a handle to the object prototype.\n *\n * @returns Promise which resolves to a handle to an array of objects with this prototype.\n *\n * @example\n * ```ts\n * // Create a Map object\n * await page.evaluate(() => (window.map = new Map()));\n * // Get a handle to the Map object prototype\n * const mapPrototype = await page.evaluateHandle(() => Map.prototype);\n * // Query all map instances into an array\n * const mapInstances = await page.queryObjects(mapPrototype);\n * // Count amount of map objects in heap\n * const count = await page.evaluate(maps => maps.length, mapInstances);\n * await mapInstances.dispose();\n * await mapPrototype.dispose();\n * ```\n *\n */\n",
+              "docComment": "/**\n * This method iterates the JavaScript heap and finds all objects with the given prototype.\n *\n * @param prototypeHandle - a handle to the object prototype.\n *\n * @returns Promise which resolves to a handle to an array of objects with this prototype.\n *\n * @example\n * ```ts\n * // Create a Map object\n * await page.evaluate(() => (window.map = new Map()));\n * // Get a handle to the Map object prototype\n * const mapPrototype = await page.evaluateHandle(() => Map.prototype);\n * // Query all map instances into an array\n * const mapInstances = await page.queryObjects(mapPrototype);\n * // Count amount of map objects in heap\n * const count = await page.evaluate(maps => maps.length, mapInstances);\n * await mapInstances.dispose();\n * await mapPrototype.dispose();\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -23988,21 +23720,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Exclude",
-                  "canonicalReference": "!Exclude:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
                   "text": "WaitForSelectorOptions",
                   "canonicalReference": "puppeteer!WaitForSelectorOptions:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", 'root'>"
                 },
                 {
                   "kind": "Content",
@@ -24055,8 +23774,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 10,
-                "endIndex": 16
+                "startIndex": 7,
+                "endIndex": 13
               },
               "releaseTag": "Public",
               "isProtected": false,
@@ -24074,7 +23793,7 @@
                   "parameterName": "options",
                   "parameterTypeTokenRange": {
                     "startIndex": 5,
-                    "endIndex": 9
+                    "endIndex": 6
                   },
                   "isOptional": true
                 }
@@ -27732,6 +27451,33 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer!ScreenshotClip#scale:member",
+              "docComment": "/**\n * @defaultValue\n *\n * 1\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "scale?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "scale",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer!ScreenshotClip#width:member",
               "docComment": "",
               "excerptTokens": [
@@ -30098,47 +29844,6 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "puppeteer!WaitForSelectorOptions#root:member",
-              "docComment": "/**\n * @deprecated\n *\n * Do not use. Use the {@link ElementHandle.waitForSelector}\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "root?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ElementHandle",
-                  "canonicalReference": "puppeteer!ElementHandle:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Node",
-                  "canonicalReference": "!Node:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "root",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
-              }
-            },
-            {
-              "kind": "PropertySignature",
               "canonicalReference": "puppeteer!WaitForSelectorOptions#timeout:member",
               "docComment": "/**\n * Maximum time to wait in milliseconds. Pass `0` to disable timeout.\n *\n * The default value can be changed by using {@link Page.setDefaultTimeout}\n *\n * @defaultValue\n *\n * `30000` (30 seconds)\n */\n",
               "excerptTokens": [
@@ -30601,50 +30306,6 @@
               ],
               "isOptional": false,
               "name": "evaluateHandle"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "puppeteer!WebWorker#executionContext:member(1)",
-              "docComment": "/**\n * Returns the ExecutionContext the WebWorker runs in\n *\n * @returns The ExecutionContext the web worker runs in.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "executionContext(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExecutionContext",
-                  "canonicalReference": "puppeteer!ExecutionContext:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
-              },
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [],
-              "isOptional": false,
-              "name": "executionContext"
             },
             {
               "kind": "Method",

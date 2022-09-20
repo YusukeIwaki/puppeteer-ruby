@@ -7,7 +7,7 @@ class Puppeteer::ExecutionContext
 
   # @param client [Puppeteer::CDPSession]
   # @param context_payload [Hash]
-  # @param world [Puppeteer::DOMWorld?]
+  # @param world [Puppeteer::IsolaatedWorld?]
   def initialize(client, context_payload, world)
     @client = client
     @world = world
@@ -17,21 +17,14 @@ class Puppeteer::ExecutionContext
 
   attr_reader :client, :world
 
-  # only used in DOMWorld
+  # only used in IsolaatedWorld
   private def _context_id
     @context_id
   end
 
-  # only used in DOMWorld::BindingFunction#add_binding_to_context
+  # only used in IsolaatedWorld::BindingFunction#add_binding_to_context
   private def _context_name
     @context_name
-  end
-
-  # @return [Puppeteer::Frame]
-  def frame
-    if_present(@world) do |world|
-      world.frame
-    end
   end
 
   # @param page_function [String]
@@ -206,56 +199,6 @@ class Puppeteer::ExecutionContext
     js_object.evaluate_with(
       client: @client,
       context_id: @context_id,
-    )
-  end
-
-  # /**
-  #  * @param {!JSHandle} prototypeHandle
-  #  * @return {!Promise<!JSHandle>}
-  #  */
-  # async queryObjects(prototypeHandle) {
-  #   assert(!prototypeHandle._disposed, 'Prototype JSHandle is disposed!');
-  #   assert(prototypeHandle._remoteObject.objectId, 'Prototype JSHandle must not be referencing primitive value');
-  #   const response = await this._client.send('Runtime.queryObjects', {
-  #     prototypeObjectId: prototypeHandle._remoteObject.objectId
-  #   });
-  #   return createJSHandle(this, response.objects);
-  # }
-
-  # @param backend_node_id [Integer]
-  # @return [Puppeteer::ElementHandle]
-  def adopt_backend_node_id(backend_node_id)
-    response = @client.send_message('DOM.resolveNode',
-      backendNodeId: backend_node_id,
-      executionContextId: @context_id,
-    )
-    Puppeteer::JSHandle.create(
-      context: self,
-      remote_object: Puppeteer::RemoteObject.new(response["object"]),
-    )
-  end
-  private define_async_method :async_adopt_backend_node_id
-
-  # @param element_handle [Puppeteer::ElementHandle]
-  # @return [Puppeteer::ElementHandle]
-  def adopt_element_handle(element_handle)
-    if element_handle.execution_context == self
-      raise ArgumentError.new('Cannot adopt handle that already belongs to this execution context')
-    end
-
-    unless @world
-      raise 'Cannot adopt handle without DOMWorld'
-    end
-
-    node_info = element_handle.remote_object.node_info(@client)
-    response = @client.send_message('DOM.resolveNode',
-      backendNodeId: node_info["node"]["backendNodeId"],
-      executionContextId: @context_id,
-    )
-
-    Puppeteer::JSHandle.create(
-      context: self,
-      remote_object: Puppeteer::RemoteObject.new(response["object"]),
     )
   end
 end

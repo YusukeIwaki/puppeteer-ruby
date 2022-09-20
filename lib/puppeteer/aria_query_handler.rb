@@ -25,43 +25,83 @@ class Puppeteer::AriaQueryHandler
     query_options
   end
 
-  def query_one(element, selector)
-    context = element.execution_context
+  # @param element [Puppeteer::ElementHandle]
+  # @param selector [String]
+  private def query_one_id(element, selector)
     parse_result = parse_aria_selector(selector)
     res = element.query_ax_tree(accessible_name: parse_result[:name], role: parse_result[:role])
-    if res.empty?
-      nil
+
+    if res.first.is_a?(Hash)
+      res.first['backendDOMNodeId']
     else
-      context.adopt_backend_node_id(res.first['backendDOMNodeId'])
+      nil
     end
   end
 
-  def wait_for(dom_world, selector, visible: nil, hidden: nil, timeout: nil, root: nil)
+  def query_one(element, selector)
+    id = query_one_id(element, selector)
+
+    if id
+      element.frame.main_world.adopt_backend_node(id)
+    else
+      nil
+    end
+  end
+
+  def wait_for(element_or_frame, selector, visible: nil, hidden: nil, timeout: nil)
+    case element_or_frame
+    when Puppeteer::Frame
+      frame = element_or_frame
+      element = nil
+    when Puppeteer::ElementHandle
+      frame = element_or_frame.frame
+      element = frame.puppeteer_world.adopt_handle(element_or_frame)
+    else
+      raise ArgumentError.new("element_or_frame must be a Frame or ElementHandle. #{element_or_frame.inspect}")
+    end
+
     # addHandlerToWorld
-    binding_function = Puppeteer::DOMWorld::BindingFunction.new(
+    binding_function = Puppeteer::IsolaatedWorld::BindingFunction.new(
       name: 'ariaQuerySelector',
-      proc: -> (sel) { query_one(root || dom_world.send(:document), sel) },
+      proc: -> (sel) {
+        id = query_one_id(element || frame.puppeteer_world.document, sel)
+
+        if id
+          frame.puppeteer_world.adopt_backend_node(id)
+        else
+          nil
+        end
+      },
     )
-    dom_world.send(:wait_for_selector_in_page,
+    result = frame.puppeteer_world.send(:wait_for_selector_in_page,
       '(_, selector) => globalThis.ariaQuerySelector(selector)',
+      element,
       selector,
       visible: visible,
       hidden: hidden,
       timeout: timeout,
       binding_function: binding_function,
-      root: root,
     )
+
+    element&.dispose
+
+    if result.is_a?(Puppeteer::ElementHandle)
+      result.frame.main_world.transfer_handle(result)
+    else
+      result&.dispose
+      nil
+    end
   end
 
   def query_all(element, selector)
-    context = element.execution_context
+    world = element.frame.main_world
     parse_result = parse_aria_selector(selector)
     res = element.query_ax_tree(accessible_name: parse_result[:name], role: parse_result[:role])
     if res.empty?
       nil
     else
       promises = res.map do |ax_node|
-        context.send(:async_adopt_backend_node_id, ax_node['backendDOMNodeId'])
+        world.send(:async_adopt_backend_node, ax_node['backendDOMNodeId'])
       end
       await_all(*promises)
     end
