@@ -108,7 +108,7 @@ class Puppeteer::Coverage
 
       # Filter out empty ranges.
       results.select do |range|
-        range[:end] - range[:start] > 1
+        range[:end] - range[:start] > 0
       end
     end
   end
