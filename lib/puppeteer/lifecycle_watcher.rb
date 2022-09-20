@@ -93,13 +93,14 @@ class Puppeteer::LifecycleWatcher
     check_lifecycle_complete
   end
 
-  class AnotherRequestReceivedError < StandardError ; end
-
   # @param [Puppeteer::HTTPRequest] request
   def handle_request(request)
     return if request.frame != @frame || !request.navigation_request?
     @navigation_request = request
-    @navigation_response_received&.reject(AnotherRequestReceivedError.new('New navigation request was received'))
+    # Resolve previous navigation response in case there are multiple
+    # navigation requests reported by the backend. This generally should not
+    # happen by it looks like it's possible.
+    @navigation_response_received&.fulfill(nil)
     @navigation_response_received = resolvable_future
     if request.response && !@navigation_response_received.resolved?
       @navigation_response_received.fulfill(nil)
