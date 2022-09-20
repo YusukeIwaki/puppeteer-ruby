@@ -79,8 +79,11 @@ RSpec.describe 'Coverage specs' do
       end
       expect(coverage.size).to eq(1)
       entry = coverage.first
-      expect(entry.ranges.size).to eq(1)
-      range = entry.ranges.first
+      expect(entry.ranges.size).to eq(2)
+      range = entry.ranges[0]
+      expect(entry.text[range[:start]...range[:end]]).to eq("\n")
+
+      range = entry.ranges[1]
       expect(entry.text[range[:start]...range[:end]]).to eq("console.log('used!');")
     end
 
