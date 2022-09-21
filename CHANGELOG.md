@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.1...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.0...main)]
 
 - xxx
+
+### 0.44.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.1...0.44.0)]
+
+- Port Puppeteer v17.0-v17.1 features.
+  - `wait_for_selector` no longer accept `root` parameter.
+
 
 ### 0.43.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.0...0.43.1)]
 
