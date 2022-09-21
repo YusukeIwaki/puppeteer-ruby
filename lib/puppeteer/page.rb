@@ -1069,7 +1069,8 @@ class Puppeteer::Page
     clip = if_present(screenshot_options.clip) do |rect|
       x = rect[:x].round
       y = rect[:y].round
-      { x: x, y: y, width: rect[:width] + rect[:x] - x, height: rect[:height] + rect[:y] - y, scale: 1 }
+      scale = rect[:scale] || 1
+      { x: x, y: y, width: rect[:width] + rect[:x] - x, height: rect[:height] + rect[:y] - y, scale: scale }
     end
 
     if screenshot_options.full_page?

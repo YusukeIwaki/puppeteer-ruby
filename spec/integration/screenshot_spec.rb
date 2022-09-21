@@ -37,6 +37,19 @@ RSpec.describe 'Screenshots' do
       expect(screenshot).to be_golden('screenshot-offscreen-clip.png')
     end
 
+    it_fails_firefox 'should use scale for clip' do
+      screenshot = page.screenshot(
+        clip: {
+          x: 50,
+          y: 100,
+          width: 150,
+          height: 100,
+          scale: 2,
+        },
+      )
+      expect(screenshot).to be_golden('screenshot-clip-rect-scale2.png')
+    end
+
     it 'should run in parallel' do
       promises = 3.times.map do |index|
         future(index) { |i|
