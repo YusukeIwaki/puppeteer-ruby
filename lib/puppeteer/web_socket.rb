@@ -45,6 +45,10 @@ class Puppeteer::WebSocket
     rescue Errno::ECONNRESET
       raise EOFError.new('closed by remote')
     end
+    
+    def dispose
+      @socket.close
+    end
   end
 
   STATE_CONNECTING = 0
@@ -107,6 +111,7 @@ class Puppeteer::WebSocket
     return if @ready_state >= STATE_CLOSING
     @ready_state = STATE_CLOSING
     @driver.close(reason, code)
+    @impl.dispose
   end
 
   def on_open(&block)
