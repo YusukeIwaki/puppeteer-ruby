@@ -146,6 +146,10 @@ class Puppeteer::ExecutionContext
       #     if (Object.is(arg, NaN))
       #       return { unserializableValue: 'NaN' };
       @args.map do |arg|
+        if arg.is_a?(Proc) # Use Proc in puppeteer-ruby instead of LazyArg.
+          arg = arg.call
+        end
+
         if arg && arg.is_a?(Puppeteer::JSHandle)
           if arg.context != @execution_context
             raise EvaluationError.new('JSHandles can be evaluated only in the context they were created!')

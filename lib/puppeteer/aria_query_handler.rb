@@ -60,19 +60,16 @@ class Puppeteer::AriaQueryHandler
       raise ArgumentError.new("element_or_frame must be a Frame or ElementHandle. #{element_or_frame.inspect}")
     end
 
-    # addHandlerToWorld
-    binding_function = Puppeteer::IsolaatedWorld::BindingFunction.new(
-      name: 'ariaQuerySelector',
-      proc: -> (sel) {
-        id = query_one_id(element || frame.puppeteer_world.document, sel)
+    aria_query_selector = -> (sel) {
+      id = query_one_id(element || frame.puppeteer_world.document, sel)
 
-        if id
-          frame.puppeteer_world.adopt_backend_node(id)
-        else
-          nil
-        end
-      },
-    )
+      if id
+        frame.puppeteer_world.adopt_backend_node(id)
+      else
+        nil
+      end
+    }
+
     result = frame.puppeteer_world.send(:wait_for_selector_in_page,
       '(_, selector) => globalThis.ariaQuerySelector(selector)',
       element,
@@ -80,7 +77,7 @@ class Puppeteer::AriaQueryHandler
       visible: visible,
       hidden: hidden,
       timeout: timeout,
-      binding_function: binding_function,
+      bindings: [aria_query_selector],
     )
 
     element&.dispose

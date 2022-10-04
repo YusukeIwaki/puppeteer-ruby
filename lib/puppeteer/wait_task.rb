@@ -9,7 +9,21 @@ class Puppeteer::WaitTask
     end
   end
 
-  def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil, root: nil)
+  # @param world [Puppeteer::IsolatedWorld]
+  # @param bindings [Array<Proc>]
+  # @param polling ['raf'|'mutation'|Numeric]
+  # @param root [Puppeteer::ElementHandle|nil]
+  # @param timeout [Numeric]
+  # @param fn [String]
+  def initialize(world:, bindings:, polling:, root:, timeout:, fn:, args: [])
+    @world = world
+    @bindings = bindings || []
+    @polling = polling
+    @root = root
+    @fn = "() => {return(#{fn});}"
+    @args = args
+
+  #def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil, root: nil)
     if polling.is_a?(String)
       if polling != 'raf' && polling != 'mutation'
         raise ArgumentError.new("Unknown polling option: #{polling}")
