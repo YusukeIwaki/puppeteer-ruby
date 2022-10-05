@@ -1,12 +1,17 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.1...main)]
 
 - xxx
+
+### 0.44.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.0...0.44.1)]
+
+Bugfix
+
+- Ensure closing websocket [#269](https://github.com/YusukeIwaki/puppeteer-ruby/pull/269)
 
 ### 0.44.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.1...0.44.0)]
 
 - Port Puppeteer v17.0-v17.1 features.
   - `wait_for_selector` no longer accept `root` parameter.
-
 
 ### 0.43.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.43.0...0.43.1)]
 
@@ -50,7 +55,6 @@ Bugfix:
 
 - Prevent `Ctrl+C` from stopping Chrome [#196](https://github.com/YusukeIwaki/puppeteer-ruby/pull/196)
 
-
 ### 0.40.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.40.1...0.40.2)]
 
 Bugfix:
@@ -72,7 +76,6 @@ New features:
 - Puppeteer 13.0, 13.1 functionalities
 - Support Ruby 3.1
 
-
 ### 0.39.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.38.0...0.39.0)]
 
 New features:
@@ -84,12 +87,11 @@ New features:
 New features:
 
 - Puppeteer 11.0 functionalities
-    * OOP iframe support
-    * Customize debugging port
-    * HTTPRequest#initiator
-    * Customize temp directory for user data
-    * Add webp to screenshot quality option allow list
-
+  - OOP iframe support
+  - Customize debugging port
+  - HTTPRequest#initiator
+  - Customize temp directory for user data
+  - Add webp to screenshot quality option allow list
 
 ### 0.37.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.37.3...0.37.4)]
 
