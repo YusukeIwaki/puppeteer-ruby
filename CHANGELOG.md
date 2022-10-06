@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.1...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.2...main)]
 
 - xxx
+
+### 0.44.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.1...0.44.2)]
+
+Bugfix
+
+- Fix warning on `Page#wait_for_navigation`
 
 ### 0.44.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.0...0.44.1)]
 
