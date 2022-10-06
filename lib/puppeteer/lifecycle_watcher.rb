@@ -100,7 +100,7 @@ class Puppeteer::LifecycleWatcher
     # Resolve previous navigation response in case there are multiple
     # navigation requests reported by the backend. This generally should not
     # happen by it looks like it's possible.
-    @navigation_response_received&.fulfill(nil)
+    @navigation_response_received.fulfill(nil) if @navigation_response_received && !@navigation_response_received.resolved?
     @navigation_response_received = resolvable_future
     if request.response && !@navigation_response_received.resolved?
       @navigation_response_received.fulfill(nil)
