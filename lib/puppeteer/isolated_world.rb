@@ -57,20 +57,16 @@ class Puppeteer::IsolaatedWorld
     @frame = frame
     @timeout_settings = timeout_settings
     @context_promise = resolvable_future
-    @wait_tasks = Set.new
+    @task_manager = Puppeteer::TaskManager.new
     @bound_functions = {}
+
     @ctx_bindings = Set.new
     @detached = false
 
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
-  attr_reader :frame
-
-  # only used in Puppeteer::WaitTask#initialize
-  private def _wait_tasks
-    @wait_tasks
-  end
+  attr_reader :frame, :task_manager
 
   # only used in Puppeteer::WaitTask#initialize
   private def _bound_functions
@@ -84,7 +80,7 @@ class Puppeteer::IsolaatedWorld
       unless @context_promise.resolved?
         @context_promise.fulfill(context)
       end
-      @wait_tasks.each(&:async_rerun)
+      @task_manager.rerun_all
     else
       raise ArgumentError.new("context should now be nil. Use #delete_context for clearing document.")
     end
@@ -101,9 +97,7 @@ class Puppeteer::IsolaatedWorld
 
   def detach
     @detached = true
-    @wait_tasks.each do |wait_task|
-      wait_task.terminate(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
-    end
+    @task_manager.terminate_all(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
   end
 
   class DetachedError < StandardError; end
@@ -464,8 +458,9 @@ class Puppeteer::IsolaatedWorld
     result = @bound_functions[name].call(*args)
     deliver_result_js = <<~JAVASCRIPT
     (name, seq, result) => {
-      globalThis[name].callbacks.get(seq).resolve(result);
-      globalThis[name].callbacks.delete(seq);
+      const callbacks = globalThis[name].callbacks
+      callbacks.get(seq).resolve(result);
+      callbacks.delete(seq);
     }
     JAVASCRIPT
 

@@ -77,7 +77,7 @@ class Puppeteer::AriaQueryHandler
       visible: visible,
       hidden: hidden,
       timeout: timeout,
-      bindings: [aria_query_selector],
+      binding_function: aria_query_selector,
     )
 
     element&.dispose

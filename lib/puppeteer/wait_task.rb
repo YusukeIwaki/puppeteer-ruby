@@ -10,20 +10,12 @@ class Puppeteer::WaitTask
   end
 
   # @param world [Puppeteer::IsolatedWorld]
-  # @param bindings [Array<Proc>]
+  # @param binding_function [Proc]
   # @param polling ['raf'|'mutation'|Numeric]
   # @param root [Puppeteer::ElementHandle|nil]
   # @param timeout [Numeric]
   # @param fn [String]
-  def initialize(world:, bindings:, polling:, root:, timeout:, fn:, args: [])
-    @world = world
-    @bindings = bindings || []
-    @polling = polling
-    @root = root
-    @fn = "() => {return(#{fn});}"
-    @args = args
-
-  #def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil, root: nil)
+  def initialize(world:, binding_function:, polling:, root:, timeout:, fn:, args: [])
     if polling.is_a?(String)
       if polling != 'raf' && polling != 'mutation'
         raise ArgumentError.new("Unknown polling option: #{polling}")
@@ -35,33 +27,27 @@ class Puppeteer::WaitTask
     else
       raise ArgumentError.new("Unknown polling options: #{polling}")
     end
+    @result = resolvable_future
 
-    @dom_world = dom_world
-    @polling = polling
-    @timeout = timeout
-    @root = root
-    @predicate_body = "return (#{predicate_body})(...args);"
-    @args = args
+    @world = world
     @binding_function = binding_function
-    @run_count = 0
-    @dom_world.send(:_wait_tasks).add(self)
-    if binding_function
-      @dom_world.send(:_bound_functions)[binding_function.name] = binding_function
-    end
-    @promise = resolvable_future
+    @polling = polling
+    @root = root
+    @fn = "() => {return(#{fn});}"
+    @args = args
+    @world.task_manager.add(self)
 
-    # Since page navigation requires us to re-install the pageScript, we should track
-    # timeout on our end.
     if timeout && timeout > 0
       timeout_error = TimeoutError.new(title: title, timeout: timeout)
       Concurrent::Promises.schedule(timeout / 1000.0) { terminate(timeout_error) unless @timeout_cleared }
     end
+
+    @world.bound_functions.add(@binding_function)
     async_rerun
   end
 
-  # @return [Puppeteer::JSHandle]
-  def await_promise
-    @promise.value!
+  def await_result
+    @result.value!
   end
 
   def terminate(error)
@@ -71,14 +57,8 @@ class Puppeteer::WaitTask
   end
 
   def rerun
-    run_count = (@run_count += 1)
-    context = @dom_world.execution_context
-
-    return if @terminated || run_count != @run_count
-    if @binding_function
-      @dom_world.add_binding_to_context(context, @binding_function)
-    end
-    return if @terminated || run_count != @run_count
+    context = @world.execution_context
+    @world.add_binding_to_context(context, @binding_function)
 
     begin
       success = context.evaluate_handle(
