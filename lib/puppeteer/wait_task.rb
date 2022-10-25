@@ -30,7 +30,7 @@ class Puppeteer::WaitTask
     @args = args
     @binding_function = binding_function
     @run_count = 0
-    @dom_world.send(:_wait_tasks).add(self)
+    @dom_world.task_manager.add(self)
     if binding_function
       @dom_world.send(:_bound_functions)[binding_function.name] = binding_function
     end
@@ -117,10 +117,10 @@ class Puppeteer::WaitTask
 
   private def cleanup
     @timeout_cleared = true
-    @dom_world.send(:_wait_tasks).delete(self)
+    @dom_world.task_manager.delete(self)
   end
 
-  private define_async_method :async_rerun
+  define_async_method :async_rerun
 
   WAIT_FOR_PREDICATE_PAGE_FUNCTION = <<~JAVASCRIPT
   async function _(root, predicateBody, polling, timeout, ...args) {
