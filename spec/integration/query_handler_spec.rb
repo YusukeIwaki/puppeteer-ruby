@@ -1,6 +1,103 @@
 require 'spec_helper'
 
 RSpec.describe 'Query handler tests' do
+  describe 'Text selectors' do
+    describe 'in Page' do
+      it 'should query existing element' do
+        page.content = '<section>test</section>'
+
+        expect(page.query_selector('text/test').evaluate('el => el.tagName')).to eq('SECTION')
+        expect(page.query_selector_all('text/test').size).to eq(1)
+      end
+
+      it 'should return empty array for non-existing element' do
+        page.content = '<section>xxx</section>'
+
+        expect(page.query_selector('text/test')).to be_nil
+        expect(page.query_selector_all('text/test')).to be_empty
+      end
+
+      it 'should return first element' do
+        page.content ='<div id="1">a</div><div>a</div>'
+
+        element = page.query_selector('text/a')
+        expect(element['id'].json_value).to eq('1')
+      end
+
+      it 'should return multiple elements' do
+        page.content ='<div>a</div><div>a</div>'
+
+        elements = page.query_selector_all('text/a')
+        expect(elements.size).to eq(2)
+      end
+
+      it 'should pierce shadow DOM' do
+        js = <<~JAVASCRIPT
+        () => {
+          const div = document.createElement('div');
+          const shadow = div.attachShadow({mode: 'open'});
+          const diva = document.createElement('div');
+          shadow.append(diva);
+          const divb = document.createElement('div');
+          shadow.append(divb);
+          diva.innerHTML = 'a';
+          divb.innerHTML = 'b';
+          document.body.append(div);
+        }
+        JAVASCRIPT
+        page.evaluate(js)
+
+        element = page.query_selector('text/a')
+        expect(element.evaluate('el => el.textContent')).to eq('a')
+      end
+
+      it 'should query deeply nested text' do
+        page.content = '<div><div>a</div><div>b</div></div>'
+
+        element = page.query_selector('text/a')
+        expect(element.evaluate('el => el.textContent')).to eq('a')
+      end
+
+      it 'should query inputs' do
+        page.content = '<input type="text" value="a" /><div>a</div>'
+
+        element = page.query_selector('text/a')
+        expect(element.evaluate('el => el.tagName')).to eq('INPUT')
+      end
+
+      it 'should not query radio' do
+        page.content = '<input type="radio" value="a" />'
+
+        expect(page.query_selector('text/a')).to be_nil
+      end
+
+      it 'should query text spanning multiple elements' do
+        page.content = '<div><span>a</span> <span>b</span><div>'
+
+        element = page.query_selector('text/a b')
+        expect(element.evaluate('el => el.tagName')).to eq('DIV')
+      end
+    end
+
+    describe 'in ElementHandles' do
+      it 'should query existing element' do
+        page.content = '<div class="a"><span>a</span></div>'
+
+        element_handle = page.query_selector('div')
+        expect(element_handle.query_selector('text/a').evaluate('el => el.outerHTML')).to eq('<span>a</span>')
+        expect(element_handle.query_selector_all('text/a').size).to eq(1)
+      end
+
+      it 'should return null for non-existing element' do
+        page.content = '<div class="a"></div>'
+
+        element_handle = page.query_selector('div')
+        expect(element_handle.query_selector('text/a')).to be_nil
+        expect(element_handle.query_selector_all('text/a')).to be_empty
+      end
+    end
+  end
+
   describe 'XPath selectors' do
     describe 'in Page' do
       it 'should query existing element' do
