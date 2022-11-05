@@ -1104,7 +1104,7 @@ class Puppeteer::Page
       quality: screenshot_options.quality,
       clip: clip,
       captureBeyondViewport: screenshot_options.capture_beyond_viewport?,
-      fromSurface: screenshot_options.from_surface?,
+      fromSurface: screenshot_options.from_surface,
     }.compact
     result = @client.send_message('Page.captureScreenshot', screenshot_params)
     reset_default_background_color if should_set_default_background

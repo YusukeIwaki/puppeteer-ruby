@@ -159,8 +159,31 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     begin
       @remote_object.scroll_into_view_if_needed(@client)
     rescue => err
-      # Just ignore 'Node does not have a layout object' for backward-compatibility.
-      raise unless err.message =~ /Node does not have a layout object/
+      # Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
+      js = <<~JAVASCRIPT
+        async (element, pageJavascriptEnabled) => {
+          const visibleRatio = async () => {
+            return await new Promise(resolve => {
+              const observer = new IntersectionObserver(entries => {
+                resolve(entries[0].intersectionRatio);
+                observer.disconnect();
+              });
+              observer.observe(element);
+            });
+          };
+          if (!pageJavascriptEnabled || (await visibleRatio()) !== 1.0) {
+            element.scrollIntoView({
+              block: 'center',
+              inline: 'center',
+              // @ts-expect-error Chrome still supports behavior: instant but
+              // it's not in the spec so TS shouts We don't want to make this
+              // breaking change in Puppeteer yet so we'll ignore the line.
+              behavior: 'instant',
+            });
+          }
+        }
+      JAVASCRIPT
+      evaluate(js, page.javascript_enabled?)
     end
 
     # clickpoint is often calculated before scrolling is completed.
