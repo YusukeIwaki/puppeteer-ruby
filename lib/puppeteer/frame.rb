@@ -310,7 +310,7 @@ class Puppeteer::Frame
 
     # Ensure loaderId updated.
     # The order of [Page.lifecycleEvent name="init"] and [Page.frameNavigated] is random... for some reason...
-    @loader_id = frame_payload['loaderId']
+    @loader_id = frame_payload['loaderId'] if frame_payload['loaderId']
   end
 
   # @param url [String]

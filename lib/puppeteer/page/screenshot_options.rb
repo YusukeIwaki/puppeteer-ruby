@@ -105,15 +105,10 @@ class Puppeteer::Page
         else
           options[:capture_beyond_viewport]
         end
-      @from_surface =
-        if options[:from_surface].nil?
-          true
-        else
-          options[:from_surface]
-        end
+      @from_surface = options[:from_surface]
     end
 
-    attr_reader :type, :quality, :path, :clip, :encoding
+    attr_reader :type, :quality, :path, :clip, :encoding, :from_surface
 
     def full_page?
       @full_page
@@ -125,10 +120,6 @@ class Puppeteer::Page
 
     def capture_beyond_viewport?
       @capture_beyond_viewport
-    end
-
-    def from_surface?
-      @from_surface
     end
   end
 end

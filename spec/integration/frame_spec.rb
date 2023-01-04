@@ -101,7 +101,7 @@ RSpec.describe Puppeteer::Frame do
       expect(detached_frames.first).to be_detached
     end
 
-    it_fails_firefox 'should send "framenavigated" when navigating on anchor URLs' do
+    it 'should send "framenavigated" when navigating on anchor URLs' do
       page.goto(server_empty_page)
       Timeout.timeout(5) do
         framenavigated_promise = resolvable_future { |f| page.once('framenavigated') { |frame| f.fulfill(frame) } }
@@ -128,7 +128,7 @@ RSpec.describe Puppeteer::Frame do
       expect(has_events).to eq(false)
     end
 
-    it_fails_firefox 'should detach child frames on navigation' do
+    it 'should detach child frames on navigation' do
       attached_frames = []
       detached_frames = []
       navigated_frames = []
@@ -151,7 +151,7 @@ RSpec.describe Puppeteer::Frame do
       expect(navigated_frames.size).to eq(1)
     end
 
-    it_fails_firefox 'should support framesets' do
+    it 'should support framesets' do
       attached_frames = []
       detached_frames = []
       navigated_frames = []

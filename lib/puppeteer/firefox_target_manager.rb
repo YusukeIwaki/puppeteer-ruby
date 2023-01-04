@@ -66,9 +66,8 @@ class Puppeteer::FirefoxTargetManager
   end
 
   private def remove_session_listeners(session)
-    return unless @attachment_listener_ids
-    listener_ids = @attachment_listener_ids.delete(session)
-    return if listener_ids.empty?
+    listener_ids = @attachment_listener_ids&.delete(session)
+    return if !listener_ids || listener_ids.empty?
     session.remove_event_listener(*listener_ids)
   end
 

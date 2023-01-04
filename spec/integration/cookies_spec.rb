@@ -94,7 +94,7 @@ RSpec.describe 'cookies' do
       ])
     end
 
-    it_fails_firefox 'should get cookies from multiple urls' do
+    it 'should get cookies from multiple urls' do
       page.set_cookie(
         {
           url: 'https://foo.com',
@@ -250,21 +250,21 @@ RSpec.describe 'cookies' do
       expect { page.set_cookie(name: 'example-cookie', value: 'best') }.to raise_error(/At least one of the url and domain needs to be specified/)
     end
 
-    it_fails_firefox 'should default to setting secure cookie for HTTPS websites' do
+    it 'should default to setting secure cookie for HTTPS websites' do
       page.goto(server_empty_page)
       secure_url = 'https://example.com'
       page.set_cookie(url: secure_url, name: "foo", value: "bar")
       expect(page.cookies(secure_url)).to contain_exactly(include("secure" => true))
     end
 
-    it_fails_firefox 'should be able to set unsecure cookie for HTTP website' do
+    it 'should be able to set unsecure cookie for HTTP website' do
       page.goto(server_empty_page)
       http_url = 'http://example.com'
       page.set_cookie(url: http_url, name: "foo", value: "bar")
       expect(page.cookies(http_url)).to contain_exactly(include("secure" => false))
     end
 
-    it_fails_firefox 'should set a cookie on a different domain' do
+    it 'should set a cookie on a different domain' do
       page.goto(server_empty_page)
       page.set_cookie(
         url: 'https://www.example.com',
