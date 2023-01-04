@@ -229,12 +229,6 @@ end
 
 https://yusukeiwaki.github.io/puppeteer-ruby-docs/
 
-## Limitations
-
-### Not compatible with Firefox >= v97.0
-
-:sos: Help and contribution wanted! :sos:
-https://github.com/YusukeIwaki/puppeteer-ruby/issues/220
 
 ## Contributing
 
