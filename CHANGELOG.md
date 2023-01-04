@@ -1,4 +1,6 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.2...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.3...main)]
+
+### 0.44.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.2...0.44.3)]
 
 Bugfix
 
