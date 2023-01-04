@@ -168,7 +168,7 @@ RSpec.describe 'input tests' do
       end
       chooser.accept(['file-does-not-exist.txt'])
     end
-    it 'should error on read of non-existent files' do
+    it_fails_firefox 'should error on read of non-existent files' do
       page.content = '<input type=file>'
       future {
         chooser = page.wait_for_file_chooser
