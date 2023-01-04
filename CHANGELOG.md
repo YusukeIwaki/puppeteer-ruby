@@ -1,6 +1,8 @@
 ### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.2...main)]
 
-- xxx
+Bugfix
+
+- Revive Firefox automation :tada:
 
 ### 0.44.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.1...0.44.2)]
 
