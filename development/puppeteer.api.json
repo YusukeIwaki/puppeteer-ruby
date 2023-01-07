@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.29.2",
+    "toolVersion": "7.31.2",
     "schemaVersion": 1009,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -1924,7 +1924,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer!BrowserContextOptions#proxyBypassList:member",
-              "docComment": "/**\n * Bypass the proxy for the given semi-colon-separated list of hosts.\n */\n",
+              "docComment": "/**\n * Bypass the proxy for the given list of hosts.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3984,7 +3984,7 @@
             },
             {
               "kind": "Content",
-              "text": "(options: import(\"./types.js\")."
+              "text": "(options: import(\"./types\")."
             },
             {
               "kind": "Reference",
@@ -4002,7 +4002,7 @@
             },
             {
               "kind": "Content",
-              "text": "<import(\"./types.js\")."
+              "text": "<import(\"./types\")."
             },
             {
               "kind": "Reference",
@@ -5752,7 +5752,7 @@
             },
             {
               "kind": "Content",
-              "text": "(options: import(\"./types.js\")."
+              "text": "(options: import(\"puppeteer-core/internal/node/BrowserFetcher.js\")."
             },
             {
               "kind": "Reference",
@@ -5761,7 +5761,7 @@
             },
             {
               "kind": "Content",
-              "text": ") => import(\"./types.js\")."
+              "text": ") => import(\"puppeteer-core/internal/node/BrowserFetcher.js\")."
             },
             {
               "kind": "Reference",
@@ -6271,7 +6271,7 @@
             },
             {
               "kind": "Content",
-              "text": "(options?: import(\"./types.js\")."
+              "text": "(options?: import(\"puppeteer-core/internal/node/LaunchOptions.js\")."
             },
             {
               "kind": "Reference",
@@ -6280,7 +6280,7 @@
             },
             {
               "kind": "Content",
-              "text": ") => string[]"
+              "text": " | undefined) => string[]"
             }
           ],
           "isReadonly": true,
@@ -7323,7 +7323,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!ElementHandle#$x:member(1)",
-              "docComment": "/**\n * @deprecated\n *\n * Use {@link ElementHandle.$$} with the `xpath` prefix.\n *\n * The method evaluates the XPath expression relative to the elementHandle. If there are no such elements, the method will resolve to an empty array.\n *\n * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}\n */\n",
+              "docComment": "/**\n * @deprecated\n *\n * Use {@link ElementHandle.$$} with the `xpath` prefix.\n *\n * Example: `await elementHandle.$$('xpath/' + xpathExpression)`\n *\n * The method evaluates the XPath expression relative to the elementHandle. If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.\n *\n * If there are no such elements, the method will resolve to an empty array.\n *\n * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -8499,7 +8499,7 @@
                 {
                   "kind": "Reference",
                   "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\"~__global.Buffer:interface"
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
                 },
                 {
                   "kind": "Content",
@@ -8918,7 +8918,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!ElementHandle#waitForXPath:member(1)",
-              "docComment": "/**\n * @remarks\n *\n * The optional Argument `options` have properties:\n *\n * - `visible`: A boolean to wait for element to be present in DOM and to be visible, i.e. to not have `display: none` or `visibility: hidden` CSS properties. Defaults to `false`.\n *\n * - `hidden`: A boolean wait for element to not be found in the DOM or to be hidden, i.e. have `display: none` or `visibility: hidden` CSS properties. Defaults to `false`.\n *\n * - `timeout`: A number which is maximum time to wait for in milliseconds. Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default value can be changed by using the {@link Page.setDefaultTimeout} method.\n *\n * @deprecated\n *\n * Use {@link ElementHandle.waitForSelector} with the `xpath` prefix.\n *\n * Wait for the `xpath` within the element. If at the moment of calling the method the `xpath` already exists, the method will return immediately. If the `xpath` doesn't appear after the `timeout` milliseconds of waiting, the function will throw.\n *\n * If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.\n *\n * This method works across navigation\n * ```ts\n * const puppeteer = require('puppeteer');\n * (async () => {\n *   const browser = await puppeteer.launch();\n *   const page = await browser.newPage();\n *   let currentURL;\n *   page\n *     .waitForXPath('//img')\n *     .then(() => console.log('First URL with image: ' + currentURL));\n *   for (currentURL of [\n *     'https://example.com',\n *     'https://google.com',\n *     'https://bbc.com',\n *   ]) {\n *     await page.goto(currentURL);\n *   }\n *   await browser.close();\n * })();\n * ```\n *\n * @param xpath - A {@link https://developer.mozilla.org/en-US/docs/Web/XPath | xpath} of an element to wait for\n *\n * @param options - Optional waiting parameters\n *\n * @returns Promise which resolves when element specified by xpath string is added to DOM. Resolves to `null` if waiting for `hidden: true` and xpath is not found in DOM.\n */\n",
+              "docComment": "/**\n * @remarks\n *\n * The optional Argument `options` have properties:\n *\n * - `visible`: A boolean to wait for element to be present in DOM and to be visible, i.e. to not have `display: none` or `visibility: hidden` CSS properties. Defaults to `false`.\n *\n * - `hidden`: A boolean wait for element to not be found in the DOM or to be hidden, i.e. have `display: none` or `visibility: hidden` CSS properties. Defaults to `false`.\n *\n * - `timeout`: A number which is maximum time to wait for in milliseconds. Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default value can be changed by using the {@link Page.setDefaultTimeout} method.\n *\n * @deprecated\n *\n * Use {@link ElementHandle.waitForSelector} with the `xpath` prefix.\n *\n * Example: `await elementHandle.waitForSelector('xpath/' + xpathExpression)`\n *\n * The method evaluates the XPath expression relative to the elementHandle.\n *\n * Wait for the `xpath` within the element. If at the moment of calling the method the `xpath` already exists, the method will return immediately. If the `xpath` doesn't appear after the `timeout` milliseconds of waiting, the function will throw.\n *\n * If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.\n *\n * This method works across navigation.\n * ```ts\n * const puppeteer = require('puppeteer');\n * (async () => {\n *   const browser = await puppeteer.launch();\n *   const page = await browser.newPage();\n *   let currentURL;\n *   page\n *     .waitForXPath('//img')\n *     .then(() => console.log('First URL with image: ' + currentURL));\n *   for (currentURL of [\n *     'https://example.com',\n *     'https://google.com',\n *     'https://bbc.com',\n *   ]) {\n *     await page.goto(currentURL);\n *   }\n *   await browser.close();\n * })();\n * ```\n *\n * @param xpath - A {@link https://developer.mozilla.org/en-US/docs/Web/XPath | xpath} of an element to wait for\n *\n * @param options - Optional waiting parameters\n *\n * @returns Promise which resolves when element specified by xpath string is added to DOM. Resolves to `null` if waiting for `hidden: true` and xpath is not found in DOM.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -9671,11 +9671,11 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "puppeteer!EventType:type",
-          "docComment": "/**\n * @public\n */\n",
+          "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type EventType = "
+              "text": "declare type EventType = "
             },
             {
               "kind": "Content",
@@ -10529,7 +10529,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Frame#$x:member(1)",
-              "docComment": "/**\n * @deprecated\n *\n * Use {@link Frame.$$} with the `xpath` prefix.\n *\n * This method evaluates the given XPath expression and returns the results.\n *\n * @param expression - the XPath expression to evaluate.\n */\n",
+              "docComment": "/**\n * @deprecated\n *\n * Use {@link Frame.$$} with the `xpath` prefix.\n *\n * Example: `await frame.$$('xpath/' + xpathExpression)`\n *\n * This method evaluates the given XPath expression and returns the results. If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.\n *\n * @param expression - the XPath expression to evaluate.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12345,7 +12345,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Frame#waitForTimeout:member(1)",
-              "docComment": "/**\n * @remarks\n *\n * It's generally recommended to not wait for a number of seconds, but instead use {@link Frame.waitForSelector}, {@link Frame.waitForXPath} or {@link Frame.waitForFunction} to wait for exactly the conditions you want.\n *\n * @deprecated\n *\n * Use `new Promise(r => setTimeout(r, milliseconds));`.\n *\n * Causes your script to wait for the given number of milliseconds.\n *\n * @param milliseconds - the number of milliseconds to wait.\n *\n * @example\n *\n * Wait for 1 second:\n * ```ts\n * await frame.waitForTimeout(1000);\n * ```\n *\n */\n",
+              "docComment": "/**\n * @remarks\n *\n * It's generally recommended to not wait for a number of seconds, but instead use {@link Frame.waitForSelector}, {@link Frame.waitForXPath} or {@link Frame.waitForFunction} to wait for exactly the conditions you want.\n *\n * @deprecated\n *\n * Replace with `new Promise(r => setTimeout(r, milliseconds));`.\n *\n * Causes your script to wait for the given number of milliseconds.\n *\n * @param milliseconds - the number of milliseconds to wait.\n *\n * @example\n *\n * Wait for 1 second:\n * ```ts\n * await frame.waitForTimeout(1000);\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12397,7 +12397,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Frame#waitForXPath:member(1)",
-              "docComment": "/**\n * @deprecated\n *\n * Use {@link Frame.waitForSelector} with the `xpath` prefix.\n *\n * Wait for the `xpath` to appear in page. If at the moment of calling the method the `xpath` already exists, the method will return immediately. If the xpath doesn't appear after the `timeout` milliseconds of waiting, the function will throw.\n *\n * For a code example, see the example for {@link Frame.waitForSelector}. That function behaves identically other than taking a CSS selector rather than an XPath.\n *\n * @param xpath - the XPath expression to wait for.\n *\n * @param options - options to configure the visiblity of the element and how long to wait before timing out.\n */\n",
+              "docComment": "/**\n * @deprecated\n *\n * Use {@link Frame.waitForSelector} with the `xpath` prefix.\n *\n * Example: `await frame.waitForSelector('xpath/' + xpathExpression)`\n *\n * The method evaluates the XPath expression relative to the Frame. If `xpath` starts with `//` instead of `.//`, the dot will be appended automatically.\n *\n * Wait for the `xpath` to appear in page. If at the moment of calling the method the `xpath` already exists, the method will return immediately. If the xpath doesn't appear after the `timeout` milliseconds of waiting, the function will throw.\n *\n * For a code example, see the example for {@link Frame.waitForSelector}. That function behaves identically other than taking a CSS selector rather than an XPath.\n *\n * @param xpath - the XPath expression to wait for.\n *\n * @param options - options to configure the visiblity of the element and how long to wait before timing out.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12759,7 +12759,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "string | number"
+                  "text": "'raf' | 'mutation' | number"
                 },
                 {
                   "kind": "Content",
@@ -13023,11 +13023,11 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "puppeteer!Handler:type",
-          "docComment": "/**\n * @public\n */\n",
+          "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type Handler<T = "
+              "text": "declare type Handler<T = "
             },
             {
               "kind": "Content",
@@ -13196,7 +13196,7 @@
                 {
                   "kind": "Reference",
                   "text": "CDPSession",
-                  "canonicalReference": "puppeteer!~CDPSession:interface"
+                  "canonicalReference": "puppeteer!~CDPSession_3:interface"
                 },
                 {
                   "kind": "Content",
@@ -13982,7 +13982,7 @@
                 {
                   "kind": "Reference",
                   "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\"~__global.Buffer:interface"
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
                 },
                 {
                   "kind": "Content",
@@ -16229,7 +16229,7 @@
             },
             {
               "kind": "Content",
-              "text": "(options?: import(\"./types.js\")."
+              "text": "(options?: import(\"puppeteer-core/internal/node/PuppeteerNode.js\")."
             },
             {
               "kind": "Reference",
@@ -16238,7 +16238,7 @@
             },
             {
               "kind": "Content",
-              "text": ") => "
+              "text": " | undefined) => "
             },
             {
               "kind": "Reference",
@@ -16247,7 +16247,7 @@
             },
             {
               "kind": "Content",
-              "text": "<import(\"./types.js\")."
+              "text": "<import(\"./types\")."
             },
             {
               "kind": "Reference",
@@ -17349,7 +17349,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Mouse#dragAndDrop:member(1)",
-              "docComment": "/**\n * Performs a drag, dragenter, dragover, and drop in sequence.\n *\n * @param target - point to drag from\n *\n * @param target - point to drop on\n *\n * @param options - An object of options. Accepts delay which, if specified, is the time to wait between `dragover` and `drop` in milliseconds. Defaults to 0.\n */\n",
+              "docComment": "/**\n * Performs a drag, dragenter, dragover, and drop in sequence.\n *\n * @param start - point to drag from\n *\n * @param target - point to drop on\n *\n * @param options - An object of options. Accepts delay which, if specified, is the time to wait between `dragover` and `drop` in milliseconds. Defaults to 0.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -19285,6 +19285,86 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer!Page#addStyleTag:member(3)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addStyleTag(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FrameAddStyleTagOptions",
+                  "canonicalReference": "puppeteer!FrameAddStyleTagOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ElementHandle",
+                  "canonicalReference": "puppeteer!ElementHandle:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLStyleElement",
+                  "canonicalReference": "!HTMLStyleElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLLinkElement",
+                  "canonicalReference": "!HTMLLinkElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 11
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 3,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "name": "addStyleTag"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer!Page#authenticate:member(1)",
               "docComment": "/**\n * Provide credentials for `HTTP authentication`.\n *\n * @remarks\n *\n * To disable authentication, pass `null`.\n */\n",
               "excerptTokens": [
@@ -19718,7 +19798,7 @@
                 {
                   "kind": "Reference",
                   "text": "Readable",
-                  "canonicalReference": "!\"\\\"stream\\\"\"~internal.Readable:class"
+                  "canonicalReference": "!\"\\\"stream\\\"\".internal.Readable:class"
                 },
                 {
                   "kind": "Content",
@@ -21669,7 +21749,7 @@
                 {
                   "kind": "Reference",
                   "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\"~__global.Buffer:interface"
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
                 },
                 {
                   "kind": "Content",
@@ -21872,7 +21952,7 @@
                 {
                   "kind": "Reference",
                   "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\"~__global.Buffer:interface"
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
                 },
                 {
                   "kind": "Content",
@@ -22027,7 +22107,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#setCacheEnabled:member(1)",
-              "docComment": "/**\n * Toggles ignoring cache for each request based on the enabled state. By default, caching is enabled.\n *\n * @param enabled - sets the `enabled` state of cache\n */\n",
+              "docComment": "/**\n * Toggles ignoring cache for each request based on the enabled state. By default, caching is enabled.\n *\n * @param enabled - sets the `enabled` state of cache\n *\n * @defaultValue\n *\n * true\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -23223,7 +23303,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#waitForFunction:member(1)",
-              "docComment": "/**\n * Waits for a function to finish evaluating in the page's context.\n *\n * @param pageFunction - Function to be evaluated in browser context\n *\n * @param options - Optional waiting parameters\n *\n * - `polling` - An interval at which the `pageFunction` is executed, defaults to `raf`. If `polling` is a number, then it is treated as an interval in milliseconds at which the function would be executed. If polling is a string, then it can be one of the following values: - `raf` - to constantly execute `pageFunction` in `requestAnimationFrame` callback. This is the tightest polling mode which is suitable to observe styling changes. - `mutation`- to execute pageFunction on every DOM mutation. - `timeout` - maximum time to wait for in milliseconds. Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default value can be changed by using the {@link Page.setDefaultTimeout} method.\n *\n * @param args - Arguments to pass to `pageFunction`\n *\n * @returns A `Promise` which resolves to a JSHandle/ElementHandle of the the `pageFunction`'s return value.\n *\n * @example\n *\n * The {@link Page.waitForFunction} can be used to observe viewport size change:\n * ```ts\n * const puppeteer = require('puppeteer');\n * (async () => {\n *   const browser = await puppeteer.launch();\n *   const page = await browser.newPage();\n *   const watchDog = page.waitForFunction('window.innerWidth < 100');\n *   await page.setViewport({width: 50, height: 50});\n *   await watchDog;\n *   await browser.close();\n * })();\n * ```\n *\n * @example\n *\n * To pass arguments from node.js to the predicate of {@link Page.waitForFunction} function:\n * ```ts\n * const selector = '.foo';\n * await page.waitForFunction(\n *   selector => !!document.querySelector(selector),\n *   {},\n *   selector\n * );\n * ```\n *\n * @example\n *\n * The predicate of {@link Page.waitForFunction} can be asynchronous too:\n * ```ts\n * const username = 'github-username';\n * await page.waitForFunction(\n *   async username => {\n *     const githubResponse = await fetch(\n *       `https://api.github.com/users/${username}`\n *     );\n *     const githubUser = await githubResponse.json();\n *     // show the avatar\n *     const img = document.createElement('img');\n *     img.src = githubUser.avatar_url;\n *     // wait 3 seconds\n *     await new Promise((resolve, reject) => setTimeout(resolve, 3000));\n *     img.remove();\n *   },\n *   {},\n *   username\n * );\n * ```\n *\n */\n",
+              "docComment": "/**\n * Waits for a function to finish evaluating in the page's context.\n *\n * @param pageFunction - Function to be evaluated in browser context\n *\n * @param options - Options for configuring waiting behavior.\n *\n * @example\n *\n * The {@link Page.waitForFunction} can be used to observe viewport size change:\n * ```ts\n * const puppeteer = require('puppeteer');\n * (async () => {\n *   const browser = await puppeteer.launch();\n *   const page = await browser.newPage();\n *   const watchDog = page.waitForFunction('window.innerWidth < 100');\n *   await page.setViewport({width: 50, height: 50});\n *   await watchDog;\n *   await browser.close();\n * })();\n * ```\n *\n * @example\n *\n * To pass arguments from node.js to the predicate of {@link Page.waitForFunction} function:\n * ```ts\n * const selector = '.foo';\n * await page.waitForFunction(\n *   selector => !!document.querySelector(selector),\n *   {},\n *   selector\n * );\n * ```\n *\n * @example\n *\n * The predicate of {@link Page.waitForFunction} can be asynchronous too:\n * ```ts\n * const username = 'github-username';\n * await page.waitForFunction(\n *   async username => {\n *     const githubResponse = await fetch(\n *       `https://api.github.com/users/${username}`\n *     );\n *     const githubUser = await githubResponse.json();\n *     // show the avatar\n *     const img = document.createElement('img');\n *     img.src = githubUser.avatar_url;\n *     // wait 3 seconds\n *     await new Promise((resolve, reject) => setTimeout(resolve, 3000));\n *     img.remove();\n *   },\n *   {},\n *   username\n * );\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -23272,8 +23352,9 @@
                   "text": ", options?: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "{\n        timeout?: number;\n        polling?: string | number;\n    }"
+                  "kind": "Reference",
+                  "text": "FrameWaitForFunctionOptions",
+                  "canonicalReference": "puppeteer!FrameWaitForFunctionOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -23506,7 +23587,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#waitForRequest:member(1)",
-              "docComment": "/**\n * @remarks\n *\n * Optional Waiting Parameters have:\n *\n * - `timeout`: Maximum wait time in milliseconds, defaults to `30` seconds, pass `0` to disable the timeout. The default value can be changed by using the {@link Page.setDefaultTimeout} method.\n *\n * @param urlOrPredicate - A URL or predicate to wait for\n *\n * @param options - Optional waiting parameters\n *\n * @returns Promise which resolves to the matched response\n *\n * @example\n * ```ts\n * const firstResponse = await page.waitForResponse(\n *   'https://example.com/resource'\n * );\n * const finalResponse = await page.waitForResponse(\n *   response =>\n *     response.url() === 'https://example.com' && response.status() === 200\n * );\n * const finalResponse = await page.waitForResponse(async response => {\n *   return (await response.text()).includes('<html>');\n * });\n * return finalResponse.ok();\n * ```\n *\n */\n",
+              "docComment": "/**\n * @remarks\n *\n * Optional Waiting Parameters have:\n *\n * - `timeout`: Maximum wait time in milliseconds, defaults to `30` seconds, pass `0` to disable the timeout. The default value can be changed by using the {@link Page.setDefaultTimeout} method.\n *\n * @param urlOrPredicate - A URL or predicate to wait for\n *\n * @param options - Optional waiting parameters\n *\n * @returns Promise which resolves to the matched request\n *\n * @example\n * ```ts\n * const firstRequest = await page.waitForRequest(\n *   'https://example.com/resource'\n * );\n * const finalRequest = await page.waitForRequest(\n *   request => request.url() === 'https://example.com'\n * );\n * return finalRequest.response()?.ok();\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -23804,7 +23885,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!Page#waitForTimeout:member(1)",
-              "docComment": "/**\n * @remarks\n *\n * It's generally recommended to not wait for a number of seconds, but instead use {@link Frame.waitForSelector}, {@link Frame.waitForXPath} or {@link Frame.waitForFunction} to wait for exactly the conditions you want.\n *\n * @deprecated\n *\n * Use `new Promise(r => setTimeout(r, milliseconds));`.\n *\n * Causes your script to wait for the given number of milliseconds.\n *\n * @param milliseconds - the number of milliseconds to wait.\n *\n * @example\n *\n * Wait for 1 second:\n * ```ts\n * await page.waitForTimeout(1000);\n * ```\n *\n */\n",
+              "docComment": "/**\n * @remarks\n *\n * It's generally recommended to not wait for a number of seconds, but instead use {@link Frame.waitForSelector}, {@link Frame.waitForXPath} or {@link Frame.waitForFunction} to wait for exactly the conditions you want.\n *\n * @deprecated\n *\n * Replace with `new Promise(r => setTimeout(r, milliseconds));`.\n *\n * Causes your script to wait for the given number of milliseconds.\n *\n * @param milliseconds - the number of milliseconds to wait.\n *\n * @example\n *\n * Wait for 1 second:\n * ```ts\n * await page.waitForTimeout(1000);\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26084,64 +26165,6 @@
           "preserveMemberOrder": false,
           "members": [
             {
-              "kind": "Property",
-              "canonicalReference": "puppeteer!Puppeteer#_changedProduct:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "protected _changedProduct: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "_changedProduct",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": true
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "puppeteer!Puppeteer#_isPuppeteerCore:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "protected _isPuppeteerCore: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "_isPuppeteerCore",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": true
-            },
-            {
               "kind": "Method",
               "canonicalReference": "puppeteer!Puppeteer#clearCustomQueryHandlers:member(1)",
               "docComment": "/**\n * @deprecated\n *\n * Import directly puppeteer.\n *\n * @example\n * ```ts\n * import {clearCustomQueryHandlers} from 'puppeteer';\n * ```\n *\n */\n",
@@ -26279,7 +26302,7 @@
                 {
                   "kind": "Reference",
                   "text": "devices",
-                  "canonicalReference": "puppeteer!~devices:var"
+                  "canonicalReference": "puppeteer!devices:var"
                 },
                 {
                   "kind": "Content",
@@ -26725,35 +26748,6 @@
           "name": "PuppeteerNode",
           "preserveMemberOrder": false,
           "members": [
-            {
-              "kind": "Property",
-              "canonicalReference": "puppeteer!PuppeteerNode#_preferredRevision:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "_preferredRevision: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "_preferredRevision",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false
-            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer!PuppeteerNode#connect:member(1)",
@@ -27303,7 +27297,7 @@
                 {
                   "kind": "Reference",
                   "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\"~__global.Buffer:interface"
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
                 },
                 {
                   "kind": "Content",
@@ -29369,7 +29363,7 @@
                 {
                   "kind": "Reference",
                   "text": "Buffer",
-                  "canonicalReference": "!\"\\\"buffer\\\"\"~__global.Buffer:interface"
+                  "canonicalReference": "!\"\\\"buffer\\\"\".__global.Buffer:interface"
                 },
                 {
                   "kind": "Content",
