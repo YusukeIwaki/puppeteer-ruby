@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v17.1.3
+- Puppeteer version: v18.2.1
 - puppeteer-ruby version: 0.44.3
 
 ## Puppeteer
@@ -280,6 +280,7 @@
 * $eval => `#eval_on_selector`
 * $x => `#Sx`
 * addScriptTag => `#add_script_tag`
+* addStyleTag => `#add_style_tag`
 * addStyleTag => `#add_style_tag`
 * addStyleTag => `#add_style_tag`
 * authenticate
