@@ -14,7 +14,7 @@
 * executablePath => `#executable_path`
 * launch
 * networkConditions => `#network_conditions`
-* ~~registerCustomQueryHandler~~
+* registerCustomQueryHandler => `#register_custom_query_handler`
 * ~~unregisterCustomQueryHandler~~
 
 ## ~~Accessibility~~
