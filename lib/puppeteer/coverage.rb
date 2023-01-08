@@ -8,11 +8,13 @@ class Puppeteer::Coverage
   def start_js_coverage(
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,
-        include_raw_script_coverage: nil)
+        include_raw_script_coverage: nil,
+        use_block_coverage: nil)
     @js.start(
       reset_on_navigation: reset_on_navigation,
       report_anonymous_scripts: report_anonymous_scripts,
       include_raw_script_coverage: include_raw_script_coverage,
+      use_block_coverage: use_block_coverage,
     )
   end
 
@@ -24,6 +26,7 @@ class Puppeteer::Coverage
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,
         include_raw_script_coverage: nil,
+        use_block_coverage: nil,
         &block)
     unless block
       raise ArgumentError.new('Block must be given')
@@ -33,6 +36,7 @@ class Puppeteer::Coverage
       reset_on_navigation: reset_on_navigation,
       report_anonymous_scripts: report_anonymous_scripts,
       include_raw_script_coverage: include_raw_script_coverage,
+      use_block_coverage: use_block_coverage,
     )
     block.call
     stop_js_coverage

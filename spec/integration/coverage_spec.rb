@@ -84,7 +84,21 @@ RSpec.describe 'Coverage specs' do
       expect(entry.text[range[:start]...range[:end]]).to eq("\n")
 
       range = entry.ranges[1]
-      expect(entry.text[range[:start]...range[:end]]).to eq("console.log('used!');")
+      expect(entry.text[range[:start]...range[:end]]).to eq("console.log('used!');if(true===false)")
+    end
+
+    it 'should report right ranges for "per function" scope', sinatra: true do
+      coverage = page.coverage.js_coverage(use_block_coverage: false) do
+        page.goto("#{server_prefix}/jscoverage/ranges.html")
+      end
+      expect(coverage.size).to eq(1)
+      entry = coverage.first
+      expect(entry.ranges.size).to eq(2)
+      range = entry.ranges[0]
+      expect(entry.text[range[:start]...range[:end]]).to eq("\n")
+
+      range = entry.ranges[1]
+      expect(entry.text[range[:start]...range[:end]]).to eq("console.log('used!');if(true===false)console.log('unused!');")
     end
 
     it 'should report scripts that have no coverage', sinatra: true do

@@ -31,12 +31,19 @@ class Puppeteer::JSCoverage
   def start(
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,
-        include_raw_script_coverage: nil)
+        include_raw_script_coverage: nil,
+        use_block_coverage: nil)
     raise 'JSCoverage is already enabled' if @enabled
 
     @reset_on_navigation =
       if [true, false].include?(reset_on_navigation)
         reset_on_navigation
+      else
+        true
+      end
+    @use_block_coverage =
+      if [true, false].include?(use_block_coverage)
+        use_block_coverage
       else
         true
       end
@@ -56,7 +63,7 @@ class Puppeteer::JSCoverage
       @client.async_send_message('Profiler.enable'),
       @client.async_send_message('Profiler.startPreciseCoverage',
         callCount: @include_raw_script_coverage,
-        detailed: true,
+        detailed: @use_block_coverage,
       ),
       @client.async_send_message('Debugger.enable'),
       @client.async_send_message('Debugger.setSkipAllPauses', skip: true),
