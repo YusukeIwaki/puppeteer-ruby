@@ -11,6 +11,8 @@ class Puppeteer::BrowserContext
     @id = context_id
   end
 
+  attr_reader :id
+
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
   def on(event_name, &block)
     unless BrowserContextEmittedEvents.values.include?(event_name.to_s)
