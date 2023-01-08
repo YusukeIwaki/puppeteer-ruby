@@ -141,6 +141,42 @@ class Puppeteer::Puppeteer
     launcher.product
   end
 
+  def register_custom_query_handler(name:, query_one:, query_all:)
+    unless name =~ /\A[a-zA-Z]+\z/
+      raise ArgumentError.new("Custom query handler names may only contain [a-zA-Z]")
+    end
+
+    handler_name = name.to_sym
+    if query_handler_manager.query_handlers.key?(handler_name)
+      raise ArgumentError.new("A query handler named #{name} already exists")
+    end
+
+    handler = Puppeteer::CustomQueryHandler.new(query_one: query_one, query_all: query_all)
+    Puppeteer::QueryHandlerManager.instance.query_handlers[handler_name] = handler
+  end
+
+  def with_custom_query_handler(name:, query_one:, query_all:, &block)
+    unless name =~ /\A[a-zA-Z]+\z/
+      raise ArgumentError.new("Custom query handler names may only contain [a-zA-Z]")
+    end
+
+    handler_name = name.to_sym
+
+    handler = Puppeteer::CustomQueryHandler.new(query_one: query_one, query_all: query_all)
+    query_handler_manager = Puppeteer::QueryHandlerManager.instance
+    original = query_handler_manager.query_handlers.delete(handler_name)
+    query_handler_manager.query_handlers[handler_name] = handler
+    begin
+      block.call
+    ensure
+      if original
+        query_handler_manager.query_handlers[handler_name] = original
+      else
+        query_handler_manager.query_handlers.delete(handler_name)
+      end
+    end
+  end
+
   # @return [Puppeteer::Devices]
   def devices
     Puppeteer::Devices

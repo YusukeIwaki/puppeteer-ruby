@@ -359,96 +359,71 @@ RSpec.describe Puppeteer::ElementHandle do
     end
   end
 
-  # describe('Custom queries', function () {
-  #   this.afterEach(() => {
-  #     const { puppeteer } = getTestState();
-  #     puppeteer.__experimental_clearQueryHandlers();
-  #   });
-  #   it('should register and unregister', async () => {
-  #     const { page, puppeteer } = getTestState();
-  #     await page.setContent('<div id="not-foo"></div><div id="foo"></div>');
+  describe 'Custom queries' do
+    it 'should register and unregister' do
+      page.content = '<div id="not-foo"></div><div id="foo"></div>'
 
-  #     // Register.
-  #     puppeteer.__experimental_registerCustomQueryHandler('getById', {
-  #       queryOne: (element, selector) =>
-  #         document.querySelector(`[id="${selector}"]`),
-  #     });
-  #     const element = await page.$('getById/foo');
-  #     expect(
-  #       await page.evaluate<(element: HTMLElement) => string>(
-  #         (element) => element.id,
-  #         element
-  #       )
-  #     ).toBe('foo');
+      Puppeteer.with_custom_query_handler(
+        name: 'getById',
+        query_one: '(element, selector) => document.querySelector(`[id="${selector}"]`)',
+        query_all: '(element, selector) => document.querySelectorAll(`[id="${selector}"]`)',
+      ) do
+        element = page.query_selector('getById/foo')
+        expect(element.evaluate('el => el.id')).to eq('foo')
+      end
 
-  #     // Unregister.
-  #     puppeteer.__experimental_unregisterCustomQueryHandler('getById');
-  #     try {
-  #       await page.$('getById/foo');
-  #       throw new Error('Custom query handler name not set - throw expected');
-  #     } catch (error) {
-  #       expect(error).toStrictEqual(
-  #         new Error(
-  #           'Query set to use "getById", but no query handler of that name was found'
-  #         )
-  #       );
-  #     }
-  #   });
-  #   it('should throw with invalid query names', () => {
-  #     try {
-  #       const { puppeteer } = getTestState();
-  #       puppeteer.__experimental_registerCustomQueryHandler(
-  #         '1/2/3',
-  #         // @ts-expect-error
-  #         () => {}
-  #       );
-  #       throw new Error(
-  #         'Custom query handler name was invalid - throw expected'
-  #       );
-  #     } catch (error) {
-  #       expect(error).toStrictEqual(
-  #         new Error('Custom query handler names may only contain [a-zA-Z]')
-  #       );
-  #     }
-  #   });
-  #   it('should work for multiple elements', async () => {
-  #     const { page, puppeteer } = getTestState();
-  #     await page.setContent(
-  #       '<div id="not-foo"></div><div class="foo">Foo1</div><div class="foo baz">Foo2</div>'
-  #     );
-  #     puppeteer.__experimental_registerCustomQueryHandler('getByClass', {
-  #       queryAll: (element, selector) =>
-  #         document.querySelectorAll(`.${selector}`),
-  #     });
-  #     const elements = await page.$$('getByClass/foo');
-  #     const classNames = await Promise.all(
-  #       elements.map(
-  #         async (element) =>
-  #           await page.evaluate<(element: HTMLElement) => string>(
-  #             (element) => element.className,
-  #             element
-  #           )
-  #       )
-  #     );
+      expect {
+        page.query_selector('getById/foo')
+      }.to raise_error(/Query set to use "getById", but no query handler of that name was found/)
+    end
 
-  #     expect(classNames).toStrictEqual(['foo', 'foo baz']);
-  #   });
-  #   it('should eval correctly', async () => {
-  #     const { page, puppeteer } = getTestState();
-  #     await page.setContent(
-  #       '<div id="not-foo"></div><div class="foo">Foo1</div><div class="foo baz">Foo2</div>'
-  #     );
-  #     puppeteer.__experimental_registerCustomQueryHandler('getByClass', {
-  #       queryAll: (element, selector) =>
-  #         document.querySelectorAll(`.${selector}`),
-  #     });
-  #     const elements = await page.$$eval(
-  #       'getByClass/foo',
-  #       (divs) => divs.length
-  #     );
+    it 'should throw with invalid query names' do
+      expect {
+        Puppeteer.register_custom_query_handler(
+          name: '1/2/3',
+          query_one: '(element, selector) => null',
+          query_all: '(element, selector) => []',
+        )
+      }.to raise_error(/Custom query handler names may only contain \[a-zA-Z\]/)
+    end
 
-  #     expect(elements).toBe(2);
-  #   });
+    it 'should work for multiple elements' do
+      page.content = <<~HTML
+      <div id="not-foo"></div>
+      <div class="foo">Foo1</div>
+      <div class="foo baz">Foo2</div>
+      HTML
+
+      Puppeteer.with_custom_query_handler(
+        name: 'getByClass',
+        query_one: '(element, selector) => document.querySelector(`.${selector}`)',
+        query_all: '(element, selector) => document.querySelectorAll(`.${selector}`)',
+      ) do
+        elements = page.query_selector_all('getByClass/foo')
+        class_names = elements.map do |element|
+          element.evaluate('(element) => element.className')
+        end
+
+        expect(class_names).to eq(['foo', 'foo baz'])
+      end
+    end
+
+    it 'should eval correctly' do
+      page.content = <<~HTML
+      <div id="not-foo"></div>
+      <div class="foo">Foo1</div>
+      <div class="foo baz">Foo2</div>
+      HTML
+
+      Puppeteer.with_custom_query_handler(
+        name: 'getByClass',
+        query_one: '(element, selector) => document.querySelector(`.${selector}`)',
+        query_all: '(element, selector) => document.querySelectorAll(`.${selector}`)',
+      ) do
+        num_elements = page.eval_on_selector_all('getByClass/foo', '(divs) => divs.length')
+        expect(num_elements).to eq(2)
+      end
+    end
   #   it('should wait correctly with waitForSelector', async () => {
   #     const { page, puppeteer } = getTestState();
   #     puppeteer.__experimental_registerCustomQueryHandler('getByClass', {
@@ -490,61 +465,47 @@ RSpec.describe Puppeteer::ElementHandle do
   #     await element.evaluate((el: HTMLElement) => el.innerText)
   #   ).toStrictEqual('bar1');
   # });
-  #   it('should wait correctly with waitFor', async () => {
-  #     /* page.waitFor is deprecated so we silence the warning to avoid test noise */
-  #     sinon.stub(console, 'warn').callsFake(() => {});
-  #     const { page, puppeteer } = getTestState();
-  #     puppeteer.__experimental_registerCustomQueryHandler('getByClass', {
-  #       queryOne: (element, selector) => element.querySelector(`.${selector}`),
-  #     });
-  #     const waitFor = page.waitFor('getByClass/foo');
 
-  #     // Set the page content after the waitFor has been started.
-  #     await page.setContent(
-  #       '<div id="not-foo"></div><div class="foo">Foo1</div>'
-  #     );
-  #     const element = await waitFor;
+    it 'should work when both queryOne and queryAll are registered' do
+      page.content = <<~HTML
+      <div id="not-foo"></div>
+      <div class="foo">
+        <div id="nested-foo" class="foo"/>
+      </div>
+      <div class="foo baz">Foo2</div>
+      HTML
 
-  #     expect(element).toBeDefined();
-  #   });
-  #   it('should work when both queryOne and queryAll are registered', async () => {
-  #     const { page, puppeteer } = getTestState();
-  #     await page.setContent(
-  #       '<div id="not-foo"></div><div class="foo"><div id="nested-foo" class="foo"/></div><div class="foo baz">Foo2</div>'
-  #     );
-  #     puppeteer.__experimental_registerCustomQueryHandler('getByClass', {
-  #       queryOne: (element, selector) => element.querySelector(`.${selector}`),
-  #       queryAll: (element, selector) =>
-  #         element.querySelectorAll(`.${selector}`),
-  #     });
+      Puppeteer.with_custom_query_handler(
+        name: 'getByClass',
+        query_one: '(element, selector) => element.querySelector(`.${selector}`)',
+        query_all: '(element, selector) => element.querySelectorAll(`.${selector}`)',
+      ) do
+        element = page.query_selector('getByClass/foo')
+        expect(element).to be_a(Puppeteer::ElementHandle)
 
-  #     const element = await page.$('getByClass/foo');
-  #     expect(element).toBeDefined();
+        elements = page.query_selector_all('getByClass/foo')
+        expect(elements.size).to eq(3)
+      end
+    end
 
-  #     const elements = await page.$$('getByClass/foo');
-  #     expect(elements.length).toBe(3);
-  #   });
-  #   it('should eval when both queryOne and queryAll are registered', async () => {
-  #     const { page, puppeteer } = getTestState();
-  #     await page.setContent(
-  #       '<div id="not-foo"></div><div class="foo">text</div><div class="foo baz">content</div>'
-  #     );
-  #     puppeteer.__experimental_registerCustomQueryHandler('getByClass', {
-  #       queryOne: (element, selector) => element.querySelector(`.${selector}`),
-  #       queryAll: (element, selector) =>
-  #         element.querySelectorAll(`.${selector}`),
-  #     });
+    it 'should eval when both queryOne and queryAll are registered' do
+      page.content = <<~HTML
+      <div id="not-foo"></div>
+      <div class="foo">text</div>
+      <div class="foo baz">content</div>
+      HTML
 
-  #     const txtContent = await page.$eval(
-  #       'getByClass/foo',
-  #       (div) => div.textContent
-  #     );
-  #     expect(txtContent).toBe('text');
+      Puppeteer.with_custom_query_handler(
+        name: 'getByClass',
+        query_one: '(element, selector) => element.querySelector(`.${selector}`)',
+        query_all: '(element, selector) => element.querySelectorAll(`.${selector}`)',
+      ) do
+        txt_content = page.eval_on_selector('getByClass/foo', '(div) => div.textContent')
+        expect(txt_content).to eq('text')
 
-  #     const txtContents = await page.$$eval('getByClass/foo', (divs) =>
-  #       divs.map((d) => d.textContent).join('')
-  #     );
-  #     expect(txtContents).toBe('textcontent');
-  #   });
-  # });
+        txt_contents = page.eval_on_selector_all('getByClass/foo', '(divs) => divs.map((d) => d.textContent).join("")')
+        expect(txt_contents).to eq('textcontent')
+      end
+    end
+  end
 end
