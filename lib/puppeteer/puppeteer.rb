@@ -170,10 +170,4 @@ class Puppeteer::Puppeteer
     }.compact
     launcher.default_args(options)
   end
-
-  # @param {!BrowserFetcher.Options=} options
-  # @return {!BrowserFetcher}
-  def createBrowserFetcher(options = {})
-    BrowserFetcher.new(@project_root, options)
-  end
 end
