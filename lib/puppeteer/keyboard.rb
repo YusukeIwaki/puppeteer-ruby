@@ -15,7 +15,7 @@ class Puppeteer::Keyboard
 
   # @param key [String]
   # @param text [String]
-  def down(key, text: nil)
+  def down(key, text: nil, commands: nil)
     description = key_description_for_string(key)
 
     auto_repeat = @pressed_keys.include?(description.code)
@@ -34,6 +34,7 @@ class Puppeteer::Keyboard
       autoRepeat: auto_repeat,
       location: description.location,
       isKeypad: description.location == 3,
+      commands: commands,
     }.compact
     @client.send_message('Input.dispatchKeyEvent', params)
   end
@@ -151,8 +152,8 @@ class Puppeteer::Keyboard
   # @param key [String]
   # @param text [String]
   # @return [Future]
-  def press(key, delay: nil, text: nil)
-    down(key, text: text)
+  def press(key, delay: nil, text: nil, commands: nil)
+    down(key, text: text, commands: commands)
     if delay
       sleep(delay.to_i / 1000.0)
     end

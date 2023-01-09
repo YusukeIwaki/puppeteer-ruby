@@ -86,6 +86,37 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('Hello World!')
     end
 
+    # @see https://github.com/puppeteer/puppeteer/issues/1313
+    it_fails_firefox 'should trigger commands of keyboard shortcuts' do
+      cmd_key = Puppeteer.env.darwin? ? 'Control' : 'Meta'
+
+      page.type_text('textarea', 'hello')
+
+      page.keyboard do
+        down cmd_key
+        press 'a', commands: ['SelectAll']
+        up cmd_key
+      end
+
+      page.keyboard do
+        down cmd_key
+        down 'c', commands: ['Copy']
+        up 'c'
+        up cmd_key
+      end
+
+      2.times do
+        page.keyboard do
+          down cmd_key
+          press 'v', commands: ['Paste']
+          up cmd_key
+        end
+      end
+
+      value = page.evaluate("() => document.querySelector('textarea').value")
+      expect(value).to eq('hellohello')
+    end
+
     it 'should send a character with ElementHandle.press' do
       textarea = page.query_selector('textarea')
       textarea.press('a')
