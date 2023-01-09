@@ -84,6 +84,7 @@ class Puppeteer::LifecycleWatcher
     @listener_ids['network_manager'] = [
       @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Request, &method(:handle_request)),
       @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::Response, &method(:handle_response)),
+      @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::RequestFailed, &method(:handle_request_failed)),
     ]
 
     @same_document_navigation_promise = resolvable_future
@@ -107,9 +108,16 @@ class Puppeteer::LifecycleWatcher
     end
   end
 
+  # @param [Puppeteer::HTTPRequest] request
+  def handle_request_failed(request)
+    return if @navigation_request&.internal&.request_id != request.internal.request_id
+
+    @navigation_response_received.fulfill(nil) unless @navigation_response_received.resolved?
+  end
+
   # @param [Puppeteer::HTTPResponse] response
   def handle_response(response)
-    return if @navigation_request&.internal&.request_id  != response.request.internal.request_id
+    return if @navigation_request&.internal&.request_id != response.request.internal.request_id
 
     @navigation_response_received.fulfill(nil) unless @navigation_response_received.resolved?
   end
