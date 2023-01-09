@@ -170,4 +170,17 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       context.close
     end
   end
+
+  it 'should provide a context id' do
+    expect(browser.browser_contexts.length).to eq(1)
+    expect(browser.browser_contexts.first.id).to be_nil
+
+    context = browser.create_incognito_browser_context
+    begin
+      expect(browser.browser_contexts.length).to eq(2)
+      expect(browser.browser_contexts.last.id).not_to be_nil
+    ensure
+      context.close
+    end
+  end
 end
