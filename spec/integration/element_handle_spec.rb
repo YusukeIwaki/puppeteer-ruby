@@ -508,4 +508,13 @@ RSpec.describe Puppeteer::ElementHandle do
       end
     end
   end
+
+  describe 'to_element' do
+    it 'should work' do
+      page.content = '<div class="foo">Foo1</div>'
+      element = page.query_selector('.foo')
+      div = element.to_element('div')
+      expect(div).to be_a(Puppeteer::ElementHandle)
+    end
+  end
 end
