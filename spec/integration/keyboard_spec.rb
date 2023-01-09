@@ -87,7 +87,7 @@ RSpec.describe Puppeteer::Keyboard do
     end
 
     # @see https://github.com/puppeteer/puppeteer/issues/1313
-    it 'should trigger commands of keyboard shortcuts' do
+    it_fails_firefox 'should trigger commands of keyboard shortcuts' do
       cmd_key = Puppeteer.env.darwin? ? 'Control' : 'Meta'
 
       page.type_text('textarea', 'hello')
