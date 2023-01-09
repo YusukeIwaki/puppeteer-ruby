@@ -562,18 +562,16 @@ class Puppeteer::IsolaatedWorld
             node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
 
           const style = window.getComputedStyle(element);
+          const hidden_visibility_values = ['hidden', 'collapse'];
           const isVisible =
-            style && style.visibility !== 'hidden' && hasVisibleBoundingBox();
+            style && !hidden_visibility_values.includes(style.visibility) && !isBoundingBoxEmpty(element);
           const success =
             waitForVisible === isVisible || waitForHidden === !isVisible;
           return success ? node : null;
 
-          /**
-          * @return {boolean}
-          */
-          function hasVisibleBoundingBox() {
+          function isBoundingBoxEmpty(element) {
             const rect = element.getBoundingClientRect();
-            return !!(rect.top || rect.bottom || rect.width || rect.height);
+            return rect.width === 0 || rect.height === 0;
           }
         }
     }
