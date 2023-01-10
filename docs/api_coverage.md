@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v18.2.1
-- puppeteer-ruby version: 0.44.3
+- Puppeteer version: v19.5.0
+- puppeteer-ruby version: 0.45.0
 
 ## Puppeteer
 
@@ -14,6 +14,7 @@
 * executablePath => `#executable_path`
 * launch
 * networkConditions => `#network_conditions`
+* ~~puppeteer~~
 * registerCustomQueryHandler => `#register_custom_query_handler`
 * ~~unregisterCustomQueryHandler~~
 
@@ -134,6 +135,7 @@
 * screenshot
 * select
 * tap
+* toElement => `#to_element`
 * type => `#type_text`
 * uploadFile => `#upload_file`
 * waitForSelector => `#wait_for_selector`
@@ -356,6 +358,12 @@
 * waitForTimeout => `#wait_for_timeout`
 * waitForXPath => `#wait_for_xpath`
 * workers
+
+## ~~ProductLauncher~~
+
+* ~~defaultArgs~~
+* ~~executablePath~~
+* ~~launch~~
 
 ## ~~ProtocolError~~
 

@@ -1,4 +1,11 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.3...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.0...main)]
+
+### 0.45.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.3...0.45.0)]
+
+- Port Puppeteer v18.0-v19.5 features except for 3 features below (If wanted, please create a issue of the feature request :)
+  - Extra headers for Puppeteer.connect ([#9314](https://github.com/puppeteer/puppeteer/pull/9314))
+  - Improvement of missing product message ([#9207](https://github.com/puppeteer/puppeteer/pull/9207))
+  - Configuration file (.puppeteerrc/puppeteer.config.js) ([#9140](https://github.com/puppeteer/puppeteer/pull/9140)).
 
 ### 0.44.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.2...0.44.3)]
 
