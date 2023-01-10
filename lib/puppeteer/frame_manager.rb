@@ -21,6 +21,8 @@ class Puppeteer::FrameManager
     # @type {!Map<string, !Frame>}
     @frames = {}
 
+    @frame_naviigated_received = Set.new
+
     # @type {!Map<number, !ExecutionContext>}
     @context_id_to_context = {}
 
@@ -42,6 +44,7 @@ class Puppeteer::FrameManager
       handle_frame_attached(client, event['frameId'], event['parentFrameId'])
     end
     client.on_event('Page.frameNavigated') do |event|
+      @frame_naviigated_received << event['frame']['id']
       handle_frame_navigated(event['frame'])
     end
     client.on_event('Page.navigatedWithinDocument') do |event|
@@ -227,7 +230,9 @@ class Puppeteer::FrameManager
     if frame_tree['frame']['parentId']
       handle_frame_attached(session, frame_tree['frame']['id'], frame_tree['frame']['parentId'])
     end
-    handle_frame_navigated(frame_tree['frame'])
+    unless @frame_naviigated_received.delete?(frame_tree['frame']['id'])
+      handle_frame_navigated(frame_tree['frame'])
+    end
     return if !frame_tree['childFrames']
 
     frame_tree['childFrames'].each do |child|
