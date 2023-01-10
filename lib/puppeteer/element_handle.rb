@@ -126,6 +126,13 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_wait_for_xpath
 
+  def to_element(tag_name)
+    unless evaluate('(node, tagName) => node.nodeName === tagName.toUpperCase()', tag_name)
+      raise ArgumentError.new("Element is not a(n) `#{tag_name}` element")
+    end
+    self
+  end
+
   def as_element
     self
   end
