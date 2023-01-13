@@ -23,7 +23,7 @@ jobs:
     - name: Check puppeteer.api.json is updated
       run: |
         cd puppeteer
-        git checkout v$(cat ../development/DOCS_VERSION)
+        git checkout puppeteer-core-v$(cat ../development/DOCS_VERSION)
         npm install && npm run build
         cd ../
         cp puppeteer/docs/puppeteer.api.json development/puppeteer.api.json
