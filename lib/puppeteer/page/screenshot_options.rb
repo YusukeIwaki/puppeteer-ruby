@@ -121,5 +121,9 @@ class Puppeteer::Page
     def capture_beyond_viewport?
       @capture_beyond_viewport
     end
+
+    def unset_capture_beyond_viewport!
+      @capture_beyond_viewport = false
+    end
   end
 end
