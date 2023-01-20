@@ -1,4 +1,10 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.0...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.1...main)]
+
+### 0.45.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.0...0.45.1)]
+
+Bugfix
+
+- Fix screenshot `full_page` option
 
 ### 0.45.0 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.44.3...0.45.0)]
 
