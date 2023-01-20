@@ -1095,6 +1095,8 @@ class Puppeteer::Page
           deviceScaleFactor: @viewport&.device_scale_factor || 1,
           screenOrientation: screen_orientation)
       end
+    elsif !clip
+      screenshot_options.unset_capture_beyond_viewport!
     end
 
     should_set_default_background = screenshot_options.omit_background? && format == 'png'

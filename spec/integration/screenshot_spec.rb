@@ -176,6 +176,13 @@ RSpec.describe 'Screenshots' do
         page.screenshot(full_page: true)
         expect(page.eval_on_selector('textarea', 'input => input.value')).to eq('my value')
       }
+      it {
+        page.content = <<~HTML
+        <html><body>#{1000.times.map(&:to_s).join('<br/>')}</body></html>
+        HTML
+        screenshot = page.screenshot(full_page: false)
+        expect(screenshot.length).to be < 100000
+      }
     end
 
     context 'with Mobile viewport' do
