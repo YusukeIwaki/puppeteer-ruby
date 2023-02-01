@@ -164,6 +164,16 @@ module Puppeteer::Launcher
           ])
         end
 
+        # helper for Docker
+        # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox
+        if %w[1 true].include?(ENV['PUPPETEER_RUBY_NO_SANDBOX'])
+          ['--no-sandbox', '--disable-setuid-sandbox'].each do |arg|
+            unless chrome_arguments.include?(arg)
+              chrome_arguments << arg
+            end
+          end
+        end
+
         if chrome_arg_options.args.all? { |arg| arg.start_with?('-') }
           chrome_arguments << 'about:blank'
         end
