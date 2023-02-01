@@ -1,15 +1,19 @@
 module Puppeteer
-  class Browser
-    def new_page: -> Page
-  end
-
-  class Page
-    def goto: (String url) -> Response
-    def content=: (String) -> void
-    def screenshot:(?path: String) -> String
-  end
-
   type channelName = 'chrome' | 'chrome-beta' | 'chrome-dev' | 'chrome-canary' | 'msedge' | 'firefox'
   type launchArgs = Array[String]
   def self.launch: (?headless: bool, ?channel: channelName, ?executable_path: string, args: launchArgs) ?{ (Browser) -> void } -> Browser
+end
+
+class Puppeteer::Browser
+  def new_page: () -> Puppeteer::Page
+end
+
+class Puppeteer::Page
+  def goto: (String url) -> Puppeteer::Response
+  def content=: (String) -> void
+  def screenshot:(?path: String) -> String
+end
+
+class Puppeteer::Response
+
 end
