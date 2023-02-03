@@ -1,4 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.1...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.2...main)]
+
+- xxx
+
+### 0.45.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.1...0.45.2)]
+
+Experimental feature
+
+- Introduce `PUPPETEER_RUBY_NO_SANDBOX` for Docker users.
 
 ### 0.45.1 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.0...0.45.1)]
 
