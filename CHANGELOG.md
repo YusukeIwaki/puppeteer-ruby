@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.2...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.3...main)]
 
 - xxx
+
+### 0.45.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.2...0.45.3)]
+
+Bugfix
+
+- Fix hang on the size using ServiceWorker.
 
 ### 0.45.2 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.1...0.45.2)]
 
