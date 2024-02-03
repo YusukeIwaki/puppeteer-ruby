@@ -13,6 +13,7 @@ class Puppeteer::Page
   # * @property {string=} format
   # * @property {string|number=} width
   # * @property {string|number=} height
+  # * @property {boolean=} generateDocumentOutline
   # * @property {boolean=} preferCSSPageSize
   # * @property {!{top?: string|number, bottom?: string|number, left?: string|number, right?: string|number}=} margin
   # */
@@ -29,6 +30,7 @@ class Puppeteer::Page
       @format = options[:format]
       @width = options[:width]
       @height = options[:height]
+      @generate_document_outline = options[:generate_document_outline]
       @prefer_css_page_size = options[:prefer_css_page_size]
       @margin = Margin.new(options[:margin] || {})
     end
@@ -142,6 +144,7 @@ class Puppeteer::Page
         footerTemplate: @footer_template || '',
         printBackground: @print_background || false,
         scale: @scale || 1,
+        generateDocumentOutline: @generate_document_outline || false,
         paperWidth: paper_size.width,
         paperHeight: paper_size.height,
         marginTop: margin.top,
