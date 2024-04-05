@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.3...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.4...main)]
 
 - xxx
+
+### 0.45.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.3...0.45.4)]
+
+Bugfix
+
+- Fixed to work with Windows Chrome browser on WSL v1. ([#327](https://github.com/YusukeIwaki/puppeteer-ruby/pull/327))
 
 ### 0.45.3 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.2...0.45.3)]
 
