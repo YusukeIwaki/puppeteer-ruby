@@ -179,7 +179,7 @@ class Puppeteer::BrowserRunner
       loop do
         line = browser_process.stderr.readline
         /^DevTools listening on (ws:\/\/.*)$/.match(line) do |m|
-          return m[1]
+          return m[1].gsub(/\r/, '')
         end
         lines << line
       end
