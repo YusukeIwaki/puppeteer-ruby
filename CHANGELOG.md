@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.4...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.5...main)]
 
 - xxx
+
+### 0.45.5 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.4...0.45.5)]
+
+Bugfix:
+
+- Relax concurrent-ruby's dependency for Rails 7.2 compatibility. ([#333](https://github.com/YusukeIwaki/puppeteer-ruby/pull/333))
 
 ### 0.45.4 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.3...0.45.4)]
 

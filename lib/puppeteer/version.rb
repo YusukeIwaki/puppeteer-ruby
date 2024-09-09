@@ -1,3 +1,3 @@
 module Puppeteer
-  VERSION = '0.45.4'
+  VERSION = '0.45.5'
 end
