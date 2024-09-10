@@ -67,8 +67,8 @@ RSpec.describe 'example' do
     page.viewport = Puppeteer::Viewport.new(width: 1280, height: 800)
     with_network_retry { page.goto("https://github.com/", wait_until: 'domcontentloaded') }
 
-    form = page.query_selector("form.js-site-search-form")
-    search_input = form.query_selector("input.header-search-input")
+    page.wait_for_selector('[placeholder="Search or jump to..."]').click
+    search_input = page.wait_for_selector('input[name="query-builder-test"]')
     search_input.click
     page.keyboard.type_text("puppeteer")
 
@@ -76,8 +76,8 @@ RSpec.describe 'example' do
       search_input.press("Enter")
     end
 
-    list = page.query_selector("ul.repo-list")
-    items = list.query_selector_all("div.f4")
+    list = page.wait_for_selector('[data-testid="results-list"]')
+    items = list.query_selector_all(".search-title")
     items.each do |item|
       title = item.eval_on_selector("a", "a => a.innerText")
       puts("==> #{title}")

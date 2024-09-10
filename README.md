@@ -44,19 +44,19 @@ require 'puppeteer-ruby'
 Puppeteer.launch(headless: false, slow_mo: 50, args: ['--window-size=1280,800']) do |browser|
   page = browser.new_page
   page.viewport = Puppeteer::Viewport.new(width: 1280, height: 800)
-  page.goto("https://github.com/", wait_until: 'domcontentloaded')
+  with_network_retry { page.goto("https://github.com/", wait_until: 'domcontentloaded') }
 
-  form = page.query_selector("form.js-site-search-form")
-  search_input = form.query_selector("input.header-search-input")
+  page.wait_for_selector('[placeholder="Search or jump to..."]').click
+  search_input = page.wait_for_selector('input[name="query-builder-test"]')
   search_input.click
   page.keyboard.type_text("puppeteer")
 
   page.wait_for_navigation do
-    search_input.press('Enter')
+    search_input.press("Enter")
   end
 
-  list = page.query_selector("ul.repo-list")
-  items = list.query_selector_all("div.f4")
+  list = page.wait_for_selector('[data-testid="results-list"]')
+  items = list.query_selector_all(".search-title")
   items.each do |item|
     title = item.eval_on_selector("a", "a => a.innerText")
     puts("==> #{title}")
@@ -95,16 +95,16 @@ More usage examples can be found [here](https://github.com/YusukeIwaki/puppeteer
 
 Following packages are required.
 
-* Google Chrome or Chromium
-  * In Debian-based images, `google-chrome-stable`
-  * In Alpine-based images, `chromium`
+- Google Chrome or Chromium
+  - In Debian-based images, `google-chrome-stable`
+  - In Alpine-based images, `chromium`
 
 Also, CJK font will be required for Chinese, Japanese, Korean sites.
 
 ### References
 
-* Puppeteer official README: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-in-docker
-* puppeteer-ruby example: https://github.com/YusukeIwaki/puppeteer-ruby-example/tree/master/docker_chromium
+- Puppeteer official README: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-in-docker
+- puppeteer-ruby example: https://github.com/YusukeIwaki/puppeteer-ruby-example/tree/master/docker_chromium
 
 ## :bulb: Collaboration with Selenium or Capybara
 
@@ -224,11 +224,9 @@ RSpec.describe 'Sample integration tests', driver: :null do
 end
 ```
 
-
 ## API
 
 https://yusukeiwaki.github.io/puppeteer-ruby-docs/
-
 
 ## Contributing
 

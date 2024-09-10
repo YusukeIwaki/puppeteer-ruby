@@ -187,8 +187,10 @@ class Puppeteer::Connection
     NON_DEBUG_PRINT_METHODS = [
       'Network.dataReceived',
       'Network.loadingFinished',
+      'Network.requestServedFromCache',
       'Network.requestWillBeSent',
       'Network.requestWillBeSentExtraInfo',
+      'Network.resourceChangedPriority',
       'Network.responseReceived',
       'Network.responseReceivedExtraInfo',
       'Page.lifecycleEvent',
