@@ -307,13 +307,13 @@ RSpec.describe Puppeteer::Launcher do
       if Puppeteer.env.firefox?
         expected_args =
           if Puppeteer.env.darwin?
-            %w(--headless --no-remote --foreground)
+            %w(--headless --foreground)
           elsif Puppeteer.env.windows?
-            %w(--headless --no-remote --wait-for-browser)
+            %w(--headless --wait-for-browser)
           else
-            %w(--headless --no-remote)
+            %w(--headless)
           end
-        unexpected_args = %w(--headless --no-remote --foreground --wait-for-browser) - expected_args
+        unexpected_args = %w(--headless --foreground --wait-for-browser) - expected_args
         expect(Puppeteer.default_args).to include(*expected_args)
         expect(Puppeteer.default_args).not_to include(*unexpected_args)
       else

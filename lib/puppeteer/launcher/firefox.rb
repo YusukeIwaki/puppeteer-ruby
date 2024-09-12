@@ -122,7 +122,11 @@ module Puppeteer::Launcher
 
     FIREFOX_EXECUTABLE_PATHS = {
       windows: "#{ENV['PROGRAMFILES']}\\Firefox Nightly\\firefox.exe",
-      darwin: '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
+      darwin: -> {
+        ['Firefox Nightly.app', 'Firefox Developer Edition.app'].map do |app|
+          "/Applications/#{app}/Contents/MacOS/firefox"
+        end.find { |path| File.exist?(path) }
+      },
       linux: -> { Puppeteer::ExecutablePathFinder.new('firefox').find_first },
     }.freeze
 
@@ -161,7 +165,7 @@ module Puppeteer::Launcher
 
       # @param options [Launcher::ChromeArgOptions]
       def initialize(chrome_arg_options)
-        firefox_arguments = ['--no-remote']
+        firefox_arguments = []
 
         if Puppeteer.env.darwin?
           firefox_arguments << '--foreground'
@@ -236,7 +240,6 @@ module Puppeteer::Launcher
         'browser.safebrowsing.blockedURIs.enabled': false,
         'browser.safebrowsing.downloads.enabled': false,
         'browser.safebrowsing.malware.enabled': false,
-        'browser.safebrowsing.passwords.enabled': false,
         'browser.safebrowsing.phishing.enabled': false,
 
         # Disable updates to search engines.
@@ -261,6 +264,9 @@ module Puppeteer::Launcher
         'browser.tabs.warnOnCloseOtherTabs': false,
         # Do not warn when multiple tabs will be opened
         'browser.tabs.warnOnOpen': false,
+
+        # Do not automatically offer translations, as tests do not expect this.
+        'browser.translations.automaticallyPopup': false,
 
         # Disable the UI tour.
         'browser.uitour.enabled': false,
@@ -324,30 +330,33 @@ module Puppeteer::Launcher
         # Make sure opening about:addons will not hit the network
         'extensions.webservice.discoverURL': "http://#{server}/dummy/discoveryURL",
 
-        # Temporarily force disable BFCache in parent (https://bit.ly/bug-1732263)
-        'fission.bfcacheInParent': false,
-        # Force all web content to use a single content process
-        'fission.webContentIsolationStrategy': 0,
-
         # Allow the application to have focus even it runs in the background
         'focusmanager.testmode': true,
+
         # Disable useragent updates
         'general.useragent.updates.enabled': false,
+
         # Always use network provider for geolocation tests so we bypass the
         # macOS dialog raised by the corelocation provider
         'geo.provider.testing': true,
+
         # Do not scan Wifi
         'geo.wifi.scan': false,
+
         # No hang monitor
         'hangmonitor.timeout': 0,
+
         # Show chrome errors and warnings in the error console
         'javascript.options.showInConsole': true,
 
         # Disable download and usage of OpenH264: and Widevine plugins
         'media.gmp-manager.updateEnabled': false,
-        # Prevent various error message on the console
-        # jest-puppeteer asserts that no error message is emitted by the console
-        'network.cookie.cookieBehavior': 0,
+
+        # Disable the GFX sanity window
+        'media.sanity-test.disabled': true,
+
+        # Disable experimental feature that is only available in Nightly
+        'network.cookie.sameSite.laxByDefault': false,
 
         # Do not prompt for temporary redirects
         'network.http.prompt-temp-redirect': false,
@@ -367,15 +376,17 @@ module Puppeteer::Launcher
 
         'privacy.trackingprotection.enabled': false,
 
-        # Enable Remote Agent
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=1544393
+        # Can be removed once Firefox 89 is no longer supported
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1710839
         'remote.enabled': true,
 
         # Don't do network connections for mitm priming
         'security.certerrors.mitm.priming.enabled': false,
+
         # Local documents have access to all other local documents,
         # including directory listings
         'security.fileuri.strict_origin_policy': false,
+
         # Do not wait for the notification button security delay
         'security.notification_enable_delay': 0,
 
@@ -385,6 +396,7 @@ module Puppeteer::Launcher
         # Do not automatically fill sign-in forms with known usernames and
         # passwords
         'signon.autofillForms': false,
+
         # Disable password capture, so that tests that include forms are not
         # influenced by the presence of the persistent doorhanger notification
         'signon.rememberSignons': false,
@@ -400,7 +412,24 @@ module Puppeteer::Launcher
 
         # Prevent starting into safe mode after application crashes
         'toolkit.startup.max_resumed_crashes': -1,
-      }
+      }.merge({
+        # Do not close the window when the last tab gets closed
+        'browser.tabs.closeWindowWithLastTab': false,
+        # Prevent various error message on the console
+        # jest-puppeteer asserts that no error message is emitted by the console
+        'network.cookie.cookieBehavior': 0,
+        # Temporarily force disable BFCache in parent (https://bit.ly/bug-1732263)
+        'fission.bfcacheInParent': false,
+        # Only enable the CDP protocol
+        'remote.active-protocols': 2,
+      }).merge({
+        # Force all web content to use a single content process. TODO: remove
+        # this once Firefox supports mouse event dispatch from the main frame
+        # context. Once this happens, webContentIsolationStrategy should only
+        # be set for CDP. See
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1773393
+        'fission.webContentIsolationStrategy': 0,
+      })
 
       default_preferences.merge(extra_prefs)
     end
