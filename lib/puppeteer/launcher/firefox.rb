@@ -412,7 +412,7 @@ module Puppeteer::Launcher
 
         # Prevent starting into safe mode after application crashes
         'toolkit.startup.max_resumed_crashes': -1,
-      }.merge({
+      }.merge({ # https://github.com/puppeteer/puppeteer/blob/puppeteer-v23.2.2/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L45-L53
         # Do not close the window when the last tab gets closed
         'browser.tabs.closeWindowWithLastTab': false,
         # Prevent various error message on the console
@@ -422,7 +422,7 @@ module Puppeteer::Launcher
         'fission.bfcacheInParent': false,
         # Only enable the CDP protocol
         'remote.active-protocols': 2,
-      }).merge({
+      }).merge({ # https://github.com/puppeteer/puppeteer/blob/puppeteer-v23.2.2/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L55-L60
         # Force all web content to use a single content process. TODO: remove
         # this once Firefox supports mouse event dispatch from the main frame
         # context. Once this happens, webContentIsolationStrategy should only
