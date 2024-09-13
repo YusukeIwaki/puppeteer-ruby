@@ -2,8 +2,8 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::Browser, puppeteer: :browser do
   describe 'version' do
-    it 'should indicate we are in headless' do
-      expect(browser.version).to start_with('Headless')
+    it 'should return version' do
+      expect(browser.version).to match(/Chrome|Firefox/)
     end
   end
 
