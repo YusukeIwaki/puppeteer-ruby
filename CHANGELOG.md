@@ -1,6 +1,12 @@
-### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.5...main)]
+### main [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.6...main)]
 
 - xxx
+
+### 0.45.6 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.5...0.45.6)]
+
+Bugfix:
+
+- Fix puppeteer-ruby to work with Firefox >= 129. Note that CDP support for Firefox is already ended. [ref](https://fxdx.dev/deprecating-cdp-support-in-firefox-embracing-the-future-with-webdriver-bidi/)
 
 ### 0.45.5 [[diff](https://github.com/YusukeIwaki/puppeteer-ruby/compare/0.45.4...0.45.5)]
 
