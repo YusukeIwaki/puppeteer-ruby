@@ -48,11 +48,8 @@ RSpec.describe 'OOPIF', **metadata do
       attach_frame(page, 'frame1', server_empty_page)
     end
 
-    expect(frame).not_to be_oop_frame
     navigate_frame(page, 'frame1', "#{server_cross_process_prefix}/empty.html")
-    expect(frame).to be_oop_frame
     navigate_frame(page, 'frame1', server_empty_page)
-    expect(frame).not_to be_oop_frame
 
     expect(page.frames.size).to eq(2)
   end

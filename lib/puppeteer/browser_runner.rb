@@ -178,6 +178,10 @@ class Puppeteer::BrowserRunner
     Timeout.timeout(timeout / 1000.0) do
       loop do
         line = browser_process.stderr.readline
+        /^WebDriver BiDi listening on (ws:\/\/.*)$/.match(line) do |m|
+          raise NotImplementedError.new('WebDriver BiDi support is not yet implemented')
+        end
+
         /^DevTools listening on (ws:\/\/.*)$/.match(line) do |m|
           return m[1].gsub(/\r/, '')
         end

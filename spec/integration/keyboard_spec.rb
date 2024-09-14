@@ -354,15 +354,7 @@ RSpec.describe Puppeteer::Keyboard do
 
       key, code, meta_key = page.evaluate('result')
       expect(key).to eq('Meta')
-      if Puppeteer.env.firefox?
-        if Puppeteer.env.darwin?
-          expect(code).to eq('OSLeft')
-        else
-          expect(code).to eq('AltLeft')
-        end
-      else
-        expect(code).to eq('MetaLeft')
-      end
+      expect(code).to eq('MetaLeft')
       expect(meta_key).to eq(true)
     end
   end

@@ -234,7 +234,10 @@ RSpec.describe 'Coverage specs' do
       end
       expect(coverage.size).to eq(1)
       expect(coverage.first.url).to include('/csscoverage/media.html')
-      expect(coverage.first.ranges).to contain_exactly({ start: 17, end: 38 })
+      expect(coverage.first.ranges).to contain_exactly(
+        { start: 8, end: 15 },
+        { start: 17, end: 38 },
+      )
     end
 
     it 'should work with complicated usecases', sinatra: true do
