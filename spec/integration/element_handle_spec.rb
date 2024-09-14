@@ -260,11 +260,12 @@ RSpec.describe Puppeteer::ElementHandle do
       }
       JAVASCRIPT
 
-      page.evaluate(<<~JAVASCRIPT)
+      page.async_evaluate(<<~JAVASCRIPT)
       async () => {
         return new Promise((resolve) => window.requestAnimationFrame(resolve));
       }
       JAVASCRIPT
+      sleep 1
 
       frame = page.frames[1]
       div_handle = frame.query_selector('div')
