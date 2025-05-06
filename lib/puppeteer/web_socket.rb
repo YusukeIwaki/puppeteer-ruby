@@ -42,7 +42,7 @@ class Puppeteer::WebSocket
 
     def readpartial(maxlen = 1024)
       @socket.readpartial(maxlen)
-    rescue Errno::ECONNRESET
+    rescue Errno::ECONNRESET, IOError
       raise EOFError.new('closed by remote')
     end
     
