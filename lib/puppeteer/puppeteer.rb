@@ -21,6 +21,7 @@ class Puppeteer::Puppeteer
   # @param dumpio [Boolean]
   # @param env [Hash]
   # @param pipe [Boolean]
+  # @param extra_prefs_firefox [Hash]
   # @param args [Array<String>]
   # @param user_data_dir [String]
   # @param devtools [Boolean]
@@ -41,6 +42,7 @@ class Puppeteer::Puppeteer
     dumpio: nil,
     env: nil,
     pipe: nil,
+    extra_prefs_firefox: nil,
     args: nil,
     user_data_dir: nil,
     devtools: nil,
@@ -61,6 +63,7 @@ class Puppeteer::Puppeteer
       dumpio: dumpio,
       env: env,
       pipe: pipe,
+      extra_prefs_firefox: extra_prefs_firefox,
       args: args,
       user_data_dir: user_data_dir,
       devtools: devtools,

@@ -43,6 +43,10 @@ RSpec.describe Puppeteer::Launcher::LaunchOptions do
     it 'pipe: false' do
       expect(subject.pipe?).to eq(false)
     end
+
+    it 'extra_prefs_firefox: {}' do
+      expect(subject.extra_prefs_firefox).to eq({})
+    end
   end
 
   describe "disabled signal handlers" do
