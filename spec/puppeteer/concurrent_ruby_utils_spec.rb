@@ -1,17 +1,6 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::ConcurrentRubyUtils do
-  describe '.await' do
-    it 'returns value when given raw object' do
-      expect(described_class.await(123)).to eq(123)
-    end
-
-    it 'waits for future completion' do
-      future = Concurrent::Promises.future { 'hoge' }
-      expect(described_class.await(future)).to eq('hoge')
-    end
-  end
-
   describe '.with_waiting_for_complete' do
     it 'waits for both future and block to complete' do
       start = Time.now
@@ -45,7 +34,7 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
 
     it 'logs errors and rejects the future' do
       expect { invalid_future ; sleep 0.2 }.to output(include('NameError').and(include('undefined_variable_is_me'))).to_stderr
-      expect { described_class.await(invalid_future) }.to raise_error(NameError)
-    end
+      expect { invalid_future.value! }.to raise_error(NameError)
   end
+end
 end

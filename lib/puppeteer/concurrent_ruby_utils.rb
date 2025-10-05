@@ -14,10 +14,6 @@ module Puppeteer::ConcurrentRubyUtils
     end
   end
 
-  def await(future_or_value)
-    future_or_value.is_a?(Concurrent::Promises::Future) ? future_or_value.value! : future_or_value
-  end
-
   def with_waiting_for_complete(future, &block)
     async_block_call = Concurrent::Promises.delay do
       block.call

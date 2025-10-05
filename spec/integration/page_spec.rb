@@ -53,7 +53,7 @@ RSpec.describe Puppeteer::Page do
       new_page.close(run_before_unload: true)
       sleep 0.2
       expect(dialog_promise).to be_fulfilled
-      dialog = Puppeteer::ConcurrentRubyUtils.await(dialog_promise)
+      dialog = dialog_promise.value!
       expect(dialog.type).to eq("beforeunload")
       expect(dialog.default_value).to eq("")
       if Puppeteer.env.firefox?
@@ -96,8 +96,8 @@ RSpec.describe Puppeteer::Page do
       res_promise = new_page.async_wait_for_response(url: server_empty_page)
       new_page.close
 
-      expect { Puppeteer::ConcurrentRubyUtils.await(req_promise) }.to raise_error(/Target Closed/)
-      expect { Puppeteer::ConcurrentRubyUtils.await(res_promise) }.to raise_error(/Target Closed/)
+      expect { req_promise.value! }.to raise_error(/Target Closed/)
+      expect { res_promise.value! }.to raise_error(/Target Closed/)
     end
   end
 
@@ -141,7 +141,7 @@ RSpec.describe Puppeteer::Page do
         page.once('error') { |err| future.fulfill(err) }
       end
       Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("chrome://crash") })
-      expect(Puppeteer::ConcurrentRubyUtils.await(error_promise).message).to eq("Page crashed!")
+      expect(error_promise.value!.message).to eq("Page crashed!")
     end
   end
 
@@ -151,7 +151,7 @@ RSpec.describe Puppeteer::Page do
         page.once('popup') { |popup| future.fulfill(popup) }
       end
       page.evaluate("() => { window.open('about:blank') }")
-      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
+      popup = popup_promise.value!
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(true)
@@ -162,7 +162,7 @@ RSpec.describe Puppeteer::Page do
         page.once('popup') { |popup| future.fulfill(popup) }
       end
       page.evaluate("() => { window.open('about:blank', null, 'noopener') }")
-      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
+      popup = popup_promise.value!
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
@@ -176,7 +176,7 @@ RSpec.describe Puppeteer::Page do
         page.once('popup') { |popup| future.fulfill(popup) }
       end
       page.click("a")
-      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
+      popup = popup_promise.value!
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
@@ -190,7 +190,7 @@ RSpec.describe Puppeteer::Page do
         page.once('popup') { |popup| future.fulfill(popup) }
       end
       page.click("a")
-      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
+      popup = popup_promise.value!
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(true)
@@ -204,7 +204,7 @@ RSpec.describe Puppeteer::Page do
         page.once('popup') { |popup| future.fulfill(popup) }
       end
       page.eval_on_selector("a", "(a) => a.click()")
-      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
+      popup = popup_promise.value!
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
@@ -218,7 +218,7 @@ RSpec.describe Puppeteer::Page do
         page.once('popup') { |popup| future.fulfill(popup) }
       end
       page.click("a")
-      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
+      popup = popup_promise.value!
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
@@ -586,7 +586,7 @@ RSpec.describe Puppeteer::Page do
           page.once('domcontentloaded') { future.fulfill(nil) }
         end
         page.goto('about:blank')
-        Puppeteer::ConcurrentRubyUtils.await(promise)
+        promise.value!
       end
     end
   end
@@ -625,7 +625,7 @@ RSpec.describe Puppeteer::Page do
       end
 
       page.evaluate('() => console.timeStamp("test42")')
-      metrics_event = Puppeteer::ConcurrentRubyUtils.await(metrics_promise)
+      metrics_event = metrics_promise.value!
       expect(metrics_event.title).to eq('test42')
       check_metrics(metrics_event.metrics)
     end
@@ -870,7 +870,7 @@ RSpec.describe Puppeteer::Page do
           page.once('pageerror') { |err| future.fulfill(err) }
         end
         page.goto("#{server_prefix}/error.html")
-        expect(Puppeteer::ConcurrentRubyUtils.await(error_promise).message).to include("Fancy error!")
+        expect(error_promise.value!.message).to include("Fancy error!")
       end
     end
   end
@@ -888,7 +888,7 @@ RSpec.describe Puppeteer::Page do
         end
       end
       page.goto("#{server_prefix}/_empty.html")
-      request = Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
+      request = async_wait_for_request.value!
       expect(request.env['HTTP_USER_AGENT']).to eq('foobar')
     end
 
@@ -903,7 +903,7 @@ RSpec.describe Puppeteer::Page do
         end
       end
       attach_frame(page, 'frame1', '/empty2.html')
-      request = Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
+      request = async_wait_for_request.value!
       expect(request.env['HTTP_USER_AGENT']).to eq('foobar')
     end
 
@@ -930,7 +930,7 @@ RSpec.describe Puppeteer::Page do
         end
       end
       page.goto("#{server_prefix}/_empty.html")
-      request = Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
+      request = async_wait_for_request.value!
       expect(request.env['HTTP_USER_AGENT']).to eq('MockBrowser')
 
       expect(page.evaluate('() => navigator.userAgentData.mobile')).to eq(false)
@@ -1001,7 +1001,7 @@ RSpec.describe Puppeteer::Page do
         end
       )
 
-      Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
+      async_wait_for_request.value!
       expect(content_promise).not_to be_fulfilled
 
       sleep 1 # wait for image loaded completely
@@ -1552,13 +1552,13 @@ RSpec.describe Puppeteer::Page do
         page.browser_context.once('targetcreated') { |target| future.fulfill(target.page) }
       end
       page.evaluate("() => { (window['newPage'] = window.open('about:blank')) }")
-      new_page = Puppeteer::ConcurrentRubyUtils.await(new_page_promise)
+      new_page = new_page_promise.value!
 
       closed_promise = Concurrent::Promises.resolvable_future.tap do |future|
         new_page.once('close') { future.fulfill(nil) }
       end
       page.evaluate("() => { window['newPage'].close() }")
-      Puppeteer::ConcurrentRubyUtils.await(closed_promise)
+      closed_promise.value!
     end
 
     it 'should work with page.close', puppeteer: :browser do
@@ -1567,7 +1567,7 @@ RSpec.describe Puppeteer::Page do
         new_page.once('close') { future.fulfill(nil) }
       end
       new_page.close
-      Puppeteer::ConcurrentRubyUtils.await(closed_promise)
+      closed_promise.value!
     end
   end
 

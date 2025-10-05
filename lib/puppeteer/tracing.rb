@@ -49,7 +49,7 @@ class Puppeteer::Tracing
     @client.send_message('Tracing.end')
     @recording = false
 
-    stream = Puppeteer::ConcurrentRubyUtils.await(stream_promise)
+    stream = stream_promise.value!
     chunks = Puppeteer::ProtocolStreamReader.new(client: @client, handle: stream).read_as_chunks
 
     StringIO.open do |stringio|

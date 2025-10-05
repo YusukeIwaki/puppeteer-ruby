@@ -1197,7 +1197,7 @@ class Puppeteer::Page
       @client.send_message('Page.close')
     else
       @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
-      Puppeteer::ConcurrentRubyUtils.await(@target.is_closed_promise)
+      @target.is_closed_promise.value!
 
       # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
       25.times do

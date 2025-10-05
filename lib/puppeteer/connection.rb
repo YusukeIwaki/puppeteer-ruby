@@ -127,7 +127,7 @@ class Puppeteer::Connection
   # @param {string} method
   # @param {!Object=} params
   def send_message(method, params = {})
-    Puppeteer::ConcurrentRubyUtils.await(async_send_message(method, params))
+    async_send_message(method, params).value!
   end
 
   def async_send_message(method, params = {})

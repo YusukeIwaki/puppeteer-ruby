@@ -26,7 +26,7 @@ class Puppeteer::CDPSession
   # @param params [Hash]
   # @returns [Hash]
   def send_message(method, params = {})
-    Puppeteer::ConcurrentRubyUtils.await(async_send_message(method, params))
+    async_send_message(method, params).value!
   end
 
   # @param method [String]

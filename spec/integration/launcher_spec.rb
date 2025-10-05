@@ -19,7 +19,7 @@ RSpec.describe Puppeteer::Launcher do
       navigation_promise = Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("#{server_prefix}/_one-style.html") })
       wait_for_css.then { sleep 0.02; remote.disconnect }
 
-      expect { Puppeteer::ConcurrentRubyUtils.await(navigation_promise) }.to raise_error(/Navigation failed because browser has disconnected!/)
+      expect { navigation_promise.value! }.to raise_error(/Navigation failed because browser has disconnected!/)
       browser.close
     end
 
@@ -30,7 +30,7 @@ RSpec.describe Puppeteer::Launcher do
       watchdog = page.async_wait_for_selector('div')
       remote.disconnect
 
-      expect { Puppeteer::ConcurrentRubyUtils.await(watchdog) }.to raise_error(/Protocol error/)
+      expect { watchdog.value! }.to raise_error(/Protocol error/)
       browser.close
     end
   end
@@ -45,8 +45,8 @@ RSpec.describe Puppeteer::Launcher do
       wait_for_response = new_page.async_wait_for_response(url: server_empty_page)
 
       browser.close
-      expect { Puppeteer::ConcurrentRubyUtils.await(wait_for_request) }.to raise_error(/Target Closed/)
-      expect { Puppeteer::ConcurrentRubyUtils.await(wait_for_response) }.to raise_error(/Target Closed/)
+      expect { wait_for_request.value! }.to raise_error(/Target Closed/)
+      expect { wait_for_response.value! }.to raise_error(/Target Closed/)
     end
   end
 
@@ -58,7 +58,7 @@ RSpec.describe Puppeteer::Launcher do
       sleep 0.004 # sleep a bit after page is created, before closing it.
 
       browser.close
-      expect { Puppeteer::ConcurrentRubyUtils.await(never_resolves) }.to raise_error(/Protocol error/)
+      expect { never_resolves.value! }.to raise_error(/Protocol error/)
     end
   end
 

@@ -158,7 +158,7 @@ RSpec.describe 'OOPIF', **metadata do
     page.request_interception = true
     page.on('request') { |req| req.continue }
     page.goto("#{server_prefix}/dynamic-oopif.html")
-    Puppeteer::ConcurrentRubyUtils.await(frame_promise)
+    frame_promise.value!
     expect(oopifs(browser_context).size).to eq(1)
   end
 

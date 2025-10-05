@@ -89,7 +89,7 @@ class Puppeteer::HTTPResponse
   end
 
   def buffer
-    Puppeteer::ConcurrentRubyUtils.await(@body_loaded_promise)
+    @body_loaded_promise.value!
     response = @client.send_message('Network.getResponseBody', requestId: @request.internal.request_id)
     if response['base64Encoded']
       Base64.decode64(response['body'])
