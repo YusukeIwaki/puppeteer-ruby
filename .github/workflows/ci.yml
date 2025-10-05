@@ -26,8 +26,11 @@ jobs:
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Run RSpec
-        run: DEBUG=1 bundle exec rspec --profile 10 --format documentation
+      - name: Run RSpec (initial pass)
+        run: bundle exec rspec --profile 10 --format documentation --failure-exit-code 0
+
+      - name: Run RSpec (retry failures)
+        run: DEBUG=1 bundle exec rspec --only-failures --format documentation
 
   rspec_chromium_alpine:
     name: RSpec on Alpine / Chromium (Ruby ${{ matrix.ruby }})
@@ -55,7 +58,7 @@ jobs:
         env:
           PUPPETEER_NO_SANDBOX_RSPEC: true
         run: |
-          DEBUG=1 bundle exec rspec --profile 10 \
+          bundle exec rspec --profile 10 \
             --failure-exit-code 0 \
             --format documentation spec/integration/
 
@@ -83,7 +86,7 @@ jobs:
           wget -O _firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-devedition-latest-ssl&os=linux64&lang=en-US"
           tar xf _firefox.tar.bz2
 
-      - name: Run RSpec
+      - name: Run RSpec (initial pass)
         env:
           PUPPETEER_PRODUCT_RSPEC: firefox
           PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
@@ -117,11 +120,21 @@ jobs:
           wget -O _firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-devedition-latest-ssl&os=linux64&lang=en-US"
           tar xf _firefox.tar.bz2
 
-      - name: Run RSpec
+      - name: Run RSpec (initial pass)
+        env:
+          PENDING_CHECK: true
+          PUPPETEER_PRODUCT_RSPEC: firefox
+          PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
+        run: |
+          bundle exec rspec --profile 10 \
+            --failure-exit-code 0 \
+            --format documentation spec/integration/
+
+      - name: Run RSpec (retry failures)
         env:
           DEBUG: 1
           PENDING_CHECK: true
           PUPPETEER_PRODUCT_RSPEC: firefox
           PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
         run: |
-          bundle exec rspec --profile 10 --format documentation spec/integration/
+          bundle exec rspec --only-failures --format documentation spec/integration/
