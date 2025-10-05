@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  rspec_chrome:
+    name: RSpec on Linux / Chrome (Ruby ${{ matrix.ruby }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['2.7', '3.0', '3.1', '3.2', '3.3', '3.4']
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run RSpec (initial pass)
+        run: bundle exec rspec --profile 10 --format documentation --failure-exit-code 0
+
+      - name: Run RSpec (retry failures)
+        run: DEBUG=1 bundle exec rspec --only-failures --format documentation
+
+  rspec_chromium_alpine:
+    name: RSpec on Alpine / Chromium (Ruby ${{ matrix.ruby }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.3-alpine', '3.4-alpine']
+    container:
+      image: ruby:${{ matrix.ruby }}
+    steps:
+      - name: Install system dependencies
+        run: apk add --no-cache build-base chromium git
+
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Install gems
+        run: |
+          gem install bundler
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Run RSpec (initial pass)
+        env:
+          PUPPETEER_NO_SANDBOX_RSPEC: true
+        run: |
+          bundle exec rspec --profile 10 \
+            --failure-exit-code 0 \
+            --format documentation spec/integration/
+
+      - name: Run RSpec (retry failures)
+        env:
+          PUPPETEER_NO_SANDBOX_RSPEC: true
+        run: |
+          DEBUG=1 bundle exec rspec --only-failures --format documentation spec/integration/
+
+  rspec_firefox:
+    name: RSpec on Linux / Firefox
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
+      - name: Install Firefox Developer Edition
+        run: |
+          wget -O _firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-devedition-latest-ssl&os=linux64&lang=en-US"
+          tar xf _firefox.tar.bz2
+
+      - name: Run RSpec (initial pass)
+        env:
+          PUPPETEER_PRODUCT_RSPEC: firefox
+          PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
+        run: |
+          bundle exec rspec --profile 10 \
+            --failure-exit-code 0 \
+            --format documentation spec/integration/
+
+      - name: Run RSpec (retry failures)
+        env:
+          PUPPETEER_PRODUCT_RSPEC: firefox
+          PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
+        run: |
+          DEBUG=1 bundle exec rspec --only-failures --format documentation spec/integration/
+
+  rspec_firefox_pending_check:
+    name: RSpec on Linux / Firefox (Pending check)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
+      - name: Install Firefox Developer Edition
+        run: |
+          wget -O _firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-devedition-latest-ssl&os=linux64&lang=en-US"
+          tar xf _firefox.tar.bz2
+
+      - name: Run RSpec (initial pass)
+        env:
+          PENDING_CHECK: true
+          PUPPETEER_PRODUCT_RSPEC: firefox
+          PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
+        run: |
+          bundle exec rspec --profile 10 \
+            --failure-exit-code 0 \
+            --format documentation spec/integration/
+
+      - name: Run RSpec (retry failures)
+        env:
+          DEBUG: 1
+          PENDING_CHECK: true
+          PUPPETEER_PRODUCT_RSPEC: firefox
+          PUPPETEER_EXECUTABLE_PATH_RSPEC: ${{ github.workspace }}/firefox/firefox
+        run: |
+          bundle exec rspec --only-failures --format documentation spec/integration/
