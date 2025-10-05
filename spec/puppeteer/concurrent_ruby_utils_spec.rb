@@ -1,65 +1,56 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::ConcurrentRubyUtils do
-  describe 'await' do
-    class AwaitExample
-      def fuga1
-        await 123
-      end
-
-      def fuga2
-        await fuga
-      end
-
-      def fuga
-        future { 'hoge' }
-      end
+  describe '.await' do
+    it 'returns value when given raw object' do
+      expect(described_class.await(123)).to eq(123)
     end
 
-    it 'return as it is, on no future' do
-      expect(AwaitExample.new.fuga1).to eq(123)
-    end
-
-    it 'wait until value is set, on future exists' do
-      expect(AwaitExample.new.fuga2).to eq('hoge')
+    it 'waits for future completion' do
+      future = Concurrent::Promises.future { 'hoge' }
+      expect(described_class.await(future)).to eq('hoge')
     end
   end
 
-  describe 'await_all' do
-    it 'wait all futures' do
+  describe '.await_all' do
+    it 'waits for all futures' do
       start = Time.now
-      await_all(
-        future { sleep 0.5 },
-        future { sleep 1.2 },
-        future { sleep 0.5 },
+      described_class.await_all(
+        Concurrent::Promises.future { sleep 0.5 },
+        Concurrent::Promises.future { sleep 1.2 },
+        Concurrent::Promises.future { sleep 0.5 },
       )
       expect(Time.now - start).to be >= 1.2
     end
 
-    it 'accept array of futures' do
+    it 'accepts an array of futures' do
       start = Time.now
-      await_all([
-        future { sleep 0.5 },
-        future { sleep 1.2 },
-        future { sleep 0.5 },
+      described_class.await_all([
+        Concurrent::Promises.future { sleep 0.5 },
+        Concurrent::Promises.future { sleep 1.2 },
+        Concurrent::Promises.future { sleep 0.5 },
       ])
       expect(Time.now - start).to be >= 1.2
     end
   end
 
-  describe 'with_waiting_for_complete' do
-    it 'wait for complete' do
+  describe '.with_waiting_for_complete' do
+    it 'waits for both future and block to complete' do
       start = Time.now
-      result = future { sleep 0.5 ; 3 }.with_waiting_for_complete do
+      result = described_class.with_waiting_for_complete(
+        Concurrent::Promises.future { sleep 0.5 ; 3 }
+      ) do
         sleep 0.3
       end
       expect(Time.now - start).to be >= 0.5
       expect(result).to eq(3)
     end
 
-    it 'wait for block call' do
+    it 'waits for the longer of future or block' do
       start = Time.now
-      result = future { sleep 0.3 ; 3 }.with_waiting_for_complete do
+      result = described_class.with_waiting_for_complete(
+        Concurrent::Promises.future { sleep 0.3 ; 3 }
+      ) do
         sleep 0.5
       end
       expect(Time.now - start).to be >= 0.5
@@ -67,32 +58,36 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
     end
   end
 
-  describe 'await_any' do
-    it 'wait first future' do
+  describe '.await_any' do
+    it 'resolves when the first future completes' do
       start = Time.now
-      await_any(
-        future { sleep 1.2 },
-        future { sleep 0.1 },
+      described_class.await_any(
+        Concurrent::Promises.future { sleep 1.2 },
+        Concurrent::Promises.future { sleep 0.1 },
       )
       expect(Time.now - start).to be < 1
     end
 
-    it 'accept array of futures' do
+    it 'accepts an array of futures' do
       start = Time.now
-      await_any([
-        future { sleep 1.2 },
-        future { sleep 0.1 },
+      described_class.await_any([
+        Concurrent::Promises.future { sleep 1.2 },
+        Concurrent::Promises.future { sleep 0.1 },
       ])
       expect(Time.now - start).to be < 1
     end
   end
 
-  describe 'future' do
-    let(:invalid_future) { future { undefined_variable_is_me } }
+  describe '.future_with_logging' do
+    let(:invalid_future) do
+      Concurrent::Promises.future(
+        &described_class.future_with_logging { undefined_variable_is_me }
+      )
+    end
 
-    it 'warns error' do
-      expect { invalid_future ; sleep 1 }.to output(include("NameError").and(include("undefined_variable_is_me"))).to_stderr
-      expect { await invalid_future }.to raise_error(NameError)
+    it 'logs errors and rejects the future' do
+      expect { invalid_future ; sleep 0.2 }.to output(include('NameError').and(include('undefined_variable_is_me'))).to_stderr
+      expect { described_class.await(invalid_future) }.to raise_error(NameError)
     end
   end
 end

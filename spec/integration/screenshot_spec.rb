@@ -52,18 +52,20 @@ RSpec.describe 'Screenshots' do
 
     it 'should run in parallel' do
       promises = 3.times.map do |index|
-        future(index) { |i|
-          page.screenshot(
-            clip: {
-              x: 50 * i,
-              y: 0,
-              width: 50,
-              height: 50,
-            },
-          )
-        }
+        Concurrent::Promises.future(index,
+          &Puppeteer::ConcurrentRubyUtils.future_with_logging do |i|
+            page.screenshot(
+              clip: {
+                x: 50 * i,
+                y: 0,
+                width: 50,
+                height: 50,
+              },
+            )
+          end
+        )
       end
-      screenshots = await_all(*promises)
+      screenshots = Puppeteer::ConcurrentRubyUtils.await_all(*promises)
       expect(screenshots[1]).to be_golden('grid-cell-1.png')
     end
 

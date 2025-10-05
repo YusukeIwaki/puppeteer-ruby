@@ -113,9 +113,9 @@ class Puppeteer::Mouse
   end
 
   def drag(start, target)
-    promise = resolvable_future do |f|
+    promise = Concurrent::Promises.resolvable_future.tap do |future|
       @client.once('Input.dragIntercepted') do |event|
-        f.fulfill(event['data'])
+        future.fulfill(event['data'])
       end
     end
     move(start.x, start.y)

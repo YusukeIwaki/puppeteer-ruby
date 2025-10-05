@@ -43,8 +43,10 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       page = context.new_page
       page.goto('about:blank')
 
-      target_promise = resolvable_future { |f| browser.once('targetcreated') { |target| f.fulfill(target) } }
-      popup_target = target_promise.with_waiting_for_complete do
+      target_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        browser.once('targetcreated') { |target| future.fulfill(target) }
+      end
+      popup_target = Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(target_promise) do
         page.evaluate('url => { window.open(url); return null }', 'about:blank')
       end
       expect(popup_target.browser_context).to eq(context)

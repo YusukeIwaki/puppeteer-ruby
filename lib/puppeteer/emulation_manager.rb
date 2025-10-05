@@ -23,7 +23,7 @@ class Puppeteer::EmulationManager
       end
     has_touch = viewport.has_touch?
 
-    await_all(
+    Puppeteer::ConcurrentRubyUtils.await_all(
       @client.async_send_message('Emulation.setDeviceMetricsOverride',
         mobile: mobile,
         width: width,

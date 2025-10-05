@@ -76,17 +76,17 @@ class Puppeteer::FrameManager
   attr_reader :client, :timeout_settings
 
   private def init(target_id, cdp_session = nil)
-    @frames_pending_target_init[target_id] ||= resolvable_future
+    @frames_pending_target_init[target_id] ||= Concurrent::Promises.resolvable_future
     client = cdp_session || @client
 
     promises = [
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
     ].compact
-    results = await_all(*promises)
+    results = Puppeteer::ConcurrentRubyUtils.await_all(*promises)
     frame_tree = results[1]['frameTree']
     handle_frame_tree(client, frame_tree)
-    await_all(
+    Puppeteer::ConcurrentRubyUtils.await_all(
       client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
       client.async_send_message('Runtime.enable'),
     )
@@ -126,20 +126,22 @@ class Puppeteer::FrameManager
     ensure_new_document_navigation = false
 
     begin
-      navigate = future do
-        result = @client.send_message('Page.navigate', navigate_params)
-        loader_id = result['loaderId']
-        ensure_new_document_navigation = !!loader_id
-        if result['errorText']
-          raise NavigationError.new("#{result['errorText']} at #{url}")
+      navigate = Concurrent::Promises.future(
+        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+          result = @client.send_message('Page.navigate', navigate_params)
+          loader_id = result['loaderId']
+          ensure_new_document_navigation = !!loader_id
+          if result['errorText']
+            raise NavigationError.new("#{result['errorText']} at #{url}")
+          end
         end
-      end
-      await_any(
+      )
+      Puppeteer::ConcurrentRubyUtils.await_any(
         navigate,
         watcher.timeout_or_termination_promise,
       )
 
-      await_any(
+      Puppeteer::ConcurrentRubyUtils.await_any(
         watcher.timeout_or_termination_promise,
         if ensure_new_document_navigation
           watcher.new_document_navigation_promise
@@ -166,7 +168,7 @@ class Puppeteer::FrameManager
     option_timeout = timeout || @timeout_settings.navigation_timeout
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     begin
-      await_any(
+      Puppeteer::ConcurrentRubyUtils.await_any(
         watcher.timeout_or_termination_promise,
         watcher.same_document_navigation_promise,
         watcher.new_document_navigation_promise,
@@ -282,7 +284,7 @@ class Puppeteer::FrameManager
     end
 
     if @frames_pending_target_init[parent_frame_id]
-      @frames_pending_attachment[frame_id] ||= resolvable_future
+      @frames_pending_attachment[frame_id] ||= Concurrent::Promises.resolvable_future
       @frames_pending_target_init[parent_frame_id].then do |_|
         attach_child_frame(@frames[parent_frame_id], parent_frame_id, frame_id, session)
         @frames_pending_attachment.delete(frame_id)&.fulfill(nil)
@@ -375,7 +377,7 @@ class Puppeteer::FrameManager
           worldName: name,
         )
       end
-    await_all(*create_isolated_worlds_promises)
+    Puppeteer::ConcurrentRubyUtils.await_all(*create_isolated_worlds_promises)
   end
 
   # @param frame_id [String]

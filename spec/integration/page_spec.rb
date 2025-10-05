@@ -47,11 +47,13 @@ RSpec.describe Puppeteer::Page do
       # We have to interact with a page so that 'beforeunload' handlers
       # fire.
       new_page.click('body')
-      dialog_promise = resolvable_future { |f| new_page.once('dialog') { |d| f.fulfill(d) } }
+      dialog_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        new_page.once('dialog') { |d| future.fulfill(d) }
+      end
       new_page.close(run_before_unload: true)
       sleep 0.2
       expect(dialog_promise).to be_fulfilled
-      dialog = await dialog_promise
+      dialog = Puppeteer::ConcurrentRubyUtils.await(dialog_promise)
       expect(dialog.type).to eq("beforeunload")
       expect(dialog.default_value).to eq("")
       if Puppeteer.env.firefox?
@@ -70,7 +72,9 @@ RSpec.describe Puppeteer::Page do
       # We have to interact with a page so that 'beforeunload' handlers
       # fire.
       new_page.click('body')
-      dialog_promise = resolvable_future { |f| new_page.once('dialog') { |d| f.fulfill(d) } }
+      dialog_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        new_page.once('dialog') { |d| future.fulfill(d) }
+      end
       new_page.close
       sleep 0.2
       expect(dialog_promise).not_to be_fulfilled
@@ -92,16 +96,18 @@ RSpec.describe Puppeteer::Page do
       res_promise = new_page.async_wait_for_response(url: server_empty_page)
       new_page.close
 
-      expect { await req_promise }.to raise_error(/Target Closed/)
-      expect { await res_promise }.to raise_error(/Target Closed/)
+      expect { Puppeteer::ConcurrentRubyUtils.await(req_promise) }.to raise_error(/Target Closed/)
+      expect { Puppeteer::ConcurrentRubyUtils.await(res_promise) }.to raise_error(/Target Closed/)
     end
   end
 
   describe 'Page.Events.Load' do
     it 'should fire when expected' do
       Timeout.timeout(5) do
-        load_promise = resolvable_future { |f| page.once('load') { f.fulfill(nil) } }
-        load_promise.with_waiting_for_complete do
+        load_promise = Concurrent::Promises.resolvable_future.tap do |future|
+          page.once('load') { future.fulfill(nil) }
+        end
+        Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(load_promise) do
           page.goto("about:blank")
         end
       end
@@ -131,26 +137,32 @@ RSpec.describe Puppeteer::Page do
 
   describe 'Page.Events.error' do
     it_fails_firefox 'should throw when page crashes' do
-      error_promise = resolvable_future { |f| page.once('error') { |err| f.fulfill(err) } }
-      future { page.goto("chrome://crash") }
-      expect((await error_promise).message).to eq("Page crashed!")
+      error_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('error') { |err| future.fulfill(err) }
+      end
+      Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("chrome://crash") })
+      expect(Puppeteer::ConcurrentRubyUtils.await(error_promise).message).to eq("Page crashed!")
     end
   end
 
   describe 'Page.Events.Popup' do
     it_fails_firefox 'should work' do
-      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('popup') { |popup| future.fulfill(popup) }
+      end
       page.evaluate("() => { window.open('about:blank') }")
-      popup = await popup_promise
+      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(true)
     end
 
     it_fails_firefox 'should work with noopener' do
-      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('popup') { |popup| future.fulfill(popup) }
+      end
       page.evaluate("() => { window.open('about:blank', null, 'noopener') }")
-      popup = await popup_promise
+      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
@@ -160,9 +172,11 @@ RSpec.describe Puppeteer::Page do
       page.goto(server_empty_page)
       page.content = '<a target=_blank href="/one-style.html">yo</a>'
 
-      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('popup') { |popup| future.fulfill(popup) }
+      end
       page.click("a")
-      popup = await popup_promise
+      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
@@ -172,9 +186,11 @@ RSpec.describe Puppeteer::Page do
       page.goto(server_empty_page)
       page.content = '<a target=_blank rel=opener href="/one-style.html">yo</a>'
 
-      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('popup') { |popup| future.fulfill(popup) }
+      end
       page.click("a")
-      popup = await popup_promise
+      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(true)
@@ -184,9 +200,11 @@ RSpec.describe Puppeteer::Page do
       page.goto(server_empty_page)
       page.content = '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
 
-      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('popup') { |popup| future.fulfill(popup) }
+      end
       page.eval_on_selector("a", "(a) => a.click()")
-      popup = await popup_promise
+      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
@@ -196,9 +214,11 @@ RSpec.describe Puppeteer::Page do
       page.goto(server_empty_page)
       page.content = '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
 
-      popup_promise = resolvable_future { |f| page.once('popup') { |popup| f.fulfill(popup) } }
+      popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('popup') { |popup| future.fulfill(popup) }
+      end
       page.click("a")
-      popup = await popup_promise
+      popup = Puppeteer::ConcurrentRubyUtils.await(popup_promise)
 
       expect(page.evaluate("() => !!window.opener")).to eq(false)
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
@@ -500,9 +520,9 @@ RSpec.describe Puppeteer::Page do
   it 'should have location and stack trace for console API calls', sinatra: true do
     page.goto(server_empty_page)
 
-    message = await_all(
-      resolvable_future { |f| page.once('console') { |m| f.fulfill(m) } },
-      Concurrent::Promises.future { page.goto("#{server_prefix}/consolelog.html") },
+    message = Puppeteer::ConcurrentRubyUtils.await_all(
+      Concurrent::Promises.resolvable_future.tap { |future| page.once('console') { |m| future.fulfill(m) } },
+      Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("#{server_prefix}/consolelog.html") }),
     ).first
     expect(message.log_type).to eq('log')
     #   expect(message.location()).toEqual({
@@ -560,9 +580,11 @@ RSpec.describe Puppeteer::Page do
   describe 'Page.Events.DOMContentLoaded' do
     it 'should fire when expected' do
       Timeout.timeout(5) do
-        promise = resolvable_future { |f| page.once('domcontentloaded') { f.fulfill(nil) } }
+        promise = Concurrent::Promises.resolvable_future.tap do |future|
+          page.once('domcontentloaded') { future.fulfill(nil) }
+        end
         page.goto('about:blank')
-        await promise
+        Puppeteer::ConcurrentRubyUtils.await(promise)
       end
     end
   end
@@ -596,10 +618,12 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'metrics event fired on console.timeStamp' do
-      metrics_promise = resolvable_future { |f| page.once('metrics') { |event| f.fulfill(event) } }
+      metrics_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('metrics') { |event| future.fulfill(event) }
+      end
 
       page.evaluate('() => console.timeStamp("test42")')
-      metrics_event = metrics_promise.value!
+      metrics_event = Puppeteer::ConcurrentRubyUtils.await(metrics_promise)
       expect(metrics_event.title).to eq('test42')
       check_metrics(metrics_event.metrics)
     end
@@ -648,7 +672,7 @@ RSpec.describe Puppeteer::Page do
         fetch('/digits/3.png');
       }
       JAVASCRIPT
-      requests = await_all(*promises)
+      requests = Puppeteer::ConcurrentRubyUtils.await_all(*promises)
       expect(requests.map(&:url)).to contain_exactly(
         "#{server_prefix}/digits/2.png",
         "#{server_prefix}/digits/3.png",
@@ -840,9 +864,11 @@ RSpec.describe Puppeteer::Page do
   describe 'Page.Events.PageError' do
     it 'should fire', sinatra: true do
       Timeout.timeout(5) do
-        error_promise = resolvable_future { |f| page.once('pageerror') { |err| f.fulfill(err) } }
+        error_promise = Concurrent::Promises.resolvable_future.tap do |future|
+          page.once('pageerror') { |err| future.fulfill(err) }
+        end
         page.goto("#{server_prefix}/error.html")
-        expect((await error_promise).message).to include("Fancy error!")
+        expect(Puppeteer::ConcurrentRubyUtils.await(error_promise).message).to include("Fancy error!")
       end
     end
   end
@@ -853,14 +879,14 @@ RSpec.describe Puppeteer::Page do
     it 'should work' do
       expect(page.evaluate('() => navigator.userAgent')).to include('Mozilla')
       page.user_agent = 'foobar'
-      async_wait_for_request = resolvable_future do |f|
+      async_wait_for_request = Concurrent::Promises.resolvable_future.tap do |future|
         sinatra.get('/_empty.html') do
-          f.fulfill(request)
+          future.fulfill(request)
           "EMPTY"
         end
       end
       page.goto("#{server_prefix}/_empty.html")
-      request = await async_wait_for_request
+      request = Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
       expect(request.env['HTTP_USER_AGENT']).to eq('foobar')
     end
 
@@ -868,14 +894,14 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate('() => navigator.userAgent')).to include('Mozilla')
       page.goto(server_empty_page)
       page.user_agent = 'foobar'
-      async_wait_for_request = resolvable_future do |f|
+      async_wait_for_request = Concurrent::Promises.resolvable_future.tap do |future|
         sinatra.get('/empty2.html') do
-          f.fulfill(request)
+          future.fulfill(request)
           "EMPTY"
         end
       end
       attach_frame(page, 'frame1', '/empty2.html')
-      request = await async_wait_for_request
+      request = Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
       expect(request.env['HTTP_USER_AGENT']).to eq('foobar')
     end
 
@@ -895,14 +921,14 @@ RSpec.describe Puppeteer::Page do
         platformVersion: '3.1',
       )
 
-      async_wait_for_request = resolvable_future do |f|
+      async_wait_for_request = Concurrent::Promises.resolvable_future.tap do |future|
         sinatra.get('/_empty.html') do
-          f.fulfill(request)
+          future.fulfill(request)
           "EMPTY"
         end
       end
       page.goto("#{server_prefix}/_empty.html")
-      request = await async_wait_for_request
+      request = Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
       expect(request.env['HTTP_USER_AGENT']).to eq('MockBrowser')
 
       expect(page.evaluate('() => navigator.userAgentData.mobile')).to eq(false)
@@ -958,20 +984,22 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should await resources to load', sinatra: true do
-      async_wait_for_request = resolvable_future do |f|
+      async_wait_for_request = Concurrent::Promises.resolvable_future.tap do |future|
         sinatra.get('/img2.png') do
-          f.fulfill(request)
+          future.fulfill(request)
 
           sleep 0.3 # emulate image to load
           ""
         end
       end
 
-      content_promise = future do
-        page.content = "<img src=\"#{server_prefix}/img2.png\" />"
-      end
+      content_promise = Concurrent::Promises.future(
+        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+          page.content = "<img src=\"#{server_prefix}/img2.png\" />"
+        end
+      )
 
-      await async_wait_for_request
+      Puppeteer::ConcurrentRubyUtils.await(async_wait_for_request)
       expect(content_promise).not_to be_fulfilled
 
       sleep 1 # wait for image loaded completely
@@ -1518,20 +1546,26 @@ RSpec.describe Puppeteer::Page do
 
   describe 'Page.Events.Close' do
     it 'should work with window.close' do
-      new_page_promise = resolvable_future { |f| page.browser_context.once('targetcreated') { |target| f.fulfill(target.page) } }
+      new_page_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.browser_context.once('targetcreated') { |target| future.fulfill(target.page) }
+      end
       page.evaluate("() => { (window['newPage'] = window.open('about:blank')) }")
-      new_page = await new_page_promise
+      new_page = Puppeteer::ConcurrentRubyUtils.await(new_page_promise)
 
-      closed_promise = resolvable_future { |f| new_page.once('close') { f.fulfill(nil) } }
+      closed_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        new_page.once('close') { future.fulfill(nil) }
+      end
       page.evaluate("() => { window['newPage'].close() }")
-      await closed_promise
+      Puppeteer::ConcurrentRubyUtils.await(closed_promise)
     end
 
     it 'should work with page.close', puppeteer: :browser do
       new_page = browser.new_page
-      closed_promise = resolvable_future { |f| new_page.once('close') { f.fulfill(nil) } }
+      closed_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        new_page.once('close') { future.fulfill(nil) }
+      end
       new_page.close
-      await closed_promise
+      Puppeteer::ConcurrentRubyUtils.await(closed_promise)
     end
   end
 

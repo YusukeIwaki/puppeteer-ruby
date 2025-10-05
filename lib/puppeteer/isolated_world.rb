@@ -56,7 +56,7 @@ class Puppeteer::IsolaatedWorld
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
-    @context_promise = resolvable_future
+    @context_promise = Concurrent::Promises.resolvable_future
     @task_manager = Puppeteer::TaskManager.new
     @bound_functions = {}
     @ctx_bindings = Set.new
@@ -87,7 +87,7 @@ class Puppeteer::IsolaatedWorld
 
   def delete_context(execution_context_id)
     @document = nil
-    @context_promise = resolvable_future
+    @context_promise = Concurrent::Promises.resolvable_future
   end
 
   def has_context?
@@ -218,7 +218,7 @@ class Puppeteer::IsolaatedWorld
 
     watcher = Puppeteer::LifecycleWatcher.new(@frame_manager, @frame, option_wait_until, option_timeout)
     begin
-      await_any(
+      Puppeteer::ConcurrentRubyUtils.await_any(
         watcher.timeout_or_termination_promise,
         watcher.lifecycle_promise,
       )

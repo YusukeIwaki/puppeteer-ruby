@@ -127,11 +127,11 @@ class Puppeteer::Connection
   # @param {string} method
   # @param {!Object=} params
   def send_message(method, params = {})
-    await async_send_message(method, params)
+    Puppeteer::ConcurrentRubyUtils.await(async_send_message(method, params))
   end
 
   def async_send_message(method, params = {})
-    promise = resolvable_future
+    promise = Concurrent::Promises.resolvable_future
 
     generate_id do |id|
       @callbacks[id] = MessageCallback.new(method: method, promise: promise)

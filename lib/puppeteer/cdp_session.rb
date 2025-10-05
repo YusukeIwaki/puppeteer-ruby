@@ -26,7 +26,7 @@ class Puppeteer::CDPSession
   # @param params [Hash]
   # @returns [Hash]
   def send_message(method, params = {})
-    await async_send_message(method, params)
+    Puppeteer::ConcurrentRubyUtils.await(async_send_message(method, params))
   end
 
   # @param method [String]
@@ -37,7 +37,7 @@ class Puppeteer::CDPSession
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
     end
 
-    promise = resolvable_future
+    promise = Concurrent::Promises.resolvable_future
 
     @connection.generate_id do |id|
       @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)

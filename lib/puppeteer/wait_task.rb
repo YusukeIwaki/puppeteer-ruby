@@ -34,7 +34,7 @@ class Puppeteer::WaitTask
     if binding_function
       @dom_world.send(:_bound_functions)[binding_function.name] = binding_function
     end
-    @promise = resolvable_future
+    @promise = Concurrent::Promises.resolvable_future
 
     # Since page navigation requires us to re-install the pageScript, we should track
     # timeout on our end.

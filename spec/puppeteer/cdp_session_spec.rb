@@ -24,7 +24,7 @@ RSpec.describe Puppeteer::CDPSession do
 
     it 'should be thread safe' do
       Timeout.timeout(5) do
-        await_all(1000.times.map { cdp_session.async_send_message('ping') })
+        Puppeteer::ConcurrentRubyUtils.await_all(1000.times.map { cdp_session.async_send_message('ping') })
       end
     end
 

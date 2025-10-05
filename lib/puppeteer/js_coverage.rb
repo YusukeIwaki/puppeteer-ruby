@@ -54,12 +54,14 @@ class Puppeteer::JSCoverage
     @script_sources.clear
     @event_listeners = []
     @event_listeners << @client.add_event_listener('Debugger.scriptParsed') do |event|
-      future { on_script_parsed(event) }
+      Concurrent::Promises.future(
+        &Puppeteer::ConcurrentRubyUtils.future_with_logging { on_script_parsed(event) }
+      )
     end
     @event_listeners << @client.add_event_listener('Runtime.executionContextsCleared') do
       on_execution_contexts_cleared
     end
-    await_all(
+    Puppeteer::ConcurrentRubyUtils.await_all(
       @client.async_send_message('Profiler.enable'),
       @client.async_send_message('Profiler.startPreciseCoverage',
         callCount: @include_raw_script_coverage,
@@ -99,7 +101,7 @@ class Puppeteer::JSCoverage
     raise 'JSCoverage is not enabled' unless @enabled
     @enabled = false
 
-    results = await_all(
+    results = Puppeteer::ConcurrentRubyUtils.await_all(
       @client.async_send_message('Profiler.takePreciseCoverage'),
       @client.async_send_message('Profiler.stopPreciseCoverage'),
       @client.async_send_message('Profiler.disable'),
