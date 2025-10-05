@@ -218,10 +218,11 @@ class Puppeteer::IsolaatedWorld
 
     watcher = Puppeteer::LifecycleWatcher.new(@frame_manager, @frame, option_wait_until, option_timeout)
     begin
-      Puppeteer::ConcurrentRubyUtils.await_any(
-        watcher.timeout_or_termination_promise,
-        watcher.lifecycle_promise,
-      )
+      Concurrent::Promises
+        .any(
+          watcher.timeout_or_termination_promise,
+          watcher.lifecycle_promise,
+        ).value!
     ensure
       watcher.dispose
     end

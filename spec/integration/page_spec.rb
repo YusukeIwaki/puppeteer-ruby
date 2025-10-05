@@ -520,10 +520,12 @@ RSpec.describe Puppeteer::Page do
   it 'should have location and stack trace for console API calls', sinatra: true do
     page.goto(server_empty_page)
 
-    message = Puppeteer::ConcurrentRubyUtils.await_all(
-      Concurrent::Promises.resolvable_future.tap { |future| page.once('console') { |m| future.fulfill(m) } },
-      Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("#{server_prefix}/consolelog.html") }),
-    ).first
+    message = Concurrent::Promises
+      .zip(
+        Concurrent::Promises.resolvable_future.tap { |future| page.once('console') { |m| future.fulfill(m) } },
+        Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("#{server_prefix}/consolelog.html") }),
+      ).value!
+      .first
     expect(message.log_type).to eq('log')
     #   expect(message.location()).toEqual({
     #     url: server.PREFIX + '/consolelog.html',
@@ -672,7 +674,7 @@ RSpec.describe Puppeteer::Page do
         fetch('/digits/3.png');
       }
       JAVASCRIPT
-      requests = Puppeteer::ConcurrentRubyUtils.await_all(*promises)
+      requests = Concurrent::Promises.zip(*promises).value!
       expect(requests.map(&:url)).to contain_exactly(
         "#{server_prefix}/digits/2.png",
         "#{server_prefix}/digits/3.png",

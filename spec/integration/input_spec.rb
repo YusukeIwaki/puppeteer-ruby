@@ -85,11 +85,13 @@ RSpec.describe 'input tests' do
     end
     it_fails_firefox 'should return the same file chooser when there are many watchdogs simultaneously' do
       page.content = '<input type=file>'
-      choosers = Puppeteer::ConcurrentRubyUtils.await_all(
-        page.async_wait_for_file_chooser,
-        page.async_wait_for_file_chooser,
-        page.async_eval_on_selector('input', '(input) => input.click()'),
-      ).first(2)
+      choosers = Concurrent::Promises
+        .zip(
+          page.async_wait_for_file_chooser,
+          page.async_wait_for_file_chooser,
+          page.async_eval_on_selector('input', '(input) => input.click()'),
+        ).value!
+        .first(2)
       expect(choosers.first).to eq(choosers.last)
     end
   end

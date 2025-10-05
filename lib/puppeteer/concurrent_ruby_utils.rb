@@ -14,16 +14,6 @@ module Puppeteer::ConcurrentRubyUtils
     end
   end
 
-  def await_all(*args)
-    futures = normalize_futures(args)
-    Concurrent::Promises.zip(*futures).value!
-  end
-
-  def await_any(*args)
-    futures = normalize_futures(args)
-    Concurrent::Promises.any(*futures).value!
-  end
-
   def await(future_or_value)
     future_or_value.is_a?(Concurrent::Promises::Future) ? future_or_value.value! : future_or_value
   end
@@ -38,19 +28,4 @@ module Puppeteer::ConcurrentRubyUtils
 
     Concurrent::Promises.zip(future, async_block_call).value!.first
   end
-
-  def normalize_futures(args)
-    futures = if args.length == 1 && args.first.is_a?(Enumerable)
-                args.first.to_a
-              else
-                args
-              end
-
-    unless futures.all? { |future| future.is_a?(Concurrent::Promises::Future) }
-      raise ArgumentError, "All argument must be a Future: #{futures}"
-    end
-
-    futures
-  end
-  private_class_method :normalize_futures
 end

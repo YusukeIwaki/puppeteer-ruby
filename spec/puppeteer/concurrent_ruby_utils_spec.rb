@@ -12,28 +12,6 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
     end
   end
 
-  describe '.await_all' do
-    it 'waits for all futures' do
-      start = Time.now
-      described_class.await_all(
-        Concurrent::Promises.future { sleep 0.5 },
-        Concurrent::Promises.future { sleep 1.2 },
-        Concurrent::Promises.future { sleep 0.5 },
-      )
-      expect(Time.now - start).to be >= 1.2
-    end
-
-    it 'accepts an array of futures' do
-      start = Time.now
-      described_class.await_all([
-        Concurrent::Promises.future { sleep 0.5 },
-        Concurrent::Promises.future { sleep 1.2 },
-        Concurrent::Promises.future { sleep 0.5 },
-      ])
-      expect(Time.now - start).to be >= 1.2
-    end
-  end
-
   describe '.with_waiting_for_complete' do
     it 'waits for both future and block to complete' do
       start = Time.now
@@ -55,26 +33,6 @@ RSpec.describe Puppeteer::ConcurrentRubyUtils do
       end
       expect(Time.now - start).to be >= 0.5
       expect(result).to eq(3)
-    end
-  end
-
-  describe '.await_any' do
-    it 'resolves when the first future completes' do
-      start = Time.now
-      described_class.await_any(
-        Concurrent::Promises.future { sleep 1.2 },
-        Concurrent::Promises.future { sleep 0.1 },
-      )
-      expect(Time.now - start).to be < 1
-    end
-
-    it 'accepts an array of futures' do
-      start = Time.now
-      described_class.await_any([
-        Concurrent::Promises.future { sleep 1.2 },
-        Concurrent::Promises.future { sleep 0.1 },
-      ])
-      expect(Time.now - start).to be < 1
     end
   end
 

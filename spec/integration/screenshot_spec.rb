@@ -65,7 +65,7 @@ RSpec.describe 'Screenshots' do
           end
         )
       end
-      screenshots = Puppeteer::ConcurrentRubyUtils.await_all(*promises)
+      screenshots = Concurrent::Promises.zip(*promises).value!
       expect(screenshots[1]).to be_golden('grid-cell-1.png')
     end
 

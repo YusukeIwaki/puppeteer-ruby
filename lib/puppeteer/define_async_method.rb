@@ -17,10 +17,10 @@ module Puppeteer::DefineAsyncMethod
       if method_defined?(original_method_name) && original_method_name.start_with?('wait_for_')
         # def wait_for_xxx(xx, yy, &block)
         #
-        # -> await_all(
+        # -> Concurrent::Promises.zip(
         #      async_wait_for_xxx(xx, yy),
         #      future { block.call },
-        #    ).first
+        #    ).value!.first
         define_method(original_method_name) do |*args, **kwargs, &block|
           if block
             async_method_call =

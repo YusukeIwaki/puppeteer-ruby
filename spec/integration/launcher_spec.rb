@@ -492,10 +492,11 @@ RSpec.describe Puppeteer::Launcher do
     it 'should be able to connect to the same page simultaneously', skip: Puppeteer.env.ci? && Puppeteer.env.firefox? do
       browser2 = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
-      pages = Puppeteer::ConcurrentRubyUtils.await_all(
-        Concurrent::Promises.resolvable_future.tap { |future| browser.once('targetcreated') { |target| future.fulfill(target.page) } },
-        Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { browser2.new_page }),
-      )
+      pages = Concurrent::Promises
+        .zip(
+          Concurrent::Promises.resolvable_future.tap { |future| browser.once('targetcreated') { |target| future.fulfill(target.page) } },
+          Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { browser2.new_page }),
+        ).value!
       expect(pages.first.evaluate('() => 7 * 8')).to eq(56)
       expect(pages.last.evaluate('() => 7 * 6')).to eq(42)
     end
@@ -556,11 +557,12 @@ RSpec.describe Puppeteer::Launcher do
       expect(disconnected_remote1).to eq(0)
       expect(disconnected_remote2).to eq(1)
 
-      Puppeteer::ConcurrentRubyUtils.await_all(
-        Concurrent::Promises.resolvable_future.tap { |future| remote_browser1.once('disconnected') { |frame| future.fulfill(frame) } },
-        Concurrent::Promises.resolvable_future.tap { |future| original_browser.once('disconnected') { |frame| future.fulfill(frame) } },
-        Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { original_browser.close }),
-      )
+      Concurrent::Promises
+        .zip(
+          Concurrent::Promises.resolvable_future.tap { |future| remote_browser1.once('disconnected') { |frame| future.fulfill(frame) } },
+          Concurrent::Promises.resolvable_future.tap { |future| original_browser.once('disconnected') { |frame| future.fulfill(frame) } },
+          Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { original_browser.close }),
+        ).value!
 
       expect(disconnected_original).to eq(1)
       expect(disconnected_remote1).to eq(1)

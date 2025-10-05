@@ -83,13 +83,14 @@ class Puppeteer::FrameManager
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
     ].compact
-    results = Puppeteer::ConcurrentRubyUtils.await_all(*promises)
+    results = Concurrent::Promises.zip(*promises).value!
     frame_tree = results[1]['frameTree']
     handle_frame_tree(client, frame_tree)
-    Puppeteer::ConcurrentRubyUtils.await_all(
-      client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
-      client.async_send_message('Runtime.enable'),
-    )
+    Concurrent::Promises
+      .zip(
+        client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
+        client.async_send_message('Runtime.enable'),
+      ).value!
     ensure_isolated_world(client, UTILITY_WORLD_NAME)
     @network_manager.init unless cdp_session
   rescue => err
@@ -136,19 +137,19 @@ class Puppeteer::FrameManager
           end
         end
       )
-      Puppeteer::ConcurrentRubyUtils.await_any(
+      Concurrent::Promises.any(
         navigate,
         watcher.timeout_or_termination_promise,
-      )
+      ).value!
 
-      Puppeteer::ConcurrentRubyUtils.await_any(
+      Concurrent::Promises.any(
         watcher.timeout_or_termination_promise,
         if ensure_new_document_navigation
           watcher.new_document_navigation_promise
         else
           watcher.same_document_navigation_promise
         end,
-      )
+      ).value!
 
       watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
@@ -168,11 +169,11 @@ class Puppeteer::FrameManager
     option_timeout = timeout || @timeout_settings.navigation_timeout
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     begin
-      Puppeteer::ConcurrentRubyUtils.await_any(
+      Concurrent::Promises.any(
         watcher.timeout_or_termination_promise,
         watcher.same_document_navigation_promise,
         watcher.new_document_navigation_promise,
-      )
+      ).value!
 
       watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
@@ -377,7 +378,7 @@ class Puppeteer::FrameManager
           worldName: name,
         )
       end
-    Puppeteer::ConcurrentRubyUtils.await_all(*create_isolated_worlds_promises)
+    Concurrent::Promises.zip(*create_isolated_worlds_promises).value!
   end
 
   # @param frame_id [String]

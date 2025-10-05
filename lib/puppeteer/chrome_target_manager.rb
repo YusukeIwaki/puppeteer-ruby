@@ -243,14 +243,15 @@ class Puppeteer::ChromeTargetManager
     Concurrent::Promises.future(
       &Puppeteer::ConcurrentRubyUtils.future_with_logging do
         # TODO: the browser might be shutting down here. What do we do with the error?
-        Puppeteer::ConcurrentRubyUtils.await_all(
-          session.async_send_message('Target.setAutoAttach', {
-            waitForDebuggerOnStart: true,
-            flatten: true,
-            autoAttach: true,
-          }),
-          session.async_send_message('Runtime.runIfWaitingForDebugger'),
-        )
+        Concurrent::Promises
+          .zip(
+            session.async_send_message('Target.setAutoAttach', {
+              waitForDebuggerOnStart: true,
+              flatten: true,
+              autoAttach: true,
+            }),
+            session.async_send_message('Runtime.runIfWaitingForDebugger'),
+          ).value!
       rescue => err
         Logger.new($stderr).warn(err)
       end

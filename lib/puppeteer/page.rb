@@ -151,11 +151,12 @@ class Puppeteer::Page
   end
 
   def init
-    Puppeteer::ConcurrentRubyUtils.await_all(
-      @frame_manager.async_init(@target.target_id),
-      @client.async_send_message('Performance.enable'),
-      @client.async_send_message('Log.enable'),
-    )
+    Concurrent::Promises
+      .zip(
+        @frame_manager.async_init(@target.target_id),
+        @client.async_send_message('Performance.enable'),
+        @client.async_send_message('Log.enable'),
+      ).value!
   end
 
   def drag_interception_enabled?
@@ -491,7 +492,7 @@ class Puppeteer::Page
     promises = @frame_manager.frames.map do |frame|
       frame.async_evaluate("() => #{source}")
     end
-    Puppeteer::ConcurrentRubyUtils.await_all(*promises)
+    Concurrent::Promises.zip(*promises).value!
 
     nil
   end
@@ -704,7 +705,7 @@ class Puppeteer::Page
     begin
       # Timeout.timeout(0) means "no limit" for timeout.
       Timeout.timeout(option_timeout / 1000.0) do
-        Puppeteer::ConcurrentRubyUtils.await_any(promise, session_close_promise)
+        Concurrent::Promises.any(promise, session_close_promise).value!
       end
     rescue Timeout::Error
       raise Puppeteer::TimeoutError.new("waiting for #{event_name} failed: timeout #{option_timeout}ms exceeded")
@@ -729,7 +730,7 @@ class Puppeteer::Page
     begin
       # Timeout.timeout(0) means "no limit" for timeout.
       Timeout.timeout(option_timeout / 1000.0) do
-        Puppeteer::ConcurrentRubyUtils.await_any(promise, session_close_promise)
+        Concurrent::Promises.any(promise, session_close_promise).value!
       end
     rescue Timeout::Error
       raise Puppeteer::TimeoutError.new("waiting for #{event_names.join(" or ")} failed: timeout #{option_timeout}ms exceeded")
