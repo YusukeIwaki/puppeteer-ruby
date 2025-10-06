@@ -22,7 +22,7 @@ class Puppeteer::FirefoxTargetManager
     @target_filter_callback = target_filter_callback
     @target_factory = target_factory
     @target_interceptors = {}
-    @initialize_promise = resolvable_future
+    @initialize_promise = Concurrent::Promises.resolvable_future
 
     @connection_event_listeners = []
     @connection_event_listeners << @connection.add_event_listener(

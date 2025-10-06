@@ -151,11 +151,12 @@ class Puppeteer::Page
   end
 
   def init
-    await_all(
-      @frame_manager.async_init(@target.target_id),
-      @client.async_send_message('Performance.enable'),
-      @client.async_send_message('Log.enable'),
-    )
+    Concurrent::Promises
+      .zip(
+        @frame_manager.async_init(@target.target_id),
+        @client.async_send_message('Performance.enable'),
+        @client.async_send_message('Log.enable'),
+      ).value!
   end
 
   def drag_interception_enabled?
@@ -214,7 +215,7 @@ class Puppeteer::Page
     end
 
     option_timeout = timeout || @timeout_settings.timeout
-    promise = resolvable_future
+    promise = Concurrent::Promises.resolvable_future
     @file_chooser_interceptors << promise
 
     begin
@@ -491,7 +492,7 @@ class Puppeteer::Page
     promises = @frame_manager.frames.map do |frame|
       frame.async_evaluate("() => #{source}")
     end
-    await_all(*promises)
+    Concurrent::Promises.zip(*promises).value!
 
     nil
   end
@@ -693,7 +694,7 @@ class Puppeteer::Page
   private def wait_for_network_manager_event(event_name, predicate:, timeout:)
     option_timeout = timeout || @timeout_settings.timeout
 
-    promise = resolvable_future
+    promise = Concurrent::Promises.resolvable_future
 
     listener_id = @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
       if predicate.call(event_target)
@@ -704,7 +705,7 @@ class Puppeteer::Page
     begin
       # Timeout.timeout(0) means "no limit" for timeout.
       Timeout.timeout(option_timeout / 1000.0) do
-        await_any(promise, session_close_promise)
+        Concurrent::Promises.any(promise, session_close_promise).value!
       end
     rescue Timeout::Error
       raise Puppeteer::TimeoutError.new("waiting for #{event_name} failed: timeout #{option_timeout}ms exceeded")
@@ -716,7 +717,7 @@ class Puppeteer::Page
   private def wait_for_frame_manager_event(*event_names, predicate:, timeout:)
     option_timeout = timeout || @timeout_settings.timeout
 
-    promise = resolvable_future
+    promise = Concurrent::Promises.resolvable_future
 
     listener_ids = event_names.map do |event_name|
       @frame_manager.add_event_listener(event_name) do |event_target|
@@ -729,7 +730,7 @@ class Puppeteer::Page
     begin
       # Timeout.timeout(0) means "no limit" for timeout.
       Timeout.timeout(option_timeout / 1000.0) do
-        await_any(promise, session_close_promise)
+        Concurrent::Promises.any(promise, session_close_promise).value!
       end
     rescue Timeout::Error
       raise Puppeteer::TimeoutError.new("waiting for #{event_names.join(" or ")} failed: timeout #{option_timeout}ms exceeded")
@@ -741,7 +742,7 @@ class Puppeteer::Page
   end
 
   private def session_close_promise
-    @disconnect_promise ||= resolvable_future do |future|
+    @disconnect_promise ||= Concurrent::Promises.resolvable_future.tap do |future|
       @client.observe_first(CDPSessionEmittedEvents::Disconnected) do
         future.reject(Puppeteer::CDPSession::Error.new('Target Closed'))
       end
@@ -1196,7 +1197,7 @@ class Puppeteer::Page
       @client.send_message('Page.close')
     else
       @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
-      await @target.is_closed_promise
+      @target.is_closed_promise.value!
 
       # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
       25.times do

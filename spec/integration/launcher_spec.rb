@@ -7,7 +7,7 @@ RSpec.describe Puppeteer::Launcher do
       page = remote.new_page
 
       # try to disconnect remote connection exactly during loading css.
-      wait_for_css = resolvable_future
+      wait_for_css = Concurrent::Promises.resolvable_future
       sinatra.get('/_one-style.html') do
         "<link rel='stylesheet' href='./_one-style.css'><div>hello, world!</div>"
       end
@@ -16,10 +16,10 @@ RSpec.describe Puppeteer::Launcher do
         sleep 30
         "body { background-color: pink; }"
       end
-      navigation_promise = future { page.goto("#{server_prefix}/_one-style.html") }
+      navigation_promise = Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("#{server_prefix}/_one-style.html") })
       wait_for_css.then { sleep 0.02; remote.disconnect }
 
-      expect { await navigation_promise }.to raise_error(/Navigation failed because browser has disconnected!/)
+      expect { navigation_promise.value! }.to raise_error(/Navigation failed because browser has disconnected!/)
       browser.close
     end
 
@@ -30,7 +30,7 @@ RSpec.describe Puppeteer::Launcher do
       watchdog = page.async_wait_for_selector('div')
       remote.disconnect
 
-      expect { await watchdog }.to raise_error(/Protocol error/)
+      expect { watchdog.value! }.to raise_error(/Protocol error/)
       browser.close
     end
   end
@@ -45,8 +45,8 @@ RSpec.describe Puppeteer::Launcher do
       wait_for_response = new_page.async_wait_for_response(url: server_empty_page)
 
       browser.close
-      expect { await wait_for_request }.to raise_error(/Target Closed/)
-      expect { await wait_for_response }.to raise_error(/Target Closed/)
+      expect { wait_for_request.value! }.to raise_error(/Target Closed/)
+      expect { wait_for_response.value! }.to raise_error(/Target Closed/)
     end
   end
 
@@ -58,7 +58,7 @@ RSpec.describe Puppeteer::Launcher do
       sleep 0.004 # sleep a bit after page is created, before closing it.
 
       browser.close
-      expect { await never_resolves }.to raise_error(/Protocol error/)
+      expect { never_resolves.value! }.to raise_error(/Protocol error/)
     end
   end
 
@@ -426,8 +426,10 @@ RSpec.describe Puppeteer::Launcher do
       remote_browser = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
       Timeout.timeout(3) do
-        disconnected_promise = resolvable_future { |f| browser.once('disconnected') { f.fulfill(nil) } }
-        disconnected_promise.with_waiting_for_complete do
+        disconnected_promise = Concurrent::Promises.resolvable_future.tap do |future|
+          browser.once('disconnected') { future.fulfill(nil) }
+        end
+        Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(disconnected_promise) do
           remote_browser.close
         end
       end
@@ -490,10 +492,11 @@ RSpec.describe Puppeteer::Launcher do
     it 'should be able to connect to the same page simultaneously', skip: Puppeteer.env.ci? && Puppeteer.env.firefox? do
       browser2 = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
-      pages = await_all(
-        resolvable_future { |f| browser.once('targetcreated') { |target| f.fulfill(target.page) } },
-        future { browser2.new_page },
-      )
+      pages = Concurrent::Promises
+        .zip(
+          Concurrent::Promises.resolvable_future.tap { |future| browser.once('targetcreated') { |target| future.fulfill(target.page) } },
+          Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { browser2.new_page }),
+        ).value!
       expect(pages.first.evaluate('() => 7 * 8')).to eq(56)
       expect(pages.last.evaluate('() => 7 * 6')).to eq(42)
     end
@@ -543,8 +546,10 @@ RSpec.describe Puppeteer::Launcher do
       remote_browser1.on('disconnected') { disconnected_remote1 += 1 }
       remote_browser2.on('disconnected') { disconnected_remote2 += 1 }
 
-      disconnected_promise = resolvable_future { |f| remote_browser2.once('disconnected') { |frame| f.fulfill(frame) } }
-      disconnected_promise.with_waiting_for_complete do
+      disconnected_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        remote_browser2.once('disconnected') { |frame| future.fulfill(frame) }
+      end
+      Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(disconnected_promise) do
         remote_browser2.disconnect
       end
 
@@ -552,11 +557,12 @@ RSpec.describe Puppeteer::Launcher do
       expect(disconnected_remote1).to eq(0)
       expect(disconnected_remote2).to eq(1)
 
-      await_all(
-        resolvable_future { |f| remote_browser1.once('disconnected') { |frame| f.fulfill(frame) } },
-        resolvable_future { |f| original_browser.once('disconnected') { |frame| f.fulfill(frame) } },
-        future { original_browser.close },
-      )
+      Concurrent::Promises
+        .zip(
+          Concurrent::Promises.resolvable_future.tap { |future| remote_browser1.once('disconnected') { |frame| future.fulfill(frame) } },
+          Concurrent::Promises.resolvable_future.tap { |future| original_browser.once('disconnected') { |frame| future.fulfill(frame) } },
+          Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { original_browser.close }),
+        ).value!
 
       expect(disconnected_original).to eq(1)
       expect(disconnected_remote1).to eq(1)
