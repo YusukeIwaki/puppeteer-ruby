@@ -29,7 +29,7 @@ RSpec.describe Puppeteer::Page do
       new_page = context.new_page
       promise = new_page.async_evaluate("() => new Promise(() => {})")
       new_page.close
-      expect { await promise }.to raise_error(/Protocol error/)
+      expect { promise.value! }.to raise_error(/Protocol error/)
     end
 
     it 'should not be visible in browser.pages', puppeteer: :browser do

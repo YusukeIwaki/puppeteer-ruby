@@ -10,7 +10,7 @@ RSpec.describe Puppeteer::WaitTask do
       expect(found).to eq(false)
 
       page.goto("#{server_prefix}/grid.html")
-      await wait_for
+      wait_for.value!
       expect(found).to eq(true)
     end
 
@@ -22,7 +22,7 @@ RSpec.describe Puppeteer::WaitTask do
       expect(found).to eq(false)
 
       page.goto("#{server_prefix}/grid.html")
-      await wait_for
+      wait_for.value!
       expect(found).to eq(true)
     end
 
@@ -88,7 +88,7 @@ RSpec.describe Puppeteer::WaitTask do
       watchdog = frame.async_wait_for_selector('div')
       frame.evaluate(add_element, 'br')
       frame.evaluate(add_element, 'div')
-      handle = Timeout.timeout(1) { await watchdog }
+      handle = Timeout.timeout(1) { watchdog.value! }
       tag_name = handle.property('tagName').json_value
       expect(tag_name).to eq('DIV')
     end
@@ -98,7 +98,7 @@ RSpec.describe Puppeteer::WaitTask do
       watchdog = page.async_wait_for_selector('h3 div')
       page.evaluate(add_element, 'span')
       page.evaluate("() => (document.querySelector('span').innerHTML = '<h3><div></div></h3>')")
-      Timeout.timeout(1) { await watchdog }
+      Timeout.timeout(1) { watchdog.value! }
     end
 
     it 'Page.waitForSelector is shortcut for main frame', sinatra: true do
@@ -108,7 +108,7 @@ RSpec.describe Puppeteer::WaitTask do
       watchdog = page.async_wait_for_selector('div')
       other_frame.evaluate(add_element, 'div')
       page.evaluate(add_element, 'div')
-      handle = await watchdog
+      handle = watchdog.value!
       expect(handle.frame).to eq(page.main_frame)
     end
 
@@ -121,7 +121,7 @@ RSpec.describe Puppeteer::WaitTask do
       promise = frame2.async_wait_for_selector('div')
       frame1.evaluate(add_element, 'div')
       frame2.evaluate(add_element, 'div')
-      handle = await promise
+      handle = promise.value!
       expect(handle.frame).to eq(frame2)
     end
 
@@ -131,7 +131,7 @@ RSpec.describe Puppeteer::WaitTask do
       frame = page.frames.last
       promise = frame.async_wait_for_selector('.box')
       detach_frame(page, 'frame1')
-      expect { await promise }.to raise_error(/waitForFunction failed: frame got detached./)
+      expect { promise.value! }.to raise_error(/waitForFunction failed: frame got detached./)
     end
     #   it('should survive cross-process navigation', async () => {
     #     const { page, server } = getTestState();
@@ -159,7 +159,7 @@ RSpec.describe Puppeteer::WaitTask do
       expect(promise).not_to be_fulfilled
 
       page.evaluate("() => document.querySelector('div').style.removeProperty('visibility')")
-      Timeout.timeout(1) { await promise }
+      Timeout.timeout(1) { promise.value! }
     end
     #   it('should wait for visible recursively', async () => {
     #     const { page } = getTestState();
@@ -206,14 +206,14 @@ RSpec.describe Puppeteer::WaitTask do
       expect(promise).not_to be_fulfilled
 
       page.evaluate("() => document.querySelector('div').style.setProperty('display', 'none')")
-      Timeout.timeout(1) { await promise }
+      Timeout.timeout(1) { promise.value! }
     end
 
     it 'hidden should wait for removal' do
       page.content = '<div></div>'
       promise = page.async_wait_for_selector('div', hidden: true)
       page.evaluate("() => document.querySelector('div').remove()")
-      Timeout.timeout(1) { await promise }
+      Timeout.timeout(1) { promise.value! }
     end
 
     it 'should return null if waiting to hide non-existing element' do
@@ -258,7 +258,7 @@ RSpec.describe Puppeteer::WaitTask do
     it 'should return the element handle' do
       promise = page.async_wait_for_selector('.zombo')
       page.content = "<div class='zombo'>anything</div>"
-      handle = await promise
+      handle = promise.value!
       expect(handle).to be_a(Puppeteer::ElementHandle)
       expect(page.evaluate('(x) => x.textContent', handle)).to eq('anything')
     end

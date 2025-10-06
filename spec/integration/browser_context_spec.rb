@@ -103,7 +103,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       page = context.new_page
       expect(resolved).to eq(false)
       page.goto("#{server_prefix}/test")
-      target = await target_promise
+      target = target_promise.value!
       expect(target.page).to eq(page)
       context.close
     end
@@ -118,7 +118,7 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       expect(resolved).to eq(false)
       page.goto("#{server_prefix}/test")
       expect(resolved).to eq(false)
-      expect { await target_promise }.to raise_error(Puppeteer::TimeoutError)
+      expect { target_promise.value! }.to raise_error(Puppeteer::TimeoutError)
       context.close
     end
   end
