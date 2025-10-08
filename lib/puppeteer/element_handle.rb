@@ -147,7 +147,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  class ScrollIntoViewError < StandardError; end
+  class ScrollIntoViewError < Puppeteer::Error; end
 
   def scroll_into_view_if_needed
     js = <<~JAVASCRIPT
@@ -198,13 +198,13 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     sleep 0.16
   end
 
-  class ElementNotVisibleError < StandardError
+  class ElementNotVisibleError < Puppeteer::Error
     def initialize
       super("Node is either not visible or not an HTMLElement")
     end
   end
 
-  class ElementNotClickableError < StandardError
+  class ElementNotClickableError < Puppeteer::Error
     def initialize
       super("Node is either not clickable or not an HTMLElement")
     end
@@ -329,7 +329,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_click
 
-  class DragInterceptionNotEnabledError < StandardError
+  class DragInterceptionNotEnabledError < Puppeteer::Error
     def initialize
       super('Drag Interception is not enabled!')
     end
@@ -585,7 +585,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
   alias_method :SS, :query_selector_all
 
-  class ElementNotFoundError < StandardError
+  class ElementNotFoundError < Puppeteer::Error
     def initialize(selector)
       super("failed to find element matching selector \"#{selector}\"")
     end

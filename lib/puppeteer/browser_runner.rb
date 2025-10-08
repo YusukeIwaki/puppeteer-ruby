@@ -54,7 +54,7 @@ class Puppeteer::BrowserRunner
     attr_reader :stdout, :stderr, :spawnargs
   end
 
-  class LaunchError < StandardError
+  class LaunchError < Puppeteer::Error
     def initialize(reason)
       super("Failed to launch browser! #{reason}")
     end

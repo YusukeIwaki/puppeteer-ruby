@@ -5,7 +5,7 @@ class Puppeteer::Connection
   include Puppeteer::EventCallbackable
   using Puppeteer::DefineAsyncMethod
 
-  class ProtocolError < StandardError
+  class ProtocolError < Puppeteer::Error
     def initialize(method:, error_message:, error_data: nil)
       msg = "Protocol error (#{method}): #{error_message}"
       if error_data

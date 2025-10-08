@@ -1,7 +1,7 @@
 class Puppeteer::WaitTask
   using Puppeteer::DefineAsyncMethod
 
-  class TerminatedError < StandardError; end
+  class TerminatedError < Puppeteer::Error; end
 
   class TimeoutError < ::Puppeteer::TimeoutError
     def initialize(title:, timeout:)

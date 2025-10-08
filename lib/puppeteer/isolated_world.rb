@@ -99,7 +99,7 @@ class Puppeteer::IsolaatedWorld
     @task_manager.terminate_all(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
   end
 
-  class DetachedError < StandardError; end
+  class DetachedError < Puppeteer::Error; end
 
   # @return {!Promise<!Puppeteer.ExecutionContext>}
   def execution_context
@@ -350,7 +350,7 @@ class Puppeteer::IsolaatedWorld
     }
   JAVASCRIPT
 
-  class ElementNotFoundError < StandardError
+  class ElementNotFoundError < Puppeteer::Error
     def initialize(selector)
       super("No node found for selector: #{selector}")
     end

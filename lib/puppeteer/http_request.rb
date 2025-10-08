@@ -228,13 +228,13 @@ class Puppeteer::HTTPRequest
     end
   end
 
-  class InterceptionNotEnabledError < StandardError
+  class InterceptionNotEnabledError < Puppeteer::Error
     def initialize
       super('Request Interception is not enabled!')
     end
   end
 
-  class AlreadyHandledError < StandardError
+  class AlreadyHandledError < Puppeteer::Error
     def initialize
       super('Request is already handled!')
     end

@@ -75,7 +75,7 @@ class Puppeteer::WebSocket
     end
   end
 
-  class TransportError < StandardError; end
+  class TransportError < Puppeteer::Error; end
 
   private def setup
     @ready_state = STATE_CONNECTING

@@ -59,7 +59,7 @@ class Puppeteer::Target
     @is_closed_promise.fulfill(true)
   end
 
-  class InitializeFailure < StandardError; end
+  class InitializeFailure < Puppeteer::Error; end
 
   def ignore_initialize_callback_promise
     unless @initialize_callback_promise.fulfilled?

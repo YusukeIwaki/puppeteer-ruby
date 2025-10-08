@@ -174,7 +174,7 @@ class Puppeteer::Browser
     @contexts.delete(context_id)
   end
 
-  class MissingBrowserContextError < StandardError ; end
+  class MissingBrowserContextError < Puppeteer::Error ; end
 
   # @param target_info [Puppeteer::Target::TargetInfo]
   # @param session [CDPSession|nil]
@@ -242,8 +242,8 @@ class Puppeteer::Browser
     @default_context.new_page
   end
 
-  class MissingTargetError < StandardError ; end
-  class CreatePageError < StandardError ; end
+  class MissingTargetError < Puppeteer::Error ; end
+  class CreatePageError < Puppeteer::Error ; end
 
   # @param {?string} contextId
   # @return {!Promise<!Puppeteer.Page>}

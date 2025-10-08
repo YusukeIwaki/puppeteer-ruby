@@ -3,7 +3,7 @@ require 'json'
 class Puppeteer::HTTPResponse
   include Puppeteer::IfPresent
 
-  class Redirected < StandardError
+  class Redirected < Puppeteer::Error
     def initialize
       super('Response body is unavailable for redirect responses')
     end

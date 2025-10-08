@@ -200,7 +200,7 @@ class Puppeteer::Page
     end
   end
 
-  class FileChooserTimeoutError < StandardError
+  class FileChooserTimeoutError < Puppeteer::Error
     def initialize(timeout:)
       super("waiting for filechooser failed: timeout #{timeout}ms exceeded")
     end
@@ -246,7 +246,7 @@ class Puppeteer::Page
     @target.browser_context
   end
 
-  class TargetCrashedError < StandardError; end
+  class TargetCrashedError < Puppeteer::Error; end
 
   private def handle_target_crashed
     emit_event(PageEmittedEvents::Error, TargetCrashedError.new('Page crashed!'))
@@ -519,7 +519,7 @@ class Puppeteer::Page
     Metrics.new(response['metrics'])
   end
 
-  class PageError < StandardError ; end
+  class PageError < Puppeteer::Error ; end
 
   private def handle_exception(exception_details)
     message = Puppeteer::ExceptionDetails.new(exception_details).message
@@ -1129,7 +1129,7 @@ class Puppeteer::Page
     buffer
   end
 
-  class PrintToPdfIsNotImplementedError < StandardError
+  class PrintToPdfIsNotImplementedError < Puppeteer::Error
     def initialize
       super('pdf() is only available in headless mode. See https://github.com/puppeteer/puppeteer/issues/1829')
     end
