@@ -50,12 +50,12 @@ class Puppeteer::LifecycleWatcher
     end
   end
 
-  class FrameDetachedError < StandardError
+  class FrameDetachedError < Puppeteer::Error
     def initialize
       super('Navigating frame was detached')
     end
   end
-  class TerminatedError < StandardError; end
+  class TerminatedError < Puppeteer::Error; end
 
   #  * @param {!Puppeteer.FrameManager} frameManager
   #  * @param {!Puppeteer.Frame} frame

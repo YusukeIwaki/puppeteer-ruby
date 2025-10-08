@@ -180,7 +180,7 @@ class Puppeteer::ExecutionContext
     end
   end
 
-  class EvaluationError < StandardError; end
+  class EvaluationError < Puppeteer::Error; end
 
   # @param return_by_value [Boolean]
   # @param page_function [String]

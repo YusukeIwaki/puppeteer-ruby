@@ -3,7 +3,7 @@ class Puppeteer::CDPSession
   include Puppeteer::EventCallbackable
   using Puppeteer::DefineAsyncMethod
 
-  class Error < StandardError; end
+  class Error < Puppeteer::Error; end
 
   # @param {!Connection} connection
   # @param {string} targetType
