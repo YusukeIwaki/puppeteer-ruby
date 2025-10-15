@@ -13,7 +13,7 @@ class Puppeteer::ChromeTargetManager
     @target_filter_callback = target_filter_callback
     @target_factory = target_factory
     @target_interceptors = {}
-    @initialize_promise = resolvable_future
+    @initialize_promise = Concurrent::Promises.resolvable_future
 
     @connection_event_listeners = []
     @connection_event_listeners << @connection.add_event_listener(
@@ -234,23 +234,28 @@ class Puppeteer::ChromeTargetManager
 
     @target_ids_for_init.delete(target.target_id)
     unless is_existing_target
-      future { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }
+      Concurrent::Promises.future(
+        &Puppeteer::ConcurrentRubyUtils.future_with_logging { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }
+      )
     end
     finish_initialization_if_ready
 
-    future do
-      # TODO: the browser might be shutting down here. What do we do with the error?
-      await_all(
-        session.async_send_message('Target.setAutoAttach', {
-          waitForDebuggerOnStart: true,
-          flatten: true,
-          autoAttach: true,
-        }),
-        session.async_send_message('Runtime.runIfWaitingForDebugger'),
-      )
-    rescue => err
-      Logger.new($stderr).warn(err)
-    end
+    Concurrent::Promises.future(
+      &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+        # TODO: the browser might be shutting down here. What do we do with the error?
+        Concurrent::Promises
+          .zip(
+            session.async_send_message('Target.setAutoAttach', {
+              waitForDebuggerOnStart: true,
+              flatten: true,
+              autoAttach: true,
+            }),
+            session.async_send_message('Runtime.runIfWaitingForDebugger'),
+          ).value!
+      rescue => err
+        Logger.new($stderr).warn(err)
+      end
+    )
   end
 
   private def finish_initialization_if_ready(target_id = nil)

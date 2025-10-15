@@ -293,7 +293,7 @@ class Puppeteer::Browser
     return existing_target if existing_target
 
     event_listening_ids = []
-    target_promise = resolvable_future
+    target_promise = Concurrent::Promises.resolvable_future
     event_listening_ids << add_event_listener(BrowserEmittedEvents::TargetCreated) do |target|
       if predicate.call(target)
         target_promise.fulfill(target)

@@ -433,7 +433,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         element.dispatchEvent(new Event('change', { bubbles: true }));
       }
       JAVASCRIPT
-      await evaluate(fn)
+      evaluate(fn)
     else
       @remote_object.set_file_input_files(@client, file_paths.map { |path| File.expand_path(path) }, backend_node_id)
     end

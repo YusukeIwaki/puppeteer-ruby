@@ -40,11 +40,11 @@ class Puppeteer::Target
     #    this._pagePromise = null;
     #    /** @type {?Promise<!Worker>} */
     #    this._workerPromise = null;
-    @initialize_callback_promise = resolvable_future
+    @initialize_callback_promise = Concurrent::Promises.resolvable_future
     @initialized_promise = @initialize_callback_promise.then do |success|
       handle_initialized(success)
     end
-    @is_closed_promise = resolvable_future
+    @is_closed_promise = Concurrent::Promises.resolvable_future
 
     @is_initialized = !@is_page_target_callback.call(@target_info) || !@target_info.url.empty?
 

@@ -35,16 +35,19 @@ class Puppeteer::CSSCoverage
     @stylesheet_sources.clear
     @event_listeners = []
     @event_listeners << @client.add_event_listener('CSS.styleSheetAdded') do |event|
-      future { on_stylesheet(event) }
+      Concurrent::Promises.future(
+        &Puppeteer::ConcurrentRubyUtils.future_with_logging { on_stylesheet(event) }
+      )
     end
     @event_listeners << @client.add_event_listener('Runtime.executionContextsCleared') do
       on_execution_contexts_cleared
     end
-    await_all(
-      @client.async_send_message('DOM.enable'),
-      @client.async_send_message('CSS.enable'),
-      @client.async_send_message('CSS.startRuleUsageTracking'),
-    )
+    Concurrent::Promises
+      .zip(
+        @client.async_send_message('DOM.enable'),
+        @client.async_send_message('CSS.enable'),
+        @client.async_send_message('CSS.startRuleUsageTracking'),
+      ).value!
   end
 
   private def on_execution_contexts_cleared
@@ -76,10 +79,11 @@ class Puppeteer::CSSCoverage
     @enabled = false
 
     rule_tracking_response = @client.send_message('CSS.stopRuleUsageTracking')
-    await_all(
-      @client.async_send_message('CSS.disable'),
-      @client.async_send_message('DOM.disable'),
-    )
+    Concurrent::Promises
+      .zip(
+        @client.async_send_message('CSS.disable'),
+        @client.async_send_message('DOM.disable'),
+      ).value!
     @client.remove_event_listener(*@event_listeners)
 
     # aggregate by styleSheetId

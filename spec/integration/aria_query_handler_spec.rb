@@ -255,7 +255,7 @@ RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
       page.evaluate(<<~JAVASCRIPT)
       () => document.querySelector('div').style.removeProperty('visibility')
       JAVASCRIPT
-      await wait_for_selector_promise
+      wait_for_selector_promise.value!
       expect(div_found).to eq(true)
     end
 

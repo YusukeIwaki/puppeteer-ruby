@@ -104,8 +104,10 @@ RSpec.describe Puppeteer::Frame do
     it 'should send "framenavigated" when navigating on anchor URLs' do
       page.goto(server_empty_page)
       Timeout.timeout(5) do
-        framenavigated_promise = resolvable_future { |f| page.once('framenavigated') { |frame| f.fulfill(frame) } }
-        framenavigated_promise.with_waiting_for_complete do
+        framenavigated_promise = Concurrent::Promises.resolvable_future.tap do |future|
+          page.once('framenavigated') { |frame| future.fulfill(frame) }
+        end
+        Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(framenavigated_promise) do
           page.goto("#{server_empty_page}#foo")
         end
         expect(page.url).to eq("#{server_empty_page}#foo")
@@ -223,8 +225,10 @@ RSpec.describe Puppeteer::Frame do
       page.evaluate(js)
       expect(frame1).to be_detached
 
-      frameattached_promise = resolvable_future { |f| page.once('frameattached') { |frame| f.fulfill(frame) } }
-      frame2 = frameattached_promise.with_waiting_for_complete do
+      frameattached_promise = Concurrent::Promises.resolvable_future.tap do |future|
+        page.once('frameattached') { |frame| future.fulfill(frame) }
+      end
+      frame2 = Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(frameattached_promise) do
         page.evaluate('() => document.body.appendChild(globalThis.frame)')
       end
       expect(frame2).not_to be_detached
