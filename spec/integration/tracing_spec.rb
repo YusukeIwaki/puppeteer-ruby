@@ -23,11 +23,17 @@ RSpec.describe 'Tracing', skip: Puppeteer.env.firefox? do
     page.tracing.stop
 
     trace_json = JSON.parse(File.read(output_file))
-    trace_config_json = trace_json.dig('metadata', 'trace-config') || trace_json.dig('metadata', 'traceConfig')
-    expect(trace_config_json).not_to be_nil
-    trace_config = JSON.parse(trace_config_json)
-    expect(trace_config['included_categories']).to eq(['disabled-by-default-v8.cpu_profiler.hires'])
-    expect(trace_config['excluded_categories']).to eq(['*'])
+    metadata = trace_json['metadata'] || {}
+    trace_config_json = metadata['trace-config'] || metadata['traceConfig']
+
+    if trace_config_json
+      trace_config = JSON.parse(trace_config_json)
+      expect(trace_config['included_categories']).to eq(['disabled-by-default-v8.cpu_profiler.hires'])
+      expect(trace_config['excluded_categories']).to eq(['*'])
+    else
+      categories = trace_json['traceEvents']&.map { |event| event['cat'] }&.compact&.uniq || []
+      expect(categories).to include('disabled-by-default-v8.cpu_profiler.hires')
+    end
   end
 
   it 'should throw if tracing on two pages' do

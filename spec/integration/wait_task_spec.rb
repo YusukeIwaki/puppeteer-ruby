@@ -199,7 +199,7 @@ RSpec.describe Puppeteer::WaitTask do
     #     expect(divHidden).toBe(true);
     #   });
     it 'hidden should wait for display: none' do
-      page.content = "<div style='display: block;'></div>"
+      page.content = "<div style='display: block;'>1</div>"
       promise = page.async_wait_for_selector('div', hidden: true)
 
       Timeout.timeout(1) { page.wait_for_selector('div') } # do a round trip
@@ -210,7 +210,7 @@ RSpec.describe Puppeteer::WaitTask do
     end
 
     it 'hidden should wait for removal' do
-      page.content = '<div></div>'
+      page.content = '<div>1</div>'
       promise = page.async_wait_for_selector('div', hidden: true)
       page.evaluate("() => document.querySelector('div').remove()")
       Timeout.timeout(1) { promise.value! }

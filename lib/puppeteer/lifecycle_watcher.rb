@@ -91,6 +91,7 @@ class Puppeteer::LifecycleWatcher
     @lifecycle_promise = Concurrent::Promises.resolvable_future
     @new_document_navigation_promise = Concurrent::Promises.resolvable_future
     @termination_promise = Concurrent::Promises.resolvable_future
+    @navigation_response_received = Concurrent::Promises.fulfilled_future(nil)
     check_lifecycle_complete
   end
 
