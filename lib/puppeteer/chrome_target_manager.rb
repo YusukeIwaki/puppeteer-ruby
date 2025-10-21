@@ -157,7 +157,7 @@ class Puppeteer::ChromeTargetManager
     emit_event(TargetManagerEmittedEvents::TargetChanged, original_target, target_info)
   end
 
-  class SessionNotCreatedError < StandardError ; end
+  class SessionNotCreatedError < Puppeteer::Error ; end
 
   private def handle_attached_to_target(parent_session, event)
     target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])

@@ -106,7 +106,7 @@ class Puppeteer::FrameManager
 
   attr_reader :network_manager
 
-  class NavigationError < StandardError; end
+  class NavigationError < Puppeteer::Error; end
 
   # @param frame [Puppeteer::Frame]
   # @param url [String]
@@ -296,7 +296,7 @@ class Puppeteer::FrameManager
     raise FrameNotFoundError.new("Parent frame #{parent_frame_id} not found.")
   end
 
-  class FrameNotFoundError < StandardError ; end
+  class FrameNotFoundError < Puppeteer::Error ; end
 
   private def attach_child_frame(parent_frame, parent_frame_id, frame_id, session)
     unless parent_frame

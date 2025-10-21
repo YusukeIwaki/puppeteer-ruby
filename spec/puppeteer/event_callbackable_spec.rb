@@ -154,7 +154,7 @@ RSpec.describe Puppeteer::EventCallbackable do
         end
 
         parent.on_event('Child.awesome') do
-          raise StandardError.new('invalid')
+          raise Puppeteer::Error.new('invalid')
         end
       end
 
