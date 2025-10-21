@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry-byebug'
   spec.add_development_dependency 'rake', '~> 13.1.0'
   spec.add_development_dependency 'rollbar'
-  spec.add_development_dependency 'rspec', '~> 3.12.0'
+  spec.add_development_dependency 'rspec', '~> 3.13.2'
   spec.add_development_dependency 'rspec_junit_formatter' # for CircleCI.
   spec.add_development_dependency 'rubocop', '~> 1.50.0'
   spec.add_development_dependency 'rubocop-rspec'
