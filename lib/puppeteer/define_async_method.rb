@@ -17,27 +17,25 @@ module Puppeteer::DefineAsyncMethod
       if method_defined?(original_method_name) && original_method_name.start_with?('wait_for_')
         # def wait_for_xxx(xx, yy, &block)
         #
-        # -> await_all(
+        # -> Concurrent::Promises.zip(
         #      async_wait_for_xxx(xx, yy),
         #      future { block.call },
-        #    ).first
+        #    ).value!.first
         define_method(original_method_name) do |*args, **kwargs, &block|
           if block
             async_method_call =
               if kwargs.empty? # for Ruby 2.6
-                Concurrent::Promises.future do
-                  original_method.bind(self).call(*args)
-                rescue => err
-                  Logger.new($stderr).warn(err)
-                  raise err
-                end
+                Concurrent::Promises.future(
+                  &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+                    original_method.bind(self).call(*args)
+                  end
+                )
               else
-                Concurrent::Promises.future do
-                  original_method.bind(self).call(*args, **kwargs)
-                rescue => err
-                  Logger.new($stderr).warn(err)
-                  raise err
-                end
+                Concurrent::Promises.future(
+                  &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+                    original_method.bind(self).call(*args, **kwargs)
+                  end
+                )
               end
 
             async_block_call = Concurrent::Promises.delay do
@@ -63,19 +61,17 @@ module Puppeteer::DefineAsyncMethod
 
       define_method(async_method_name) do |*args, **kwargs|
         if kwargs.empty? # for Ruby 2.6
-          Concurrent::Promises.future do
-            original_method.bind(self).call(*args)
-          rescue => err
-            Logger.new($stderr).warn(err)
-            raise err
-          end.extend(Puppeteer::ConcurrentRubyUtils::ConcurrentPromisesFutureExtension)
+          Concurrent::Promises.future(
+            &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+              original_method.bind(self).call(*args)
+            end
+          )
         else
-          Concurrent::Promises.future do
-            original_method.bind(self).call(*args, **kwargs)
-          rescue => err
-            Logger.new($stderr).warn(err)
-            raise err
-          end.extend(Puppeteer::ConcurrentRubyUtils::ConcurrentPromisesFutureExtension)
+          Concurrent::Promises.future(
+            &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+              original_method.bind(self).call(*args, **kwargs)
+            end
+          )
         end
       end
     end

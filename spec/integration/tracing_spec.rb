@@ -14,17 +14,17 @@ RSpec.describe 'Tracing', skip: Puppeteer.env.firefox? do
     expect(File.exist?(output_file)).to eq(true)
   end
 
-  it 'should run with custom categories if provided' do
+  it 'should run with custom categories if provided', sinatra: true do
     page.tracing.start(
       path: output_file,
-      categories: ['-*', 'disabled-by-default-v8.cpu_profiler.hires'],
+      categories: ['-*', 'disabled-by-default-devtools.timeline.frame'],
     )
+    page.goto("#{server_prefix}/grid.html")
     page.tracing.stop
 
     trace_json = JSON.parse(File.read(output_file))
-    trace_config = JSON.parse(trace_json.dig('metadata', 'trace-config'))
-    expect(trace_config['included_categories']).to eq(['disabled-by-default-v8.cpu_profiler.hires'])
-    expect(trace_config['excluded_categories']).to eq(['*'])
+    expect(trace_json['traceEvents']).not_to include(a_hash_including('cat' => 'toplevel'))
+    expect(trace_json['traceEvents']).to include(a_hash_including('cat' => a_string_including('disabled-by-default-devtools.timeline.frame')))
   end
 
   it 'should throw if tracing on two pages' do

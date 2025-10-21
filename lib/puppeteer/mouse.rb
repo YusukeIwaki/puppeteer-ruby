@@ -50,7 +50,7 @@ class Puppeteer::Mouse
   # @param y [number]
   # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
   def click(x, y, delay: nil, button: nil, click_count: nil)
-    # await_all(async_move, async_down, async_up) often breaks the order of CDP commands.
+    # Concurrent::Promises.zip(async_move, async_down, async_up) often breaks the order of CDP commands.
     # D, [2020-04-15T17:09:47.895895 #88683] DEBUG -- : RECV << {"id"=>23, "result"=>{"layoutViewport"=>{"pageX"=>0, "pageY"=>1, "clientWidth"=>375, "clientHeight"=>667}, "visualViewport"=>{"offsetX"=>0, "offsetY"=>0, "pageX"=>0, "pageY"=>1, "clientWidth"=>375, "clientHeight"=>667, "scale"=>1, "zoom"=>1}, "contentSize"=>{"x"=>0, "y"=>0, "width"=>375, "height"=>2007}}, "sessionId"=>"0B09EA5E18DEE403E525B3E7FCD7E225"}
     # D, [2020-04-15T17:09:47.898422 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mouseReleased","button":"left","x":0,"y":0,"modifiers":0,"clickCount":1},"id":24}
     # D, [2020-04-15T17:09:47.899711 #88683] DEBUG -- : SEND >> {"sessionId":"0B09EA5E18DEE403E525B3E7FCD7E225","method":"Input.dispatchMouseEvent","params":{"type":"mousePressed","button":"left","x":0,"y":0,"modifiers":0,"clickCount":1},"id":25}
@@ -113,9 +113,9 @@ class Puppeteer::Mouse
   end
 
   def drag(start, target)
-    promise = resolvable_future do |f|
+    promise = Concurrent::Promises.resolvable_future.tap do |future|
       @client.once('Input.dragIntercepted') do |event|
-        f.fulfill(event['data'])
+        future.fulfill(event['data'])
       end
     end
     move(start.x, start.y)
