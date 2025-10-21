@@ -41,15 +41,15 @@ class Puppeteer::Tracing
   end
 
   def stop
-    stream_promise = resolvable_future do |f|
+    stream_promise = Concurrent::Promises.resolvable_future.tap do |future|
       @client.once('Tracing.tracingComplete') do |event|
-        f.fulfill(event['stream'])
+        future.fulfill(event['stream'])
       end
     end
     @client.send_message('Tracing.end')
     @recording = false
 
-    stream = await stream_promise
+    stream = stream_promise.value!
     chunks = Puppeteer::ProtocolStreamReader.new(client: @client, handle: stream).read_as_chunks
 
     StringIO.open do |stringio|

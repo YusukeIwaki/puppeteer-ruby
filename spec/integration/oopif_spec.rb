@@ -60,7 +60,7 @@ RSpec.describe 'OOPIF', **metadata do
     frame2_promise = page.async_wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 2 })
 
     attach_frame(page, 'frame1', "#{server_cross_process_prefix}/frames/one-frame.html")
-    frame1, frame2 = await_all(frame1_promise, frame2_promise)
+    frame1, frame2 = Concurrent::Promises.zip(frame1_promise, frame2_promise).value!
     expect(frame1.url).to end_with('/one-frame.html')
     expect(frame2.url).to end_with('/frames/frame.html')
   end
@@ -158,7 +158,7 @@ RSpec.describe 'OOPIF', **metadata do
     page.request_interception = true
     page.on('request') { |req| req.continue }
     page.goto("#{server_prefix}/dynamic-oopif.html")
-    await frame_promise
+    frame_promise.value!
     expect(oopifs(browser_context).size).to eq(1)
   end
 
