@@ -3,9 +3,14 @@
 ## Start Here (Project-Specific Guidance)
 
 - Read `CLAUDE.md` and `CLAUDE/` first; they define the CDP architecture, porting workflow, testing strategy, and concurrency plan.
-- This repository is a CDP-based Ruby port of Puppeteer. Firefox/BiDi work lives in `puppeteer-bidi`.
-- Ruby minimum is 2.6 today; a future migration to `async` targets Ruby 3.2+ (see `CLAUDE/concurrency.md`).
+- This repository is a CDP-based Ruby port of Puppeteer, **focused on Chrome/Chromium only**.
 - CI covers Ruby 3.2, 3.3, 3.4, 4.0 with Chrome Dev.
+
+### Planned Changes
+
+- **Firefox CDP support**: Deprecated and will be removed. Firefox automation moves to [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi). Do not add new Firefox-specific code.
+- **Ruby version**: Minimum is 2.6 today; will be raised to 3.2+ with the `async` migration (see `CLAUDE/concurrency.md`).
+- **Concurrency**: Migrating from `concurrent-ruby` to `socketry/async`.
 
 ## Project Structure & Module Organization
 
