@@ -143,7 +143,7 @@ end
 
 ### Migration Strategy
 
-1. **Minimum Ruby Version**: Raise to 3.2 (required for Fiber scheduler)
+1. **Minimum Ruby Version**: 3.2 (required for Fiber scheduler)
 2. **Two-Layer Architecture**:
    - Core layer: Async operations returning `Async::Task`
    - Upper layer: Synchronous wrappers that call `.wait`
