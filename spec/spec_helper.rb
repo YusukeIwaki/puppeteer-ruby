@@ -11,9 +11,13 @@ Rollbar.configure do |config|
 end
 
 module PuppeteerEnvExtension
-  # @return [String] chrome, firefox
+  # @return [String] chrome
   def product
-    (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT_RSPEC']]).first || 'chrome'
+    value = ENV['PUPPETEER_PRODUCT_RSPEC']
+    if value && value != 'chrome'
+      raise ArgumentError.new("PUPPETEER_PRODUCT_RSPEC only supports 'chrome'.")
+    end
+    'chrome'
   end
 
   def chrome?
@@ -21,7 +25,7 @@ module PuppeteerEnvExtension
   end
 
   def firefox?
-    product == 'firefox'
+    false
   end
 end
 
@@ -100,22 +104,9 @@ RSpec.configure do |config|
         end
       end
     else
-      if Puppeteer.env.firefox?
-        Puppeteer.launch(**launch_options) do |browser|
-          # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
-          # So create new page for each spec.
-          @puppeteer_page = browser.new_page
-          begin
-            example.run
-          ensure
-            @puppeteer_page.close
-          end
-        end
-      else
-        Puppeteer.launch(**launch_options) do |browser|
-          @puppeteer_page = browser.new_page
-          example.run
-        end
+      Puppeteer.launch(**launch_options) do |browser|
+        @puppeteer_page = browser.new_page
+        example.run
       end
     end
   end

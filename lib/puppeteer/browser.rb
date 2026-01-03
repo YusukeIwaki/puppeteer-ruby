@@ -7,7 +7,7 @@ class Puppeteer::Browser
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
 
-  # @param product [String|nil] 'chrome' or 'firefox'
+  # @param product [String|nil] 'chrome'
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
@@ -38,7 +38,7 @@ class Puppeteer::Browser
     browser
   end
 
-  # @param product [String|nil] 'chrome' or 'firefox'
+  # @param product [String|nil] 'chrome'
   # @param {!Puppeteer.Connection} connection
   # @param {!Array<string>} contextIds
   # @param {boolean} ignoreHTTPSErrors
@@ -54,7 +54,10 @@ class Puppeteer::Browser
                  close_callback:,
                  target_filter_callback:,
                  is_page_target_callback:)
-    @product = product || 'chrome'
+    @product = product ? product.to_s : 'chrome'
+    if @product != 'chrome'
+      raise ArgumentError.new("Unsupported product: #{@product}. Only 'chrome' is supported.")
+    end
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
     @process = process
@@ -69,19 +72,11 @@ class Puppeteer::Browser
       @contexts[context_id] = Puppeteer::BrowserContext.new(@connection, self, context_id)
     end
 
-    if @product == 'firefox'
-      @target_manager = Puppeteer::FirefoxTargetManager.new(
-        connection: connection,
-        target_factory: method(:create_target),
-        target_filter_callback: @target_filter_callback,
-      )
-    else
-      @target_manager = Puppeteer::ChromeTargetManager.new(
-        connection: connection,
-        target_factory: method(:create_target),
-        target_filter_callback: @target_filter_callback,
-      )
-    end
+    @target_manager = Puppeteer::ChromeTargetManager.new(
+      connection: connection,
+      target_factory: method(:create_target),
+      target_filter_callback: @target_filter_callback,
+    )
   end
 
   private def default_target_filter_callback(target_info)

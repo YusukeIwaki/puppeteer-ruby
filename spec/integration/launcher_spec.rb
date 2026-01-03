@@ -304,56 +304,27 @@ RSpec.describe Puppeteer::Launcher do
 
   describe 'Puppeteer#default_args', puppeteer: :browser do
     it 'returns default arguments' do
-      if Puppeteer.env.firefox?
-        expected_args =
-          if Puppeteer.env.darwin?
-            %w(--headless --foreground)
-          elsif Puppeteer.env.windows?
-            %w(--headless --wait-for-browser)
-          else
-            %w(--headless)
-          end
-        unexpected_args = %w(--headless --foreground --wait-for-browser) - expected_args
-        expect(Puppeteer.default_args).to include(*expected_args)
-        expect(Puppeteer.default_args).not_to include(*unexpected_args)
-      else
-        expect(Puppeteer.default_args).to include(
-          '--no-first-run',
-          '--headless',
-        )
-      end
+      expect(Puppeteer.default_args).to include(
+        '--no-first-run',
+        '--headless',
+      )
     end
 
     it 'can override headless parameter' do
-      if Puppeteer.env.firefox?
-        expect(Puppeteer.default_args(headless: false)).not_to include('--headless')
-      else
-        expect(Puppeteer.default_args(headless: false)).not_to include('--headless')
-      end
+      expect(Puppeteer.default_args(headless: false)).not_to include('--headless')
     end
 
     it 'can override user_data_dir parameter' do
-      if Puppeteer.env.firefox?
-        expect(Puppeteer.default_args(user_data_dir: 'foo')).to include(
-          '--profile',
-          'foo',
-        )
-      else
-        expect(Puppeteer.default_args(user_data_dir: 'foo')).to include(
-          '--user-data-dir=foo',
-        )
-      end
+      expect(Puppeteer.default_args(user_data_dir: 'foo')).to include(
+        '--user-data-dir=foo',
+      )
     end
   end
 
   describe '#product', puppeteer: :browser do
     subject { Puppeteer.product }
 
-    if Puppeteer.env.firefox?
-      it { is_expected.to eq('firefox') }
-    else
-      it { is_expected.to eq('chrome') }
-    end
+    it { is_expected.to eq('chrome') }
   end
 
 #   describe('Puppeteer.launch', function () {

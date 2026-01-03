@@ -223,18 +223,6 @@ session.send_message('Page.enable')
 | `Runtime.executionContextCreated` | New JS context |
 | `Runtime.executionContextDestroyed` | Context destroyed |
 
-## Firefox CDP Support [DEPRECATED]
-
-> **Planned for removal**: Firefox support will be removed from this library. Firefox automation will move to [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi) which uses the WebDriver BiDi protocol.
-
-While Firefox support is still present, note that Firefox's CDP implementation differs from Chrome:
-
-- Some CDP commands may not be implemented
-- Event timing may differ
-- Response format may vary slightly
-
-When writing new code, focus on Chrome/CDP only. Do not add new Firefox-specific handling.
-
 ## Resources
 
 - [Chrome DevTools Protocol Documentation](https://chromedevtools.github.io/devtools-protocol/)

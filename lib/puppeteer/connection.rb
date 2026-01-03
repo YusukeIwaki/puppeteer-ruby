@@ -194,7 +194,6 @@ class Puppeteer::Connection
       'Network.responseReceived',
       'Network.responseReceivedExtraInfo',
       'Page.lifecycleEvent',
-      'Target.receivedMessageFromTarget', # only Firefox
     ]
 
     def handle_message(message)

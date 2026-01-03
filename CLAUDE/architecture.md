@@ -93,13 +93,6 @@ This document describes the architecture of puppeteer-ruby.
 │  - Handles target attachment and auto-attach                    │
 └─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────┐
-│              FirefoxTargetManager [DEPRECATED]                  │
-│  lib/puppeteer/firefox_target_manager.rb                        │
-│                                                                 │
-│  - Firefox-specific target management (planned for removal)     │
-│  - Firefox support moving to puppeteer-bidi                     │
-└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Page Architecture
@@ -192,7 +185,6 @@ lib/puppeteer/
 │   ├── network_manager.rb    # Network interception
 │   ├── launcher/
 │   │   ├── chrome.rb         # Chrome-specific launch
-│   │   └── firefox.rb        # Firefox launch [DEPRECATED]
 │   └── ...
 ```
 

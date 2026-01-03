@@ -56,7 +56,6 @@ module Puppeteer::Launcher
         end
       use_pipe = chrome_arguments.include?('--remote-debugging-pipe')
       runner = Puppeteer::BrowserRunner.new(
-        false,
         chrome_executable,
         chrome_arguments,
         user_data_dir,

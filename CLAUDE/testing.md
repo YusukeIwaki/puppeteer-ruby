@@ -144,30 +144,6 @@ DEBUG=1 bundle exec rspec spec/integration/page_spec.rb 2>&1 | tee test.log
 PUPPETEER_NO_SANDBOX_RSPEC=true bundle exec rspec
 ```
 
-### Firefox Testing [DEPRECATED]
-
-> **Planned for removal**: Firefox support will be removed in a future version. Firefox automation will move to [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi).
-
-While Firefox support is still present:
-
-```bash
-# Run with Firefox
-PUPPETEER_PRODUCT_RSPEC=firefox bundle exec rspec spec/integration/
-
-# Check if pending Firefox tests now pass
-PENDING_CHECK=true PUPPETEER_PRODUCT_RSPEC=firefox bundle exec rspec
-```
-
-Use `it_fails_firefox` for tests that don't work on Firefox:
-
-```ruby
-RSpec.describe 'Chrome-specific features' do
-  it_fails_firefox 'uses Chrome DevTools extension' do
-    # Skipped on Firefox, runs on Chrome
-  end
-end
-```
-
 ## Screenshot Testing
 
 ### Golden Matcher
@@ -248,7 +224,6 @@ Tests run on GitHub Actions with matrix of:
 
 - Ruby versions: 2.7, 3.0, 3.1, 3.2, 3.3, 3.4
 - Environments: Ubuntu with Chrome, Alpine with Chromium
-- Firefox tests (deprecated, will be removed)
 
 See `.github/workflows/ci.yml` for details.
 

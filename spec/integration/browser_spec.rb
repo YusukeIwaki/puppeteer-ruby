@@ -3,19 +3,13 @@ require 'spec_helper'
 RSpec.describe Puppeteer::Browser, puppeteer: :browser do
   describe 'version' do
     it 'should return version' do
-      expect(browser.version).to match(/Chrome|Firefox/)
+      expect(browser.version).to include('Chrome')
     end
   end
 
   describe 'user_agent' do
-    if Puppeteer.env.firefox?
-      it 'should include Gecko' do
-        expect(browser.user_agent).to include('Gecko')
-      end
-    else
-      it 'should include WebKit' do
-        expect(browser.user_agent).to include('WebKit')
-      end
+    it 'should include WebKit' do
+      expect(browser.user_agent).to include('WebKit')
     end
   end
 

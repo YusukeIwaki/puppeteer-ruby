@@ -12,7 +12,11 @@ class Puppeteer::BrowserConnector
   # @return [Puppeteer::Browser]
   def connect_to_browser
     version = Puppeteer::Browser::Version.fetch(connection)
-    product = version.product.downcase.include?('firefox') ? 'firefox' : 'chrome'
+    product_name = version.product.to_s.downcase
+    if product_name.include?('firefox')
+      raise Puppeteer::Error.new('Firefox CDP support has been removed. Use puppeteer-bidi for Firefox automation.')
+    end
+    product = 'chrome'
 
     result = connection.send_message('Target.getBrowserContexts')
     browser_context_ids = result['browserContextIds']

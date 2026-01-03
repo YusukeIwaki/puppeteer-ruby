@@ -258,7 +258,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
 
     # Filter out quads that have too small area to click into.
-    # Fallback to `layoutViewport` in case of using Firefox.
+    # Prefer cssLayoutViewport when available.
     layout_viewport = layout_metrics["cssLayoutViewport"] || layout_metrics["layoutViewport"]
     client_width = layout_viewport["clientWidth"]
     client_height = layout_viewport["clientHeight"]
