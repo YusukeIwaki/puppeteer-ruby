@@ -78,7 +78,7 @@ lib/puppeteer/
 
 ### Ruby Version & Style
 
-- Minimum Ruby version: 2.6
+- Minimum Ruby version: 3.2
 - Follow RuboCop rules defined in `.rubocop.yml`
 - Use explicit keyword arguments for public APIs
 
@@ -168,7 +168,6 @@ Currently, puppeteer-ruby uses Thread-based concurrency with `concurrent-ruby`:
 The project is planning to migrate from concurrent-ruby to socketry/async:
 
 - **Target**: Fiber-based concurrency using `Async` gem
-- **Minimum Ruby Version**: Will be raised to Ruby 3.2
 - **Benefits**: Simpler concurrency model, no mutex locks needed, better alignment with JavaScript async/await patterns
 
 When implementing new features, consider the upcoming migration:
@@ -196,6 +195,13 @@ end
 1. Run tests: `bundle exec rspec`
 2. Run RuboCop: `bundle exec rubocop`
 3. Update `docs/api_coverage.md` if adding new API methods
+
+### Pull Request Guidelines
+
+- **Language**: All Pull Requests must be written in English (title, description, and commit messages)
+- **`gh` command**: Available for exploring GitHub issues, codes, or creating pull requests
+- **PR Title**: Use a clear, concise title describing the change
+- **PR Description**: Include a summary of changes and testing done
 
 ### Version Updates
 

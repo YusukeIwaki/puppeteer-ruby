@@ -222,7 +222,7 @@ end
 
 Tests run on GitHub Actions with matrix of:
 
-- Ruby versions: 2.7, 3.0, 3.1, 3.2, 3.3, 3.4
+- Ruby versions: 3.2, 3.3, 3.4
 - Environments: Ubuntu with Chrome, Alpine with Chromium
 
 See `.github/workflows/ci.yml` for details.

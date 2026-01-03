@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.0
+        ruby-version: 3.2
         bundler-cache: true
     - name: Check Puppeteer::VERSION
       run: bundle exec ruby -e 'raise "invalid Puppeteer::VERSION" unless Puppeteer::VERSION == ENV["RELEASE_TAG"]'

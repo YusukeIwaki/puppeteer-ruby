@@ -4,11 +4,11 @@
 
 - Read `CLAUDE.md` and `CLAUDE/` first; they define the CDP architecture, porting workflow, testing strategy, and concurrency plan.
 - This repository is a CDP-based Ruby port of Puppeteer, **focused on Chrome/Chromium only**.
-- CI covers Ruby 3.2, 3.3, 3.4, 4.0 with Chrome Dev.
+- CI covers Ruby 3.2, 3.3, 3.4 with latest Chrome.
 
 ### Planned Changes
 
-- **Ruby version**: Minimum is 2.6 today; will be raised to 3.2+ with the `async` migration (see `CLAUDE/concurrency.md`).
+- **Ruby version**: Minimum is 3.2+ (aligned with the `async` migration plan; see `CLAUDE/concurrency.md`).
 - **Concurrency**: Migrating from `concurrent-ruby` to `socketry/async`.
 
 ## Project Structure & Module Organization
@@ -28,7 +28,7 @@
 ### Useful Environment Variables
 
 - `PUPPETEER_EXECUTABLE_PATH_RSPEC`: custom Chrome path
-- `PUPPETEER_CHANNEL_RSPEC`: Chrome channel (CI uses `chrome-dev`)
+- `PUPPETEER_CHANNEL_RSPEC`: Chrome channel (for example `chrome-dev`)
 - `PUPPETEER_NO_SANDBOX_RSPEC`: add `--no-sandbox` flag
 
 ## Coding Style & Naming Conventions
