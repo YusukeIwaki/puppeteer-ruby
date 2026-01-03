@@ -43,6 +43,10 @@ RSpec.describe Puppeteer::Launcher::LaunchOptions do
     it 'pipe: false' do
       expect(subject.pipe?).to eq(false)
     end
+
+    it 'wait_for_initial_page: true' do
+      expect(subject.wait_for_initial_page?).to eq(true)
+    end
   end
 
   describe "disabled signal handlers" do

@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
+  include_context 'with test state'
   describe 'default context' do
     it 'should have default context' do
       expect(browser.browser_contexts.length).to eq(1)
@@ -43,10 +44,10 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
       page = context.new_page
       page.goto('about:blank')
 
-      target_promise = Concurrent::Promises.resolvable_future.tap do |future|
-        browser.once('targetcreated') { |target| future.fulfill(target) }
+      target_promise = Async::Promise.new.tap do |promise|
+        browser.once('targetcreated') { |target| promise.resolve(target) }
       end
-      popup_target = Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(target_promise) do
+      popup_target = await_with_trigger(target_promise) do
         page.evaluate('url => { window.open(url); return null }', 'about:blank')
       end
       expect(popup_target.browser_context).to eq(context)
@@ -96,29 +97,26 @@ RSpec.describe Puppeteer::BrowserContext, puppeteer: :browser do
 
     it 'should wait for a target' do
       context = browser.create_incognito_browser_context
-      resolved = false
       target_promise = context.async_wait_for_target(predicate: -> (target) { target.url == "#{server_prefix}/test" })
-      target_promise.then { resolved = true }
 
       page = context.new_page
-      expect(resolved).to eq(false)
+      expect(target_promise.completed?).to eq(false)
       page.goto("#{server_prefix}/test")
-      target = target_promise.value!
+      target = target_promise.wait
+      expect(target_promise.completed?).to eq(true)
       expect(target.page).to eq(page)
       context.close
     end
 
     it 'should timeout waiting for a non-existent target' do
       context = browser.create_incognito_browser_context
-      resolved = false
       target_promise = context.async_wait_for_target(timeout: 500, predicate: -> (target) { target.url == '?????' })
-      target_promise.then { resolved = true }
 
       page = context.new_page
-      expect(resolved).to eq(false)
+      expect(target_promise.completed?).to eq(false)
       page.goto("#{server_prefix}/test")
-      expect(resolved).to eq(false)
-      expect { target_promise.value! }.to raise_error(Puppeteer::TimeoutError)
+      expect(target_promise.completed?).to eq(false)
+      expect { target_promise.wait }.to raise_error(Puppeteer::TimeoutError)
       context.close
     end
   end

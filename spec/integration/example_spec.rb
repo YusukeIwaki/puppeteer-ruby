@@ -4,6 +4,7 @@ require 'spec_helper'
 require 'tmpdir'
 
 RSpec.describe 'example' do
+  include_context 'with test state'
   def with_network_retry(max_retry: 2, timeout: 4, &block)
     if max_retry <= 0
       Timeout.timeout(timeout, &block)

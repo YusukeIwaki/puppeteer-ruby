@@ -140,7 +140,7 @@ class Puppeteer::Keyboard
         press(char, delay: delay)
       else
         if delay
-          sleep(delay.to_i / 1000.0)
+          Puppeteer::AsyncUtils.sleep_seconds(delay.to_i / 1000.0)
         end
         send_character(char)
       end
@@ -155,7 +155,7 @@ class Puppeteer::Keyboard
   def press(key, delay: nil, text: nil, commands: nil)
     down(key, text: text, commands: commands)
     if delay
-      sleep(delay.to_i / 1000.0)
+      Puppeteer::AsyncUtils.sleep_seconds(delay.to_i / 1000.0)
     end
     up(key)
   end

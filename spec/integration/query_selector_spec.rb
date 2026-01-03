@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'querySelector' do
+  include_context 'with test state'
   describe 'Page#eval_on_selector' do
     it 'should work' do
       page.content = '<section id="testAttribute">43543</section>'

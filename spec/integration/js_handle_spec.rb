@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::JSHandle do
+  include_context 'with test state'
   describe 'Page#evaluate_handle' do
     it 'should work' do
       window_handle = page.evaluate_handle('() => window')

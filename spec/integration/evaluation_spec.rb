@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'evaluation specs' do
+  include_context 'with test state'
   describe 'Page#evaluate', puppeteer: :page do
     it 'should work' do
       expect(page.evaluate('() => 7 * 3')).to eq(21)

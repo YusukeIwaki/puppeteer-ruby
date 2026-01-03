@@ -58,8 +58,10 @@
   - Follow puppeteer-bidi's `Page` patterns: wrap `:request` handlers to enqueue interception actions (WeakMap to keep `on/off` mapping), serialize interception with `Async::Semaphore`, and keep `Page` mostly as a thin delegator to `Frame`.
   - Mirror upstream timeout/deferred behavior with `Async::Promise` + `AsyncUtils.async_timeout` (timeout 0 = infinite) and keep error messages aligned (e.g., file chooser/network idle).
   - Screenshot parity: apply default option behavior and clip rounding (`normalize/round`), and convert clip coordinates when `captureBeyondViewport` is false (visualViewport offsets).
+  - Serialize screenshot operations (bidi uses `browserContext.waitForScreenshotOperations`); keep `ScreenshotTaskQueue`/guards to avoid overlapping captures.
   - `evaluate_on_new_document`: build IIFE expressions and serialize args the same way as puppeteer-bidi's `build_evaluation_expression`/`serialize_arg_for_preload`.
   - `wait_for_network_idle`: track inflight requests and reset idle timers on changes (mirrors Page.ts inflight counter logic).
+  - `wait_for_file_chooser`: resolve all pending waiters and keep timeout error messaging aligned (`Waiting for \`FileChooser\` failed: <ms> exceeded`).
   - RxJS Observable flows are replaced with manual EventEmitter listeners + `Async::Promise` (no `fromEmitterEvent`/`merge`/`timeout`), so compose waits explicitly (e.g., `wait_for_navigation`, `set_content`).
   - Use `AsyncUtils` (Barrier-based Promise.all/race + `async_timeout`) instead of RxJS `combineLatest`/`firstValueFrom`/`timeout`.
   - `WaitTask`/`TaskManager` mirror Puppeteer's polling waits; no AbortSignal, use Async tasks + cancellation.

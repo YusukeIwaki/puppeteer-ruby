@@ -31,6 +31,7 @@ module Puppeteer::Launcher
     # @property {boolean=} dumpio
     # @property {!Object<string, string | undefined>=} env
     # @property {boolean=} pipe
+    # @property {boolean=} wait_for_initial_page
     def initialize(options)
       @channel = options[:channel]
       @executable_path = options[:executable_path]
@@ -42,6 +43,7 @@ module Puppeteer::Launcher
       @dumpio = options[:dumpio] || false
       @env = options[:env] || ENV
       @pipe = options[:pipe] || false
+      @wait_for_initial_page = options.fetch(:wait_for_initial_page, true)
     end
 
     attr_reader :channel, :executable_path, :ignore_default_args, :timeout, :env
@@ -64,6 +66,10 @@ module Puppeteer::Launcher
 
     def pipe?
       @pipe
+    end
+
+    def wait_for_initial_page?
+      @wait_for_initial_page
     end
   end
 end

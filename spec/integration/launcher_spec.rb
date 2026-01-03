@@ -1,64 +1,77 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Launcher do
+  include_context 'with test state'
   describe 'Browser#disconnect', puppeteer: :browser do
     it 'should reject navigation when browser closes', sinatra: true do
-      remote = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
-      page = remote.new_page
+      with_browser do |test_browser|
+        remote = Puppeteer.connect(browser_ws_endpoint: test_browser.ws_endpoint)
+        page = remote.new_page
 
-      # try to disconnect remote connection exactly during loading css.
-      wait_for_css = Concurrent::Promises.resolvable_future
-      sinatra.get('/_one-style.html') do
-        "<link rel='stylesheet' href='./_one-style.css'><div>hello, world!</div>"
-      end
-      sinatra.get('/_one-style.css') do
-        wait_for_css.fulfill(nil)
-        sleep 30
-        "body { background-color: pink; }"
-      end
-      navigation_promise = Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { page.goto("#{server_prefix}/_one-style.html") })
-      wait_for_css.then { sleep 0.02; remote.disconnect }
+        # try to disconnect remote connection exactly during loading css.
+        wait_for_css = Async::Promise.new
+        sinatra.get('/_one-style.html') do
+          "<link rel='stylesheet' href='./_one-style.css'><div>hello, world!</div>"
+        end
+        sinatra.get('/_one-style.css') do
+          wait_for_css.resolve(nil)
+          sleep 30
+          "body { background-color: pink; }"
+        end
+        navigation_promise = async_promise { page.goto("#{server_prefix}/_one-style.html") }
+        Thread.new { wait_for_css.wait; sleep 0.02; remote.disconnect }
 
-      expect { navigation_promise.value! }.to raise_error(/Navigation failed because browser has disconnected!/)
-      browser.close
+        expect { navigation_promise.wait }.to raise_error(/Navigation failed because browser has disconnected!/)
+      end
     end
 
     it 'should reject wait_for_selector when browser closes' do
-      remote = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
-      page = remote.new_page
+      with_browser do |test_browser|
+        remote = Puppeteer.connect(browser_ws_endpoint: test_browser.ws_endpoint)
+        page = remote.new_page
 
-      watchdog = page.async_wait_for_selector('div')
-      remote.disconnect
+        watchdog = page.async_wait_for_selector('div')
+        remote.disconnect
 
-      expect { watchdog.value! }.to raise_error(/Protocol error/)
-      browser.close
+        expect { watchdog.wait }.to raise_error(/Protocol error/)
+      end
     end
   end
 
   describe 'Browser#close', puppeteer: :browser do
     it 'should terminate network waiters', sinatra: true do
-      remote = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
+      test_browser = Puppeteer.launch(**default_launch_options)
+      begin
+        remote = Puppeteer.connect(browser_ws_endpoint: test_browser.ws_endpoint)
 
-      new_page = remote.new_page
+        new_page = remote.new_page
 
-      wait_for_request = new_page.async_wait_for_request(url: server_empty_page)
-      wait_for_response = new_page.async_wait_for_response(url: server_empty_page)
+        wait_for_request = new_page.async_wait_for_request(url: server_empty_page)
+        wait_for_response = new_page.async_wait_for_response(url: server_empty_page)
 
-      browser.close
-      expect { wait_for_request.value! }.to raise_error(/Target Closed/)
-      expect { wait_for_response.value! }.to raise_error(/Target Closed/)
+        test_browser.close
+        expect { wait_for_request.wait }.to raise_error(/Target Closed/)
+        expect { wait_for_response.wait }.to raise_error(/Target Closed/)
+      ensure
+        test_browser.close if test_browser.connected?
+      end
     end
   end
 
   describe 'Puppeteer#launch', puppeteer: :browser do
     it 'should reject all promises when browser is closed' do
-      page = browser.new_page
-      never_resolves = page.async_evaluate('() => new Promise(() => {})')
+      test_browser = Puppeteer.launch(**default_launch_options)
+      begin
+        page = test_browser.new_page
+        never_resolves = page.async_evaluate('() => new Promise(() => {})')
 
-      sleep 0.004 # sleep a bit after page is created, before closing it.
+        sleep 0.004 # sleep a bit after page is created, before closing it.
 
-      browser.close
-      expect { never_resolves.value! }.to raise_error(/Protocol error/)
+        test_browser.close
+        expect { never_resolves.wait }.to raise_error(/Protocol error/)
+      ensure
+        test_browser.close if test_browser.connected?
+      end
     end
   end
 
@@ -381,15 +394,20 @@ RSpec.describe Puppeteer::Launcher do
     end
 
     it 'should be able to close remote browser' do
-      remote_browser = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
+      test_browser = Puppeteer.launch(**default_launch_options)
+      begin
+        remote_browser = Puppeteer.connect(browser_ws_endpoint: test_browser.ws_endpoint)
 
-      Timeout.timeout(3) do
-        disconnected_promise = Concurrent::Promises.resolvable_future.tap do |future|
-          browser.once('disconnected') { future.fulfill(nil) }
+        Timeout.timeout(3) do
+          disconnected_promise = Async::Promise.new.tap do |promise|
+            test_browser.once('disconnected') { promise.resolve(nil) }
+          end
+          await_with_trigger(disconnected_promise) do
+            remote_browser.close
+          end
         end
-        Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(disconnected_promise) do
-          remote_browser.close
-        end
+      ensure
+        test_browser.close if test_browser.connected?
       end
     end
 
@@ -423,36 +441,43 @@ RSpec.describe Puppeteer::Launcher do
     #     });
 
     it 'should be able to reconnect to a disconnected browser', sinatra: true do
-      ws_endpoint = browser.ws_endpoint
+      test_browser = Puppeteer.launch(**default_launch_options)
+      begin
+        ws_endpoint = test_browser.ws_endpoint
 
-      page = browser.new_page
-      page.goto("#{server_prefix}/frames/nested-frames.html")
-      browser.disconnect
+        page = test_browser.new_page
+        page.goto("#{server_prefix}/frames/nested-frames.html")
+        test_browser.disconnect
 
-      Puppeteer.connect(browser_ws_endpoint: ws_endpoint) do |remote_browser|
-        restored_page = remote_browser.pages.find do |page|
-          page.url == "#{server_prefix}/frames/nested-frames.html"
+        remote_browser = Puppeteer.connect(browser_ws_endpoint: ws_endpoint)
+        begin
+          restored_page = remote_browser.pages.find do |page|
+            page.url == "#{server_prefix}/frames/nested-frames.html"
+          end
+
+          expect(dump_frames(restored_page.main_frame)).to eq([
+            'http://localhost:<PORT>/frames/nested-frames.html',
+            '    http://localhost:<PORT>/frames/two-frames.html (2frames)',
+            '        http://localhost:<PORT>/frames/frame.html (uno)',
+            '        http://localhost:<PORT>/frames/frame.html (dos)',
+            '    http://localhost:<PORT>/frames/frame.html (aframe)',
+          ])
+          expect(restored_page.evaluate('() => 7 * 8')).to eq(56)
+        ensure
+          remote_browser.close
         end
-
-        expect(dump_frames(restored_page.main_frame)).to eq([
-          'http://localhost:<PORT>/frames/nested-frames.html',
-          '    http://localhost:<PORT>/frames/two-frames.html (2frames)',
-          '        http://localhost:<PORT>/frames/frame.html (uno)',
-          '        http://localhost:<PORT>/frames/frame.html (dos)',
-          '    http://localhost:<PORT>/frames/frame.html (aframe)',
-        ])
-        expect(restored_page.evaluate('() => 7 * 8')).to eq(56)
+      ensure
+        test_browser.close if test_browser.connected?
       end
     end
 
     it 'should be able to connect to the same page simultaneously' do
       browser2 = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
-      pages = Concurrent::Promises
-        .zip(
-          Concurrent::Promises.resolvable_future.tap { |future| browser.once('targetcreated') { |target| future.fulfill(target.page) } },
-          Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { browser2.new_page }),
-        ).value!
+      pages = await_promises(
+        Async::Promise.new.tap { |promise| browser.once('targetcreated') { |target| promise.resolve(target.page) } },
+        async_promise { browser2.new_page },
+      )
       expect(pages.first.evaluate('() => 7 * 8')).to eq(56)
       expect(pages.last.evaluate('() => 7 * 6')).to eq(42)
     end
@@ -485,39 +510,42 @@ RSpec.describe Puppeteer::Launcher do
 
   describe 'Browser.Events.disconnected', puppeteer: :browser do
     it 'should be emitted when: browser gets closed, disconnected or underlying websocket gets closed' do
-      original_browser = browser
-      browser_ws_endpoint = original_browser.ws_endpoint
-      remote_browser1 = Puppeteer.connect(browser_ws_endpoint: browser_ws_endpoint)
-      remote_browser2 = Puppeteer.connect(browser_ws_endpoint: browser_ws_endpoint)
+      test_browser = Puppeteer.launch(**default_launch_options)
+      begin
+        browser_ws_endpoint = test_browser.ws_endpoint
+        remote_browser1 = Puppeteer.connect(browser_ws_endpoint: browser_ws_endpoint)
+        remote_browser2 = Puppeteer.connect(browser_ws_endpoint: browser_ws_endpoint)
 
-      disconnected_original = 0
-      disconnected_remote1 = 0
-      disconnected_remote2 = 0
-      original_browser.on('disconnected') { disconnected_original += 1 }
-      remote_browser1.on('disconnected') { disconnected_remote1 += 1 }
-      remote_browser2.on('disconnected') { disconnected_remote2 += 1 }
+        disconnected_original = 0
+        disconnected_remote1 = 0
+        disconnected_remote2 = 0
+        test_browser.on('disconnected') { disconnected_original += 1 }
+        remote_browser1.on('disconnected') { disconnected_remote1 += 1 }
+        remote_browser2.on('disconnected') { disconnected_remote2 += 1 }
 
-      disconnected_promise = Concurrent::Promises.resolvable_future.tap do |future|
-        remote_browser2.once('disconnected') { |frame| future.fulfill(frame) }
+        disconnected_promise = Async::Promise.new.tap do |promise|
+          remote_browser2.once('disconnected') { |frame| promise.resolve(frame) }
+        end
+        await_with_trigger(disconnected_promise) do
+          remote_browser2.disconnect
+        end
+
+        expect(disconnected_original).to eq(0)
+        expect(disconnected_remote1).to eq(0)
+        expect(disconnected_remote2).to eq(1)
+
+        await_promises(
+          Async::Promise.new.tap { |promise| remote_browser1.once('disconnected') { |frame| promise.resolve(frame) } },
+          Async::Promise.new.tap { |promise| test_browser.once('disconnected') { |frame| promise.resolve(frame) } },
+          async_promise { test_browser.close },
+        )
+
+        expect(disconnected_original).to eq(1)
+        expect(disconnected_remote1).to eq(1)
+        expect(disconnected_remote2).to eq(1)
+      ensure
+        test_browser.close if test_browser.connected?
       end
-      Puppeteer::ConcurrentRubyUtils.with_waiting_for_complete(disconnected_promise) do
-        remote_browser2.disconnect
-      end
-
-      expect(disconnected_original).to eq(0)
-      expect(disconnected_remote1).to eq(0)
-      expect(disconnected_remote2).to eq(1)
-
-      Concurrent::Promises
-        .zip(
-          Concurrent::Promises.resolvable_future.tap { |future| remote_browser1.once('disconnected') { |frame| future.fulfill(frame) } },
-          Concurrent::Promises.resolvable_future.tap { |future| original_browser.once('disconnected') { |frame| future.fulfill(frame) } },
-          Concurrent::Promises.future(&Puppeteer::ConcurrentRubyUtils.future_with_logging { original_browser.close }),
-        ).value!
-
-      expect(disconnected_original).to eq(1)
-      expect(disconnected_remote1).to eq(1)
-      expect(disconnected_remote2).to eq(1)
     end
   end
 end

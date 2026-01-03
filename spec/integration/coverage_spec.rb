@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Coverage specs' do
+  include_context 'with test state'
   describe 'JSCoverage' do
     it 'should work', sinatra: true do
       page.coverage.start_js_coverage

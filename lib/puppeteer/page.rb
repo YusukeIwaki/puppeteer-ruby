@@ -112,7 +112,8 @@ class Puppeteer::Page
     @client.on_event('Page.fileChooserOpened') do |event|
       handle_file_chooser(event)
     end
-    @target.is_closed_promise.then do
+    Async do
+      @target.is_closed_promise.wait
       @target.target_manager.remove_target_interceptor(@client, method(:handle_attached_to_target))
       @target.target_manager.remove_event_listener(@target_gone_listener_id)
 
@@ -151,12 +152,11 @@ class Puppeteer::Page
   end
 
   def init
-    Concurrent::Promises
-      .zip(
-        @frame_manager.async_init(@target.target_id),
-        @client.async_send_message('Performance.enable'),
-        @client.async_send_message('Log.enable'),
-      ).value!
+    Puppeteer::AsyncUtils.await_promise_all(
+      @frame_manager.async_init(@target.target_id),
+      @client.async_send_message('Performance.enable'),
+      @client.async_send_message('Log.enable'),
+    )
   end
 
   def drag_interception_enabled?
@@ -197,7 +197,7 @@ class Puppeteer::Page
     @file_chooser_interceptors.clear
     file_chooser = Puppeteer::FileChooser.new(element, event)
     interceptors.each do |promise|
-      promise.fulfill(file_chooser)
+      promise.resolve(file_chooser)
     end
   end
 
@@ -215,14 +215,16 @@ class Puppeteer::Page
     end
 
     option_timeout = timeout || @timeout_settings.timeout
-    promise = Concurrent::Promises.resolvable_future
+    promise = Async::Promise.new
     @file_chooser_interceptors << promise
 
     begin
-      Timeout.timeout(option_timeout / 1000.0) do
-        promise.value!
+      if option_timeout == 0
+        promise.wait
+      else
+        Puppeteer::AsyncUtils.async_timeout(option_timeout, promise).wait
       end
-    rescue Timeout::Error
+    rescue Async::TimeoutError
       raise FileChooserTimeoutError.new(timeout: option_timeout)
     ensure
       @file_chooser_interceptors.delete(promise)
@@ -492,7 +494,7 @@ class Puppeteer::Page
     promises = @frame_manager.frames.map do |frame|
       frame.async_evaluate("() => #{source}")
     end
-    Concurrent::Promises.zip(*promises).value!
+    Puppeteer::AsyncUtils.await_promise_all(*promises)
 
     nil
   end
@@ -596,8 +598,12 @@ class Puppeteer::Page
         JavaScriptFunction.new(deliver_error, [name, seq, err.message]).source
       end
 
-    @client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).rescue do |error|
-      debug_puts(error)
+    Async do
+      begin
+        @client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+      rescue => error
+        debug_puts(error)
+      end
     end
   end
 
@@ -694,20 +700,23 @@ class Puppeteer::Page
   private def wait_for_network_manager_event(event_name, predicate:, timeout:)
     option_timeout = timeout || @timeout_settings.timeout
 
-    promise = Concurrent::Promises.resolvable_future
+    promise = Async::Promise.new
 
     listener_id = @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
       if predicate.call(event_target)
-        promise.fulfill(event_target)
+        promise.resolve(event_target)
       end
     end
 
     begin
-      # Timeout.timeout(0) means "no limit" for timeout.
-      Timeout.timeout(option_timeout / 1000.0) do
-        Concurrent::Promises.any(promise, session_close_promise).value!
+      if option_timeout == 0
+        Puppeteer::AsyncUtils.await_promise_race(promise, session_close_promise)
+      else
+        Puppeteer::AsyncUtils.async_timeout(option_timeout, -> {
+          Puppeteer::AsyncUtils.await_promise_race(promise, session_close_promise)
+        }).wait
       end
-    rescue Timeout::Error
+    rescue Async::TimeoutError
       raise Puppeteer::TimeoutError.new("waiting for #{event_name} failed: timeout #{option_timeout}ms exceeded")
     ensure
       @frame_manager.network_manager.remove_event_listener(listener_id)
@@ -717,22 +726,25 @@ class Puppeteer::Page
   private def wait_for_frame_manager_event(*event_names, predicate:, timeout:)
     option_timeout = timeout || @timeout_settings.timeout
 
-    promise = Concurrent::Promises.resolvable_future
+    promise = Async::Promise.new
 
     listener_ids = event_names.map do |event_name|
       @frame_manager.add_event_listener(event_name) do |event_target|
         if predicate.call(event_target)
-          promise.fulfill(event_target) unless promise.resolved?
+          promise.resolve(event_target) unless promise.resolved?
         end
       end
     end
 
     begin
-      # Timeout.timeout(0) means "no limit" for timeout.
-      Timeout.timeout(option_timeout / 1000.0) do
-        Concurrent::Promises.any(promise, session_close_promise).value!
+      if option_timeout == 0
+        Puppeteer::AsyncUtils.await_promise_race(promise, session_close_promise)
+      else
+        Puppeteer::AsyncUtils.async_timeout(option_timeout, -> {
+          Puppeteer::AsyncUtils.await_promise_race(promise, session_close_promise)
+        }).wait
       end
-    rescue Timeout::Error
+    rescue Async::TimeoutError
       raise Puppeteer::TimeoutError.new("waiting for #{event_names.join(" or ")} failed: timeout #{option_timeout}ms exceeded")
     ensure
       listener_ids.each do |listener_id|
@@ -742,7 +754,7 @@ class Puppeteer::Page
   end
 
   private def session_close_promise
-    @disconnect_promise ||= Concurrent::Promises.resolvable_future.tap do |future|
+    @disconnect_promise ||= Async::Promise.new.tap do |future|
       @client.observe_first(CDPSessionEmittedEvents::Disconnected) do
         future.reject(Puppeteer::CDPSession::Error.new('Target Closed'))
       end
@@ -1197,12 +1209,12 @@ class Puppeteer::Page
       @client.send_message('Page.close')
     else
       @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
-      @target.is_closed_promise.value!
+      @target.is_closed_promise.wait
 
       # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
       25.times do
         break if @closed
-        sleep 0.004
+        Puppeteer::AsyncUtils.sleep_seconds(0.004)
       end
     end
   end

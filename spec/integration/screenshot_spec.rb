@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Screenshots' do
+  include_context 'with test state'
   include GoldenMatcher
 
   describe 'Page#screenshot', skip: ENV['CI'], sinatra: true do
@@ -52,20 +53,18 @@ RSpec.describe 'Screenshots' do
 
     it 'should run in parallel' do
       promises = 3.times.map do |index|
-        Concurrent::Promises.future(index,
-          &Puppeteer::ConcurrentRubyUtils.future_with_logging do |i|
-            page.screenshot(
-              clip: {
-                x: 50 * i,
-                y: 0,
-                width: 50,
-                height: 50,
-              },
-            )
-          end
-        )
+        async_promise do
+          page.screenshot(
+            clip: {
+              x: 50 * index,
+              y: 0,
+              width: 50,
+              height: 50,
+            },
+          )
+        end
       end
-      screenshots = Concurrent::Promises.zip(*promises).value!
+      screenshots = await_promises(*promises)
       expect(screenshots[1]).to be_golden('grid-cell-1.png')
     end
 

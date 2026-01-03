@@ -1,5 +1,3 @@
-require 'timeout'
-
 class Puppeteer::FrameManager
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
@@ -76,21 +74,20 @@ class Puppeteer::FrameManager
   attr_reader :client, :timeout_settings
 
   private def init(target_id, cdp_session = nil)
-    @frames_pending_target_init[target_id] ||= Concurrent::Promises.resolvable_future
+    @frames_pending_target_init[target_id] ||= Async::Promise.new
     client = cdp_session || @client
 
     promises = [
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
     ].compact
-    results = Concurrent::Promises.zip(*promises).value!
+    results = Puppeteer::AsyncUtils.await_promise_all(*promises)
     frame_tree = results[1]['frameTree']
     handle_frame_tree(client, frame_tree)
-    Concurrent::Promises
-      .zip(
-        client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
-        client.async_send_message('Runtime.enable'),
-      ).value!
+    Puppeteer::AsyncUtils.await_promise_all(
+      client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
+      client.async_send_message('Runtime.enable'),
+    )
     ensure_isolated_world(client, UTILITY_WORLD_NAME)
     @network_manager.init unless cdp_session
   rescue => err
@@ -99,7 +96,7 @@ class Puppeteer::FrameManager
 
     raise
   ensure
-    @frames_pending_target_init.delete(target_id)&.fulfill(nil)
+    @frames_pending_target_init.delete(target_id)&.resolve(nil)
   end
 
   define_async_method :async_init
@@ -127,29 +124,29 @@ class Puppeteer::FrameManager
     ensure_new_document_navigation = false
 
     begin
-      navigate = Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+      navigate = Async do
+        Puppeteer::AsyncUtils.future_with_logging do
           result = @client.send_message('Page.navigate', navigate_params)
           loader_id = result['loaderId']
           ensure_new_document_navigation = !!loader_id
           if result['errorText']
             raise NavigationError.new("#{result['errorText']} at #{url}")
           end
-        end
-      )
-      Concurrent::Promises.any(
+        end.call
+      end
+      Puppeteer::AsyncUtils.await_promise_race(
         navigate,
         watcher.timeout_or_termination_promise,
-      ).value!
+      )
 
-      Concurrent::Promises.any(
+      Puppeteer::AsyncUtils.await_promise_race(
         watcher.timeout_or_termination_promise,
         if ensure_new_document_navigation
           watcher.new_document_navigation_promise
         else
           watcher.same_document_navigation_promise
         end,
-      ).value!
+      )
 
       watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
@@ -169,11 +166,11 @@ class Puppeteer::FrameManager
     option_timeout = timeout || @timeout_settings.navigation_timeout
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     begin
-      Concurrent::Promises.any(
+      Puppeteer::AsyncUtils.await_promise_race(
         watcher.timeout_or_termination_promise,
         watcher.same_document_navigation_promise,
         watcher.new_document_navigation_promise,
-      ).value!
+      )
 
       watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
@@ -285,10 +282,11 @@ class Puppeteer::FrameManager
     end
 
     if @frames_pending_target_init[parent_frame_id]
-      @frames_pending_attachment[frame_id] ||= Concurrent::Promises.resolvable_future
-      @frames_pending_target_init[parent_frame_id].then do |_|
+      @frames_pending_attachment[frame_id] ||= Async::Promise.new
+      Async do
+        @frames_pending_target_init[parent_frame_id].wait
         attach_child_frame(@frames[parent_frame_id], parent_frame_id, frame_id, session)
-        @frames_pending_attachment.delete(frame_id)&.fulfill(nil)
+        @frames_pending_attachment.delete(frame_id)&.resolve(nil)
       end
       return
     end
@@ -316,7 +314,8 @@ class Puppeteer::FrameManager
 
 
     if @frames_pending_attachment[frame_id]
-      @frames_pending_attachment[frame_id].then do |_|
+      Async do
+        @frames_pending_attachment[frame_id].wait
         frame = is_main_frame ? @main_frame : @frames[frame_id]
         reattach_frame(frame, frame_id, is_main_frame, frame_payload)
       end
@@ -378,7 +377,7 @@ class Puppeteer::FrameManager
           worldName: name,
         )
       end
-    Concurrent::Promises.zip(*create_isolated_worlds_promises).value!
+    Puppeteer::AsyncUtils.await_promise_all(*create_isolated_worlds_promises)
   end
 
   # @param frame_id [String]

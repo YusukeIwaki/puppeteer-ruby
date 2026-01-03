@@ -25,7 +25,7 @@ RSpec.describe Puppeteer::CDPSession do
     it 'should be thread safe' do
       Timeout.timeout(5) do
         futures = 1000.times.map { cdp_session.async_send_message('ping') }
-        Concurrent::Promises.zip(*futures).value!
+        await_promises(*futures)
       end
     end
 

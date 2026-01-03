@@ -40,30 +40,36 @@ class Puppeteer::Target
     #    this._pagePromise = null;
     #    /** @type {?Promise<!Worker>} */
     #    this._workerPromise = null;
-    @initialize_callback_promise = Concurrent::Promises.resolvable_future
-    @initialized_promise = @initialize_callback_promise.then do |success|
-      handle_initialized(success)
+    @initialize_callback_promise = Async::Promise.new
+    @initialized_promise = Async::Promise.new
+    @is_closed_promise = Async::Promise.new
+
+    Async do
+      begin
+        @initialized_promise.resolve(handle_initialized(@initialize_callback_promise.wait))
+      rescue => err
+        @initialized_promise.reject(err)
+      end
     end
-    @is_closed_promise = Concurrent::Promises.resolvable_future
 
     @is_initialized = !@is_page_target_callback.call(@target_info) || !@target_info.url.empty?
 
     if @is_initialized
-      @initialize_callback_promise.fulfill(true)
+      @initialize_callback_promise.resolve(true)
     end
   end
 
   attr_reader :target_id, :target_info, :initialized_promise, :is_closed_promise
 
   def closed_callback
-    @is_closed_promise.fulfill(true)
+    @is_closed_promise.resolve(true) unless @is_closed_promise.resolved?
   end
 
   class InitializeFailure < Puppeteer::Error; end
 
   def ignore_initialize_callback_promise
-    unless @initialize_callback_promise.fulfilled?
-      @initialize_callback_promise.fulfill(false)
+    unless @initialize_callback_promise.resolved?
+      @initialize_callback_promise.resolve(false)
     end
   end
 
@@ -165,7 +171,7 @@ class Puppeteer::Target
 
     if !@is_initialized && (!@is_page_target_callback.call(@target_info) || !@target_info.url.empty?)
       @is_initialized = true
-      @initialize_callback_promise.fulfill(true)
+      @initialize_callback_promise.resolve(true)
     end
   end
 end

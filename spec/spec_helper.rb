@@ -1,6 +1,85 @@
 require 'bundler/setup'
 require 'puppeteer'
 require 'rollbar'
+require 'timeout'
+
+require_relative 'support/test_server'
+
+class TestServerSinatraAdapter
+  class SinatraRequest
+    def initialize(route_request)
+      @route_request = route_request
+      @env = build_env(route_request.headers)
+    end
+
+    attr_reader :env
+
+    private def build_env(headers)
+      env = {}
+      headers.each do |key, value|
+        name = "HTTP_#{key.upcase.tr('-', '_')}"
+        env[name] = value
+      end
+      env
+    end
+  end
+
+  class RouteContext
+    def initialize(request)
+      @headers = {}
+      @status = 200
+      @body = nil
+      @request = request
+    end
+
+    attr_reader :headers
+
+    def status(value = nil)
+      return @status if value.nil?
+
+      @status = value
+    end
+
+    def headers(values = nil)
+      return @headers if values.nil?
+
+      @headers.merge!(values)
+    end
+
+    def body(value = nil)
+      return @body if value.nil?
+
+      @body = value
+    end
+
+    def request
+      @request
+    end
+  end
+
+  def initialize(server)
+    @server = server
+  end
+
+  def get(path, &block)
+    @server.set_route(path) do |route_request, writer|
+      route = RouteContext.new(SinatraRequest.new(route_request))
+      result = route.instance_exec(&block)
+
+      status, headers, body =
+        if result.is_a?(Array) && result.size == 3
+          result
+        else
+          [route.status, route.headers, route.body || result]
+        end
+
+      writer.status = status if status
+      headers&.each { |key, value| writer.add_header(key, value) }
+      writer.write(body.to_s) if body
+      writer.finish
+    end
+  end
+end
 
 Rollbar.configure do |config|
   if ENV['ROLLBAR_ACCESS_TOKEN']
@@ -23,7 +102,6 @@ module PuppeteerEnvExtension
   def chrome?
     product == 'chrome'
   end
-
 end
 
 Puppeteer::Env.include(PuppeteerEnvExtension)
@@ -39,148 +117,196 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  launch_options = {
+  config.define_derived_metadata(file_path: %r(/spec/integration/)) do |metadata|
+    metadata[:type] = :integration
+  end
+
+  default_launch_options = {
     product: Puppeteer.env.product,
     channel: ENV['PUPPETEER_CHANNEL_RSPEC'],
     executable_path: ENV['PUPPETEER_EXECUTABLE_PATH_RSPEC'],
   }.compact
-  if Puppeteer.env.debug? && !Puppeteer.env.ci?
-    launch_options[:headless] = false
-  end
+  default_launch_options[:headless] = !%w[0 false].include?(ENV['HEADLESS'])
+  default_launch_options[:ignore_https_errors] = true
   if ENV['PUPPETEER_NO_SANDBOX_RSPEC']
-    args = launch_options[:args] || []
+    args = default_launch_options[:args] || []
     args << '--no-sandbox'
-    launch_options[:args] = args
+    default_launch_options[:args] = args
   end
+  $default_launch_options = default_launch_options
 
-  # Every browser automation test case should spend less than 15sec.
-  if Puppeteer.env.ci?
-    timeout_sec = (ENV['PUPPETEER_TIMEOUT_RSPEC'] || 15).to_i
-    config.around(:each, type: :puppeteer) do |example|
-      Timeout.timeout(timeout_sec) { example.run }
+  config.before(:suite) do
+    if RSpec.configuration.files_to_run.any? { |f| f.include?('spec/integration') }
+      $shared_browser = Puppeteer.launch(**$default_launch_options)
+      $shared_test_server = TestServer::Server.new
+      $shared_https_test_server = TestServer::Server.new(
+        scheme: 'https',
+        ssl_context: TestServer.ssl_context,
+      )
+      $shared_test_server.start
+      $shared_https_test_server.start
     end
   end
 
-  config.around(:each, type: :puppeteer) do |example|
+  config.after(:suite) do
+    $shared_browser&.close
+    $shared_test_server&.stop
+    $shared_https_test_server&.stop
+  end
+
+  # Every browser automation test case should spend less than 15sec.
+  timeout_sec = (ENV['PUPPETEER_TIMEOUT_RSPEC'] || 15).to_i
+
+  config.around(:each, type: :integration) do |example|
     if ENV['PENDING_CHECK'] && !example.metadata[:pending]
       skip 'Pending check mode'
     end
 
-    @default_launch_options = launch_options
-    @puppeteer_headless = launch_options[:headless] != false
-
-    # if example.metadata[:disable_web_security]
-    #   # Enable cross-origin access for cookies_spec
-    #   # ref: https://github.com/puppeteer/puppeteer/issues/4053
-    #   launch_options[:args] = [
-    #     '--disable-web-security',
-    #     '--disable-features=IsolateOrigins,site-per-process',
-    #   ]
-    # end
-
-    if example.metadata[:enable_site_per_process_flag]
-      args = launch_options[:args] || []
-      args << '--site-per-process'
-      args << '--host-rules=MAP * 127.0.0.1'
-      launch_options[:args] = args
-    end
-
-    if example.metadata[:puppeteer].to_s == 'browser'
-      Puppeteer.launch(**launch_options) do |browser|
-        @puppeteer_browser = browser
-        example.run
-      end
-    elsif example.metadata[:browser_context].to_s == 'incognito'
-      Puppeteer.launch(**launch_options) do |browser|
-        @puppeteer_browser_context = browser.create_incognito_browser_context
-        @puppeteer_page = @puppeteer_browser_context.new_page
-        begin
-          example.run
-        ensure
-          @puppeteer_page.close
-        end
-      end
+    if timeout_sec > 0
+      Timeout.timeout(timeout_sec) { example.run }
     else
-      Puppeteer.launch(**launch_options) do |browser|
-        @puppeteer_page = browser.new_page
-        example.run
-      end
+      example.run
     end
+  end
+
+  # Clean up custom routes after each test.
+  config.after(:each, type: :integration) do
+    $shared_test_server&.clear_routes
+    $shared_https_test_server&.clear_routes
   end
 
   # Unit test doesn't connect to internet. No need to wait for 30sec. Set it to 7.5sec.
-  config.before(:each, type: :puppeteer) do
-    stub_const("Puppeteer::TimeoutSettings::DEFAULT_TIMEOUT", 7500)
+  config.before(:each, type: :integration) do
+    stub_const('Puppeteer::TimeoutSettings::DEFAULT_TIMEOUT', 7500)
   end
 
-  config.define_derived_metadata(file_path: %r(/spec/integration/)) do |metadata|
-    metadata[:type] = :puppeteer
-  end
+  module AsyncSpecHelpers
+    def async_promise(&block)
+      promise = Async::Promise.new
+      Thread.new do
+        Async::Promise.fulfill(promise, &Puppeteer::AsyncUtils.future_with_logging(&block))
+      end
+      promise
+    end
 
-  module PuppeteerMethods
+    def await_promises(*promises)
+      Puppeteer::AsyncUtils.await_promise_all(*promises)
+    end
+
+    def await_with_trigger(promise, &block)
+      await_promises(promise, block).first
+    end
+  end
+  config.include AsyncSpecHelpers
+
+  helper_module = Module.new do
     def headless?
-      @puppeteer_headless
-    end
-
-    def browser
-      @puppeteer_browser or raise NoMethodError.new('undefined method "browser" (If you intended to use puppeteer#browser, you have to add `puppeteer: :browser` to metadata.)')
-    end
-
-    def browser_context
-      @puppeteer_browser_context or raise NoMethodError.new('undefined method "browser_context"')
-    end
-
-    def page
-      @puppeteer_page or raise NoMethodError.new('undefined method "page"')
+      !%w[0 false].include?(ENV['HEADLESS'])
     end
 
     def default_launch_options
-      @default_launch_options or raise NoMethodError.new('undefined method "default_launch_options"')
+      $default_launch_options or raise NoMethodError.new('undefined method "default_launch_options"')
     end
-  end
-  config.include PuppeteerMethods, type: :puppeteer
 
-  test_with_sinatra = Module.new do
-    attr_reader :server_port, :server_prefix, :server_cross_process_prefix, :server_empty_page, :sinatra
-  end
-  config.include(test_with_sinatra, sinatra: true)
-  config.around(sinatra: true) do |example|
-    require 'net/http'
-    require 'sinatra/base'
-    require 'timeout'
-
-    sinatra_app = Sinatra.new
-    sinatra_app.disable(:protection)
-    sinatra_app.set(:quiet, true)
-    sinatra_app.set(:public_folder, File.join(__dir__, 'assets'))
-    sinatra_app.set(:logging, false)
-    @server_port = 4567
-    @server_prefix = "http://localhost:#{@server_port}"
-    @server_cross_process_prefix = "http://127.0.0.1:#{@server_port}"
-    @server_empty_page = "#{@server_prefix}/empty.html"
-
-    sinatra_app.get('/_ping') { '_pong' }
-
-    # Start server and wait for server ready.
-    # FIXME should change port when Errno::EADDRINUSE
-    Thread.new { sinatra_app.run!(port: 4567) }
-    Timeout.timeout(3) do
-      loop do
-        Net::HTTP.get(URI("#{server_prefix}/_ping"))
-        break
-      rescue Errno::EADDRNOTAVAIL
-        sleep 1
-      rescue Errno::ECONNREFUSED
-        sleep 0.1
+    def with_browser(**options)
+      options = default_launch_options.merge(options)
+      Puppeteer.launch(**options) do |browser|
+        yield(browser)
       end
     end
 
-    begin
-      @sinatra = sinatra_app
-      example.run
-    ensure
-      sinatra_app.quit!
+    def with_test_state(incognito: false, create_page: true, browser: nil)
+      browser ||= $shared_browser or raise 'Shared browser not started'
+      server = $shared_test_server
+      https_server = $shared_https_test_server
+
+      initial_context_ids = browser.browser_contexts.map(&:id)
+
+      context =
+        if incognito
+          browser.create_incognito_browser_context
+        else
+          browser.default_browser_context
+        end
+      initial_pages = context.pages
+      page = create_page ? context.new_page : nil
+
+      begin
+        yield(page: page, server: server, https_server: https_server, browser: browser, context: context)
+      ensure
+        page&.close unless page&.closed?
+
+        (context.pages - initial_pages).each do |extra_page|
+          extra_page.close unless extra_page.closed?
+        end
+
+        if incognito && browser.browser_contexts.include?(context) && !context.closed?
+          context.close
+        end
+
+        browser.browser_contexts.each do |ctx|
+          next if initial_context_ids.include?(ctx.id)
+          next if ctx.id.nil?
+          ctx.close
+        end
+      end
     end
+  end
+  config.include helper_module, type: :integration
+
+  RSpec.shared_context 'with test state' do
+    around do |example|
+      incognito = example.metadata[:browser_context].to_s == 'incognito'
+      create_page = example.metadata[:puppeteer].to_s != 'browser'
+
+      run_example = lambda do |page:, server:, https_server:, browser:, context:|
+        @page = page
+        @server = server
+        @https_server = https_server
+        @browser = browser
+        @browser_context = context
+
+        example.run
+      ensure
+        @page = nil
+        @server = nil
+        @https_server = nil
+        @browser = nil
+        @browser_context = nil
+      end
+
+      if example.metadata[:enable_site_per_process_flag]
+        args = (default_launch_options[:args] || []) + [
+          '--site-per-process',
+          '--host-rules=MAP * 127.0.0.1',
+        ]
+        options = default_launch_options.merge(args: args)
+        Puppeteer.launch(**options) do |isolated_browser|
+          with_test_state(
+            incognito: incognito,
+            create_page: create_page,
+            browser: isolated_browser,
+            &run_example
+          )
+        end
+      else
+        with_test_state(
+          incognito: incognito,
+          create_page: create_page,
+          &run_example
+        )
+      end
+    end
+
+    let(:page) { @page }
+    let(:browser) { @browser }
+    let(:browser_context) { @browser_context }
+    let(:server) { @server }
+    let(:https_server) { @https_server }
+    let(:sinatra) { TestServerSinatraAdapter.new(server) }
+    let(:server_prefix) { server&.prefix }
+    let(:server_cross_process_prefix) { server&.cross_process_prefix }
+    let(:server_empty_page) { server&.empty_page }
   end
 end
 

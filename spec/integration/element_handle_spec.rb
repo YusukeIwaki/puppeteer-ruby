@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::ElementHandle do
+  include_context 'with test state'
   describe '#bounding_box' do
     it 'should work', sinatra: true do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)

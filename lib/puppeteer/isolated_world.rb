@@ -56,7 +56,7 @@ class Puppeteer::IsolaatedWorld
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
-    @context_promise = Concurrent::Promises.resolvable_future
+    @context_promise = Async::Promise.new
     @task_manager = Puppeteer::TaskManager.new
     @bound_functions = {}
     @ctx_bindings = Set.new
@@ -77,7 +77,7 @@ class Puppeteer::IsolaatedWorld
     if context
       @ctx_bindings.clear
       unless @context_promise.resolved?
-        @context_promise.fulfill(context)
+        @context_promise.resolve(context)
       end
       @task_manager.async_rerun_all
     else
@@ -87,7 +87,7 @@ class Puppeteer::IsolaatedWorld
 
   def delete_context(execution_context_id)
     @document = nil
-    @context_promise = Concurrent::Promises.resolvable_future
+    @context_promise = Async::Promise.new
   end
 
   def has_context?
@@ -106,7 +106,7 @@ class Puppeteer::IsolaatedWorld
     if @detached
       raise DetachedError.new("Execution Context is not available in detached frame \"#{@frame.url}\" (are you trying to evaluate?)")
     end
-    @context_promise.value!
+    @context_promise.wait
   end
 
   # @param {Function|string} pageFunction
@@ -135,13 +135,13 @@ class Puppeteer::IsolaatedWorld
     # sometimes execution_context.evaluate_handle('document') returns null object.
     # D, [2020-04-24T02:17:51.023631 #220] DEBUG -- : RECV << {"id"=>20, "result"=>{"result"=>{"type"=>"object", "subtype"=>"null", "value"=>nil}}, "sessionId"=>"78E9CF1E14D81294E320E7C20E5CDE06"}
     # retry if so.
-    Timeout.timeout(3) do
+    Puppeteer::AsyncUtils.async_timeout(3000, -> do
       loop do
         handle = execution_context.evaluate_handle('document')
         return handle if handle.is_a?(Puppeteer::ElementHandle)
       end
-    end
-  rescue Timeout::Error
+    end).wait
+  rescue Async::TimeoutError
     raise 'Bug of puppeteer-ruby...'
   end
 
@@ -218,11 +218,10 @@ class Puppeteer::IsolaatedWorld
 
     watcher = Puppeteer::LifecycleWatcher.new(@frame_manager, @frame, option_wait_until, option_timeout)
     begin
-      Concurrent::Promises
-        .any(
-          watcher.timeout_or_termination_promise,
-          watcher.lifecycle_promise,
-        ).value!
+      Puppeteer::AsyncUtils.await_promise_race(
+        watcher.timeout_or_termination_promise,
+        watcher.lifecycle_promise,
+      )
     ensure
       watcher.dispose
     end

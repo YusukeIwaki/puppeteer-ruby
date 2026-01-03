@@ -9,7 +9,8 @@ class Puppeteer::CDPSession
   # @param {string} targetType
   # @param {string} sessionId
   def initialize(connection, target_type, session_id)
-    @callbacks = Concurrent::Hash.new
+    @callbacks = {}
+    @callbacks_mutex = Mutex.new
     @connection = connection
     @target_type = target_type
     @session_id = session_id
@@ -26,7 +27,7 @@ class Puppeteer::CDPSession
   # @param params [Hash]
   # @returns [Hash]
   def send_message(method, params = {})
-    async_send_message(method, params).value!
+    async_send_message(method, params).wait
   end
 
   # @param method [String]
@@ -37,10 +38,12 @@ class Puppeteer::CDPSession
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
     end
 
-    promise = Concurrent::Promises.resolvable_future
+    promise = Async::Promise.new
 
     @connection.generate_id do |id|
-      @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
+      @callbacks_mutex.synchronize do
+        @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
+      end
       @connection.raw_send(id: id, message: { sessionId: @session_id, method: method, params: params })
     end
 
@@ -50,7 +53,7 @@ class Puppeteer::CDPSession
   # @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
   def handle_message(message)
     if message['id']
-      if callback = @callbacks.delete(message['id'])
+      if callback = @callbacks_mutex.synchronize { @callbacks.delete(message['id']) }
         callback_with_message(callback, message)
       else
         raise Error.new("unknown id: #{message['id']}")
@@ -80,13 +83,15 @@ class Puppeteer::CDPSession
   end
 
   def handle_closed
-    @callbacks.each_value do |callback|
+    callbacks = @callbacks_mutex.synchronize do
+      @callbacks.values.tap { @callbacks.clear }
+    end
+    callbacks.each do |callback|
       callback.reject(
         Puppeteer::Connection::ProtocolError.new(
           method: callback.method,
           error_message: 'Target Closed.'))
     end
-    @callbacks.clear
     @connection = nil
     emit_event(CDPSessionEmittedEvents::Disconnected)
   end

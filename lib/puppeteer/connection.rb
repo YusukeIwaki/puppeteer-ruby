@@ -19,14 +19,14 @@ class Puppeteer::Connection
   # callback object stored in @callbacks.
   class MessageCallback
     # @param method [String]
-    # @param promise [Concurrent::Promises::ResolvableFuture]
+    # @param promise [Async::Promise]
     def initialize(method:, promise:)
       @method = method
       @promise = promise
     end
 
     def resolve(result)
-      @promise.fulfill(result)
+      @promise.resolve(result)
     end
 
     def reject(error)
@@ -39,7 +39,8 @@ class Puppeteer::Connection
   def initialize(url, transport, delay = 0)
     @url = url
     @last_id = 0
-    @callbacks = Concurrent::Hash.new
+    @callbacks = {}
+    @callbacks_mutex = Mutex.new
     @delay = delay
 
     @transport = transport
@@ -56,7 +57,8 @@ class Puppeteer::Connection
       handle_close
     end
 
-    @sessions = Concurrent::Hash.new
+    @sessions = {}
+    @sessions_mutex = Mutex.new
     @closed = false
     @manually_attached = Set.new
   end
@@ -73,7 +75,7 @@ class Puppeteer::Connection
 
     # For some reasons, sleeping a bit reduces trivial errors...
     # 4ms is an interval of internal shared timer of WebKit.
-    sleep 0.004
+    Puppeteer::AsyncUtils.sleep_seconds(0.004)
   end
 
   private def should_handle_synchronously?(message)
@@ -117,7 +119,7 @@ class Puppeteer::Connection
   # @param {string} sessionId
   # @return {?CDPSession}
   def session(session_id)
-    @sessions[session_id]
+    @sessions_mutex.synchronize { @sessions[session_id] }
   end
 
   def url
@@ -127,14 +129,16 @@ class Puppeteer::Connection
   # @param {string} method
   # @param {!Object=} params
   def send_message(method, params = {})
-    async_send_message(method, params).value!
+    async_send_message(method, params).wait
   end
 
   def async_send_message(method, params = {})
-    promise = Concurrent::Promises.resolvable_future
+    promise = Async::Promise.new
 
     generate_id do |id|
-      @callbacks[id] = MessageCallback.new(method: method, promise: promise)
+      @callbacks_mutex.synchronize do
+        @callbacks[id] = MessageCallback.new(method: method, promise: promise)
+      end
       raw_send(id: id, message: { method: method, params: params })
     end
 
@@ -235,7 +239,7 @@ class Puppeteer::Connection
 
   private def handle_message(message)
     if @delay > 0
-      sleep(@delay / 1000.0)
+      Puppeteer::AsyncUtils.sleep_seconds(@delay / 1000.0)
     end
 
     response_debug_printer.handle_message(message)
@@ -244,21 +248,21 @@ class Puppeteer::Connection
     when 'Target.attachedToTarget'
       session_id = message['params']['sessionId']
       session = Puppeteer::CDPSession.new(self, message['params']['targetInfo']['type'], session_id)
-      @sessions[session_id] = session
+      @sessions_mutex.synchronize { @sessions[session_id] = session }
       emit_event('sessionattached', session)
       if message['sessionId']
-        parent_session = @sessions[message['sessionId']]
+        parent_session = @sessions_mutex.synchronize { @sessions[message['sessionId']] }
         parent_session&.emit_event('sessionattached', session)
       end
     when 'Target.detachedFromTarget'
       session_id = message['params']['sessionId']
-      session = @sessions[session_id]
+      session = @sessions_mutex.synchronize { @sessions[session_id] }
       if session
         session.handle_closed
-        @sessions.delete(session_id)
+        @sessions_mutex.synchronize { @sessions.delete(session_id) }
         emit_event('sessiondetached', session)
         if message['sessionId']
-          parent_session = @sessions[message['sessionId']]
+          parent_session = @sessions_mutex.synchronize { @sessions[message['sessionId']] }
           parent_session&.emit_event('sessiondetached', session)
         end
       end
@@ -266,10 +270,10 @@ class Puppeteer::Connection
 
     if message['sessionId']
       session_id = message['sessionId']
-      @sessions[session_id]&.handle_message(message)
+      @sessions_mutex.synchronize { @sessions[session_id] }&.handle_message(message)
     elsif message['id']
       # Callbacks could be all rejected if someone has called `.dispose()`.
-      if callback = @callbacks.delete(message['id'])
+      if callback = @callbacks_mutex.synchronize { @callbacks.delete(message['id']) }
         if message['error']
           callback.reject(
             ProtocolError.new(
@@ -292,17 +296,19 @@ class Puppeteer::Connection
     @closed = true
     @transport.on_message
     @transport.on_close
-    @callbacks.each_value do |callback|
+    callbacks = @callbacks_mutex.synchronize do
+      @callbacks.values.tap { @callbacks.clear }
+    end
+    callbacks.each do |callback|
       callback.reject(
         ProtocolError.new(
           method: callback.method,
           error_message: 'Target Closed.'))
     end
-    @callbacks.clear
-    @sessions.each_value do |session|
-      session.handle_closed
+    sessions = @sessions_mutex.synchronize do
+      @sessions.values.tap { @sessions.clear }
     end
-    @sessions.clear
+    sessions.each(&:handle_closed)
     emit_event(ConnectionEmittedEvents::Disconnected)
   end
 
@@ -332,6 +338,6 @@ class Puppeteer::Connection
     result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
     @manually_attached.delete(target_info.target_id)
-    @sessions[session_id]
+    @sessions_mutex.synchronize { @sessions[session_id] }
   end
 end

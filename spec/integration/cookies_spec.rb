@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'cookies' do
+  include_context 'with test state'
   describe 'Page#cookies', sinatra: true do
     it 'should fail if specifying wrong cookie' do
       expect { page.set_cookie(token: '123456') }.to raise_error(/Each coookie must have name and value attribute./)

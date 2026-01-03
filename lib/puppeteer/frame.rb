@@ -267,7 +267,7 @@ class Puppeteer::Frame
 
   # @param milliseconds [Integer] the number of milliseconds to wait.
   def wait_for_timeout(milliseconds)
-    sleep(milliseconds / 1000.0)
+    Puppeteer::AsyncUtils.sleep_seconds(milliseconds / 1000.0)
   end
 
   # @param xpath [String]

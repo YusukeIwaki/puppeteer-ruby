@@ -36,7 +36,7 @@ class Puppeteer::HTTPResponse
     @client = client
     @request = request
 
-    @body_loaded_promise = Concurrent::Promises.resolvable_future
+    @body_loaded_promise = Async::Promise.new
     @remote_address = RemoteAddress.new(
       ip: response_payload['remoteIPAddress'],
       port: response_payload['remotePort'],
@@ -89,7 +89,7 @@ class Puppeteer::HTTPResponse
   end
 
   def buffer
-    @body_loaded_promise.value!
+    @body_loaded_promise.wait
     response = @client.send_message('Network.getResponseBody', requestId: @request.internal.request_id)
     if response['base64Encoded']
       Base64.decode64(response['body'])

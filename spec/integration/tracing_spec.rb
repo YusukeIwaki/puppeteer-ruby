@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'tmpdir'
 
 RSpec.describe 'Tracing' do
+  include_context 'with test state'
   let(:output_file) { "trace-#{SecureRandom.hex(8)}.json" }
   after do
     File.delete(output_file) if File.exist?(output_file)

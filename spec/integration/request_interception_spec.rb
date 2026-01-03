@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'request interception' do
+  include_context 'with test state'
   it 'should intercept', sinatra: true do
     page.request_interception = true
 

@@ -19,6 +19,8 @@ class Puppeteer::TaskManager
   end
 
   def async_rerun_all
-    Concurrent::Promises.zip(*@tasks.map(&:async_rerun))
+    Async do
+      Puppeteer::AsyncUtils.await_promise_all(*@tasks.map(&:async_rerun))
+    end
   end
 end

@@ -21,8 +21,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.required_ruby_version = '>= 3.2'
-  spec.add_dependency 'concurrent-ruby', '>= 1.1', '< 1.4'
-  spec.add_dependency 'websocket-driver', '>= 0.6.0'
+  spec.add_dependency "async", ">= 2.6", "< 3.0"
+  spec.add_dependency "async-http", ">= 0.60", "< 1.0"
+  spec.add_dependency "async-websocket", ">= 0.27", "< 1.0"
   spec.add_dependency 'mime-types', '>= 3.0'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'chunky_png'
@@ -33,7 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 3.13.2'
   spec.add_development_dependency 'rspec_junit_formatter' # for CircleCI.
   spec.add_development_dependency 'rubocop', '~> 1.50.0'
-  spec.add_development_dependency 'rubocop-rspec'
+  spec.add_development_dependency 'rubocop-rspec', '~> 2.17.1'
   spec.add_development_dependency 'sinatra', '< 4.0.0'
   spec.add_development_dependency 'webrick'
   spec.add_development_dependency 'yard'
