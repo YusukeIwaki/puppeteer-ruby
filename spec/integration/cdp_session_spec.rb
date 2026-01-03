@@ -53,7 +53,7 @@ RSpec.describe Puppeteer::CDPSession do
   #   expect(event.url).toBe('foo.js');
   # });
 
-  it_fails_firefox 'should be able to detach session' do
+  it 'should be able to detach session' do
     client = page.target.create_cdp_session
 
     client.send_message('Runtime.enable')

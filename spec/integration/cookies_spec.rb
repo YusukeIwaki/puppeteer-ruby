@@ -147,7 +147,7 @@ RSpec.describe 'cookies' do
       expect(page.evaluate('document.cookie')).to eq('password=123456')
     end
 
-    it_fails_firefox 'should isolate cookies in browser contexts' do
+    it 'should isolate cookies in browser contexts' do
       another_context = page.browser.create_incognito_browser_context
       another_page = another_context.new_page
 
@@ -286,7 +286,7 @@ RSpec.describe 'cookies' do
       ))
     end
 
-    it_fails_firefox 'should set cookies from a frame' do
+    it 'should set cookies from a frame' do
       page.goto("#{server_prefix}/grid.html")
       page.set_cookie(name: 'localhost-cookie', value: 'best')
       js = <<~JAVASCRIPT

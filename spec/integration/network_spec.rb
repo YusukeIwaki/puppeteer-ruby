@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'network' do
-  describe 'Request.initiator', skip: Puppeteer.env.firefox? do
+  describe 'Request.initiator' do
     it 'shoud return the initiator', sinatra: true do
       initiators = {}
       page.on('request') do |req|

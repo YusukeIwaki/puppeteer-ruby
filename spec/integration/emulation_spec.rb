@@ -64,7 +64,7 @@ RSpec.describe 'Emulation' do
       expect(page.evaluate('() => globalThis.Modernizr.touchevents')).to eq(true)
     end
 
-    it_fails_firefox 'should support landscape emulation', sinatra: true do
+    it 'should support landscape emulation', sinatra: true do
       page.goto("#{server_prefix}/mobile.html")
       expect(page.evaluate('() => screen.orientation.type')).to eq('portrait-primary')
       page.viewport = iPhoneLandscape.viewport
@@ -93,7 +93,7 @@ RSpec.describe 'Emulation' do
   end
 
   describe 'Page.emulate_media_type' do
-    it_fails_firefox 'should work' do
+    it 'should work' do
       expect(page.evaluate("() => matchMedia('screen').matches")).to eq(true)
       expect(page.evaluate("() => matchMedia('print').matches")).to eq(false)
       page.emulate_media_type('print')
@@ -110,7 +110,7 @@ RSpec.describe 'Emulation' do
   end
 
   describe 'Page.emulate_media_features' do
-    it_fails_firefox 'should work' do
+    it 'should work' do
       page.emulate_media_features([
         { name: 'prefers-reduced-motion', value: 'reduce' },
       ])
@@ -188,7 +188,7 @@ RSpec.describe 'Emulation' do
     end
   end
 
-  describe 'Page.emulateTimezone', skip: Puppeteer.env.firefox? do
+  describe 'Page.emulateTimezone' do
     it 'should work' do
       page.evaluate('() => { globalThis.date = new Date(1479579154987) }')
 
@@ -211,7 +211,7 @@ RSpec.describe 'Emulation' do
     end
   end
 
-  describe 'Page.emulateVisionDeficiency', skip: Puppeteer.env.firefox? do
+  describe 'Page.emulateVisionDeficiency' do
     it 'should work', sinatra: true do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
       page.goto("#{server_prefix}/grid.html")
@@ -229,7 +229,7 @@ RSpec.describe 'Emulation' do
     end
   end
 
-  describe 'Page#emulate_network_conditions', skip: Puppeteer.env.firefox? do
+  describe 'Page#emulate_network_conditions' do
     it 'should change navigator.connection.effectiveType' do
       expect(page.evaluate('window.navigator.connection.effectiveType')).to eq('4g')
       page.emulate_network_conditions(Puppeteer.network_conditions.fast_3g)
@@ -241,7 +241,7 @@ RSpec.describe 'Emulation' do
     end
   end
 
-  describe 'Page.emulateCPUThrottling', skip: Puppeteer.env.firefox? do
+  describe 'Page.emulateCPUThrottling' do
     it 'should change the CPU throttling rate successfully' do
       page.emulate_cpu_throttling(100)
       page.emulate_cpu_throttling(nil)

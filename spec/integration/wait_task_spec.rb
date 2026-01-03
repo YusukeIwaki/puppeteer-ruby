@@ -71,7 +71,7 @@ RSpec.describe Puppeteer::WaitTask do
       Timeout.timeout(1) { frame.wait_for_selector('div') }
     end
 
-    it_fails_firefox 'should work with removed MutationObserver' do
+    it 'should work with removed MutationObserver' do
       page.evaluate("() => delete window.MutationObserver")
 
 
@@ -125,7 +125,7 @@ RSpec.describe Puppeteer::WaitTask do
       expect(handle.frame).to eq(frame2)
     end
 
-    it_fails_firefox 'should throw when frame is detached', sinatra: true do
+    it 'should throw when frame is detached', sinatra: true do
       page.goto(server_empty_page)
       attach_frame(page, 'frame1', server_empty_page)
       frame = page.frames.last

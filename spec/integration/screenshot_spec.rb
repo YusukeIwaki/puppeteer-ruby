@@ -37,7 +37,7 @@ RSpec.describe 'Screenshots' do
       expect(screenshot).to be_golden('screenshot-offscreen-clip.png')
     end
 
-    it_fails_firefox 'should use scale for clip' do
+    it 'should use scale for clip' do
       screenshot = page.screenshot(
         clip: {
           x: 50,
@@ -119,7 +119,7 @@ RSpec.describe 'Screenshots' do
     #   expect(screenshot).toBeGolden('white.jpg');
     # });
 
-    it_fails_firefox 'should work with webp' do
+    it 'should work with webp' do
       screenshot = page.screenshot(type: :webp)
       expect(screenshot.length).to be >= 1000
       Dir.mktmpdir do |tmpdir|
@@ -280,7 +280,7 @@ RSpec.describe 'Screenshots' do
       expect(element_handle.screenshot).to be_golden('screenshot-element-scrolled-into-view.png')
     end
 
-    it_fails_firefox 'should work with a rotated element' do
+    it 'should work with a rotated element' do
       page.set_content <<-CONTENT
         <div style="position:absolute;
         top: 100px;
@@ -294,7 +294,7 @@ RSpec.describe 'Screenshots' do
       expect(element_handle.screenshot).to be_golden('screenshot-element-rotate.png')
     end
 
-    it_fails_firefox 'should fail to screenshot a detached element' do
+    it 'should fail to screenshot a detached element' do
       page.set_content('<h1>remove this</h1>')
       element_handle = page.S('h1')
       page.evaluate('(element) => element.remove()', element_handle)
@@ -312,7 +312,7 @@ RSpec.describe 'Screenshots' do
       expect(element_handle.screenshot).to be_golden('screenshot-element-fractional.png')
     end
 
-    it_fails_firefox 'should work for an element with an offset' do
+    it 'should work for an element with an offset' do
       page.set_content '<div style="position:absolute; top: 10.3px; left: 20.4px;width:50.3px;height:20.2px;border:1px solid black;"></div>'
       element_handle = page.S('div')
       expect(element_handle.screenshot).to be_golden('screenshot-element-fractional-offset.png')

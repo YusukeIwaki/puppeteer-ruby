@@ -39,7 +39,7 @@ RSpec.describe Puppeteer::Page do
       expect(browser.pages).not_to include(new_page)
     end
 
-    it_fails_firefox 'should run beforeunload if asked for', sinatra: true do
+    it 'should run beforeunload if asked for', sinatra: true do
       context = page.browser_context
 
       new_page = context.new_page
@@ -56,15 +56,11 @@ RSpec.describe Puppeteer::Page do
       dialog = dialog_promise.value!
       expect(dialog.type).to eq("beforeunload")
       expect(dialog.default_value).to eq("")
-      if Puppeteer.env.firefox?
-        expect(dialog.message).to eq('This page is asking you to confirm that you want to leave - data you have entered may not be saved.')
-      else
-        expect(dialog.message).to eq("")
-      end
+      expect(dialog.message).to eq("")
       dialog.accept
     end
 
-    it_fails_firefox 'should *not* run beforeunload by default', sinatra: true do
+    it 'should *not* run beforeunload by default', sinatra: true do
       context = page.browser_context
 
       new_page = context.new_page
@@ -88,7 +84,7 @@ RSpec.describe Puppeteer::Page do
       expect { new_page.close }.to change { new_page.closed? }.from(false).to(true)
     end
 
-    it_fails_firefox 'should terminate network waiters', sinatra: true do
+    it 'should terminate network waiters', sinatra: true do
       context = page.browser_context
 
       new_page = context.new_page
@@ -136,7 +132,7 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.Events.error' do
-    it_fails_firefox 'should throw when page crashes' do
+    it 'should throw when page crashes' do
       error_promise = Concurrent::Promises.resolvable_future.tap do |future|
         page.once('error') { |err| future.fulfill(err) }
       end
@@ -146,7 +142,7 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.Events.Popup' do
-    it_fails_firefox 'should work' do
+    it 'should work' do
       popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
         page.once('popup') { |popup| future.fulfill(popup) }
       end
@@ -157,7 +153,7 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(true)
     end
 
-    it_fails_firefox 'should work with noopener' do
+    it 'should work with noopener' do
       popup_promise = Concurrent::Promises.resolvable_future.tap do |future|
         page.once('popup') { |popup| future.fulfill(popup) }
       end
@@ -168,7 +164,7 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
     end
 
-    it_fails_firefox 'should work with clicking target=_blank', sinatra: true do
+    it 'should work with clicking target=_blank', sinatra: true do
       page.goto(server_empty_page)
       page.content = '<a target=_blank href="/one-style.html">yo</a>'
 
@@ -182,7 +178,7 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(false) # was true in Chrome < 88.
     end
 
-    it_fails_firefox 'should work with clicking target=_blank and rel=opener', sinatra: true do
+    it 'should work with clicking target=_blank and rel=opener', sinatra: true do
       page.goto(server_empty_page)
       page.content = '<a target=_blank rel=opener href="/one-style.html">yo</a>'
 
@@ -196,7 +192,7 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(true)
     end
 
-    it_fails_firefox 'should work with fake-clicking target=_blank and rel=noopener', sinatra: true do
+    it 'should work with fake-clicking target=_blank and rel=noopener', sinatra: true do
       page.goto(server_empty_page)
       page.content = '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
 
@@ -210,7 +206,7 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
     end
 
-    it_fails_firefox 'should work with clicking target=_blank and rel=noopener', sinatra: true do
+    it 'should work with clicking target=_blank and rel=noopener', sinatra: true do
       page.goto(server_empty_page)
       page.content = '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
 
@@ -240,7 +236,7 @@ RSpec.describe Puppeteer::Page do
       expect(get_permission_for(page, "geolocation")).to eq("prompt")
     end
 
-    it_fails_firefox 'should deny permission when not listed' do
+    it 'should deny permission when not listed' do
       page.browser_context.override_permissions(server_empty_page, [])
       expect(get_permission_for(page, "geolocation")).to eq("denied")
     end
@@ -250,12 +246,12 @@ RSpec.describe Puppeteer::Page do
         to raise_error(/Unknown permission: foo/)
     end
 
-    it_fails_firefox 'should grant permission when listed' do
+    it 'should grant permission when listed' do
       page.browser_context.override_permissions(server_empty_page, ['geolocation'])
       expect(get_permission_for(page, "geolocation")).to eq("granted")
     end
 
-    it_fails_firefox 'should reset permissions' do
+    it 'should reset permissions' do
       page.browser_context.override_permissions(server_empty_page, ['geolocation'])
 
       expect {
@@ -263,7 +259,7 @@ RSpec.describe Puppeteer::Page do
       }.to change { get_permission_for(page, "geolocation") }.from("granted").to("prompt")
     end
 
-    it_fails_firefox 'should trigger permission onchange' do
+    it 'should trigger permission onchange' do
       js = <<~JAVASCRIPT
       () => {
         globalThis.events = [];
@@ -287,7 +283,7 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied granted prompt))
     end
 
-    it_fails_firefox 'should isolate permissions between browser contexs' do
+    it 'should isolate permissions between browser contexs' do
       other_context = page.browser.create_incognito_browser_context
       other_page = other_context.new_page
       other_page.goto(server_empty_page)
@@ -309,7 +305,7 @@ RSpec.describe Puppeteer::Page do
       other_context.close
     end
 
-    it_fails_firefox 'should grant persistent-storage' do
+    it 'should grant persistent-storage' do
       expect(get_permission_for(page, 'persistent-storage')).to eq('prompt')
       page.browser_context.override_permissions(server_empty_page, ['persistent-storage'])
       expect(get_permission_for(page, "persistent-storage")).to eq("granted")
@@ -317,7 +313,7 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe '#geolocation=' do
-    it_fails_firefox 'should work', browser_context: :incognito, sinatra: true do
+    it 'should work', browser_context: :incognito, sinatra: true do
       page.browser_context.override_permissions(server_empty_page, ['geolocation'])
       page.goto(server_empty_page)
       page.geolocation = Puppeteer::Geolocation.new(latitude: 10, longitude: 20)
@@ -344,7 +340,7 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe '#offline_mode=' do
-    it_fails_firefox 'should work', sinatra: true do
+    it 'should work', sinatra: true do
       page.offline_mode = true
       expect { page.goto(server_empty_page) }.to raise_error(/net::ERR_INTERNET_DISCONNECTED/)
 
@@ -591,7 +587,7 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  describe 'Page#metrics', skip: Puppeteer.env.firefox? do
+  describe 'Page#metrics' do
     def check_metrics(page_metrics)
       aggregate_failures do
         [
@@ -777,7 +773,7 @@ RSpec.describe Puppeteer::Page do
   #   });
   # });
 
-  describe 'Page#expose_function', skip: Puppeteer.env.firefox? do
+  describe 'Page#expose_function' do
     it 'should work' do
       page.expose_function('compute', ->(a, b) { a * b })
       result = page.evaluate('async function() { return await globalThis.compute(9, 4) }')
@@ -914,7 +910,7 @@ RSpec.describe Puppeteer::Page do
       expect(page.evaluate('() => navigator.userAgent')).to include('iPhone')
     end
 
-    it_fails_firefox 'should work with additional userAgentMetdata' do
+    it 'should work with additional userAgentMetdata' do
       page.set_user_agent('MockBrowser',
         architecture: 'Mock1',
         mobile: false,
@@ -1036,7 +1032,7 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  describe '#bypass_csp=', skip: Puppeteer.env.firefox? do
+  describe '#bypass_csp=' do
     include Utils::AttachFrame
 
     it 'should bypass CSP meta tag', sinatra: true do
@@ -1223,7 +1219,7 @@ RSpec.describe Puppeteer::Page do
       expect(bg_color).to eq('rgb(0, 128, 0)')
     end
 
-    it_fails_firefox 'should throw when added with content to the CSP page', sinatra: true do
+    it 'should throw when added with content to the CSP page', sinatra: true do
       page.goto("#{server_prefix}/csp.html")
       expect { page.add_style_tag(content: 'body { background-color: green; }') }.to raise_error
     end
@@ -1242,7 +1238,7 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe '#javascript_enabled=' do
-    it_fails_firefox 'should work' do
+    it 'should work' do
       page.javascript_enabled = false
       page.goto('data:text/html, <script>var something = "forbidden"</script>')
       expect { page.evaluate("something") }.to raise_error(/something is not defined/)
@@ -1292,7 +1288,7 @@ RSpec.describe Puppeteer::Page do
       expect(response_count).to eq(2)
     end
 
-    it_fails_firefox 'should stay disabled when toggling request interception on/off' do
+    it 'should stay disabled when toggling request interception on/off' do
       request_count = 0
       response_count = 0
       last_modified_timestamp = Time.now.iso8601

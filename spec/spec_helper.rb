@@ -24,9 +24,6 @@ module PuppeteerEnvExtension
     product == 'chrome'
   end
 
-  def firefox?
-    false
-  end
 end
 
 Puppeteer::Env.include(PuppeteerEnvExtension)
@@ -186,25 +183,6 @@ RSpec.configure do |config|
     end
   end
 end
-
-module ItFailsFirefox
-  def it_fails_firefox(*args, **kwargs, &block)
-    if Puppeteer.env.firefox?
-      if ENV['PENDING_CHECK']
-        # Executed but not marked as failure.
-        # Fails if pass.
-        pending(*args, **kwargs, &block)
-      else
-        # Not executed, just skip.
-        skip(*args, **kwargs, &block)
-      end
-    else
-      it(*args, **kwargs, &block)
-    end
-  end
-end
-
-RSpec::Core::ExampleGroup.extend(ItFailsFirefox)
 
 require_relative './golden_matcher'
 require_relative './utils'

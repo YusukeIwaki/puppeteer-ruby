@@ -91,16 +91,9 @@ RSpec.describe Puppeteer::Launcher do
         options = default_launch_options.dup
 
         default_launch_option_args = default_launch_options[:args] || []
-        if Puppeteer.env.firefox?
-          options[:args] = default_launch_option_args + [
-            '-profile',
-            user_data_dir,
-          ]
-        else
-          options[:args] = default_launch_option_args + [
-            "--user-data-dir=#{user_data_dir}",
-          ]
-        end
+        options[:args] = default_launch_option_args + [
+          "--user-data-dir=#{user_data_dir}",
+        ]
 
         Puppeteer.launch(**options) do |browser|
           # Open a page to make sure its functional.
@@ -112,9 +105,6 @@ RSpec.describe Puppeteer::Launcher do
     end
 
     it 'user_data_dir option should restore state', sinatra: true do
-      # Too flaky on CI ckeck...
-      skip if Puppeteer.env.firefox? && Puppeteer.env.ci?
-
       Dir.mktmpdir do |user_data_dir|
         options = default_launch_options.merge(
           user_data_dir: user_data_dir,
@@ -137,9 +127,6 @@ RSpec.describe Puppeteer::Launcher do
     end
 
     it 'user_data_dir option should restore cookies', sinatra: true do
-      # Too flaky on CI ckeck...
-      skip if Puppeteer.env.firefox? && Puppeteer.env.ci?
-
       Dir.mktmpdir do |user_data_dir|
         options = default_launch_options.merge(
           user_data_dir: user_data_dir,
@@ -435,7 +422,7 @@ RSpec.describe Puppeteer::Launcher do
     #       await browser.close();
     #     });
 
-    it_fails_firefox 'should be able to reconnect to a disconnected browser', sinatra: true do
+    it 'should be able to reconnect to a disconnected browser', sinatra: true do
       ws_endpoint = browser.ws_endpoint
 
       page = browser.new_page
@@ -458,9 +445,7 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    # This spec sometimes (but not always) fails in Firefox.
-    # @see https://github.com/puppeteer/puppeteer/issues/4197#issuecomment-481793410
-    it 'should be able to connect to the same page simultaneously', skip: Puppeteer.env.ci? && Puppeteer.env.firefox? do
+    it 'should be able to connect to the same page simultaneously' do
       browser2 = Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint)
 
       pages = Concurrent::Promises
@@ -494,12 +479,7 @@ RSpec.describe Puppeteer::Launcher do
       page.goto(server_empty_page)
       page.close
 
-      if Puppeteer.env.firefox?
-        # Firefox doesn't fire targetchanged.
-        expect(events).to eq(%w(CREATED DESTROYED))
-      else
-        expect(events).to eq(%w(CREATED CHANGED DESTROYED))
-      end
+      expect(events).to eq(%w(CREATED CHANGED DESTROYED))
     end
   end
 

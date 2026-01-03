@@ -16,7 +16,7 @@ RSpec.describe Puppeteer::Page do
         page.evaluate('() => delete window.Node')
       }
 
-      it_fails_firefox 'should click button' do
+      it 'should click button' do
         page.click('button')
         expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
       end
@@ -61,7 +61,7 @@ RSpec.describe Puppeteer::Page do
     expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
   end
 
-  it_fails_firefox 'should click with disabled javascript', sinatra: true do
+  it 'should click with disabled javascript', sinatra: true do
     page.javascript_enabled = false
     page.goto("#{server_prefix}/wrappedlink.html")
 
