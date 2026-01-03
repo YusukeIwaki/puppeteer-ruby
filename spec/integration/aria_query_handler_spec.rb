@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'AriaQueryHandler', skip: Puppeteer.env.firefox? do
+RSpec.describe 'AriaQueryHandler' do
   describe 'parseAreaSelector', puppeteer: :page do
     before {
       page.content = '<button id="btn" role="button"> Submit  button   and some spaces  </button>'

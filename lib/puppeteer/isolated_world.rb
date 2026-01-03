@@ -239,9 +239,7 @@ class Puppeteer::IsolaatedWorld
         return execution_context.
           evaluate_handle(ADD_SCRIPT_URL, url, id, type || '').
           as_element
-      rescue Puppeteer::ExecutionContext::EvaluationError # for Chrome
-        raise "Loading script from #{url} failed"
-      rescue Puppeteer::Connection::ProtocolError # for Firefox
+      rescue Puppeteer::ExecutionContext::EvaluationError, Puppeteer::Connection::ProtocolError
         raise "Loading script from #{url} failed"
       end
     end
@@ -301,9 +299,7 @@ class Puppeteer::IsolaatedWorld
     if url
       begin
         return execution_context.evaluate_handle(ADD_STYLE_URL, url).as_element
-      rescue Puppeteer::ExecutionContext::EvaluationError # for Chrome
-        raise "Loading style from #{url} failed"
-      rescue Puppeteer::Connection::ProtocolError # for Firefox
+      rescue Puppeteer::ExecutionContext::EvaluationError, Puppeteer::Connection::ProtocolError
         raise "Loading style from #{url} failed"
       end
     end

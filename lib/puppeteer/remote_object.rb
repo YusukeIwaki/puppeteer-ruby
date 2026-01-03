@@ -82,13 +82,12 @@ class Puppeteer::RemoteObject
   def box_model(client)
     result = client.send_message('DOM.getBoxModel', objectId: @object_id)
 
-    # Firefox returns width/height = 0, content/padding/border/margin = [nil, nil, nil, nil, nil, nil, nil, nil]
-    # while Chrome throws Error(Could not compute box model)
+    # Some browsers return zeroed box model data instead of throwing errors.
     model = result['model']
     if model['width'] == 0 && model['height'] == 0 &&
       %w(content padding border margin).all? { |key| model[key].all?(&:nil?) }
 
-      debug_puts('Could not compute box model in Firefox.')
+      debug_puts('Could not compute box model.')
       return nil
     end
     result

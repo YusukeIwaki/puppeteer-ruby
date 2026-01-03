@@ -10,7 +10,7 @@ class Puppeteer::Puppeteer
 
   class NoViewport ; end
 
-  # @param product [String]
+  # @param product [String] 'chrome'
   # @param channel [String|Symbol]
   # @param executable_path [String]
   # @param ignore_default_args [Array<String>|nil]
@@ -50,6 +50,11 @@ class Puppeteer::Puppeteer
     default_viewport: NoViewport.new,
     slow_mo: nil
   )
+    product = product.to_s if product
+    if product && product != 'chrome'
+      raise ArgumentError.new("Unsupported product: #{product}. Only 'chrome' is supported.")
+    end
+
     options = {
       channel: channel&.to_s,
       executable_path: executable_path,

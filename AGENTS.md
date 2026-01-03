@@ -8,7 +8,6 @@
 
 ### Planned Changes
 
-- **Firefox CDP support**: Deprecated and will be removed. Firefox automation moves to [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi). Do not add new Firefox-specific code.
 - **Ruby version**: Minimum is 2.6 today; will be raised to 3.2+ with the `async` migration (see `CLAUDE/concurrency.md`).
 - **Concurrency**: Migrating from `concurrent-ruby` to `socketry/async`.
 

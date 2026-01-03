@@ -6,12 +6,10 @@ This document provides essential guidance for AI agents working on the puppeteer
 
 puppeteer-ruby is a Ruby port of [Puppeteer](https://pptr.dev/), the Node.js browser automation library. It uses the Chrome DevTools Protocol (CDP) to automate Chrome/Chromium browsers.
 
-> **Note on Firefox Support**: Firefox support currently exists in the codebase but is planned for removal. Firefox automation will be handled by [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi), which uses the WebDriver BiDi protocol. New development should focus on Chrome/CDP only.
-
 ### Core Principles
 
 1. **CDP Protocol Focus**: All browser automation is done via CDP
-2. **Chrome Specialization**: Focused on Chrome/Chromium automation (Firefox support is deprecated)
+2. **Chrome Specialization**: Focused on Chrome/Chromium automation
 3. **API Compatibility**: Follow Puppeteer's API design closely, but use Ruby idioms
 
 ## Quick Reference
@@ -37,7 +35,6 @@ DEBUG=1 bundle exec rspec spec/integration/page_spec.rb
 | `PUPPETEER_CHANNEL_RSPEC` | Chrome channel (e.g., `chrome`, `chrome-beta`) |
 | `DEBUG` | Set to `1` for debug output |
 | `PUPPETEER_NO_SANDBOX_RSPEC` | Add `--no-sandbox` flag (for containers) |
-| `PUPPETEER_PRODUCT_RSPEC` | **[DEPRECATED]** Browser: `chrome` (default) or `firefox` |
 
 ### Code Quality
 
@@ -134,23 +131,6 @@ The `type: :puppeteer` metadata automatically:
 - Provides `page` helper method
 - Closes browser after test
 
-### Firefox Tests [DEPRECATED]
-
-> **Planned for removal**: Firefox support will be removed in a future version.
-
-Currently, `it_fails_firefox` is used for tests that don't work on Firefox:
-
-```ruby
-it_fails_firefox 'uses Chrome-specific feature' do
-  # Skipped on Firefox, runs on Chrome
-end
-```
-
-To run tests on Firefox (while still supported):
-```bash
-PUPPETEER_PRODUCT_RSPEC=firefox bundle exec rspec spec/integration/
-```
-
 ## Porting from Puppeteer
 
 When implementing new features, reference the TypeScript Puppeteer source:
@@ -231,4 +211,3 @@ For in-depth information on specific topics, see the [CLAUDE/](./CLAUDE/) direct
 - [cdp_protocol.md](./CLAUDE/cdp_protocol.md) - CDP protocol details
 - [concurrency.md](./CLAUDE/concurrency.md) - Concurrency patterns
 - [porting_puppeteer.md](./CLAUDE/porting_puppeteer.md) - Guide for porting from TypeScript
-- [browser_differences.md](./CLAUDE/browser_differences.md) - **[DEPRECATED]** Firefox differences

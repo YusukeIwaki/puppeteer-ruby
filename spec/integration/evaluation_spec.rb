@@ -19,7 +19,7 @@ RSpec.describe 'evaluation specs' do
   end
 
   describe 'Page.evaluate_on_new_document', sinatra: true do
-    it_fails_firefox 'should evaluate before anything else on the page' do
+    it 'should evaluate before anything else on the page' do
       page.evaluate_on_new_document('function () { globalThis.injected = 123; }')
       page.goto("#{server_prefix}/tamperable.html")
       expect(page.evaluate('() => globalThis.result')).to eq(123)

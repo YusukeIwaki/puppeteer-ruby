@@ -69,7 +69,7 @@ RSpec.describe Puppeteer::Frame do
       ])
     end
 
-    it_fails_firefox 'should send events when frames are manipulated dynamically' do
+    it 'should send events when frames are manipulated dynamically' do
       page.goto(server_empty_page)
 
       # validate frameattached events
@@ -214,7 +214,7 @@ RSpec.describe Puppeteer::Frame do
       expect(page.frames.map(&:parent_frame)).to eq([nil, page.main_frame, page.main_frame])
     end
 
-    it_fails_firefox 'should report different frame instance when frame re-attaches' do
+    it 'should report different frame instance when frame re-attaches' do
       frame1 = attach_frame(page, 'frame1', server_empty_page)
       js = <<~JAVASCRIPT
       () => {
@@ -242,7 +242,7 @@ RSpec.describe Puppeteer::Frame do
       expect(page.frames.last.url).to eq("#{server_prefix}/frames/frame.html?param=value#fragment")
     end
 
-    it_fails_firefox 'should support lazy frames' do
+    it 'should support lazy frames' do
       page.viewport = Puppeteer::Viewport.new(width: 1000, height: 1000)
       page.goto("#{server_prefix}/frames/lazy-frame.html")
 

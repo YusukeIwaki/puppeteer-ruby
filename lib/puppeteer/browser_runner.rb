@@ -9,8 +9,7 @@ class Puppeteer::BrowserRunner
   # @param {string} executablePath
   # @param {!Array<string>} processArguments
   # @param {string=} tempDirectory
-  def initialize(for_firefox, executable_path, process_arguments, user_data_dir, using_temp_user_data_dir)
-    @for_firefox = for_firefox
+  def initialize(executable_path, process_arguments, user_data_dir, using_temp_user_data_dir)
     @executable_path = executable_path
     @process_arguments = process_arguments
     @user_data_dir = user_data_dir

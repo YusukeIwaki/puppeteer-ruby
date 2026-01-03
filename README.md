@@ -228,6 +228,10 @@ end
 
 https://yusukeiwaki.github.io/puppeteer-ruby-docs/
 
+## Note on Firefox
+
+This library supports **Chrome/Chromium only**. For Firefox automation, consider using [playwright-ruby-client](https://github.com/YusukeIwaki/playwright-ruby-client) or [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi).
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/YusukeIwaki/puppeteer-ruby.

@@ -11,18 +11,19 @@ Rollbar.configure do |config|
 end
 
 module PuppeteerEnvExtension
-  # @return [String] chrome, firefox
+  # @return [String] chrome
   def product
-    (%w(chrome firefox) & [ENV['PUPPETEER_PRODUCT_RSPEC']]).first || 'chrome'
+    value = ENV['PUPPETEER_PRODUCT_RSPEC']
+    if value && value != 'chrome'
+      raise ArgumentError.new("PUPPETEER_PRODUCT_RSPEC only supports 'chrome'.")
+    end
+    'chrome'
   end
 
   def chrome?
     product == 'chrome'
   end
 
-  def firefox?
-    product == 'firefox'
-  end
 end
 
 Puppeteer::Env.include(PuppeteerEnvExtension)
@@ -100,22 +101,9 @@ RSpec.configure do |config|
         end
       end
     else
-      if Puppeteer.env.firefox?
-        Puppeteer.launch(**launch_options) do |browser|
-          # Firefox often fails page.focus by reusing the page with 'browser.pages.first'.
-          # So create new page for each spec.
-          @puppeteer_page = browser.new_page
-          begin
-            example.run
-          ensure
-            @puppeteer_page.close
-          end
-        end
-      else
-        Puppeteer.launch(**launch_options) do |browser|
-          @puppeteer_page = browser.new_page
-          example.run
-        end
+      Puppeteer.launch(**launch_options) do |browser|
+        @puppeteer_page = browser.new_page
+        example.run
       end
     end
   end
@@ -195,25 +183,6 @@ RSpec.configure do |config|
     end
   end
 end
-
-module ItFailsFirefox
-  def it_fails_firefox(*args, **kwargs, &block)
-    if Puppeteer.env.firefox?
-      if ENV['PENDING_CHECK']
-        # Executed but not marked as failure.
-        # Fails if pass.
-        pending(*args, **kwargs, &block)
-      else
-        # Not executed, just skip.
-        skip(*args, **kwargs, &block)
-      end
-    else
-      it(*args, **kwargs, &block)
-    end
-  end
-end
-
-RSpec::Core::ExampleGroup.extend(ItFailsFirefox)
 
 require_relative './golden_matcher'
 require_relative './utils'

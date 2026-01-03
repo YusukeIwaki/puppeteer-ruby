@@ -87,7 +87,7 @@ RSpec.describe Puppeteer::Keyboard do
     end
 
     # @see https://github.com/puppeteer/puppeteer/issues/1313
-    it_fails_firefox 'should trigger commands of keyboard shortcuts' do
+    it 'should trigger commands of keyboard shortcuts' do
       cmd_key = Puppeteer.env.darwin? ? 'Control' : 'Meta'
 
       page.type_text('textarea', 'hello')
@@ -127,13 +127,13 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('a')
     end
 
-    it_fails_firefox 'ElementHandle.press should support |text| option' do
+    it 'ElementHandle.press should support |text| option' do
       textarea = page.query_selector('textarea')
       textarea.press('a', text: 'ё')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('ё')
     end
 
-    it_fails_firefox 'should send a character with sendCharacter' do
+    it 'should send a character with sendCharacter' do
       page.focus('textarea')
       page.keyboard.send_character('嗨')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('嗨')
@@ -163,7 +163,7 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('He Wrd!')
     end
 
-    it_fails_firefox 'should specify repeat property' do
+    it 'should specify repeat property' do
       page.focus('textarea')
       page.evaluate(<<~JAVASCRIPT)
       () => document.querySelector('textarea').addEventListener('keydown', (e) => (globalThis.lastEvent = e), true)
@@ -184,14 +184,14 @@ RSpec.describe Puppeteer::Keyboard do
       expect(page.evaluate('() => globalThis.lastEvent.repeat')).to eq(false)
     end
 
-    it_fails_firefox 'should type all kinds of characters' do
+    it 'should type all kinds of characters' do
       page.focus('textarea')
       text = 'This text goes onto two lines.\nThis character is 嗨.'
       page.keyboard.type_text(text)
       expect(page.evaluate('result')).to eq(text)
     end
 
-    it_fails_firefox 'should specify location' do
+    it 'should specify location' do
       page.evaluate(<<~JAVASCRIPT)
       () => {
         window.addEventListener(
@@ -215,7 +215,7 @@ RSpec.describe Puppeteer::Keyboard do
       end
     end
 
-    it_fails_firefox 'should type emoji' do
+    it 'should type emoji' do
       page.type_text('textarea', '👹 Tokyo street Japan 🇯🇵')
       expect(page.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
@@ -240,8 +240,6 @@ RSpec.describe Puppeteer::Keyboard do
         result = page.evaluate('() => globalThis.getResult()')
         # Shift+! will generate a keypress
         if modifier_key == 'Shift'
-          expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]\nKeypress: ! Digit1 33 33 [#{modifier_key}]")
-        elsif modifier_key == 'Alt' && Puppeteer.env.firefox? && Puppeteer.env.darwin?
           expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]\nKeypress: ! Digit1 33 33 [#{modifier_key}]")
         else
           expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]")
@@ -329,7 +327,7 @@ RSpec.describe Puppeteer::Keyboard do
       attach_frame(page, 'emoji-test', '/input/textarea.html')
     }
 
-    it_fails_firefox 'should type emoji into an iframe' do
+    it 'should type emoji into an iframe' do
       frame = page.frames.last
       textarea = frame.query_selector('textarea')
       textarea.type_text('👹 Tokyo street Japan 🇯🇵')
@@ -371,11 +369,7 @@ RSpec.describe Puppeteer::Keyboard do
         down 'Shift'
         5.times { press 'ArrowLeft' }
         up 'Shift'
-        if Puppeteer.env.firefox?
-          press('a')
-        else
-          send_character('a')
-        end
+        send_character('a')
       }
       expect(page.query_selector('input').evaluate('(el) => el.value')).to eq('1234a')
     end
@@ -386,11 +380,7 @@ RSpec.describe Puppeteer::Keyboard do
       page.keyboard.down('Shift')
       5.times { page.keyboard.press('ArrowLeft') }
       page.keyboard.up('Shift')
-      if Puppeteer.env.firefox?
-        page.keyboard.press('a')
-      else
-        page.keyboard.send_character('a')
-      end
+      page.keyboard.send_character('a')
       expect(page.query_selector('input').evaluate('(el) => el.value')).to eq('1234a')
     end
   end

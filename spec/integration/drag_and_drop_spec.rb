@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'Input.drag', skip: Puppeteer.env.firefox? do
+RSpec.describe 'Input.drag' do
   it 'should throw an exception if not enabled before usage', sinatra: true do
     page.goto("#{server_prefix}/input/drag-and-drop.html")
     draggable = page.query_selector('#drag')

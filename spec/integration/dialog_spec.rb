@@ -25,7 +25,7 @@ RSpec.describe 'Page.Events.Dialog' do
     result = page.evaluate("() => prompt('question?', 'yes.')")
 
     expect(my_dialog.type).to eq('prompt')
-    expect(my_dialog.default_value).to eq('yes.') unless Puppeteer.env.firefox?
+    expect(my_dialog.default_value).to eq('yes.')
     expect(my_dialog.message).to eq('question?')
     expect(result).to eq('answer!')
   end

@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 metadata = {
-  skip: Puppeteer.env.firefox?,
   enable_site_per_process_flag: true,
   browser_context: :incognito,
   sinatra: true,

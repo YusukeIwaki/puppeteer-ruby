@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'input tests' do
   describe 'input' do
-    it_fails_firefox 'should upload the file', sinatra: true do
+    it 'should upload the file', sinatra: true do
       page.goto("#{server_prefix}/input/fileupload.html")
       filepath = File.join('spec', 'assets', 'file-to-upload.txt')
       input = page.query_selector('input')
@@ -35,14 +35,14 @@ RSpec.describe 'input tests' do
   end
 
   describe 'Page#wait_for_file_chooser' do
-    it_fails_firefox 'should work when file input is attached to DOM' do
+    it 'should work when file input is attached to DOM' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')
       end
       expect(chooser).to be_a(Puppeteer::FileChooser)
     end
-    it_fails_firefox 'should work when file input is not attached to DOM' do
+    it 'should work when file input is not attached to DOM' do
       js = <<~JAVASCRIPT
       () => {
         const el = document.createElement('input');
@@ -67,7 +67,7 @@ RSpec.describe 'input tests' do
       page.default_timeout = 5000
       expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
     end
-    it_fails_firefox 'should work with no timeout' do
+    it 'should work with no timeout' do
       js = <<~JAVASCRIPT
       () => {
         setTimeout(() => {
@@ -83,7 +83,7 @@ RSpec.describe 'input tests' do
       end
       expect(chooser).to be_a(Puppeteer::FileChooser)
     end
-    it_fails_firefox 'should return the same file chooser when there are many watchdogs simultaneously' do
+    it 'should return the same file chooser when there are many watchdogs simultaneously' do
       page.content = '<input type=file>'
       choosers = Concurrent::Promises
         .zip(
@@ -99,7 +99,7 @@ RSpec.describe 'input tests' do
   describe 'FileChooser#accept' do
     let(:filepath) { File.join('spec', 'assets', 'file-to-upload.txt') }
 
-    it_fails_firefox 'should accept single file' do
+    it 'should accept single file' do
       page.content = "<input type=file oninput='javascript:console.timeStamp()'>"
       chooser = page.wait_for_file_chooser do
         page.click('input')
@@ -108,7 +108,7 @@ RSpec.describe 'input tests' do
       expect(page.eval_on_selector('input', "(input) => input.files.length")).to eq(1)
       expect(page.eval_on_selector('input', "(input) => input.files[0].name")).to eq("file-to-upload.txt")
     end
-    it_fails_firefox 'should be able to read selected file' do
+    it 'should be able to read selected file' do
       page.content = '<input type=file>'
       Concurrent::Promises.future(
         &Puppeteer::ConcurrentRubyUtils.future_with_logging do
@@ -128,7 +128,7 @@ RSpec.describe 'input tests' do
       JAVASCRIPT
       expect(page.eval_on_selector('input', js)).to eq('contents of the file')
     end
-    it_fails_firefox 'should be able to reset selected files with empty file list' do
+    it 'should be able to reset selected files with empty file list' do
       page.content = '<input type=file>'
 
       Concurrent::Promises.future(
@@ -161,7 +161,7 @@ RSpec.describe 'input tests' do
       JAVASCRIPT
       expect(page.eval_on_selector('input', js)).to eq(0)
     end
-    it_fails_firefox 'should not accept multiple files for single-file input' do
+    it 'should not accept multiple files for single-file input' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')
@@ -169,14 +169,14 @@ RSpec.describe 'input tests' do
       pprt_png = File.join('spec', 'assets', 'pptr.png')
       expect { chooser.accept([filepath, pprt_png]) }.to raise_error(/Multiple file uploads only work with <input type=file multiple>/)
     end
-    it_fails_firefox 'should succeed even for non-existent files' do
+    it 'should succeed even for non-existent files' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')
       end
       chooser.accept(['file-does-not-exist.txt'])
     end
-    it_fails_firefox 'should error on read of non-existent files' do
+    it 'should error on read of non-existent files' do
       page.content = '<input type=file>'
       Concurrent::Promises.future(
         &Puppeteer::ConcurrentRubyUtils.future_with_logging do
@@ -196,7 +196,7 @@ RSpec.describe 'input tests' do
       JAVASCRIPT
       expect(page.eval_on_selector('input', js)).to eq(false)
     end
-    it_fails_firefox 'should fail when accepting file chooser twice' do
+    it 'should fail when accepting file chooser twice' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.eval_on_selector('input', '(input) => input.click()')
@@ -207,7 +207,7 @@ RSpec.describe 'input tests' do
   end
 
   describe 'FileChooser#cancel' do
-    it_fails_firefox 'should cancel dialog' do
+    it 'should cancel dialog' do
       # Consider file chooser canceled if we can summon another one.
       # There's no reliable way in WebPlatform to see that FileChooser was
       # canceled.
@@ -226,7 +226,7 @@ RSpec.describe 'input tests' do
       end
     end
 
-    it_fails_firefox 'should fail when canceling file chooser twice' do
+    it 'should fail when canceling file chooser twice' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.eval_on_selector('input', '(input) => input.click()')
@@ -237,21 +237,21 @@ RSpec.describe 'input tests' do
   end
 
   describe 'FileChooser#multiple?' do
-    it_fails_firefox 'should work for single file pick' do
+    it 'should work for single file pick' do
       page.content = '<input type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')
       end
       expect(chooser).not_to be_multiple
     end
-    it_fails_firefox 'should work for "multiple"' do
+    it 'should work for "multiple"' do
       page.content = '<input multiple type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')
       end
       expect(chooser).to be_multiple
     end
-    it_fails_firefox 'should work for "webkitdirectory"' do
+    it 'should work for "webkitdirectory"' do
       page.content = '<input multiple webkitdirectory type=file>'
       chooser = page.wait_for_file_chooser do
         page.click('input')

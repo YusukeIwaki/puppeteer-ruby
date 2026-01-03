@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Coverage specs' do
-  describe 'JSCoverage', skip: Puppeteer.env.firefox? do
+  describe 'JSCoverage' do
     it 'should work', sinatra: true do
       page.coverage.start_js_coverage
       page.goto("#{server_prefix}/jscoverage/simple.html", wait_until: 'networkidle0')
@@ -175,7 +175,7 @@ RSpec.describe 'Coverage specs' do
     end
   end
 
-  describe 'CSSCoverage', skip: Puppeteer.env.firefox? do
+  describe 'CSSCoverage' do
     it 'should work', sinatra: true do
       page.coverage.start_css_coverage
       page.goto("#{server_prefix}/csscoverage/simple.html")

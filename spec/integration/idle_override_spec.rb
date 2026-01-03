@@ -6,7 +6,7 @@ RSpec.describe 'Emulate idle state' do
     page.evaluate('(element) => element.innerText', state_element)
   end
 
-  it_fails_firefox 'changing idle state emulation causes change of the IdleDetector state', browser_context: :incognit, sinatra: true do
+  it 'changing idle state emulation causes change of the IdleDetector state', browser_context: :incognit, sinatra: true do
     page.browser_context.override_permissions("#{server_prefix}/idle-detector.html", ['idle-detection'])
     page.goto("#{server_prefix}/idle-detector.html")
 

@@ -45,27 +45,6 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    context 'firefox' do
-      let(:product) { 'firefox' }
-
-      context 'without channel param' do
-        subject { instance.executable_path }
-      end
-
-      context 'with invalid channel param' do
-        let(:channel) { 'hoge' }
-
-        it 'raises ArgumentError' do
-          expect { subject }.to raise_error(/\["firefox", "firefox-nightly", "nightly"\]/)
-        end
-      end
-
-      context 'with channel: nightly' do
-        let(:channel) { 'nightly' }
-
-        it { is_expected.to eq('/Applications/Firefox Nightly.app/Contents/MacOS/firefox') }
-      end
-    end
   end
 
   describe 'executable_path detection' do
