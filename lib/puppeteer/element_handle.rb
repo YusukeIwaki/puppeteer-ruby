@@ -469,7 +469,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @param delay [number|nil]
   def press(key, delay: nil, text: nil)
     focus
-    @page.keyboard.press(key, delay: delay, text: text)
+    @page.keyboard.press(key, delay: delay)
   end
 
   define_async_method :async_press

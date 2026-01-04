@@ -48,6 +48,15 @@
 
 - When porting from upstream, use `packages/puppeteer-core/src/cdp/` as the primary source.
 - Mirror upstream behavior, error messages, and option handling as closely as possible.
+- For test ports, keep `it` blocks in the same order and with the same bodies as upstream; do not add extra `context`/`describe` wrappers unless the upstream test has them.
+- When tests rely on `spec/assets/` fixtures, do not hand-edit them. Fetch each file via `wget` from `https://raw.githubusercontent.com/puppeteer/puppeteer/refs/heads/main/test/assets/xxx` and keep the contents identical to upstream.
+- Keyboard test port notes (from `test/src/keyboard.spec.ts`):
+  - `spec/assets/input/keyboard.html` must match upstream: it logs `input` events (not `keypress`) and omits `which/charCode` assertions.
+  - `ElementHandle#press` should ignore the `text:` option; the upstream test expects no override.
+  - `sendCharacter` tests assert input/keydown counts; use `eval_on_selector` to return an object and compare as a hash.
+  - `sendCharacter` in iframe uses `set_content` with nested `srcdoc` and `wait_for_frame` by frame name.
+  - Meta key test only runs on macOS; skip elsewhere.
+  - Use upstream modifier mapping: command key is `Meta` on macOS and `Control` otherwise.
 - Enable required CDP domains before relying on their events (see `CLAUDE/cdp_protocol.md`).
 - Update `docs/api_coverage.md` when new APIs are added.
 - `CHANGELOG.md` is being retired; do not update it for new changes.
