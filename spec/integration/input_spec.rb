@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'input tests' do
+  include_context 'with test state'
   describe 'input' do
     it 'should upload the file', sinatra: true do
       page.goto("#{server_prefix}/input/fileupload.html")
@@ -85,13 +86,11 @@ RSpec.describe 'input tests' do
     end
     it 'should return the same file chooser when there are many watchdogs simultaneously' do
       page.content = '<input type=file>'
-      choosers = Concurrent::Promises
-        .zip(
-          page.async_wait_for_file_chooser,
-          page.async_wait_for_file_chooser,
-          page.async_eval_on_selector('input', '(input) => input.click()'),
-        ).value!
-        .first(2)
+      choosers = await_promises(
+        page.async_wait_for_file_chooser,
+        page.async_wait_for_file_chooser,
+        page.async_eval_on_selector('input', '(input) => input.click()'),
+      ).first(2)
       expect(choosers.first).to eq(choosers.last)
     end
   end
@@ -110,12 +109,10 @@ RSpec.describe 'input tests' do
     end
     it 'should be able to read selected file' do
       page.content = '<input type=file>'
-      Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+      async_promise do
         chooser = page.wait_for_file_chooser
         chooser.accept(filepath)
-        end
-      )
+      end
       js = <<~JAVASCRIPT
       async (picker) => {
         picker.click();
@@ -131,12 +128,10 @@ RSpec.describe 'input tests' do
     it 'should be able to reset selected files with empty file list' do
       page.content = '<input type=file>'
 
-      Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+      async_promise do
         chooser = page.wait_for_file_chooser
         chooser.accept(filepath)
-        end
-      )
+      end
       js = <<~JAVASCRIPT
       async (picker) => {
         picker.click();
@@ -146,12 +141,10 @@ RSpec.describe 'input tests' do
       JAVASCRIPT
       expect(page.eval_on_selector('input', js)).to eq(1)
 
-      Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+      async_promise do
         chooser = page.wait_for_file_chooser
         chooser.accept([])
-        end
-      )
+      end
       js = <<~JAVASCRIPT
       async (picker) => {
         picker.click();
@@ -178,12 +171,10 @@ RSpec.describe 'input tests' do
     end
     it 'should error on read of non-existent files' do
       page.content = '<input type=file>'
-      Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
+      async_promise do
         chooser = page.wait_for_file_chooser
         chooser.accept(['file-does-not-exist.txt'])
-        end
-      )
+      end
       js = <<~JAVASCRIPT
       async (picker) => {
         picker.click();

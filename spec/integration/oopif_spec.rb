@@ -7,6 +7,7 @@ metadata = {
 }
 
 RSpec.describe 'OOPIF', **metadata do
+  include_context 'with test state'
   include Utils::AttachFrame
   include Utils::DetachFrame
   include Utils::NavigateFrame
@@ -43,7 +44,7 @@ RSpec.describe 'OOPIF', **metadata do
   it 'should support OOP iframes becoming normal iframes again' do
     page.goto(server_empty_page)
     predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
-    frame = page.wait_for_frame(predicate: predicate) do
+    page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
     end
 
@@ -59,7 +60,7 @@ RSpec.describe 'OOPIF', **metadata do
     frame2_promise = page.async_wait_for_frame(predicate: -> (frame) { page.frames.index { |_frame| _frame == frame } == 2 })
 
     attach_frame(page, 'frame1', "#{server_cross_process_prefix}/frames/one-frame.html")
-    frame1, frame2 = Concurrent::Promises.zip(frame1_promise, frame2_promise).value!
+    frame1, frame2 = await_promises(frame1_promise, frame2_promise)
     expect(frame1.url).to end_with('/one-frame.html')
     expect(frame2.url).to end_with('/frames/frame.html')
   end
@@ -157,7 +158,7 @@ RSpec.describe 'OOPIF', **metadata do
     page.request_interception = true
     page.on('request') { |req| req.continue }
     page.goto("#{server_prefix}/dynamic-oopif.html")
-    frame_promise.value!
+    frame_promise.wait
     expect(oopifs(browser_context).size).to eq(1)
   end
 

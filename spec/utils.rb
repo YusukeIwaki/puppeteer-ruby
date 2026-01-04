@@ -43,7 +43,7 @@ end
 
 module Utils::DumpFrames
   def dump_frames(frame, indentation = '')
-    description = frame.url.gsub(/:\d{4}\//, ':<PORT>/')
+    description = frame.url.gsub(/:\d+\//, ':<PORT>/')
     if frame.name && frame.name.length > 0
       description = "#{description} (#{frame.name})"
     end

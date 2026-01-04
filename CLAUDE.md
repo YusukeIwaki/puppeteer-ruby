@@ -153,37 +153,37 @@ await this._client.send('Page.navigate', { url });
 
 ## Concurrency Model
 
-### Current State (concurrent-ruby)
+### Current State (socketry/async)
 
-Currently, puppeteer-ruby uses Thread-based concurrency with `concurrent-ruby`:
+puppeteer-ruby uses Fiber-based concurrency with `socketry/async` (version 2.35.1+):
 
-- `Concurrent::Promises.resolvable_future` - For async operations that complete later
-- `Concurrent::Promises.future` - For running operations in background
-- `Concurrent::Promises.zip` - For waiting on multiple promises
-- `Concurrent::Promises.any` - For waiting on any of multiple promises
-- `Concurrent::Hash` - Thread-safe hash for callbacks and sessions
+- `Async::Promise` - For async operations that complete later
+- `Async` blocks - For running operations in Fiber context
+- `Puppeteer::AsyncUtils.await_promise_all` - For waiting on multiple promises
+- `Puppeteer::AsyncUtils.await_promise_race` - For waiting on any of multiple promises
+- `Puppeteer::ReactorRunner` - Dedicated Async reactor thread for sync API wrapping
+- Standard `Hash` with `Mutex` - For thread-safe callbacks and sessions
 
-### Planned Migration (socketry/async)
+### Key Components
 
-The project is planning to migrate from concurrent-ruby to socketry/async:
+| Component | Purpose |
+|-----------|---------|
+| `Async::Promise` | Promise that can be resolved/rejected later |
+| `AsyncUtils.await_promise_all` | Wait for multiple async operations |
+| `AsyncUtils.await_promise_race` | Wait for first of multiple operations |
+| `AsyncUtils.async_timeout` | Timeout wrapper for async operations |
+| `ReactorRunner` | Bridges sync API calls into Async reactor |
 
-- **Target**: Fiber-based concurrency using `Async` gem
-- **Benefits**: Simpler concurrency model, no mutex locks needed, better alignment with JavaScript async/await patterns
-
-When implementing new features, consider the upcoming migration:
-- Avoid adding new concurrent-ruby dependencies where possible
-- Design with Fiber-based concurrency in mind
-
-### Async Method Pattern (Current)
+### Async Method Pattern
 
 ```ruby
 class Page
-  # Synchronous version
+  # Synchronous version (blocks until complete)
   def wait_for_selector(selector, timeout: nil)
     # ...
   end
 
-  # Async version (returns Concurrent::Promises::Future)
+  # Async version (returns Async task)
   define_async_method :async_wait_for_selector
 end
 ```

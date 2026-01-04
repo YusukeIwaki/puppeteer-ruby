@@ -1,5 +1,3 @@
-require 'timeout'
-
 class Puppeteer::TimeoutHelper
   # @param timeout_ms [String|Integer|nil]
   # @param default_timeout_ms [Integer]
@@ -9,14 +7,12 @@ class Puppeteer::TimeoutHelper
   end
 
   def with_timeout(&block)
-    if @timeout_ms > 0
-      begin
-        Timeout.timeout(@timeout_ms / 1000.0, &block)
-      rescue Timeout::Error
-        raise Puppeteer::TimeoutError.new("waiting for #{@task_name} failed: timeout #{@timeout_ms}ms exceeded")
-      end
-    else
-      block.call
+    return block.call if @timeout_ms <= 0
+
+    begin
+      Puppeteer::AsyncUtils.async_timeout(@timeout_ms, &block).wait
+    rescue Async::TimeoutError
+      raise Puppeteer::TimeoutError.new("waiting for #{@task_name} failed: timeout #{@timeout_ms}ms exceeded")
     end
   end
 end

@@ -1,12 +1,13 @@
 require 'spec_helper'
 
 RSpec.describe 'Emulate idle state' do
+  include_context 'with test state'
   def idle_state_for(page)
     state_element = page.query_selector('#state')
     page.evaluate('(element) => element.innerText', state_element)
   end
 
-  it 'changing idle state emulation causes change of the IdleDetector state', browser_context: :incognit, sinatra: true do
+  it 'changing idle state emulation causes change of the IdleDetector state', browser_context: :incognito, sinatra: true do
     page.browser_context.override_permissions("#{server_prefix}/idle-detector.html", ['idle-detection'])
     page.goto("#{server_prefix}/idle-detector.html")
 

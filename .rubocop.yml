@@ -294,9 +294,6 @@ Style/AccessModifierDeclarations:
   Enabled: true
   EnforcedStyle: inline
 
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
-
 Style/TrailingCommaInArguments:
   Enabled: true
   EnforcedStyleForMultiline: comma

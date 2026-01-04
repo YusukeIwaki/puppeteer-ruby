@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Page.Events.Dialog' do
+  include_context 'with test state'
   it 'should fire' do
     my_dialog = nil
 

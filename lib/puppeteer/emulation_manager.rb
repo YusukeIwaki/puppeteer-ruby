@@ -23,19 +23,18 @@ class Puppeteer::EmulationManager
       end
     has_touch = viewport.has_touch?
 
-    Concurrent::Promises
-      .zip(
-        @client.async_send_message('Emulation.setDeviceMetricsOverride',
-          mobile: mobile,
-          width: width,
-          height: height,
-          deviceScaleFactor: device_scale_factor,
-          screenOrientation: screen_orientation,
-        ),
-        @client.async_send_message('Emulation.setTouchEmulationEnabled',
-          enabled: has_touch,
-        ),
-      ).value!
+    Puppeteer::AsyncUtils.await_promise_all(
+      @client.async_send_message('Emulation.setDeviceMetricsOverride',
+        mobile: mobile,
+        width: width,
+        height: height,
+        deviceScaleFactor: device_scale_factor,
+        screenOrientation: screen_orientation,
+      ),
+      @client.async_send_message('Emulation.setTouchEmulationEnabled',
+        enabled: has_touch,
+      ),
+    )
 
     reload_needed = @emulating_mobile != mobile || @has_touch != has_touch
     @emulating_mobile = mobile

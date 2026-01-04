@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'tmpdir'
 
 RSpec.describe 'Emulation' do
+  include_context 'with test state'
   let(:iPhone) { Puppeteer.devices.iPhone_6 }
   let(:iPhoneLandscape) { Puppeteer.devices.iPhone_6_landscape }
 

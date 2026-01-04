@@ -441,7 +441,7 @@ class Puppeteer::NetworkManager
     # Under certain conditions we never get the Network.responseReceived
     # event from protocol. @see https://crbug.com/883475
     if_present(request.response) do |response|
-      response.internal.body_loaded_promise.fulfill(nil)
+      response.internal.body_loaded_promise.resolve(nil)
     end
 
     forget_request(request, true)
@@ -467,7 +467,7 @@ class Puppeteer::NetworkManager
 
     request.internal.failure_text = event['errorText']
     if_present(request.response) do |response|
-      response.internal.body_loaded_promise.fulfill(nil)
+      response.internal.body_loaded_promise.resolve(nil)
     end
     forget_request(request, true)
     emit_event(NetworkManagerEmittedEvents::RequestFailed, request)

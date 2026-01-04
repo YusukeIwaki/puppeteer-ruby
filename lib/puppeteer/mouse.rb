@@ -59,7 +59,7 @@ class Puppeteer::Mouse
     move(x, y)
     down(button: button, click_count: click_count)
     if delay
-      sleep(delay / 1000.0)
+      Puppeteer::AsyncUtils.sleep_seconds(delay / 1000.0)
     end
     up(button: button, click_count: click_count)
   end
@@ -113,15 +113,15 @@ class Puppeteer::Mouse
   end
 
   def drag(start, target)
-    promise = Concurrent::Promises.resolvable_future.tap do |future|
+    promise = Async::Promise.new.tap do |future|
       @client.once('Input.dragIntercepted') do |event|
-        future.fulfill(event['data'])
+        future.resolve(event['data'])
       end
     end
     move(start.x, start.y)
     down
     move(target.x, target.y)
-    promise.value!
+    promise.wait
   end
 
   def drag_enter(target, data)
@@ -159,7 +159,7 @@ class Puppeteer::Mouse
     drag_enter(target, data)
     drag_over(target, data)
     if delay
-      sleep(delay / 1000.0)
+      Puppeteer::AsyncUtils.sleep_seconds(delay / 1000.0)
     end
     drop(target, data)
     up

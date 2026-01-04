@@ -96,10 +96,12 @@ module Puppeteer::Launcher
         end
 
       begin
-        browser.wait_for_target(
-          predicate: ->(target) { target.type == 'page' },
-          timeout: @launch_options.timeout,
-        )
+        if @launch_options.wait_for_initial_page?
+          browser.wait_for_target(
+            predicate: ->(target) { target.type == 'page' },
+            timeout: @launch_options.timeout,
+          )
+        end
       rescue
         browser.close
         raise

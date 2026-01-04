@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'request interception' do
+  include_context 'with test state'
   it 'should intercept', sinatra: true do
     page.request_interception = true
 
@@ -68,6 +69,16 @@ end
 
 # https://github.com/puppeteer/puppeteer/blob/e2e98376b9a3fa9a2501ddc86ff6407f3b59887d/docs/api.md#cooperative-intercept-mode-and-legacy-intercept-mode
 RSpec.describe 'request interception example' do
+  include_context 'with test state'
+
+  def skip_interception_example_request?(request, target_url)
+    return false if request.url == target_url
+    return true if request.url.start_with?('data:')
+
+    request.continue unless request.intercept_resolution_handled?
+    true
+  end
+
   example 'Legacy Mode prevails and the request is aborted', sinatra: true do
     # In this example, Legacy Mode prevails and the request is aborted immediately
     # because at least one handler omits priority when resolving the intercept:
@@ -75,10 +86,14 @@ RSpec.describe 'request interception example' do
     # Final outcome: immediate abort()
     page.request_interception = true
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Legacy Mode: interception is aborted immediately.
       request.abort(error_code: 'failed')
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # ['already-handled'], meaning a legacy resolution has taken place
       expect(request.intercept_resolution_state.action).to eq('already-handled')
 
@@ -86,7 +101,11 @@ RSpec.describe 'request interception example' do
       # Ultimately throws an exception after all handlers have finished
       # running and Cooperative Mode resolutions are evaluated becasue
       # abort() was called using Legacy Mode.
-      request.continue(priority: 0)
+      begin
+        request.continue(priority: 0)
+      rescue Puppeteer::HTTPRequest::AlreadyHandledError
+        # Legacy mode takes precedence over cooperative handlers.
+      end
     end
 
     expect { page.goto(server_empty_page) }.to raise_error(/net::ERR_FAILED/)
@@ -99,6 +118,8 @@ RSpec.describe 'request interception example' do
     # Final outcome: immediate continue()
     page.request_interception = true
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to abort at priority 0.
       # Ultimately throws an exception after all handlers have finished
       # running and Cooperative Mode resolutions are evaluated becasue
@@ -106,6 +127,8 @@ RSpec.describe 'request interception example' do
       request.abort(error_code: 'failed', priority: 0)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # ['abort', 0], meaning an abort @ 0 is the current winning resolution
       expect(request.intercept_resolution_state.action).to eq('abort')
       expect(request.intercept_resolution_state.priority).to eq(0)
@@ -125,16 +148,22 @@ RSpec.describe 'request interception example' do
     # Final outcome: cooperative continue() @ 5
     page.request_interception = true
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to abort at priority 0
       request.abort(error_code: 'failed', priority: 0)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to continue at priority 5
       params = request.continue_request_overrides
       params[:priority] = 5
       request.continue(**params)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # ['continue', 5], because continue @ 5 > abort @ 0
       expect(request.intercept_resolution_state.action).to eq('continue')
       expect(request.intercept_resolution_state.priority).to eq(5)
@@ -153,28 +182,38 @@ RSpec.describe 'request interception example' do
     # Final outcome: cooperative continue() @ 5
     page.request_interception = true
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to abort at priority 10
       request.abort(error_code: 'failed', priority: 10)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to continue at priority 15
       params = request.continue_request_overrides
       params[:priority] = 15
       request.continue(**params)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to respond at priority 15
       params = request.response_for_request || {}
       params[:priority] = 15
       request.respond(**params)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # Cooperative Mode: votes to respond at priority 15
       params = request.response_for_request || {}
       params[:priority] = 12
       request.respond(**params)
     end
     page.on('request') do |request|
+      next if skip_interception_example_request?(request, server_empty_page)
+
       # ['continue', 5], because continue @ 5 > abort @ 0
       expect(request.intercept_resolution_state.action).to eq('respond')
       expect(request.intercept_resolution_state.priority).to eq(15)

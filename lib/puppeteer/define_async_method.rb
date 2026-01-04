@@ -17,38 +17,28 @@ module Puppeteer::DefineAsyncMethod
       if method_defined?(original_method_name) && original_method_name.start_with?('wait_for_')
         # def wait_for_xxx(xx, yy, &block)
         #
-        # -> Concurrent::Promises.zip(
-        #      async_wait_for_xxx(xx, yy),
-        #      future { block.call },
-        #    ).value!.first
+        # -> AsyncUtils.await_promise_all(
+        #      -> { wait_for_xxx(xx, yy) },
+        #      -> { block.call },
+        #    ).first
         define_method(original_method_name) do |*args, **kwargs, &block|
           if block
-            async_method_call =
-              if kwargs.empty? # for Ruby 2.6
-                Concurrent::Promises.future(
-                  &Puppeteer::ConcurrentRubyUtils.future_with_logging do
-                    original_method.bind(self).call(*args)
-                  end
-                )
+            async_method_call = Puppeteer::AsyncUtils.future_with_logging do
+              if kwargs.empty?
+                original_method.bind(self).call(*args)
               else
-                Concurrent::Promises.future(
-                  &Puppeteer::ConcurrentRubyUtils.future_with_logging do
-                    original_method.bind(self).call(*args, **kwargs)
-                  end
-                )
+                original_method.bind(self).call(*args, **kwargs)
               end
-
-            async_block_call = Concurrent::Promises.delay do
-              block.call
-            rescue => err
-              Logger.new($stderr).warn(err)
-              raise err
             end
 
-            Concurrent::Promises.zip(
+            async_block_call = Puppeteer::AsyncUtils.future_with_logging do
+              block.call
+            end
+
+            Puppeteer::AsyncUtils.await_promise_all(
               async_method_call,
               async_block_call,
-            ).value!.first
+            ).first
           else
             if kwargs.empty? # for Ruby 2.6
               original_method.bind(self).call(*args)
@@ -60,18 +50,12 @@ module Puppeteer::DefineAsyncMethod
       end
 
       define_method(async_method_name) do |*args, **kwargs|
-        if kwargs.empty? # for Ruby 2.6
-          Concurrent::Promises.future(
-            &Puppeteer::ConcurrentRubyUtils.future_with_logging do
-              original_method.bind(self).call(*args)
-            end
-          )
-        else
-          Concurrent::Promises.future(
-            &Puppeteer::ConcurrentRubyUtils.future_with_logging do
-              original_method.bind(self).call(*args, **kwargs)
-            end
-          )
+        Async do
+          if kwargs.empty? # for Ruby 2.6
+            original_method.bind(self).call(*args)
+          else
+            original_method.bind(self).call(*args, **kwargs)
+          end
         end
       end
     end

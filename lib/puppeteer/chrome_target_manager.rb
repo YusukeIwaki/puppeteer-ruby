@@ -13,7 +13,7 @@ class Puppeteer::ChromeTargetManager
     @target_filter_callback = target_filter_callback
     @target_factory = target_factory
     @target_interceptors = {}
-    @initialize_promise = Concurrent::Promises.resolvable_future
+    @initialize_promise = Async::Promise.new
 
     @connection_event_listeners = []
     @connection_event_listeners << @connection.add_event_listener(
@@ -34,15 +34,17 @@ class Puppeteer::ChromeTargetManager
     )
 
     setup_attachment_listeners(@connection)
-    @connection.async_send_message('Target.setDiscoverTargets', {
-      discover: true,
-      filter: [
-        { type: 'tab', exclude: true },
-        {},
-      ],
-    }).then do
+
+    Async do
+      @connection.async_send_message('Target.setDiscoverTargets', {
+        discover: true,
+        filter: [
+          { type: 'tab', exclude: true },
+          {},
+        ],
+      }).wait
       store_existing_targets_for_init
-    end.rescue do |err|
+    rescue => err
       debug_puts(err)
     end
   end
@@ -62,7 +64,7 @@ class Puppeteer::ChromeTargetManager
       autoAttach: true,
     })
     finish_initialization_if_ready
-    @initialize_promise.value!
+    @initialize_promise.wait
   end
 
   def dispose
@@ -168,15 +170,19 @@ class Puppeteer::ChromeTargetManager
     end
 
     silent_detach = -> {
-      session.async_send_message('Runtime.runIfWaitingForDebugger').rescue do |err|
+      Async do
+        Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
+      rescue => err
         Logger.new($stderr).warn(err)
       end
 
       # We don't use `session.detach()` because that dispatches all commands on
       # the connection instead of the parent session.
-      parent_session.async_send_message('Target.detachFromTarget', {
-        sessionId: session.id,
-      }).rescue do |err|
+      Async do
+        Puppeteer::AsyncUtils.await(parent_session.async_send_message('Target.detachFromTarget', {
+          sessionId: session.id,
+        }))
+      rescue => err
         Logger.new($stderr).warn(err)
       end
     }
@@ -234,34 +240,30 @@ class Puppeteer::ChromeTargetManager
 
     @target_ids_for_init.delete(target.target_id)
     unless is_existing_target
-      Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }
-      )
+      Async do
+        Puppeteer::AsyncUtils.future_with_logging { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }.call
+      end
     end
     finish_initialization_if_ready
 
-    Concurrent::Promises.future(
-      &Puppeteer::ConcurrentRubyUtils.future_with_logging do
-        # TODO: the browser might be shutting down here. What do we do with the error?
-        Concurrent::Promises
-          .zip(
-            session.async_send_message('Target.setAutoAttach', {
-              waitForDebuggerOnStart: true,
-              flatten: true,
-              autoAttach: true,
-            }),
-            session.async_send_message('Runtime.runIfWaitingForDebugger'),
-          ).value!
-      rescue => err
-        Logger.new($stderr).warn(err)
-      end
-    )
+    Async do
+      Puppeteer::AsyncUtils.await(session.async_send_message('Target.setAutoAttach', {
+        waitForDebuggerOnStart: true,
+        flatten: true,
+        autoAttach: true,
+      }))
+      Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
+    rescue => err
+      Logger.new($stderr).warn(err)
+    ensure
+      session.mark_ready
+    end
   end
 
   private def finish_initialization_if_ready(target_id = nil)
     @target_ids_for_init.delete(target_id) if target_id
     if @target_ids_for_init.empty?
-      @initialize_promise.fulfill(nil) unless @initialize_promise.resolved?
+      @initialize_promise.resolve(nil) unless @initialize_promise.resolved?
     end
   end
 

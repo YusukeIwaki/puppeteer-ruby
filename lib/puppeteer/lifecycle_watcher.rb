@@ -72,6 +72,12 @@ class Puppeteer::LifecycleWatcher
     @listener_ids['client'] = @frame_manager.client.add_event_listener(CDPSessionEmittedEvents::Disconnected) do
       terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
     end
+    connection = @frame_manager.client.respond_to?(:connection) ? @frame_manager.client.connection : nil
+    if connection
+      @listener_ids['connection'] = connection.add_event_listener(ConnectionEmittedEvents::Disconnected) do
+        terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
+      end
+    end
     @listener_ids['frame_manager'] = [
       @frame_manager.add_event_listener(FrameManagerEmittedEvents::LifecycleEvent) do |_|
         check_lifecycle_complete
@@ -87,11 +93,11 @@ class Puppeteer::LifecycleWatcher
       @frame_manager.network_manager.add_event_listener(NetworkManagerEmittedEvents::RequestFailed, &method(:handle_request_failed)),
     ]
 
-    @same_document_navigation_promise = Concurrent::Promises.resolvable_future
-    @lifecycle_promise = Concurrent::Promises.resolvable_future
-    @new_document_navigation_promise = Concurrent::Promises.resolvable_future
-    @termination_promise = Concurrent::Promises.resolvable_future
-    @navigation_response_received = Concurrent::Promises.fulfilled_future(nil)
+    @same_document_navigation_promise = Async::Promise.new
+    @lifecycle_promise = Async::Promise.new
+    @new_document_navigation_promise = Async::Promise.new
+    @termination_promise = Async::Promise.new
+    @navigation_response_received = Async::Promise.new.tap { |promise| promise.resolve(nil) }
     check_lifecycle_complete
   end
 
@@ -102,10 +108,10 @@ class Puppeteer::LifecycleWatcher
     # Resolve previous navigation response in case there are multiple
     # navigation requests reported by the backend. This generally should not
     # happen by it looks like it's possible.
-    @navigation_response_received.fulfill(nil) if @navigation_response_received && !@navigation_response_received.resolved?
-    @navigation_response_received = Concurrent::Promises.resolvable_future
+    @navigation_response_received.resolve(nil) if @navigation_response_received && !@navigation_response_received.resolved?
+    @navigation_response_received = Async::Promise.new
     if request.response && !@navigation_response_received.resolved?
-      @navigation_response_received.fulfill(nil)
+      @navigation_response_received.resolve(nil)
     end
   end
 
@@ -113,14 +119,14 @@ class Puppeteer::LifecycleWatcher
   def handle_request_failed(request)
     return if @navigation_request&.internal&.request_id != request.internal.request_id
 
-    @navigation_response_received.fulfill(nil) unless @navigation_response_received.resolved?
+    @navigation_response_received.resolve(nil) unless @navigation_response_received.resolved?
   end
 
   # @param [Puppeteer::HTTPResponse] response
   def handle_response(response)
     return if @navigation_request&.internal&.request_id != response.request.internal.request_id
 
-    @navigation_response_received.fulfill(nil) unless @navigation_response_received.resolved?
+    @navigation_response_received.resolve(nil) unless @navigation_response_received.resolved?
   end
 
   # @param frame [Puppeteer::Frame]
@@ -135,7 +141,7 @@ class Puppeteer::LifecycleWatcher
   # @return [Puppeteer::HTTPResponse]
   def navigation_response
     # Continue with a possibly null response.
-    @navigation_response_received.value! rescue nil
+    @navigation_response_received.wait rescue nil
     if_present(@navigation_request) do |request|
       request.response
     end
@@ -143,6 +149,8 @@ class Puppeteer::LifecycleWatcher
 
   # @param error [TerminatedError]
   private def terminate(error)
+    return if @termination_promise.resolved?
+
     @termination_promise.reject(error)
   end
 
@@ -154,15 +162,13 @@ class Puppeteer::LifecycleWatcher
 
   def timeout_or_termination_promise
     if @timeout > 0
-      Concurrent::Promises.future(
-        &Puppeteer::ConcurrentRubyUtils.future_with_logging do
-          Timeout.timeout(@timeout / 1000.0) do
-            @termination_promise.value!
-          end
-        rescue Timeout::Error
+      -> do
+        begin
+          Puppeteer::AsyncUtils.async_timeout(@timeout, @termination_promise).wait
+        rescue Async::TimeoutError
           raise Puppeteer::TimeoutError.new("Navigation timeout of #{@timeout}ms exceeded")
         end
-      )
+      end
     else
       @termination_promise
     end
@@ -190,12 +196,12 @@ class Puppeteer::LifecycleWatcher
   private def check_lifecycle_complete
     # We expect navigation to commit.
     return unless @expected_lifecycle.completed?(@frame)
-    @lifecycle_promise.fulfill(true) if @lifecycle_promise.pending?
-    if @has_same_document_navigation && @same_document_navigation_promise.pending?
-      @same_document_navigation_promise.fulfill(true)
+    @lifecycle_promise.resolve(true) unless @lifecycle_promise.resolved?
+    if @has_same_document_navigation && !@same_document_navigation_promise.resolved?
+      @same_document_navigation_promise.resolve(true)
     end
-    if (@swapped || @frame.loader_id != @initial_loader_id) && @new_document_navigation_promise.pending?
-      @new_document_navigation_promise.fulfill(true)
+    if (@swapped || @frame.loader_id != @initial_loader_id) && !@new_document_navigation_promise.resolved?
+      @new_document_navigation_promise.resolve(true)
     end
   end
 
@@ -205,6 +211,10 @@ class Puppeteer::LifecycleWatcher
     end
     if_present(@listener_ids['frame_manager']) do |ids|
       @frame_manager.remove_event_listener(*ids)
+    end
+    if_present(@listener_ids['connection']) do |id|
+      connection = @frame_manager.client.respond_to?(:connection) ? @frame_manager.client.connection : nil
+      connection&.remove_event_listener(id)
     end
     if_present(@listener_ids['network_manager']) do |ids|
       @frame_manager.network_manager.remove_event_listener(*ids)

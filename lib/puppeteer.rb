@@ -1,4 +1,4 @@
-require 'concurrent'
+require "async"
 
 module Puppeteer; end
 
@@ -11,11 +11,12 @@ require 'puppeteer/geolocation'
 require 'puppeteer/viewport'
 
 # Modules
-require 'puppeteer/concurrent_ruby_utils'
+require "puppeteer/async_utils"
 require 'puppeteer/define_async_method'
 require 'puppeteer/debug_print'
 require 'puppeteer/event_callbackable'
 require 'puppeteer/if_present'
+require "puppeteer/reactor_runner"
 
 # Classes & values.
 require 'puppeteer/aria_query_handler'
@@ -64,7 +65,6 @@ require 'puppeteer/timeout_settings'
 require 'puppeteer/touch_screen'
 require 'puppeteer/version'
 require 'puppeteer/wait_task'
-require 'puppeteer/web_socket'
 require 'puppeteer/web_socket_transport'
 
 # subclasses

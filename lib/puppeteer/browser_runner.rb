@@ -1,7 +1,5 @@
 require 'fileutils'
 require 'open3'
-require 'timeout'
-
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
 class Puppeteer::BrowserRunner
   include Puppeteer::DebugPrint
@@ -174,7 +172,7 @@ class Puppeteer::BrowserRunner
 
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
     lines = []
-    Timeout.timeout(timeout / 1000.0) do
+    wait_for_endpoint = lambda do
       loop do
         line = browser_process.stderr.readline
         /^WebDriver BiDi listening on (ws:\/\/.*)$/.match(line) do |m|
@@ -187,9 +185,15 @@ class Puppeteer::BrowserRunner
         lines << line
       end
     end
+
+    if timeout && timeout > 0
+      Puppeteer::AsyncUtils.async_timeout(timeout, wait_for_endpoint).wait
+    else
+      wait_for_endpoint.call
+    end
   rescue EOFError
     raise LaunchError.new("\n#{lines.join("\n")}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
-  rescue Timeout::Error
+  rescue Async::TimeoutError
     raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
   end
 end

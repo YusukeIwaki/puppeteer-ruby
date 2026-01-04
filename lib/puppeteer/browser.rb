@@ -1,5 +1,4 @@
 require 'thread'
-require 'timeout'
 
 class Puppeteer::Browser
   include Puppeteer::DebugPrint
@@ -199,7 +198,7 @@ class Puppeteer::Browser
   end
 
   private def handle_attached_to_target(target)
-    if target.initialized_promise.value!
+    if target.initialized_promise.wait
       emit_event(BrowserEmittedEvents::TargetCreated, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
     end
@@ -208,7 +207,7 @@ class Puppeteer::Browser
   private def handle_detached_from_target(target)
     target.ignore_initialize_callback_promise
     target.closed_callback
-    if target.initialized_promise.value!
+    if target.initialized_promise.wait
       emit_event(BrowserEmittedEvents::TargetDestroyed, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetDestroyed, target)
     end
@@ -253,7 +252,7 @@ class Puppeteer::Browser
     unless target
       raise MissingTargetError.new("Missing target for page (id = #{target_id})")
     end
-    unless target.initialized_promise.value!
+    unless target.initialized_promise.wait
       raise CreatePageError.new("Failed to create target for page (id = #{target_id})")
     end
     page = target.page
@@ -288,21 +287,21 @@ class Puppeteer::Browser
     return existing_target if existing_target
 
     event_listening_ids = []
-    target_promise = Concurrent::Promises.resolvable_future
+    target_promise = Async::Promise.new
     event_listening_ids << add_event_listener(BrowserEmittedEvents::TargetCreated) do |target|
       if predicate.call(target)
-        target_promise.fulfill(target)
+        target_promise.resolve(target)
       end
     end
     event_listening_ids << add_event_listener(BrowserEmittedEvents::TargetChanged) do |target|
       if predicate.call(target)
-        target_promise.fulfill(target)
+        target_promise.resolve(target)
       end
     end
 
     begin
       timeout_helper.with_timeout do
-        target_promise.value!
+        target_promise.wait
       end
     ensure
       remove_event_listener(*event_listening_ids)

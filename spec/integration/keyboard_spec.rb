@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Keyboard do
+  include_context 'with test state'
   context 'with textarea content' do
     before {
       page.evaluate(<<~JAVASCRIPT)

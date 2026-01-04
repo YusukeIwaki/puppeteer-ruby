@@ -34,25 +34,28 @@ class Puppeteer::WaitTask
     if binding_function
       @dom_world.send(:_bound_functions)[binding_function.name] = binding_function
     end
-    @promise = Concurrent::Promises.resolvable_future
+    @promise = Async::Promise.new
 
     # Since page navigation requires us to re-install the pageScript, we should track
     # timeout on our end.
     if timeout && timeout > 0
       timeout_error = TimeoutError.new(title: title, timeout: timeout)
-      Concurrent::Promises.schedule(timeout / 1000.0) { terminate(timeout_error) unless @timeout_cleared }
+      @timeout_task = Async do |task|
+        task.sleep(timeout / 1000.0)
+        terminate(timeout_error) unless @timeout_cleared
+      end
     end
     async_rerun
   end
 
   # @return [Puppeteer::JSHandle]
   def await_promise
-    @promise.value!
+    @promise.wait
   end
 
   def terminate(error)
     @terminated = true
-    @promise.reject(error)
+    @promise.reject(error) unless @promise.resolved?
     cleanup
   end
 
@@ -109,7 +112,7 @@ class Puppeteer::WaitTask
     if error
       @promise.reject(error)
     else
-      @promise.fulfill(success)
+      @promise.resolve(success)
     end
 
     cleanup
@@ -117,6 +120,7 @@ class Puppeteer::WaitTask
 
   private def cleanup
     @timeout_cleared = true
+    @timeout_task&.stop
     @dom_world.task_manager.delete(self)
   end
 

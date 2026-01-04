@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::CDPSession do
+  include_context 'with test state'
   it 'should work' do
     client = page.target.create_cdp_session
 

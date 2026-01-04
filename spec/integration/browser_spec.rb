@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Browser, puppeteer: :browser do
+  include_context 'with test state'
   describe 'version' do
     it 'should return version' do
       expect(browser.version).to include('Chrome')

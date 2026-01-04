@@ -1,44 +1,76 @@
+# frozen_string_literal: true
+
+require "async"
+require "async/http/endpoint"
+require "async/websocket/client"
+
 class Puppeteer::WebSocketTransport
+  class ClosedError < Puppeteer::Error; end
+
   # @param {string} url
   # @return [Puppeteer::WebSocketTransport]
   def self.create(url)
-    ws = Puppeteer::WebSocket.new(
-      url: url,
-      max_payload_size: 256 * 1024 * 1024, # 256MB
-    )
-    Concurrent::Promises.resolvable_future.tap do |future|
-      ws.on_open do
-        future.fulfill(Puppeteer::WebSocketTransport.new(ws))
-      end
-      ws.on_error do |error_message|
-        future.reject(Puppeteer::WebSocket::TransportError.new(error_message))
-      end
-    end.value!
+    transport = new(url)
+    transport.connect.wait
+    transport
   end
 
-  # @param {!WebSocket::Driver} web_socket
-  def initialize(web_socket)
-    @ws = web_socket
-    @ws.on_message do |data|
-      @on_message&.call(data)
+  def initialize(url)
+    @url = url
+    @endpoint = Async::HTTP::Endpoint.parse(url)
+    @connection = nil
+    @task = nil
+    @closed = false
+    @connected = false
+    @on_message = nil
+    @on_close = nil
+    @connect_promise = nil
+    @write_mutex = Mutex.new
+  end
+
+  def connect
+    return @connect_promise if @connect_promise
+
+    @connect_promise = Async::Promise.new
+    @task = Async do |task|
+      Async::WebSocket::Client.connect(@endpoint) do |connection|
+        @connection = connection
+        @connected = true
+        @connect_promise.resolve(true) unless @connect_promise.resolved?
+        receive_loop(connection)
+      end
+    rescue => err
+      @connect_promise.reject(err) unless @connect_promise.resolved?
+      close
+    ensure
+      @connected = false
     end
-    @ws.on_close do |reason, code|
-      @on_close&.call(reason, code)
-    end
-    @ws.on_error do |error|
-      # Silently ignore all errors - we don't know what to do with them.
-    end
+
+    @connect_promise
   end
 
   # @param message [String]
   def send_text(message)
-    @ws.send_text(message)
+    raise ClosedError.new("Transport is closed") if @closed
+
+    @write_mutex.synchronize do
+      @connection&.write(message)
+      @connection&.flush
+    end
+  rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+    close
+    raise
   end
 
   def close
-    @ws.close
-  rescue EOFError
-    # ignore EOLError. The connection is already closed.
+    return if @closed
+
+    @closed = true
+    @connection&.close
+    @on_close&.call(nil, nil)
+    @task&.stop
+  rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+    @on_close&.call(nil, nil)
   end
 
   def on_close(&block)
@@ -47,5 +79,25 @@ class Puppeteer::WebSocketTransport
 
   def on_message(&block)
     @on_message = block
+  end
+
+  def connected?
+    @connected && !@closed
+  end
+
+  def closed?
+    @closed
+  end
+
+  private def receive_loop(connection)
+    while (message = connection.read)
+      next if message.nil?
+
+      @on_message&.call(message.to_str)
+    end
+  rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+    # Connection closed; no-op.
+  ensure
+    close unless @closed
   end
 end

@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Query handler tests' do
+  include_context 'with test state'
   describe 'Text selectors' do
     describe 'in Page' do
       it 'should query existing element' do

@@ -45,7 +45,7 @@ class Puppeteer::WebSocket
     rescue Errno::ECONNRESET
       raise EOFError.new('closed by remote')
     end
-    
+
     def dispose
       @socket.close
     end

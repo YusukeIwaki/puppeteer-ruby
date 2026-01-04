@@ -103,7 +103,7 @@ class Puppeteer::AriaQueryHandler
       promises = res.map do |ax_node|
         world.send(:async_adopt_backend_node, ax_node['backendDOMNodeId'])
       end
-      Concurrent::Promises.zip(*promises).value!
+      Puppeteer::AsyncUtils.await_promise_all(*promises)
     end
   end
 

@@ -48,7 +48,8 @@ class Puppeteer::Puppeteer
     headless: nil,
     ignore_https_errors: nil,
     default_viewport: NoViewport.new,
-    slow_mo: nil
+    slow_mo: nil,
+    wait_for_initial_page: nil
   )
     product = product.to_s if product
     if product && product != 'chrome'
@@ -74,21 +75,43 @@ class Puppeteer::Puppeteer
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
+      wait_for_initial_page: wait_for_initial_page,
     }
     if default_viewport.is_a?(NoViewport)
       options.delete(:default_viewport)
     end
+    options.delete(:wait_for_initial_page) if wait_for_initial_page.nil?
 
     @product_name = product
-    browser = launcher.launch(options)
-    if block_given?
-      begin
-        yield(browser)
-      ensure
-        browser.close
+    if async_context?
+      browser = launcher.launch(options)
+      if block_given?
+        begin
+          yield(browser)
+        ensure
+          browser.close
+        end
+      else
+        browser
       end
     else
-      browser
+      runner = Puppeteer::ReactorRunner.new
+      begin
+        browser = runner.sync { launcher.launch(options) }
+      rescue StandardError
+        runner.close
+        raise
+      end
+      proxy = Puppeteer::ReactorRunner::Proxy.new(runner, browser, owns_runner: true)
+      if block_given?
+        begin
+          yield(proxy)
+        ensure
+          proxy.close
+        end
+      else
+        proxy
+      end
     end
   end
 
@@ -115,15 +138,35 @@ class Puppeteer::Puppeteer
       default_viewport: default_viewport,
       slow_mo: slow_mo,
     }.compact
-    browser = Puppeteer::BrowserConnector.new(options).connect_to_browser
-    if block_given?
-      begin
-        yield(browser)
-      ensure
-        browser.disconnect
+    if async_context?
+      browser = Puppeteer::BrowserConnector.new(options).connect_to_browser
+      if block_given?
+        begin
+          yield(browser)
+        ensure
+          browser.disconnect
+        end
+      else
+        browser
       end
     else
-      browser
+      runner = Puppeteer::ReactorRunner.new
+      begin
+        browser = runner.sync { Puppeteer::BrowserConnector.new(options).connect_to_browser }
+      rescue StandardError
+        runner.close
+        raise
+      end
+      proxy = Puppeteer::ReactorRunner::Proxy.new(runner, browser, owns_runner: true)
+      if block_given?
+        begin
+          yield(proxy)
+        ensure
+          proxy.disconnect
+        end
+      else
+        proxy
+      end
     end
   end
 
@@ -144,6 +187,13 @@ class Puppeteer::Puppeteer
   # @return [String]
   def product
     launcher.product
+  end
+
+  private def async_context?
+    task = Async::Task.current
+    !task.nil?
+  rescue RuntimeError, NoMethodError
+    false
   end
 
   def register_custom_query_handler(name:, query_one:, query_all:)

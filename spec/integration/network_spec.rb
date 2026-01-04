@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'network' do
+  include_context 'with test state'
   describe 'Request.initiator' do
     it 'shoud return the initiator', sinatra: true do
       initiators = {}

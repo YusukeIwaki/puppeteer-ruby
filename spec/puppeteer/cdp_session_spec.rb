@@ -7,7 +7,11 @@ RSpec.describe Puppeteer::CDPSession do
 
   describe '#send_message' do
     before {
-      allow(connection).to receive(:generate_id) { |&block| block.call(SecureRandom.hex(16)) }
+      # rubocop:disable RSpec/Yield -- IDs must be unique per call in this spec.
+      allow(connection).to receive(:generate_id) do |&block|
+        block.call(SecureRandom.hex(16))
+      end
+      # rubocop:enable RSpec/Yield
       allow(connection).to receive(:raw_send) do |kwargs|
         id = kwargs[:id]
 
@@ -25,7 +29,7 @@ RSpec.describe Puppeteer::CDPSession do
     it 'should be thread safe' do
       Timeout.timeout(5) do
         futures = 1000.times.map { cdp_session.async_send_message('ping') }
-        Concurrent::Promises.zip(*futures).value!
+        await_promises(*futures)
       end
     end
 

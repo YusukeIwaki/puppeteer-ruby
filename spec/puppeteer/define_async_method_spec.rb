@@ -42,10 +42,10 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
       define_async_method :async_keyword_args_example
     end
 
-    it 'defined async method wrapped with Concurrent::Promises::Future' do
+    it 'defined async method wrapped with Async::Task' do
       instance = DefineAsyncMethodExample.new
-      expect(instance.async_fuga).to be_a(Concurrent::Promises::Future)
-      expect(instance.async_fuga.value!).to eq('-> fuga')
+      expect(instance.async_fuga).to be_a(Async::Task)
+      expect(instance.async_fuga.wait).to eq('-> fuga')
     end
 
     it 'preserves the modifier of original method' do
@@ -99,16 +99,16 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
 
     it 'works with arguments' do
       instance = DefineAsyncMethodExample.new
-      expect(instance.async_args_example(:hoge)).to be_a(Concurrent::Promises::Future)
-      expect(instance.async_args_example(:hoge).value!).to eq('-> hoge,')
-      expect(instance.async_args_example(:hoge, :fuga).value!).to eq('-> hoge,fuga')
+      expect(instance.async_args_example(:hoge)).to be_a(Async::Task)
+      expect(instance.async_args_example(:hoge).wait).to eq('-> hoge,')
+      expect(instance.async_args_example(:hoge, :fuga).wait).to eq('-> hoge,fuga')
     end
 
     it 'works with keyword arguments' do
       instance = DefineAsyncMethodExample.new
-      expect(instance.async_keyword_args_example(arg1: :hoge)).to be_a(Concurrent::Promises::Future)
-      expect(instance.async_keyword_args_example(arg1: :hoge).value!).to eq('-> hoge,')
-      expect(instance.async_keyword_args_example(arg1: :hoge, arg2: :fuga).value!).to eq('-> hoge,fuga')
+      expect(instance.async_keyword_args_example(arg1: :hoge)).to be_a(Async::Task)
+      expect(instance.async_keyword_args_example(arg1: :hoge).wait).to eq('-> hoge,')
+      expect(instance.async_keyword_args_example(arg1: :hoge, arg2: :fuga).wait).to eq('-> hoge,fuga')
     end
 
     it 'raises exception when async method name does not start with async_' do
