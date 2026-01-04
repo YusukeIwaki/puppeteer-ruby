@@ -7,9 +7,11 @@ RSpec.describe Puppeteer::CDPSession do
 
   describe '#send_message' do
     before {
+      # rubocop:disable RSpec/Yield -- IDs must be unique per call in this spec.
       allow(connection).to receive(:generate_id) do |&block|
         block.call(SecureRandom.hex(16))
       end
+      # rubocop:enable RSpec/Yield
       allow(connection).to receive(:raw_send) do |kwargs|
         id = kwargs[:id]
 
