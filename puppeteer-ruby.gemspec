@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.required_ruby_version = '>= 3.2'
-  spec.add_dependency "async", ">= 2.6", "< 3.0"
+  spec.add_dependency "async", ">= 2.35.1", "< 3.0"
   spec.add_dependency "async-http", ">= 0.60", "< 1.0"
   spec.add_dependency "async-websocket", ">= 0.27", "< 1.0"
   spec.add_dependency 'base64'
