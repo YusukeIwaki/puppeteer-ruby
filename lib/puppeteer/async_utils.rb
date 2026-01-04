@@ -12,6 +12,14 @@ module Puppeteer
     def await(task)
       if task.is_a?(Proc)
         task.call
+      elsif task.is_a?(Async::Promise)
+        current_task = Async::Task.current?
+        if current_task
+          until task.resolved?
+            current_task.sleep(0.001)
+          end
+        end
+        task.wait
       elsif task.respond_to?(:wait)
         task.wait
       else

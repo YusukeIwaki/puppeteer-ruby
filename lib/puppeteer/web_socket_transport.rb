@@ -25,13 +25,14 @@ class Puppeteer::WebSocketTransport
     @on_message = nil
     @on_close = nil
     @connect_promise = nil
+    @write_mutex = Mutex.new
   end
 
   def connect
     return @connect_promise if @connect_promise
 
     @connect_promise = Async::Promise.new
-    @task = Async do
+    @task = Async do |task|
       Async::WebSocket::Client.connect(@endpoint) do |connection|
         @connection = connection
         @connected = true
@@ -52,8 +53,10 @@ class Puppeteer::WebSocketTransport
   def send_text(message)
     raise ClosedError.new("Transport is closed") if @closed
 
-    @connection&.write(message)
-    @connection&.flush
+    @write_mutex.synchronize do
+      @connection&.write(message)
+      @connection&.flush
+    end
   rescue IOError, Errno::ECONNRESET, Errno::EPIPE
     close
     raise

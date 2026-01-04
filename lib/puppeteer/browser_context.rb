@@ -9,9 +9,19 @@ class Puppeteer::BrowserContext
     @connection = connection
     @browser = browser
     @id = context_id
+    @closed = false
   end
 
   attr_reader :id
+
+  def ==(other)
+    other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)
+    return true if equal?(other)
+    return false unless other.is_a?(Puppeteer::BrowserContext)
+    return false if @id.nil? || other.id.nil?
+
+    @id == other.id
+  end
 
   # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
   def on(event_name, &block)
@@ -59,6 +69,10 @@ class Puppeteer::BrowserContext
 
   def incognito?
     !!@id
+  end
+
+  def closed?
+    @closed
   end
 
   WEB_PERMISSION_TO_PROTOCOL = {
@@ -120,5 +134,6 @@ class Puppeteer::BrowserContext
       raise 'Non-incognito profiles cannot be closed!'
     end
     @browser.dispose_context(@id)
+    @closed = true
   end
 end

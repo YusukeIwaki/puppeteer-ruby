@@ -14,6 +14,7 @@ class Puppeteer::CDPSession
     @connection = connection
     @target_type = target_type
     @session_id = session_id
+    @ready_promise = Async::Promise.new
   end
 
   # @internal
@@ -22,6 +23,14 @@ class Puppeteer::CDPSession
   end
 
   attr_reader :connection
+
+  def mark_ready
+    @ready_promise.resolve(true) unless @ready_promise.resolved?
+  end
+
+  def wait_for_ready
+    @ready_promise.wait
+  end
 
   # @param method [String]
   # @param params [Hash]
@@ -92,6 +101,7 @@ class Puppeteer::CDPSession
           method: callback.method,
           error_message: 'Target Closed.'))
     end
+    @ready_promise.reject(Error.new("Session closed")) unless @ready_promise.resolved?
     @connection = nil
     emit_event(CDPSessionEmittedEvents::Disconnected)
   end

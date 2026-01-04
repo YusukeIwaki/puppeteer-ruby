@@ -51,6 +51,15 @@ class Puppeteer::Frame
 
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world
 
+  def ==(other)
+    other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)
+    return true if equal?(other)
+    return false unless other.is_a?(Puppeteer::Frame)
+    return false unless @id && other.id
+
+    @id == other.id
+  end
+
   def has_started_loading?
     @has_started_loading
   end
@@ -307,10 +316,6 @@ class Puppeteer::Frame
   def navigated(frame_payload)
     @name = frame_payload['name']
     @url = "#{frame_payload['url']}#{frame_payload['urlFragment']}"
-
-    # Ensure loaderId updated.
-    # The order of [Page.lifecycleEvent name="init"] and [Page.frameNavigated] is random... for some reason...
-    @loader_id = frame_payload['loaderId'] if frame_payload['loaderId']
   end
 
   # @param url [String]

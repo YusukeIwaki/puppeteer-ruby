@@ -55,6 +55,10 @@ class TestServerSinatraAdapter
     def request
       @request
     end
+
+    def response
+      self
+    end
   end
 
   def initialize(server)
@@ -209,12 +213,14 @@ RSpec.configure do |config|
       Puppeteer.launch(**options, &block)
     end
 
-    def with_test_state(incognito: false, create_page: true, browser: nil)
+    def with_test_state(incognito: nil, create_page: true, browser: nil)
       browser ||= $shared_browser or raise 'Shared browser not started'
       server = $shared_test_server
       https_server = $shared_https_test_server
 
       initial_context_ids = browser.browser_contexts.map(&:id)
+
+      incognito = create_page if incognito.nil?
 
       context =
         if incognito
@@ -250,8 +256,16 @@ RSpec.configure do |config|
 
   RSpec.shared_context('with test state') do
     around do |example|
-      incognito = example.metadata[:browser_context].to_s == 'incognito'
       create_page = example.metadata[:puppeteer].to_s != 'browser'
+      incognito =
+        case example.metadata[:browser_context].to_s
+        when 'incognito'
+          true
+        when 'default'
+          false
+        else
+          nil
+        end
 
       run_example = lambda do |page:, server:, https_server:, browser:, context:|
         @page = page
@@ -301,6 +315,7 @@ RSpec.configure do |config|
     let(:server_prefix) { server&.prefix }
     let(:server_cross_process_prefix) { server&.cross_process_prefix }
     let(:server_empty_page) { server&.empty_page }
+    let(:server_port) { server&.port }
   end
 end
 

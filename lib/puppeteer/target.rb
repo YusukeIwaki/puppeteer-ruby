@@ -107,6 +107,7 @@ class Puppeteer::Target
   def page
     if @is_page_target_callback.call(@target_info) && @page.nil?
       client = @session || @session_factory.call(true)
+      client.wait_for_ready if client.respond_to?(:wait_for_ready)
       @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport)
     end
     @page

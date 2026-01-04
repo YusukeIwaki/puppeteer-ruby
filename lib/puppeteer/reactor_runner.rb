@@ -31,8 +31,9 @@ module Puppeteer
       end
 
       def method_missing(name, *args, **kwargs, &block)
-        if @owns_runner && @runner.closed? && close_like?(name)
-          return nil
+        if @runner.closed?
+          return false if name == :connected?
+          return nil if @owns_runner && close_like?(name)
         end
 
         begin
@@ -43,7 +44,10 @@ module Puppeteer
             @runner.wrap(result)
           end
         ensure
-          @runner.close if @owns_runner && close_like?(name)
+          if @owns_runner && close_like?(name)
+            @runner.wait_until_idle
+            @runner.close
+          end
         end
       end
 
@@ -56,12 +60,16 @@ module Puppeteer
       end
 
       def is_a?(klass)
+        return true if klass == Proxy || klass == self.class
+
         __getobj__.is_a?(klass)
       end
 
       alias kind_of? is_a?
 
       def instance_of?(klass)
+        return true if klass == Proxy || klass == self.class
+
         __getobj__.instance_of?(klass)
       end
 
@@ -114,7 +122,7 @@ module Puppeteer
 
     def sync(&block)
       return block.call if runner_thread?
-      raise Puppeteer::Error.new("ReactorRunner is closed") if closed?
+      raise ::Puppeteer::Error.new("ReactorRunner is closed") if closed?
 
       promise = Async::Promise.new
       job = lambda do
@@ -124,7 +132,7 @@ module Puppeteer
       begin
         @queue << job
       rescue ClosedQueueError
-        raise Puppeteer::Error.new("ReactorRunner is closed")
+        raise ::Puppeteer::Error.new("ReactorRunner is closed")
       end
 
       promise.wait
@@ -136,6 +144,24 @@ module Puppeteer
       @closed = true
       @queue.close
       @thread.join unless runner_thread?
+    end
+
+    def wait_until_idle(timeout: 1.0)
+      return if closed?
+
+      sync do
+        return unless @barrier
+
+        deadline = timeout ? Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout : nil
+        loop do
+          break if @barrier.empty?
+          break if deadline && Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+          Async::Task.current.sleep(0.01)
+        end
+      end
+    rescue Puppeteer::Error
+      # Runner closed while waiting; ignore.
     end
 
     def closed?

@@ -170,15 +170,19 @@ class Puppeteer::ChromeTargetManager
     end
 
     silent_detach = -> {
-      session.async_send_message('Runtime.runIfWaitingForDebugger').rescue do |err|
+      Async do
+        Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
+      rescue => err
         Logger.new($stderr).warn(err)
       end
 
       # We don't use `session.detach()` because that dispatches all commands on
       # the connection instead of the parent session.
-      parent_session.async_send_message('Target.detachFromTarget', {
-        sessionId: session.id,
-      }).rescue do |err|
+      Async do
+        Puppeteer::AsyncUtils.await(parent_session.async_send_message('Target.detachFromTarget', {
+          sessionId: session.id,
+        }))
+      rescue => err
         Logger.new($stderr).warn(err)
       end
     }
@@ -243,21 +247,16 @@ class Puppeteer::ChromeTargetManager
     finish_initialization_if_ready
 
     Async do
-      Puppeteer::AsyncUtils.future_with_logging do
-        # TODO: the browser might be shutting down here. What do we do with the error?
-        Puppeteer::AsyncUtils.await_promise_all(
-          -> {
-            session.async_send_message('Target.setAutoAttach', {
-              waitForDebuggerOnStart: true,
-              flatten: true,
-              autoAttach: true,
-            }).wait
-          },
-          -> { session.async_send_message('Runtime.runIfWaitingForDebugger').wait },
-        )
-      rescue => err
-        Logger.new($stderr).warn(err)
-      end.call
+      Puppeteer::AsyncUtils.await(session.async_send_message('Target.setAutoAttach', {
+        waitForDebuggerOnStart: true,
+        flatten: true,
+        autoAttach: true,
+      }))
+      Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
+    rescue => err
+      Logger.new($stderr).warn(err)
+    ensure
+      session.mark_ready
     end
   end
 

@@ -338,6 +338,6 @@ class Puppeteer::Connection
     result = send_message('Target.attachToTarget', targetId: target_info.target_id, flatten: true)
     session_id = result['sessionId']
     @manually_attached.delete(target_info.target_id)
-    @sessions_mutex.synchronize { @sessions[session_id] }
+    @sessions_mutex.synchronize { @sessions[session_id] }.tap { |session| session&.mark_ready }
   end
 end

@@ -174,9 +174,9 @@ class Puppeteer::Page
       super('request') do |req|
         req.enqueue_intercept_action(-> { block.call(req) })
       end
+    else
+      super(event_name.to_s, &block)
     end
-
-    super(event_name.to_s, &block)
   end
 
   # @param event_name [Symbol]
@@ -185,7 +185,13 @@ class Puppeteer::Page
       raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
     end
 
-    super(event_name.to_s, &block)
+    if event_name.to_s == 'request'
+      super('request') do |req|
+        req.enqueue_intercept_action(-> { block.call(req) })
+      end
+    else
+      super(event_name.to_s, &block)
+    end
   end
 
   def handle_file_chooser(event)
@@ -239,6 +245,15 @@ class Puppeteer::Page
   end
 
   attr_reader :javascript_enabled, :target, :client
+
+  def ==(other)
+    other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)
+    return true if equal?(other)
+    return false unless other.is_a?(Puppeteer::Page)
+    return false unless @target&.target_id && other.target&.target_id
+
+    @target.target_id == other.target.target_id
+  end
   alias_method :javascript_enabled?, :javascript_enabled
 
   def browser

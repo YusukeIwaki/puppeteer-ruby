@@ -210,6 +210,12 @@ module TestServer
       status = writer.status
       body = writer.body
       headers = writer.headers
+      unless headers.key?('content-type')
+        path = route_request.path
+        ext = File.extname(path)
+        content_type = ext.empty? ? 'text/html; charset=utf-8' : mime_type_for(path)
+        headers['content-type'] = content_type
+      end
 
       ::Protocol::HTTP::Response[status, headers.to_a, [body]]
     end

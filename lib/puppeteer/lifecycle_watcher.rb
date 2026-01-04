@@ -72,6 +72,12 @@ class Puppeteer::LifecycleWatcher
     @listener_ids['client'] = @frame_manager.client.add_event_listener(CDPSessionEmittedEvents::Disconnected) do
       terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
     end
+    connection = @frame_manager.client.respond_to?(:connection) ? @frame_manager.client.connection : nil
+    if connection
+      @listener_ids['connection'] = connection.add_event_listener(ConnectionEmittedEvents::Disconnected) do
+        terminate(TerminatedError.new('Navigation failed because browser has disconnected!'))
+      end
+    end
     @listener_ids['frame_manager'] = [
       @frame_manager.add_event_listener(FrameManagerEmittedEvents::LifecycleEvent) do |_|
         check_lifecycle_complete
@@ -143,6 +149,8 @@ class Puppeteer::LifecycleWatcher
 
   # @param error [TerminatedError]
   private def terminate(error)
+    return if @termination_promise.resolved?
+
     @termination_promise.reject(error)
   end
 
@@ -203,6 +211,10 @@ class Puppeteer::LifecycleWatcher
     end
     if_present(@listener_ids['frame_manager']) do |ids|
       @frame_manager.remove_event_listener(*ids)
+    end
+    if_present(@listener_ids['connection']) do |id|
+      connection = @frame_manager.client.respond_to?(:connection) ? @frame_manager.client.connection : nil
+      connection&.remove_event_listener(id)
     end
     if_present(@listener_ids['network_manager']) do |ids|
       @frame_manager.network_manager.remove_event_listener(*ids)
