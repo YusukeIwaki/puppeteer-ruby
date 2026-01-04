@@ -46,18 +46,46 @@
 
 ## Agent Notes (Porting/Review)
 
+### Source Code Porting
+
 - When porting from upstream, use `packages/puppeteer-core/src/cdp/` as the primary source.
 - Mirror upstream behavior, error messages, and option handling as closely as possible.
-- For test ports, keep `it` blocks in the same order and with the same bodies as upstream; do not add extra `context`/`describe` wrappers unless the upstream test has them.
-- When tests rely on `spec/assets/` fixtures, do not hand-edit them. Fetch each file via `wget` from `https://raw.githubusercontent.com/puppeteer/puppeteer/refs/heads/main/test/assets/xxx` and keep the contents identical to upstream.
-- Keyboard test port notes (from `test/src/keyboard.spec.ts`):
-  - `spec/assets/input/keyboard.html` must match upstream: it logs `input` events (not `keypress`) and omits `which/charCode` assertions.
-  - `ElementHandle#press` should ignore the `text:` option; the upstream test expects no override.
-  - `sendCharacter` tests assert input/keydown counts; use `eval_on_selector` to return an object and compare as a hash.
-  - `sendCharacter` in iframe uses `set_content` with nested `srcdoc` and `wait_for_frame` by frame name.
-  - Meta key test only runs on macOS; skip elsewhere.
-  - Use upstream modifier mapping: command key is `Meta` on macOS and `Control` otherwise.
 - Enable required CDP domains before relying on their events (see `CLAUDE/cdp_protocol.md`).
+
+### Test Porting Guidelines
+
+When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spec.rb`:
+
+**Structure & Order**
+- Keep `it` blocks in the **exact same order** as upstream
+- Use the **same test names** (translated to Ruby style, e.g., `'should type into a textarea'`)
+- Do NOT add extra `context`/`describe` wrappers unless upstream has them
+- Do NOT add Ruby-specific tests in the middle; add them at the end if needed
+
+**Asset Files**
+- `spec/assets/` files must be **identical** to upstream `test/assets/`
+- Fetch assets directly: `wget https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/assets/xxx`
+- Do NOT hand-edit asset files; if upstream changes, re-fetch
+
+**Code Translation**
+- `page.evaluate(() => expr)` → `page.evaluate('() => expr')` (string form)
+- `page.$('selector')` → `page.query_selector('selector')`
+- `page.$$('selector')` → `page.query_selector_all('selector')`
+- `page.$eval()` → `page.eval_on_selector()`
+- `await expect(...)` assertions → RSpec `expect(...).to eq(...)`
+- `toThrow`/`rejects.toThrow` → `raise_error` matcher
+- Platform checks: `os.platform() !== 'darwin'` → `skip(...) unless Puppeteer.env.darwin?`
+
+**JavaScript Object Comparisons**
+- When comparing JS objects, use `eval_on_selector` or `evaluate` returning a hash
+- Compare with Ruby hash: `expect(result).to eq({ 'key' => 'value' })`
+- Note: JS object keys become string keys in Ruby hashes
+
+**Upstream Test Location**
+- Tests: `https://github.com/puppeteer/puppeteer/tree/main/test/src`
+- Assets: `https://github.com/puppeteer/puppeteer/tree/main/test/assets`
+
+See `CLAUDE/porting_puppeteer.md` for detailed examples.
 - Update `docs/api_coverage.md` when new APIs are added.
 - `CHANGELOG.md` is being retired; do not update it for new changes.
 - Porting plan (CDP + async):
