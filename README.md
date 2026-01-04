@@ -1,5 +1,9 @@
 [![Gem Version](https://badge.fury.io/rb/puppeteer-ruby.svg)](https://badge.fury.io/rb/puppeteer-ruby)
 
+> [!IMPORTANT]
+> The `main` branch is currently under **HEAVY DEVELOPMENT** for increased stability.
+> If you need the latest stable release, please refer to the [ref-2025 tag](https://github.com/YusukeIwaki/puppeteer-ruby/tree/ref-2025).
+
 # Puppeteer in Ruby
 
 A Ruby port of [puppeteer](https://pptr.dev/).
