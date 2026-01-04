@@ -6,10 +6,10 @@
 - This repository is a CDP-based Ruby port of Puppeteer, **focused on Chrome/Chromium only**.
 - CI covers Ruby 3.2, 3.3, 3.4 with latest Chrome.
 
-### Planned Changes
+### Technical Details
 
-- **Ruby version**: Minimum is 3.2+ (aligned with the `async` migration plan; see `CLAUDE/concurrency.md`).
-- **Concurrency**: Migrating from `concurrent-ruby` to `socketry/async`.
+- **Ruby version**: Minimum is 3.2+
+- **Concurrency**: Uses `socketry/async` (version 2.35.1+) for Fiber-based concurrency. See `CLAUDE/concurrency.md` for details.
 
 ## Project Structure & Module Organization
 
@@ -36,7 +36,7 @@
 - Follow `.rubocop.yml`; prefer explicit keyword arguments for public APIs.
 - Public APIs mirror Puppeteer naming but use Ruby `snake_case`.
 - Custom errors inherit from `Puppeteer::Error`.
-- Avoid adding new `concurrent-ruby` dependencies when possible; design with the `async` migration in mind.
+- Use `Puppeteer::AsyncUtils` for async operations; see `CLAUDE/concurrency.md` for patterns.
 
 ## Testing Guidelines
 

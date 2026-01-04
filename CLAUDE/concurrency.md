@@ -1,91 +1,139 @@
 # Concurrency Model
 
-This document explains the concurrency architecture in puppeteer-ruby and the planned migration path.
+This document explains the concurrency architecture in puppeteer-ruby using `socketry/async`.
 
-## Current State: concurrent-ruby
+## Current State: socketry/async
 
-puppeteer-ruby currently uses Thread-based concurrency with the `concurrent-ruby` gem.
+puppeteer-ruby uses Fiber-based concurrency with the `socketry/async` gem (version 2.35.1+).
 
 ### Key Components
 
 | Component | Purpose |
 |-----------|---------|
-| `Concurrent::Promises.resolvable_future` | Promise that can be fulfilled later |
-| `Concurrent::Promises.future` | Run operation in background thread |
-| `Concurrent::Promises.zip` | Wait for multiple promises |
-| `Concurrent::Promises.any` | Wait for any of multiple promises |
-| `Concurrent::Promises.delay` | Deferred execution |
-| `Concurrent::Promises.schedule` | Scheduled execution (timeout) |
-| `Concurrent::Hash` | Thread-safe hash for callbacks |
+| `Async::Promise` | Promise that can be resolved/rejected later |
+| `Puppeteer::AsyncUtils` | Utility module for async operations |
+| `Puppeteer::ReactorRunner` | Dedicated Async reactor thread for sync API |
+
+### AsyncUtils Module
+
+Located in `lib/puppeteer/async_utils.rb`:
+
+```ruby
+module Puppeteer::AsyncUtils
+  # Wait for all promises to complete (like Promise.all)
+  def await_promise_all(*tasks)
+    # ...
+  end
+
+  # Wait for first promise to complete (like Promise.race)
+  def await_promise_race(*tasks)
+    # ...
+  end
+
+  # Timeout wrapper
+  def async_timeout(timeout_ms, &block)
+    # ...
+  end
+
+  # Sleep helper that works in Async context
+  def sleep_seconds(seconds)
+    # ...
+  end
+end
+```
+
+### ReactorRunner
+
+`ReactorRunner` manages a dedicated Async reactor thread and provides a bridge between synchronous API calls and the Async context:
+
+```ruby
+# From lib/puppeteer/reactor_runner.rb
+
+# ReactorRunner runs Async operations in a dedicated thread
+runner = Puppeteer::ReactorRunner.new
+
+# Wrap an object to proxy calls through the reactor
+browser = runner.wrap(actual_browser)
+
+# Calls are executed in the Async reactor context
+browser.new_page  # Runs in reactor thread
+```
+
+Key features:
+- Dedicated thread running Async reactor
+- Proxies method calls into reactor context
+- Handles result unwrapping and error propagation
+- `wait_until_idle` for graceful shutdown
 
 ### Threading Model
 
 ```
-Main Thread                   WebSocket Thread
+Main Thread                   Reactor Thread (Async)
     │                              │
-    ├── send_message() ──────────►│
-    │                              │ (process message)
-    │   ◄────────────────────────── (response)
+    ├── sync method call ─────────►│
+    │                              │ (execute in Async context)
+    │   ◄────────────────────────── result
     │                              │
-    ├── on('event') ──────────────►│
-    │                              │ (receives event)
-    │   ◄────────────────────────── callback execution
+    ├── browser.close ────────────►│
+    │                              │ wait_until_idle
+    │   ◄────────────────────────── cleanup complete
     │                              │
 ```
 
-### Synchronization Patterns
+### Promise Patterns
 
-#### Waiting for Response (CDPSession)
+#### Creating and Resolving Promises
 
 ```ruby
-# From lib/puppeteer/cdp_session.rb
-def send_message(method, params = {})
-  id = raw_send(message: { method: method, params: params })
-  promise = Concurrent::Promises.resolvable_future
-  @callbacks[id] = promise
+# Create a promise
+promise = Async::Promise.new
 
-  # Wait for response with timeout
-  promise.value!(timeout_in_seconds)
-end
+# Resolve with value
+promise.resolve(result)
 
-# When response arrives:
-def handle_message(message)
-  if message['id']
-    promise = @callbacks.delete(message['id'])
-    promise&.fulfill(message['result'])
-  end
-end
+# Reject with error
+promise.reject(error)
+
+# Wait for result
+result = promise.wait
 ```
 
 #### Waiting for Events
 
 ```ruby
 # Common pattern for waiting on events
-promise = Concurrent::Promises.resolvable_future.tap do |future|
-  page.once('load') { future.fulfill(true) }
+promise = Async::Promise.new.tap do |p|
+  page.once('load') { p.resolve(true) }
 end
 
 # Later, wait for the event
-promise.value!
+promise.wait
 ```
 
 #### Running Multiple Operations
 
 ```ruby
-# Wait for all
-Concurrent::Promises.zip(promise1, promise2, promise3).value!
+# Wait for all (like Promise.all)
+Puppeteer::AsyncUtils.await_promise_all(
+  page.async_goto('https://example1.com'),
+  page.async_goto('https://example2.com'),
+)
 
-# Wait for any
-Concurrent::Promises.any(promise1, promise2).value!
+# Wait for any (like Promise.race)
+Puppeteer::AsyncUtils.await_promise_race(
+  timeout_promise,
+  navigation_promise,
+)
 ```
 
-#### Scheduled Timeout
+#### Timeout Handling
 
 ```ruby
-# From lib/puppeteer/wait_task.rb
-Concurrent::Promises.schedule(timeout / 1000.0) do
-  terminate(timeout_error) unless @timeout_cleared
+# With timeout (milliseconds)
+Puppeteer::AsyncUtils.async_timeout(5000) do
+  slow_operation
 end
+# Raises Async::TimeoutError if exceeded
 ```
 
 ### Async Method Pattern
@@ -96,7 +144,7 @@ def wait_for_selector(selector, timeout: nil)
   # Implementation...
 end
 
-# Generate async version that returns Future
+# Generate async version that returns Async task
 define_async_method :async_wait_for_selector
 ```
 
@@ -106,167 +154,63 @@ Usage:
 # Synchronous (blocks)
 element = page.wait_for_selector('button')
 
-# Asynchronous (returns Future)
-future = page.async_wait_for_selector('button')
+# Asynchronous (returns Async task)
+task = page.async_wait_for_selector('button')
 # Do other work...
-element = future.value!
+element = task.wait
 ```
 
-## Planned Migration: socketry/async
+## Key Implementation Files
 
-The project is planning to migrate to Fiber-based concurrency using the `socketry/async` gem.
-
-### Why Migrate?
-
-1. **Simpler Mental Model**: Fibers are cooperative, no race conditions
-2. **No Mutex Needed**: Single-threaded execution within Fiber context
-3. **Better JavaScript Alignment**: Mirrors JavaScript async/await patterns
-4. **Modern Ruby Support**: Leverages Ruby 3.x Fiber scheduler
-
-### Target Architecture
-
-```ruby
-# With Async gem
-Async do
-  browser = Puppeteer.launch.wait
-  page = browser.new_page.wait
-
-  # Concurrent operations
-  [
-    page.goto('https://example1.com'),
-    page.goto('https://example2.com'),
-  ].each(&:wait)
-
-  browser.close.wait
-end
-```
-
-### Migration Strategy
-
-1. **Minimum Ruby Version**: 3.2 (required for Fiber scheduler)
-2. **Two-Layer Architecture**:
-   - Core layer: Async operations returning `Async::Task`
-   - Upper layer: Synchronous wrappers that call `.wait`
-3. **Gradual Migration**: Convert components one at a time
-
-### Example: Before and After
-
-```ruby
-# Before (concurrent-ruby)
-class Connection
-  def send_message(method, params)
-    event = Concurrent::Event.new
-    @callbacks[id] = ->(r) { @result = r; event.set }
-    @socket.write(message)
-    event.wait(timeout)
-    @result
-  end
-end
-
-# After (async)
-class Connection
-  def send_message(method, params)
-    Async do |task|
-      @pending[id] = task
-      @socket.write(message)
-      task.sleep(timeout) # or wait for signal
-      @pending.delete(id)
-    end
-  end
-end
-```
-
-### Key Async Patterns
-
-```ruby
-# Basic async block
-Async do
-  result = some_async_operation.wait
-end
-
-# Parallel execution
-Async do |task|
-  results = [
-    task.async { operation1 },
-    task.async { operation2 },
-  ].map(&:wait)
-end
-
-# Timeout
-Async do |task|
-  task.with_timeout(5) do
-    slow_operation.wait
-  end
-end
-```
+| File | Description |
+|------|-------------|
+| `lib/puppeteer/async_utils.rb` | Core async utility functions |
+| `lib/puppeteer/reactor_runner.rb` | Reactor thread management |
+| `lib/puppeteer/define_async_method.rb` | Async method generation |
+| `lib/puppeteer/connection.rb` | WebSocket with async messaging |
+| `lib/puppeteer/lifecycle_watcher.rb` | Navigation wait logic |
 
 ## Guidelines for New Code
 
-When writing new code, follow these guidelines to prepare for migration:
-
 ### Do
 
+- Use `Async::Promise` for deferred results
+- Use `AsyncUtils` methods for combining promises
 - Keep synchronous and async logic separate
-- Use clear patterns for waiting/signaling
-- Document any threading assumptions
-- Write tests that work with both models
+- Handle `Async::TimeoutError` for timeout operations
+- Use `Mutex` for shared state between threads
 
 ### Don't
 
-- Add new concurrent-ruby dependencies if avoidable
-- Create complex thread synchronization
-- Rely on thread-specific behavior
-- Use global mutable state
+- Block the reactor thread with synchronous I/O
+- Create nested `Async` blocks unnecessarily
+- Ignore promise rejections
+- Use `sleep` directly (use `AsyncUtils.sleep_seconds`)
 
-### Example: Migration-Ready Code
+### Example: Async-Ready Code
 
 ```ruby
 class MyComponent
-  # Core logic: can be wrapped in Thread or Fiber
-  def perform_operation
-    send_command
-    wait_for_response
-    process_result
-  end
+  def perform_operation(timeout: 30000)
+    promise = Async::Promise.new
 
-  private
+    listener_id = @emitter.add_event_listener('complete') do |result|
+      promise.resolve(result) unless promise.resolved?
+    end
 
-  # Abstract the waiting mechanism
-  def wait_for_response
-    @waiter.wait  # Could be Event or Async::Task
-  end
-end
-```
-
-## Testing Concurrency
-
-### Current Tests
-
-Tests generally run synchronously with occasional async patterns:
-
-```ruby
-it 'waits for navigation' do
-  # This blocks until navigation completes
-  page.wait_for_navigation do
-    page.click('a')
-  end
-end
-```
-
-### Future Tests (with Async)
-
-```ruby
-it 'waits for navigation' do
-  Async do
-    page.wait_for_navigation do
-      page.click('a').wait
-    end.wait
+    begin
+      Puppeteer::AsyncUtils.async_timeout(timeout) do
+        promise.wait
+      end
+    ensure
+      @emitter.remove_event_listener(listener_id)
+    end
   end
 end
 ```
 
 ## Resources
 
-- [concurrent-ruby documentation](https://github.com/ruby-concurrency/concurrent-ruby)
 - [socketry/async documentation](https://github.com/socketry/async)
+- [Async::Promise](https://github.com/socketry/async)
 - [Ruby Fiber scheduler](https://ruby-doc.org/core-3.1.0/Fiber/Scheduler.html)

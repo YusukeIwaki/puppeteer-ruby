@@ -227,20 +227,6 @@ Tests run on GitHub Actions with matrix of:
 
 See `.github/workflows/ci.yml` for details.
 
-### Retry Strategy
-
-CI uses two-pass retry:
-
-```yaml
-- name: Run RSpec (initial pass)
-  run: bundle exec rspec --failure-exit-code 0
-
-- name: Run RSpec (retry failures)
-  run: DEBUG=1 bundle exec rspec --only-failures
-```
-
-This handles flaky tests while still catching real failures.
-
 ## Debugging Tips
 
 ### See What's Happening

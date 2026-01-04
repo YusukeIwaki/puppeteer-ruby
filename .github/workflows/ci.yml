@@ -51,16 +51,7 @@ jobs:
           bundle config set --local path vendor/bundle
           bundle install --jobs 4 --retry 3
 
-      - name: Run RSpec (initial pass)
+      - name: Run RSpec
         env:
           PUPPETEER_NO_SANDBOX_RSPEC: true
-        run: |
-          bundle exec rspec --profile 10 \
-            --failure-exit-code 0 \
-            --format documentation spec/integration/
-
-      - name: Run RSpec (retry failures)
-        env:
-          PUPPETEER_NO_SANDBOX_RSPEC: true
-        run: |
-          DEBUG=1 bundle exec rspec --only-failures --format documentation spec/integration/
+        run: bundle exec rspec --profile 10 --format documentation
