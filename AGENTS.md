@@ -62,6 +62,20 @@ When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spe
 - Do NOT add extra `context`/`describe` wrappers unless upstream has them
 - Do NOT add Ruby-specific tests in the middle; add them at the end if needed
 
+**Test State Setup**
+- Use `with_test_state` block instead of `include_context 'with test state'`
+- Access test helpers via block arguments: `page:`, `server:`, `https_server:`, `browser:`, `browser_context:`
+- Example:
+  ```ruby
+  it 'should click button' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/button.html")
+      page.click('button')
+      expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
+    end
+  end
+  ```
+
 **Asset Files**
 - `spec/assets/` files must be **identical** to upstream `test/assets/`
 - Fetch assets directly: `wget https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/assets/xxx`

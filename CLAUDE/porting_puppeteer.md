@@ -154,6 +154,31 @@ test/assets/                 # Test fixtures (HTML, JS, CSS)
 
 ### TypeScript to Ruby Translation
 
+#### Test State Setup
+
+Use `with_test_state` block to access test helpers explicitly:
+
+```ruby
+RSpec.describe Puppeteer::Page do
+  it 'should click button' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/button.html")
+      page.click('button')
+      expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
+    end
+  end
+end
+```
+
+Available block arguments:
+- `page:` - Current `Puppeteer::Page` instance
+- `server:` - Test server (use `server.prefix` for URL base)
+- `https_server:` - HTTPS test server
+- `browser:` - Browser instance
+- `browser_context:` - BrowserContext instance
+
+**Do NOT use** `include_context 'with test state'` - prefer explicit `with_test_state` blocks.
+
 #### Basic Test Structure
 
 ```typescript
@@ -178,16 +203,18 @@ describe('Keyboard', function () {
 # Ruby
 RSpec.describe Puppeteer::Keyboard do
   it 'should type into a textarea' do
-    page.evaluate(<<~JAVASCRIPT)
-    () => {
-      const textarea = document.createElement('textarea');
-      document.body.appendChild(textarea);
-      textarea.focus();
-    }
-    JAVASCRIPT
-    text = 'Hello world. I am the text that was typed!'
-    page.keyboard.type_text(text)
-    expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
+    with_test_state do |page:, **|
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        const textarea = document.createElement('textarea');
+        document.body.appendChild(textarea);
+        textarea.focus();
+      }
+      JAVASCRIPT
+      text = 'Hello world. I am the text that was typed!'
+      page.keyboard.type_text(text)
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
+    end
   end
 end
 ```
