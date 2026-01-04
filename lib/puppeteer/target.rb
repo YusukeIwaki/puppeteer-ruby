@@ -45,11 +45,9 @@ class Puppeteer::Target
     @is_closed_promise = Async::Promise.new
 
     Async do
-      begin
-        @initialized_promise.resolve(handle_initialized(@initialize_callback_promise.wait))
-      rescue => err
-        @initialized_promise.reject(err)
-      end
+      @initialized_promise.resolve(handle_initialized(@initialize_callback_promise.wait))
+    rescue => err
+      @initialized_promise.reject(err)
     end
 
     @is_initialized = !@is_page_target_callback.call(@target_info) || !@target_info.url.empty?

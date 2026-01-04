@@ -32,19 +32,17 @@ class Puppeteer::WebSocketTransport
 
     @connect_promise = Async::Promise.new
     @task = Async do
-      begin
-        Async::WebSocket::Client.connect(@endpoint) do |connection|
-          @connection = connection
-          @connected = true
-          @connect_promise.resolve(true) unless @connect_promise.resolved?
-          receive_loop(connection)
-        end
-      rescue => err
-        @connect_promise.reject(err) unless @connect_promise.resolved?
-        close
-      ensure
-        @connected = false
+      Async::WebSocket::Client.connect(@endpoint) do |connection|
+        @connection = connection
+        @connected = true
+        @connect_promise.resolve(true) unless @connect_promise.resolved?
+        receive_loop(connection)
       end
+    rescue => err
+      @connect_promise.reject(err) unless @connect_promise.resolved?
+      close
+    ensure
+      @connected = false
     end
 
     @connect_promise
@@ -52,7 +50,7 @@ class Puppeteer::WebSocketTransport
 
   # @param message [String]
   def send_text(message)
-    raise ClosedError, "Transport is closed" if @closed
+    raise ClosedError.new("Transport is closed") if @closed
 
     @connection&.write(message)
     @connection&.flush
@@ -88,9 +86,7 @@ class Puppeteer::WebSocketTransport
     @closed
   end
 
-  private
-
-  def receive_loop(connection)
+  private def receive_loop(connection)
     while (message = connection.read)
       next if message.nil?
 

@@ -60,7 +60,7 @@ module Puppeteer
           end
         end
       else
-        raise ArgumentError, "AsyncUtils.async_timeout requires a task or block"
+        raise ArgumentError.new("AsyncUtils.async_timeout requires a task or block")
       end
 
       current_task = Async::Task.current?
@@ -73,11 +73,9 @@ module Puppeteer
       result = nil
       error = nil
       Async do |async_task|
-        begin
-          result = runner.call(async_task)
-        rescue => err
-          error = err
-        end
+        result = runner.call(async_task)
+      rescue => err
+        error = err
       end.wait
 
       ImmediateTask.new(result, error)
@@ -115,8 +113,6 @@ module Puppeteer
       Kernel.sleep(duration)
     end
 
-    private
-
     class ImmediateTask
       def initialize(result, error)
         @result = result
@@ -130,7 +126,7 @@ module Puppeteer
       end
     end
 
-    def zip(*tasks)
+    private def zip(*tasks)
       barrier = Async::Barrier.new
       results = Array.new(tasks.size)
 
@@ -144,7 +140,7 @@ module Puppeteer
       results
     end
 
-    def first(*tasks)
+    private def first(*tasks)
       barrier = Async::Barrier.new
       result = nil
 

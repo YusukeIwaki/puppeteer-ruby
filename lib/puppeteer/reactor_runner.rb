@@ -77,9 +77,7 @@ module Puppeteer
         __getobj__.hash
       end
 
-      private
-
-      def close_like?(name)
+      private def close_like?(name)
         name == :close || name == :disconnect
       end
     end
@@ -89,27 +87,25 @@ module Puppeteer
       @ready = Queue.new
       @closed = false
       @thread = Thread.new do
-        begin
-          Sync do |task|
-            barrier = Async::Barrier.new(parent: task)
-            @barrier = barrier
-            @ready << true
-            begin
-              while (job = @queue.pop)
-                barrier.async do
-                  job.call
-                end
+        Sync do |task|
+          barrier = Async::Barrier.new(parent: task)
+          @barrier = barrier
+          @ready << true
+          begin
+            while (job = @queue.pop)
+              barrier.async do
+                job.call
               end
-            rescue ClosedQueueError
-              # Queue closed; exit the reactor loop.
-            ensure
-              barrier.stop
             end
+          rescue ClosedQueueError
+            # Queue closed; exit the reactor loop.
+          ensure
+            barrier.stop
           end
-        ensure
-          @barrier = nil
-          @closed = true
         end
+      ensure
+        @barrier = nil
+        @closed = true
       end
 
       ObjectSpace.define_finalizer(self, Finalizer.new(@queue, @thread))
@@ -118,7 +114,7 @@ module Puppeteer
 
     def sync(&block)
       return block.call if runner_thread?
-      raise Puppeteer::Error, "ReactorRunner is closed" if closed?
+      raise Puppeteer::Error.new("ReactorRunner is closed") if closed?
 
       promise = Async::Promise.new
       job = lambda do
@@ -128,7 +124,7 @@ module Puppeteer
       begin
         @queue << job
       rescue ClosedQueueError
-        raise Puppeteer::Error, "ReactorRunner is closed"
+        raise Puppeteer::Error.new("ReactorRunner is closed")
       end
 
       promise.wait
@@ -171,13 +167,11 @@ module Puppeteer
       end
     end
 
-    private
-
-    def runner_thread?
+    private def runner_thread?
       Thread.current == @thread
     end
 
-    def proxyable?(value)
+    private def proxyable?(value)
       return false if value.is_a?(Module) || value.is_a?(Class)
 
       name = value.class.name

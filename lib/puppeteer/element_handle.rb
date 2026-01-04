@@ -165,7 +165,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
     begin
       @remote_object.scroll_into_view_if_needed(@client)
-    rescue => err
+    rescue
       # Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
       js = <<~JAVASCRIPT
         async (element, pageJavascriptEnabled) => {

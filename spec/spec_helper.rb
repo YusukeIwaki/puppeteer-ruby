@@ -158,10 +158,6 @@ RSpec.configure do |config|
   timeout_sec = (ENV['PUPPETEER_TIMEOUT_RSPEC'] || 15).to_i
 
   config.around(:each, type: :integration) do |example|
-    if ENV['PENDING_CHECK'] && !example.metadata[:pending]
-      skip 'Pending check mode'
-    end
-
     if timeout_sec > 0
       Timeout.timeout(timeout_sec) { example.run }
     else
@@ -208,11 +204,9 @@ RSpec.configure do |config|
       $default_launch_options or raise NoMethodError.new('undefined method "default_launch_options"')
     end
 
-    def with_browser(**options)
+    def with_browser(**options, &block)
       options = default_launch_options.merge(options)
-      Puppeteer.launch(**options) do |browser|
-        yield(browser)
-      end
+      Puppeteer.launch(**options, &block)
     end
 
     def with_test_state(incognito: false, create_page: true, browser: nil)
@@ -254,7 +248,7 @@ RSpec.configure do |config|
   end
   config.include helper_module, type: :integration
 
-  RSpec.shared_context 'with test state' do
+  RSpec.shared_context('with test state') do
     around do |example|
       incognito = example.metadata[:browser_context].to_s == 'incognito'
       create_page = example.metadata[:puppeteer].to_s != 'browser'

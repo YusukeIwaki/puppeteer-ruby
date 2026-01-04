@@ -10,13 +10,11 @@ class Puppeteer::Page
       @chain = result_promise
 
       Async do
-        begin
-          previous.wait
-          result = block.call
-          result_promise.resolve(result)
-        rescue => err
-          result_promise.reject(err)
-        end
+        previous.wait
+        result = block.call
+        result_promise.resolve(result)
+      rescue => err
+        result_promise.reject(err)
       end
 
       result_promise.wait

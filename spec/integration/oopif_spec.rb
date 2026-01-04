@@ -44,7 +44,7 @@ RSpec.describe 'OOPIF', **metadata do
   it 'should support OOP iframes becoming normal iframes again' do
     page.goto(server_empty_page)
     predicate = -> (frame) { page.frames.index { |_frame| _frame == frame } == 1 }
-    frame = page.wait_for_frame(predicate: predicate) do
+    page.wait_for_frame(predicate: predicate) do
       attach_frame(page, 'frame1', server_empty_page)
     end
 

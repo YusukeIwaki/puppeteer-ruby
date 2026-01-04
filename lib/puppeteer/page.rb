@@ -599,11 +599,9 @@ class Puppeteer::Page
       end
 
     Async do
-      begin
-        @client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
-      rescue => error
-        debug_puts(error)
-      end
+      @client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+    rescue => error
+      debug_puts(error)
     end
   end
 

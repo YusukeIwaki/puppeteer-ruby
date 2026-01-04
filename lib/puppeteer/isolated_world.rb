@@ -494,7 +494,7 @@ class Puppeteer::IsolaatedWorld
       predicate_arg_def: '(root, selector, waitForVisible, waitForHidden)',
       predicate_query_handler: query_one,
       async: true,
-      predicate_body: <<~JAVASCRIPT
+      predicate_body: <<~JAVASCRIPT,
         const node = await predicateQueryHandler(root, selector)
         return checkWaitForOptions(node, waitForVisible, waitForHidden);
       JAVASCRIPT

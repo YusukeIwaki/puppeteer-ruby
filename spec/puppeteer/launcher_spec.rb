@@ -44,7 +44,6 @@ RSpec.describe Puppeteer::Launcher do
         it { is_expected.to eq('/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary') }
       end
     end
-
   end
 
   describe 'executable_path detection' do

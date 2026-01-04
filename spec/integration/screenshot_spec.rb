@@ -216,7 +216,7 @@ RSpec.describe 'Screenshots' do
     end
 
     it 'should take into account padding and border' do
-      page.set_content <<-CONTENT
+      page.set_content(<<-CONTENT)
         something above
         <style>div {
           border: 2px solid blue;
@@ -226,14 +226,14 @@ RSpec.describe 'Screenshots' do
         }
         </style>
         <div></div>
-        CONTENT
+      CONTENT
 
       elementHandle = page.S('div')
       expect(elementHandle.screenshot).to be_golden('screenshot-element-padding-border.png')
     end
 
     it 'should capture full element when larger than viewport' do
-      page.set_content <<-CONTENT
+      page.set_content(<<-CONTENT)
         something above
         <style>
         div.to-screenshot {
@@ -247,18 +247,18 @@ RSpec.describe 'Screenshots' do
         }
         </style>
         <div class="to-screenshot"></div>
-        CONTENT
+      CONTENT
 
       element_handle = page.S('div.to-screenshot')
       expect(element_handle.screenshot).to be_golden('screenshot-element-larger-than-viewport.png')
 
       expect(
-        page.evaluate('() => ({ w: window.innerWidth, h: window.innerHeight}))')
+        page.evaluate('() => ({ w: window.innerWidth, h: window.innerHeight}))'),
       ).to eq({ w: 500, h: 500 })
     end
 
     it 'should scroll element into view' do
-      page.set_content <<-CONTENT
+      page.set_content(<<-CONTENT)
         something above
         <style>div.above {
           border: 2px solid blue;
@@ -274,13 +274,13 @@ RSpec.describe 'Screenshots' do
         </style>
         <div class="above"></div>
         <div class="to-screenshot"></div>
-        CONTENT
+      CONTENT
       element_handle = page.S('div.to-screenshot')
       expect(element_handle.screenshot).to be_golden('screenshot-element-scrolled-into-view.png')
     end
 
     it 'should work with a rotated element' do
-      page.set_content <<-CONTENT
+      page.set_content(<<-CONTENT)
         <div style="position:absolute;
         top: 100px;
         left: 100px;
@@ -288,7 +288,7 @@ RSpec.describe 'Screenshots' do
         height: 100px;
         background: green;
         transform: rotateZ(200deg);">&nbsp;</div>
-        CONTENT
+      CONTENT
       element_handle = page.S('div')
       expect(element_handle.screenshot).to be_golden('screenshot-element-rotate.png')
     end
@@ -306,13 +306,13 @@ RSpec.describe 'Screenshots' do
     end
 
     it 'should work for an element with fractional dimensions' do
-      page.set_content '<div style="width:48.51px;height:19.8px;border:1px solid black;"></div>'
+      page.set_content('<div style="width:48.51px;height:19.8px;border:1px solid black;"></div>')
       element_handle = page.S('div')
       expect(element_handle.screenshot).to be_golden('screenshot-element-fractional.png')
     end
 
     it 'should work for an element with an offset' do
-      page.set_content '<div style="position:absolute; top: 10.3px; left: 20.4px;width:50.3px;height:20.2px;border:1px solid black;"></div>'
+      page.set_content('<div style="position:absolute; top: 10.3px; left: 20.4px;width:50.3px;height:20.2px;border:1px solid black;"></div>')
       element_handle = page.S('div')
       expect(element_handle.screenshot).to be_golden('screenshot-element-fractional-offset.png')
     end

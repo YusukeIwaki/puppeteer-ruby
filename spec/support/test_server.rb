@@ -150,13 +150,11 @@ module TestServer
       raise "Timeout waiting for request to #{path}"
     end
 
-    private
-
-    def run_server
+    private def run_server
       Sync do
         endpoint = Async::HTTP::Endpoint.parse(
           "#{@scheme}://127.0.0.1:#{@port}",
-          ssl_context: @ssl_context
+          ssl_context: @ssl_context,
         )
         server = Async::HTTP::Server.for(endpoint) do |request|
           handle_request(request)
@@ -172,7 +170,7 @@ module TestServer
       end
     end
 
-    def handle_request(request)
+    private def handle_request(request)
       raw_path = request.path
       path = strip_query(raw_path)
       handler = lookup_route(path)
@@ -187,19 +185,19 @@ module TestServer
         serve_static_asset(request)
       end
     rescue StandardError => error
-      warn "[TestServer] Unhandled exception for #{request&.path}: #{error.class}: #{error.message}"
+      warn("[TestServer] Unhandled exception for #{request&.path}: #{error.class}: #{error.message}")
       ::Protocol::HTTP::Response[500, [['content-type', 'text/plain; charset=utf-8']], ['Internal Server Error']]
     ensure
       request.body&.close
     end
 
-    def respond_with_handler(handler, route_request)
+    private def respond_with_handler(handler, route_request)
       writer = ResponseWriter.new
 
       begin
         handler.call(route_request, writer)
       rescue StandardError => error
-        warn "[TestServer] Route handler error for #{route_request.path}: #{error.class}: #{error.message}"
+        warn("[TestServer] Route handler error for #{route_request.path}: #{error.class}: #{error.message}")
         writer.status = 500
         writer.write('Internal Server Error')
         writer.finish
@@ -216,7 +214,7 @@ module TestServer
       ::Protocol::HTTP::Response[status, headers.to_a, [body]]
     end
 
-    def serve_static_asset(request)
+    private def serve_static_asset(request)
       return method_not_allowed(request) unless %w[GET HEAD].include?(request.method)
 
       path = strip_query(request.path)
@@ -235,7 +233,7 @@ module TestServer
 
       body = File.binread(file_path)
       headers = {
-        'content-type' => mime_type_for(file_path)
+        'content-type' => mime_type_for(file_path),
       }
       if sanitized.start_with?('cached/')
         headers['cache-control'] = 'public, max-age=31536000'
@@ -250,21 +248,21 @@ module TestServer
       ::Protocol::HTTP::Response[200, headers.to_a, [response_body]]
     end
 
-    def method_not_allowed(_request)
+    private def method_not_allowed(_request)
       headers = [
         ['content-type', 'text/plain; charset=utf-8'],
-        ['allow', 'GET, HEAD']
+        ['allow', 'GET, HEAD'],
       ]
       ::Protocol::HTTP::Response[405, headers, ['Method Not Allowed']]
     end
 
-    def lookup_route(path)
+    private def lookup_route(path)
       @routes_mutex.synchronize do
         @routes[path]
       end
     end
 
-    def notify_request(path, request)
+    private def notify_request(path, request)
       promises = nil
       @request_promises_mutex.synchronize do
         promises = @request_promises.delete(path)
@@ -272,20 +270,20 @@ module TestServer
       promises&.each { |promise| promise.resolve(request) }
     end
 
-    def register_server(_server)
+    private def register_server(_server)
       @ready_mutex.synchronize do
         @ready = true
         @ready_condition.broadcast
       end
     end
 
-    def shutdown_server
+    private def shutdown_server
       @ready_mutex.synchronize do
         @ready = false
       end
     end
 
-    def wait_until_ready
+    private def wait_until_ready
       @ready_mutex.synchronize do
         until @ready || @server_error
           @ready_condition.wait(@ready_mutex)
@@ -295,14 +293,14 @@ module TestServer
       raise @server_error if @server_error
     end
 
-    def signal_server_failure(error)
+    private def signal_server_failure(error)
       @ready_mutex.synchronize do
         @server_error = error
         @ready_condition.broadcast
       end
     end
 
-    def sanitize_path(path)
+    private def sanitize_path(path)
       clean = path.sub(%r{^/}, '')
       full_path = File.expand_path(clean, @assets_directory)
       return nil unless full_path.start_with?(@assets_directory)
@@ -310,13 +308,13 @@ module TestServer
       full_path[@assets_directory.length + 1..]
     end
 
-    def strip_query(path)
+    private def strip_query(path)
       return '' if path.nil?
 
       path.split('?', 2).first
     end
 
-    def mime_type_for(file_path)
+    private def mime_type_for(file_path)
       ext = File.extname(file_path)
       case ext
       when '.html' then 'text/html; charset=utf-8'
@@ -335,17 +333,17 @@ module TestServer
       end
     end
 
-    def find_available_port
+    private def find_available_port
       server = TCPServer.new('127.0.0.1', 0)
       port = server.addr[1]
       server.close
       port
     end
 
-    def wait_for_server
+    private def wait_for_server
       endpoint = Async::HTTP::Endpoint.parse(
         @prefix,
-        ssl_context: @scheme == 'https' ? TestServer.client_ssl_context : nil
+        ssl_context: @scheme == 'https' ? TestServer.client_ssl_context : nil,
       )
 
       Sync do |task|
@@ -375,7 +373,7 @@ module TestServer
       raise 'Test server failed to start'
     end
 
-    def current_async_task
+    private def current_async_task
       Async::Task.current
     rescue RuntimeError
       nil
@@ -527,15 +525,13 @@ module TestServer
       end
     end
 
-    private
-
-    def current_async_task
+    private def current_async_task
       Async::Task.current
     rescue RuntimeError
       nil
     end
 
-    def normalize_header_name(name)
+    private def normalize_header_name(name)
       name.to_s.downcase
     end
   end

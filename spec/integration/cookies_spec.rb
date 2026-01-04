@@ -196,15 +196,15 @@ RSpec.describe 'cookies' do
       page.goto(server_empty_page)
       page.set_cookie(name: "password", value: "123456")
       expect(page.cookies).to contain_exactly(include(
-        'name' => 'password',
-        'value' => '123456',
-        'domain' => 'localhost',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 14,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+                                                'name' => 'password',
+                                                'value' => '123456',
+                                                'domain' => 'localhost',
+                                                'path' => '/',
+                                                'expires' => -1,
+                                                'size' => 14,
+                                                'httpOnly' => false,
+                                                'secure' => false,
+                                                'session' => true,
       ))
     end
 
@@ -212,15 +212,15 @@ RSpec.describe 'cookies' do
       page.goto("#{server_prefix}/grid.html")
       page.set_cookie(name: "gridcookie", value: "GRID", path: "/grid.html")
       expect(page.cookies).to contain_exactly(include(
-        'name' => 'gridcookie',
-        'value' => 'GRID',
-        'domain' => 'localhost',
-        'path' => '/grid.html',
-        'expires' => -1,
-        'size' => 14,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+                                                'name' => 'gridcookie',
+                                                'value' => 'GRID',
+                                                'domain' => 'localhost',
+                                                'path' => '/grid.html',
+                                                'expires' => -1,
+                                                'size' => 14,
+                                                'httpOnly' => false,
+                                                'secure' => false,
+                                                'session' => true,
       ))
       expect(page.evaluate("document.cookie")).to eq("gridcookie=GRID")
 
@@ -275,15 +275,15 @@ RSpec.describe 'cookies' do
       expect(page.evaluate('document.cookie')).to eq("")
       expect(page.cookies).to be_empty
       expect(page.cookies('https://www.example.com')).to contain_exactly(include(
-        'name' => 'example-cookie',
-        'value' => 'best',
-        'domain' => 'www.example.com',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 18,
-        'httpOnly' => false,
-        'secure' => true,
-        'session' => true,
+                                                                           'name' => 'example-cookie',
+                                                                           'value' => 'best',
+                                                                           'domain' => 'www.example.com',
+                                                                           'path' => '/',
+                                                                           'expires' => -1,
+                                                                           'size' => 18,
+                                                                           'httpOnly' => false,
+                                                                           'secure' => true,
+                                                                           'session' => true,
       ))
     end
 
@@ -310,26 +310,26 @@ RSpec.describe 'cookies' do
       expect(page.evaluate("document.cookie")).to eq('localhost-cookie=best')
       expect(page.frames[1].evaluate("document.cookie")).to eq('')
       expect(page.cookies).to contain_exactly(include(
-        'name' => 'localhost-cookie',
-        'value' => 'best',
-        'domain' => 'localhost',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 20,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+                                                'name' => 'localhost-cookie',
+                                                'value' => 'best',
+                                                'domain' => 'localhost',
+                                                'path' => '/',
+                                                'expires' => -1,
+                                                'size' => 20,
+                                                'httpOnly' => false,
+                                                'secure' => false,
+                                                'session' => true,
       ))
       expect(page.cookies(server_cross_process_prefix)).to contain_exactly(include(
-        'name' => '127-cookie',
-        'value' => 'worst',
-        'domain' => '127.0.0.1',
-        'path' => '/',
-        'expires' => -1,
-        'size' => 15,
-        'httpOnly' => false,
-        'secure' => false,
-        'session' => true,
+                                                                             'name' => '127-cookie',
+                                                                             'value' => 'worst',
+                                                                             'domain' => '127.0.0.1',
+                                                                             'path' => '/',
+                                                                             'expires' => -1,
+                                                                             'size' => 15,
+                                                                             'httpOnly' => false,
+                                                                             'secure' => false,
+                                                                             'session' => true,
       ))
     end
 

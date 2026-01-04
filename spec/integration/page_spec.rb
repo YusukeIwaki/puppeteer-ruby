@@ -577,8 +577,8 @@ RSpec.describe Puppeteer::Page do
   describe 'Page.Events.DOMContentLoaded' do
     it 'should fire when expected' do
       Timeout.timeout(5) do
-        promise = Async::Promise.new.tap do |promise|
-          page.once('domcontentloaded') { promise.resolve(nil) }
+        promise = Async::Promise.new.tap do |p|
+          page.once('domcontentloaded') { p.resolve(nil) }
         end
         page.goto('about:blank')
         promise.wait

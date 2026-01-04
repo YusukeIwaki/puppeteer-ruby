@@ -36,18 +36,16 @@ class Puppeteer::ChromeTargetManager
     setup_attachment_listeners(@connection)
 
     Async do
-      begin
-        @connection.async_send_message('Target.setDiscoverTargets', {
-          discover: true,
-          filter: [
-            { type: 'tab', exclude: true },
-            {},
-          ],
-        }).wait
-        store_existing_targets_for_init
-      rescue => err
-        debug_puts(err)
-      end
+      @connection.async_send_message('Target.setDiscoverTargets', {
+        discover: true,
+        filter: [
+          { type: 'tab', exclude: true },
+          {},
+        ],
+      }).wait
+      store_existing_targets_for_init
+    rescue => err
+      debug_puts(err)
     end
   end
 
