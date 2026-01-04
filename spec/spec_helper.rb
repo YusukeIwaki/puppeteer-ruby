@@ -1,7 +1,9 @@
 require 'bundler/setup'
 require 'puppeteer'
 require 'rollbar'
+require 'time'
 require 'timeout'
+require 'rack/utils'
 
 require_relative 'support/test_server'
 
@@ -46,6 +48,42 @@ class TestServerSinatraAdapter
       @headers.merge!(values)
     end
 
+    def halt(status = nil, body = nil, headers = nil)
+      status ||= @status
+      headers ||= @headers
+      body = body.nil? ? @body : body
+      throw(:halt, [status, headers, body])
+    end
+
+    def cache_control(*values, **options)
+      directives = values.map { |value| value.to_s.tr('_', '-') }
+      options.each do |key, value|
+        directive = key.to_s.tr('_', '-')
+        directives << (value == true ? directive : "#{directive}=#{value}")
+      end
+      @headers['cache-control'] = directives.join(', ')
+    end
+
+    def last_modified(value)
+      time = value.is_a?(Time) ? value : Time.parse(value.to_s)
+      @headers['last-modified'] = time.httpdate
+
+      if_modified_since = @request.env['HTTP_IF_MODIFIED_SINCE']
+      return unless if_modified_since
+
+      begin
+        since_time = Time.httpdate(if_modified_since)
+      rescue ArgumentError
+        return
+      end
+
+      if since_time.to_i >= time.to_i
+        @status = 304
+        @body = ''
+        halt(@status, @body, @headers)
+      end
+    end
+
     def body(value = nil)
       return @body if value.nil?
 
@@ -68,7 +106,7 @@ class TestServerSinatraAdapter
   def get(path, &block)
     @server.set_route(path) do |route_request, writer|
       route = RouteContext.new(SinatraRequest.new(route_request))
-      result = route.instance_exec(&block)
+      result = catch(:halt) { route.instance_exec(&block) }
 
       status, headers, body =
         if result.is_a?(Array) && result.size == 3
