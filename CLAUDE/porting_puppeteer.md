@@ -151,6 +151,50 @@ test/assets/                 # Test fixtures (HTML, JS, CSS)
 2. **Preserve test names** - Use the same test descriptions
 3. **Preserve test structure** - Don't add extra `context`/`describe` wrappers
 4. **Preserve asset files** - Keep `spec/assets/` identical to upstream `test/assets/`
+5. **Separate Ruby-specific tests** - Move Ruby-only features to `*_ext_spec.rb` files
+
+### Ruby-Specific Tests (`*_ext_spec.rb`)
+
+When porting tests, separate Ruby-only features into dedicated extension spec files:
+
+```
+spec/integration/
+├── keyboard_spec.rb       # Upstream port (faithful to test/src/keyboard.spec.ts)
+└── keyboard_ext_spec.rb   # Ruby-specific extensions
+```
+
+**Ruby-specific features to separate:**
+- Block DSL syntax: `page.keyboard { type_text('hello'); press('Enter') }`
+- Nested block syntax: `press('Shift') { press('Comma') }`
+- Other Ruby idioms not present in upstream
+
+**Example `*_ext_spec.rb` structure:**
+
+```ruby
+RSpec.describe 'Keyboard (white-box / Ruby-specific)' do
+  def with_textarea(&block)
+    with_test_state do |page:, **|
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        const textarea = document.createElement('textarea');
+        document.body.appendChild(textarea);
+        textarea.focus();
+      }
+      JAVASCRIPT
+      block.call(page: page)
+    end
+  end
+
+  it 'should input < by pressing Shift + , using press with block' do
+    with_textarea do |page:|
+      page.keyboard do
+        press('Shift') { press('Comma') }
+      end
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('<')
+    end
+  end
+end
+```
 
 ### TypeScript to Ruby Translation
 

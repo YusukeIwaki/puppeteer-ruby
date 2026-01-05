@@ -62,6 +62,12 @@ When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spe
 - Do NOT add extra `context`/`describe` wrappers unless upstream has them
 - Do NOT add Ruby-specific tests in the middle; add them at the end if needed
 
+**Ruby-Specific Tests → `*_ext_spec.rb`**
+- When porting, separate Ruby-only features into `*_ext_spec.rb` files (e.g., `keyboard_ext_spec.rb`)
+- Ruby-specific features include: block DSL (`page.keyboard { ... }`), `press('Shift') { press('Key') }` syntax
+- Keep upstream-equivalent tests in the main spec file for easy comparison
+- Example: `keyboard_spec.rb` (upstream port) + `keyboard_ext_spec.rb` (Ruby extensions)
+
 **Test State Setup**
 - Use `with_test_state` block instead of `include_context 'with test state'`
 - Access test helpers via block arguments: `page:`, `server:`, `https_server:`, `browser:`, `browser_context:`
