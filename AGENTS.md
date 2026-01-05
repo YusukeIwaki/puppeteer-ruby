@@ -46,9 +46,66 @@
 
 ## Agent Notes (Porting/Review)
 
+### Source Code Porting
+
 - When porting from upstream, use `packages/puppeteer-core/src/cdp/` as the primary source.
 - Mirror upstream behavior, error messages, and option handling as closely as possible.
 - Enable required CDP domains before relying on their events (see `CLAUDE/cdp_protocol.md`).
+
+### Test Porting Guidelines
+
+When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spec.rb`:
+
+**Structure & Order**
+- Keep `it` blocks in the **exact same order** as upstream
+- Use the **same test names** (translated to Ruby style, e.g., `'should type into a textarea'`)
+- Do NOT add extra `context`/`describe` wrappers unless upstream has them
+- Do NOT add Ruby-specific tests in the middle; add them at the end if needed
+
+**Ruby-Specific Tests → `*_ext_spec.rb`**
+- When porting, separate Ruby-only features into `*_ext_spec.rb` files (e.g., `keyboard_ext_spec.rb`)
+- Ruby-specific features include: block DSL (`page.keyboard { ... }`), `press('Shift') { press('Key') }` syntax
+- Keep upstream-equivalent tests in the main spec file for easy comparison
+- Example: `keyboard_spec.rb` (upstream port) + `keyboard_ext_spec.rb` (Ruby extensions)
+
+**Test State Setup**
+- Use `with_test_state` block instead of `include_context 'with test state'`
+- Access test helpers via block arguments: `page:`, `server:`, `https_server:`, `browser:`, `browser_context:`
+- Example:
+  ```ruby
+  it 'should click button' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/button.html")
+      page.click('button')
+      expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
+    end
+  end
+  ```
+
+**Asset Files**
+- `spec/assets/` files must be **identical** to upstream `test/assets/`
+- Fetch assets directly: `wget https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/assets/xxx`
+- Do NOT hand-edit asset files; if upstream changes, re-fetch
+
+**Code Translation**
+- `page.evaluate(() => expr)` → `page.evaluate('() => expr')` (string form)
+- `page.$('selector')` → `page.query_selector('selector')`
+- `page.$$('selector')` → `page.query_selector_all('selector')`
+- `page.$eval()` → `page.eval_on_selector()`
+- `await expect(...)` assertions → RSpec `expect(...).to eq(...)`
+- `toThrow`/`rejects.toThrow` → `raise_error` matcher
+- Platform checks: `os.platform() !== 'darwin'` → `skip(...) unless Puppeteer.env.darwin?`
+
+**JavaScript Object Comparisons**
+- When comparing JS objects, use `eval_on_selector` or `evaluate` returning a hash
+- Compare with Ruby hash: `expect(result).to eq({ 'key' => 'value' })`
+- Note: JS object keys become string keys in Ruby hashes
+
+**Upstream Test Location**
+- Tests: `https://github.com/puppeteer/puppeteer/tree/main/test/src`
+- Assets: `https://github.com/puppeteer/puppeteer/tree/main/test/assets`
+
+See `CLAUDE/porting_puppeteer.md` for detailed examples.
 - Update `docs/api_coverage.md` when new APIs are added.
 - `CHANGELOG.md` is being retired; do not update it for new changes.
 - Porting plan (CDP + async):

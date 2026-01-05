@@ -42,6 +42,8 @@ class Puppeteer::WaitTask
       timeout_error = TimeoutError.new(title: title, timeout: timeout)
       @timeout_task = Async do |task|
         task.sleep(timeout / 1000.0)
+        # Avoid stopping the timeout task from inside terminate/cleanup.
+        @timeout_task = nil
         terminate(timeout_error) unless @timeout_cleared
       end
     end

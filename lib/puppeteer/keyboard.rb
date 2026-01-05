@@ -152,10 +152,16 @@ class Puppeteer::Keyboard
   # @param key [String]
   # @param text [String]
   # @return [Future]
-  def press(key, delay: nil, text: nil, commands: nil)
+  def press(key, delay: nil, text: nil, commands: nil, &block)
     down(key, text: text, commands: commands)
     if delay
       Puppeteer::AsyncUtils.sleep_seconds(delay.to_i / 1000.0)
+    end
+    if block
+      block.call
+      if delay
+        Puppeteer::AsyncUtils.sleep_seconds(delay.to_i / 1000.0)
+      end
     end
     up(key)
   end

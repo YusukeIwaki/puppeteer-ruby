@@ -154,7 +154,7 @@ module Puppeteer
 
       begin
         tasks.each do |task|
-          barrier.async do
+          barrier.async(finished: false) do
             await(task)
           end
         end
@@ -166,8 +166,44 @@ module Puppeteer
 
         result
       ensure
-        barrier.stop
+        drain_barrier_tasks(barrier)
+      end
+    end
+
+    private def drain_barrier_tasks(barrier)
+      pending = barrier.tasks.to_a
+      return if pending.empty?
+
+      barrier.stop
+      pending.each do |waiting|
+        task = waiting.task
+        next unless task.completed? || task.failed? || task.stopped?
+
+        begin
+          task.wait
+        rescue StandardError
+          # The race winner is already decided; ignore losers' errors.
+        end
       end
     end
   end
 end
+
+module AsyncPromiseWaitRetry
+  def wait(...)
+    loop do
+      begin
+        return super
+      rescue ThreadError => e
+        raise unless e.message == 'Attempt to unlock a mutex which is not locked'
+        next unless resolved?
+
+        value = self.value
+        raise value if value.is_a?(Exception)
+        return value
+      end
+    end
+  end
+end
+
+Async::Promise.prepend(AsyncPromiseWaitRetry)

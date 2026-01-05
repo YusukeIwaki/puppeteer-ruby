@@ -1,9 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Keyboard do
-  include_context 'with test state'
-  context 'with textarea content' do
-    before {
+  include Utils::AttachFrame
+
+  it 'should type into a textarea' do
+    with_test_state do |page:, **|
       page.evaluate(<<~JAVASCRIPT)
       () => {
         const textarea = document.createElement('textarea');
@@ -11,140 +12,278 @@ RSpec.describe Puppeteer::Keyboard do
         textarea.focus();
       }
       JAVASCRIPT
-    }
-
-    it 'should type into a textarea' do
       text = 'Hello world. I am the text that was typed!'
       page.keyboard.type_text(text)
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
     end
-
-    it 'should input ( by type_text method' do
-      text = '(puppeteer)'
-      page.keyboard.type_text(text)
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
-    end
-
-    it 'should input ( by pressing Shift + 9' do
-      page.keyboard do
-        down('Shift')
-        press('Digit9')
-        up('Shift')
-      end
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('(')
-    end
-
-    it 'should input <' do
-      text = '<puppeteer>'
-      page.keyboard.type_text(text)
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq(text)
-    end
-
-    it 'should input < by pressing Shift + ,' do
-      page.keyboard do
-        down('Shift')
-        press('Comma')
-        up('Shift')
-      end
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('<')
-    end
   end
 
-  context 'with key event listener content' do
-    before {
-      page.evaluate(<<~JAVASCRIPT)
-      () => {
-        window.keyPromise = new Promise((resolve) =>
-          document.addEventListener('keydown', (event) => resolve(event.key))
-        );
-      }
-      JAVASCRIPT
-    }
-
-    it 'should press the metaKey' do
-      page.keyboard.press('Meta')
-      expect(page.evaluate('keyPromise')).to eq('Meta')
-    end
-  end
-
-  context 'with textarea page', sinatra: true do
-    before {
-      page.goto("#{server_prefix}/input/textarea.html")
-    }
-
-    it 'should move with the arrow keys' do
+  it 'should move with the arrow keys' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.type_text('textarea', 'Hello World!')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('Hello World!')
 
-      'World!'.length.times { page.keyboard.press('ArrowLeft') }
+      'World!'.each_char { page.keyboard.press('ArrowLeft') }
       page.keyboard.type_text('inserted ')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('Hello inserted World!')
 
       page.keyboard.down('Shift')
-      'inserted '.length.times { page.keyboard.press('ArrowLeft') }
+      'inserted '.each_char { page.keyboard.press('ArrowLeft') }
       page.keyboard.up('Shift')
       page.keyboard.press('Backspace')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('Hello World!')
     end
+  end
 
-    # @see https://github.com/puppeteer/puppeteer/issues/1313
-    it 'should trigger commands of keyboard shortcuts' do
-      cmd_key = Puppeteer.env.darwin? ? 'Control' : 'Meta'
+  # @see https://github.com/puppeteer/puppeteer/issues/1313
+  it 'should trigger commands of keyboard shortcuts' do
+    with_test_state do |page:, server:, **|
+      cmd_key = Puppeteer.env.darwin? ? 'Meta' : 'Control'
 
+      page.goto("#{server.prefix}/input/textarea.html")
       page.type_text('textarea', 'hello')
 
-      page.keyboard do
-        down cmd_key
-        press 'a', commands: ['SelectAll']
-        up cmd_key
-      end
+      page.keyboard.down(cmd_key)
+      page.keyboard.press('a', commands: ['SelectAll'])
+      page.keyboard.up(cmd_key)
 
-      page.keyboard do
-        down cmd_key
-        down 'c', commands: ['Copy']
-        up 'c'
-        up cmd_key
-      end
+      page.keyboard.down(cmd_key)
+      page.keyboard.down('c', commands: ['Copy'])
+      page.keyboard.up('c')
+      page.keyboard.up(cmd_key)
 
-      2.times do
-        page.keyboard do
-          down cmd_key
-          press 'v', commands: ['Paste']
-          up cmd_key
-        end
-      end
+      page.keyboard.down(cmd_key)
+      page.keyboard.press('v', commands: ['Paste'])
+      page.keyboard.press('v', commands: ['Paste'])
+      page.keyboard.up(cmd_key)
 
-      value = page.evaluate("() => document.querySelector('textarea').value")
-      expect(value).to eq('hellohello')
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('hellohello')
     end
+  end
 
-    it 'should send a character with ElementHandle.press' do
+  it 'should send a character with ElementHandle.press' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       textarea = page.query_selector('textarea')
       textarea.press('a')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('a')
 
-      page.evaluate("() => window.addEventListener('keydown', (e) => e.preventDefault(), true)")
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        return window.addEventListener(
+          'keydown',
+          (event) => {
+            return event.preventDefault();
+          },
+          true
+        );
+      }
+      JAVASCRIPT
+
       textarea.press('b')
       expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('a')
     end
+  end
 
-    it 'ElementHandle.press should support |text| option' do
+  it 'ElementHandle.press should not support |text| option' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       textarea = page.query_selector('textarea')
       textarea.press('a', text: 'ё')
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('ё')
+      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('a')
     end
+  end
 
-    it 'should send a character with sendCharacter' do
+  it 'should send a character with sendCharacter' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.focus('textarea')
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        globalThis.inputCount = 0;
+        globalThis.keyDownCount = 0;
+        window.addEventListener(
+          'input',
+          () => {
+            globalThis.inputCount += 1;
+          },
+          true
+        );
+        window.addEventListener(
+          'keydown',
+          () => {
+            globalThis.keyDownCount += 1;
+          },
+          true
+        );
+      }
+      JAVASCRIPT
+
       page.keyboard.send_character('嗨')
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('嗨')
+      result = page.eval_on_selector('textarea', <<~JAVASCRIPT)
+      (textarea) => ({
+        value: textarea.value,
+        inputs: globalThis.inputCount,
+        keyDowns: globalThis.keyDownCount,
+      })
+      JAVASCRIPT
+      expect(result).to eq({ 'value' => '嗨', 'inputs' => 1, 'keyDowns' => 0 })
 
-      page.evaluate("() => window.addEventListener('keydown', (e) => e.preventDefault(), true)")
       page.keyboard.send_character('a')
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('嗨a')
+      result = page.eval_on_selector('textarea', <<~JAVASCRIPT)
+      (textarea) => ({
+        value: textarea.value,
+        inputs: globalThis.inputCount,
+        keyDowns: globalThis.keyDownCount,
+      })
+      JAVASCRIPT
+      expect(result).to eq({ 'value' => '嗨a', 'inputs' => 2, 'keyDowns' => 0 })
     end
+  end
 
-    it 'should not type canceled events' do
+  it 'should send a character with sendCharacter in iframe' do
+    with_test_state do |page:, **|
+      Timeout.timeout(2) do
+        page.set_content(<<~HTML)
+          <iframe
+            srcdoc="<iframe name='test' srcdoc='<textarea></textarea>'></iframe>"
+          ></iframe>
+        HTML
+        frame = page.wait_for_frame(predicate: ->(frame) { frame.name == 'test' })
+        frame.focus('textarea')
+
+        frame.evaluate(<<~JAVASCRIPT)
+        () => {
+          globalThis.inputCount = 0;
+          globalThis.keyDownCount = 0;
+          window.addEventListener(
+            'input',
+            () => {
+              globalThis.inputCount += 1;
+            },
+            true
+          );
+          window.addEventListener(
+            'keydown',
+            () => {
+              globalThis.keyDownCount += 1;
+            },
+            true
+          );
+        }
+        JAVASCRIPT
+
+        page.keyboard.send_character('嗨')
+        result = frame.eval_on_selector('textarea', <<~JAVASCRIPT)
+        (textarea) => ({
+          value: textarea.value,
+          inputs: globalThis.inputCount,
+          keyDowns: globalThis.keyDownCount,
+        })
+        JAVASCRIPT
+        expect(result).to eq({ 'value' => '嗨', 'inputs' => 1, 'keyDowns' => 0 })
+
+        page.keyboard.send_character('a')
+        result = frame.eval_on_selector('textarea', <<~JAVASCRIPT)
+        (textarea) => ({
+          value: textarea.value,
+          inputs: globalThis.inputCount,
+          keyDowns: globalThis.keyDownCount,
+        })
+        JAVASCRIPT
+        expect(result).to eq({ 'value' => '嗨a', 'inputs' => 2, 'keyDowns' => 0 })
+      end
+    end
+  end
+
+  it 'should report shiftKey' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/keyboard.html")
+      keyboard = page.keyboard
+      %w[Shift Alt Control].each do |modifier_key|
+        keyboard.down(modifier_key)
+        expect(page.evaluate('() => globalThis.getResult()')).to eq("Keydown: #{modifier_key} #{modifier_key}Left [#{modifier_key}]")
+
+        keyboard.down('!')
+        if modifier_key == 'Shift'
+          expect(page.evaluate('() => globalThis.getResult()')).to eq("Keydown: ! Digit1 [#{modifier_key}]\ninput: ! insertText false")
+        else
+          expect(page.evaluate('() => globalThis.getResult()')).to eq("Keydown: ! Digit1 [#{modifier_key}]")
+        end
+
+        keyboard.up('!')
+        expect(page.evaluate('() => globalThis.getResult()')).to eq("Keyup: ! Digit1 [#{modifier_key}]")
+
+        keyboard.up(modifier_key)
+        expect(page.evaluate('() => globalThis.getResult()')).to eq("Keyup: #{modifier_key} #{modifier_key}Left []")
+      end
+    end
+  end
+
+  it 'should report multiple modifiers' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/keyboard.html")
+      keyboard = page.keyboard
+      keyboard.down('Control')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq('Keydown: Control ControlLeft [Control]')
+
+      keyboard.down('Alt')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq('Keydown: Alt AltLeft [Alt Control]')
+
+      keyboard.down(';')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq('Keydown: ; Semicolon [Alt Control]')
+
+      keyboard.up(';')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq('Keyup: ; Semicolon [Alt Control]')
+
+      keyboard.up('Control')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq('Keyup: Control ControlLeft [Alt]')
+
+      keyboard.up('Alt')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq('Keyup: Alt AltLeft []')
+    end
+  end
+
+  it 'should send proper codes while typing' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/keyboard.html")
+      page.keyboard.type_text('!')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq([
+        'Keydown: ! Digit1 []',
+        'input: ! insertText false',
+        'Keyup: ! Digit1 []',
+      ].join("\n"))
+
+      page.keyboard.type_text('^')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq([
+        'Keydown: ^ Digit6 []',
+        'input: ^ insertText false',
+        'Keyup: ^ Digit6 []',
+      ].join("\n"))
+    end
+  end
+
+  it 'should send proper codes while typing with shift' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/keyboard.html")
+      keyboard = page.keyboard
+      keyboard.down('Shift')
+      page.keyboard.type_text('~')
+      expect(page.evaluate('() => globalThis.getResult()')).to eq([
+        'Keydown: Shift ShiftLeft [Shift]',
+        'Keydown: ~ Backquote [Shift]',
+        'input: ~ insertText false',
+        'Keyup: ~ Backquote [Shift]',
+      ].join("\n"))
+      keyboard.up('Shift')
+    end
+  end
+
+  it 'should not type canceled events' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.focus('textarea')
       page.evaluate(<<~JAVASCRIPT)
       () => {
@@ -161,10 +300,13 @@ RSpec.describe Puppeteer::Keyboard do
       }
       JAVASCRIPT
       page.keyboard.type_text('Hello World!')
-      expect(page.evaluate("() => document.querySelector('textarea').value")).to eq('He Wrd!')
+      expect(page.evaluate('() => globalThis.textarea.value')).to eq('He Wrd!')
     end
+  end
 
-    it 'should specify repeat property' do
+  it 'should specify repeat property' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.focus('textarea')
       page.evaluate(<<~JAVASCRIPT)
       () => document.querySelector('textarea').addEventListener('keydown', (e) => (globalThis.lastEvent = e), true)
@@ -177,22 +319,28 @@ RSpec.describe Puppeteer::Keyboard do
 
       page.keyboard.down('b')
       expect(page.evaluate('() => globalThis.lastEvent.repeat')).to eq(false)
-      page.keyboard.press('b')
+      page.keyboard.down('b')
       expect(page.evaluate('() => globalThis.lastEvent.repeat')).to eq(true)
 
       page.keyboard.up('a')
       page.keyboard.down('a')
       expect(page.evaluate('() => globalThis.lastEvent.repeat')).to eq(false)
     end
+  end
 
-    it 'should type all kinds of characters' do
+  it 'should type all kinds of characters' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.focus('textarea')
-      text = 'This text goes onto two lines.\nThis character is 嗨.'
+      text = "This text goes onto two lines.\nThis character is 嗨."
       page.keyboard.type_text(text)
       expect(page.evaluate('result')).to eq(text)
     end
+  end
 
-    it 'should specify location' do
+  it 'should specify location' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.evaluate(<<~JAVASCRIPT)
       () => {
         window.addEventListener(
@@ -205,139 +353,49 @@ RSpec.describe Puppeteer::Keyboard do
 
       textarea = page.query_selector('textarea')
 
-      {
-        'Digit5' => 0,
-        'ControlLeft' => 1,
-        'ControlRight' => 2,
-        'NumpadSubtract' => 3,
-      }.each do |key, location|
-        textarea.press(key)
-        expect(page.evaluate('keyLocation')).to eq(location)
-      end
-    end
+      textarea.press('Digit5')
+      expect(page.evaluate('keyLocation')).to eq(0)
 
-    it 'should type emoji' do
+      textarea.press('ControlLeft')
+      expect(page.evaluate('keyLocation')).to eq(1)
+
+      textarea.press('ControlRight')
+      expect(page.evaluate('keyLocation')).to eq(2)
+
+      textarea.press('NumpadSubtract')
+      expect(page.evaluate('keyLocation')).to eq(3)
+    end
+  end
+
+  it 'should throw on unknown keys' do
+    with_test_state do |page:, **|
+      expect { page.keyboard.press('NotARealKey') }.to raise_error(/Unknown key: "NotARealKey"/)
+    end
+  end
+
+  it 'should type emoji' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/input/textarea.html")
       page.type_text('textarea', '👹 Tokyo street Japan 🇯🇵')
       expect(page.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
   end
 
-  context 'with keyboard page', sinatra: true do
-    before {
-      page.goto("#{server_prefix}/input/keyboard.html")
-    }
-
-    {
-      'Shift' => 16,
-      'Alt' => 18,
-      'Control' => 17,
-    }.each do |modifier_key, modifier_code|
-      it "should report shiftKey  [modifier_key: #{modifier_key}]" do
-        page.keyboard.down(modifier_key)
-        result = page.evaluate('() => globalThis.getResult()')
-        expect(result).to eq("Keydown: #{modifier_key} #{modifier_key}Left #{modifier_code} [#{modifier_key}]")
-
-        page.keyboard.down('!')
-        result = page.evaluate('() => globalThis.getResult()')
-        # Shift+! will generate a keypress
-        if modifier_key == 'Shift'
-          expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]\nKeypress: ! Digit1 33 33 [#{modifier_key}]")
-        else
-          expect(result).to eq("Keydown: ! Digit1 49 [#{modifier_key}]")
-        end
-
-        page.keyboard.up('!')
-        result = page.evaluate('() => globalThis.getResult()')
-        expect(result).to eq("Keyup: ! Digit1 49 [#{modifier_key}]")
-
-        page.keyboard.up(modifier_key)
-        result = page.evaluate('() => globalThis.getResult()')
-        expect(result).to eq("Keyup: #{modifier_key} #{modifier_key}Left #{modifier_code} []")
-      end
-    end
-
-    it 'should report multiple modifiers' do
-      page.keyboard.down('Control')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq('Keydown: Control ControlLeft 17 [Control]')
-
-      page.keyboard.down('Alt')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq('Keydown: Alt AltLeft 18 [Alt Control]')
-
-      page.keyboard.down(';')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq('Keydown: ; Semicolon 186 [Alt Control]')
-
-      page.keyboard.up(';')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq('Keyup: ; Semicolon 186 [Alt Control]')
-
-      page.keyboard.up('Control')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq('Keyup: Control ControlLeft 17 [Alt]')
-
-      page.keyboard.up('Alt')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq('Keyup: Alt AltLeft 18 []')
-    end
-
-    it 'should send proper codes while typing' do
-      page.keyboard.type_text('!')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq([
-        'Keydown: ! Digit1 49 []',
-        'Keypress: ! Digit1 33 33 []',
-        'Keyup: ! Digit1 49 []',
-      ].join("\n"))
-
-      page.keyboard.type_text('^')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq([
-        'Keydown: ^ Digit6 54 []',
-        'Keypress: ^ Digit6 94 94 []',
-        'Keyup: ^ Digit6 54 []',
-      ].join("\n"))
-    end
-
-    it 'should send proper codes while typing with shift' do
-      page.keyboard.down('Shift')
-      page.keyboard.type_text('~')
-      result = page.evaluate('() => globalThis.getResult()')
-      expect(result).to eq([
-        'Keydown: Shift ShiftLeft 16 [Shift]',
-        'Keydown: ~ Backquote 192 [Shift]', # 192 is ` keyCode
-        'Keypress: ~ Backquote 126 126 [Shift]', # 126 is ~ charCode
-        'Keyup: ~ Backquote 192 [Shift]',
-      ].join("\n"))
-      page.keyboard.up('Shift')
-    end
-  end
-
-  it 'should throw on unknown keys' do
-    expect { page.keyboard.press('NotARealKey') }.to raise_error(/Unknown key: "NotARealKey"/)
-    expect { page.keyboard.press('ё') }.to raise_error(/Unknown key: "ё"/)
-    expect { page.keyboard.press('😊') }.to raise_error(/Unknown key: "😊"/)
-  end
-
-  context 'with textarea page and iframe', sinatra: true do
-    include Utils::AttachFrame
-
-    before {
-      page.goto(server_empty_page)
-      attach_frame(page, 'emoji-test', '/input/textarea.html')
-    }
-
-    it 'should type emoji into an iframe' do
-      frame = page.frames.last
+  it 'should type emoji into an iframe' do
+    with_test_state do |page:, server:, **|
+      page.goto("#{server.prefix}/empty.html")
+      attach_frame(page, 'emoji-test', "#{server.prefix}/input/textarea.html")
+      frame = page.frames[1]
       textarea = frame.query_selector('textarea')
       textarea.type_text('👹 Tokyo street Japan 🇯🇵')
       expect(frame.eval_on_selector('textarea', '(textarea) => textarea.value')).to eq('👹 Tokyo street Japan 🇯🇵')
     end
   end
 
-  context 'with keydown event listener' do
-    before {
+  it 'should press the meta key' do
+    with_test_state do |page:, **|
+      skip('This test only runs on macOS.') unless Puppeteer.env.darwin?
+
       page.evaluate(<<~JAVASCRIPT)
       () => {
         globalThis.result = null;
@@ -346,43 +404,12 @@ RSpec.describe Puppeteer::Keyboard do
         });
       }
       JAVASCRIPT
-    }
-
-    it 'should press the meta key' do
       page.keyboard.press('Meta')
 
       key, code, meta_key = page.evaluate('result')
       expect(key).to eq('Meta')
       expect(code).to eq('MetaLeft')
       expect(meta_key).to eq(true)
-    end
-  end
-
-  describe 'block' do
-    before {
-      page.content = '<html><body><input id="editor" type="text" /></body></html>'
-    }
-
-    it 'can use press, send_text with block' do
-      page.click('input')
-      page.keyboard {
-        type_text '123456789'
-        down 'Shift'
-        5.times { press 'ArrowLeft' }
-        up 'Shift'
-        send_character('a')
-      }
-      expect(page.query_selector('input').evaluate('(el) => el.value')).to eq('1234a')
-    end
-
-    it 'can use press, send_text without block' do
-      page.click('input')
-      page.keyboard.type_text('123456789')
-      page.keyboard.down('Shift')
-      5.times { page.keyboard.press('ArrowLeft') }
-      page.keyboard.up('Shift')
-      page.keyboard.send_character('a')
-      expect(page.query_selector('input').evaluate('(el) => el.value')).to eq('1234a')
     end
   end
 end
