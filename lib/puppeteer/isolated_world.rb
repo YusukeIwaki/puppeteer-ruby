@@ -378,6 +378,11 @@ class Puppeteer::IsolaatedWorld
   #   await handle.hover();
   #   await handle.dispose();
   # }
+  def hover(selector)
+    handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
+    handle.hover
+    handle.dispose
+  end
 
   # @param selector [String]
   # @return [Array<String>]
