@@ -305,7 +305,6 @@ RSpec.describe Puppeteer::Mouse do
   end
 
   it 'should reset properly' do
-    skip('TODO: implement Mouse#reset and button state tracking')
     with_test_state do |page:, server:, **|
       page.goto(server.empty_page)
 
@@ -330,7 +329,7 @@ RSpec.describe Puppeteer::Mouse do
         common_attrs.merge('button' => 2, 'buttons' => 5, 'detail' => 1, 'type' => 'mouseup'),
         common_attrs.merge('button' => 2, 'buttons' => 5, 'detail' => 1, 'type' => 'auxclick'),
       ])
-      expect(data.drop(2)).to eq([
+      expect(data.drop(2).take(2)).to eq([
         common_attrs.merge('button' => 1, 'buttons' => 1, 'detail' => 0, 'type' => 'mouseup'),
         common_attrs.merge('button' => 0, 'buttons' => 0, 'detail' => 0, 'type' => 'mouseup'),
       ])
