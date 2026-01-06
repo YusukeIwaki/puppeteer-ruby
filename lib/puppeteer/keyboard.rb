@@ -1,10 +1,13 @@
+# rbs_inline: enabled
+
 require_relative './keyboard/key_description'
 require_relative './keyboard/us_keyboard_layout'
 
 class Puppeteer::Keyboard
   using Puppeteer::DefineAsyncMethod
 
-  # @param {!Puppeteer.CDPSession} client
+  # @rbs client: Puppeteer::CDPSession -- CDP session
+  # @rbs return: void -- No return value
   def initialize(client)
     @client = client
     @modifiers = 0
@@ -13,8 +16,10 @@ class Puppeteer::Keyboard
 
   attr_reader :modifiers
 
-  # @param key [String]
-  # @param text [String]
+  # @rbs key: String -- Key name
+  # @rbs text: String? -- Text to input
+  # @rbs commands: Array[String]? -- Editing commands
+  # @rbs return: void -- No return value
   def down(key, text: nil, commands: nil)
     description = key_description_for_string(key)
 
@@ -41,8 +46,6 @@ class Puppeteer::Keyboard
 
   define_async_method :async_down
 
-  # @param {string} key
-  # @return {number}
   private def modifier_bit(key)
     case key
     when 'Alt'
@@ -58,8 +61,6 @@ class Puppeteer::Keyboard
     end
   end
 
-  # @param {string} keyString
-  # @return {KeyDescription}
   private def key_description_for_string(key_string)
     shift = (@modifiers & 8) != 0
     description = {}
@@ -106,7 +107,8 @@ class Puppeteer::Keyboard
     KeyDescription.new(**description)
   end
 
-  # @param key [String]
+  # @rbs key: untyped -- key parameter
+  # @rbs return: untyped -- Result
   def up(key)
     description = key_description_for_string(key)
 
@@ -125,15 +127,17 @@ class Puppeteer::Keyboard
 
   define_async_method :async_up
 
-  # @param char [string]
+  # @rbs char: untyped -- char parameter
+  # @rbs return: untyped -- Result
   def send_character(char)
     @client.send_message('Input.insertText', text: char)
   end
 
   define_async_method :async_send_character
 
-  # @param text [String]
-  # @return [Future]
+  # @rbs text: untyped -- text parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs return: untyped -- Result
   def type_text(text, delay: nil)
     text.each_char do |char|
       if KEY_DEFINITIONS.include?(char.to_sym)
@@ -149,9 +153,12 @@ class Puppeteer::Keyboard
 
   define_async_method :async_type_text
 
-  # @param key [String]
-  # @param text [String]
-  # @return [Future]
+  # @rbs key: untyped -- key parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs text: untyped -- text parameter
+  # @rbs commands: untyped -- commands parameter
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def press(key, delay: nil, text: nil, commands: nil, &block)
     down(key, text: text, commands: commands)
     if delay

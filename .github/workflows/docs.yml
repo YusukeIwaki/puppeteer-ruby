@@ -35,7 +35,8 @@ jobs:
         run: |
           git clone git@github.com:YusukeIwaki/puppeteer-ruby-docs.git docs
           rm -rf docs/*
-          bundle exec yardoc -o docs
+          bundle exec rake rbs
+          cp -R sig docs/
           cp puppeteer-ruby.png docs/
           cd docs/
           git add -A

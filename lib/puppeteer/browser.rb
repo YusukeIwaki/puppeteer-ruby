@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 require 'thread'
 
 class Puppeteer::Browser
@@ -6,13 +8,16 @@ class Puppeteer::Browser
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
 
-  # @param product [String|nil] 'chrome'
-  # @param {!Puppeteer.Connection} connection
-  # @param {!Array<string>} contextIds
-  # @param {boolean} ignoreHTTPSErrors
-  # @param {?Puppeteer.Viewport} defaultViewport
-  # @param process [Puppeteer::BrowserRunner::BrowserProcess|NilClass]
-  # @param {function()=} closeCallback
+  # @rbs product: String? -- Browser product (chrome only)
+  # @rbs connection: Puppeteer::Connection -- CDP connection
+  # @rbs context_ids: Array[String] -- Browser context IDs
+  # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
+  # @rbs close_callback: untyped -- Close callback
+  # @rbs target_filter_callback: untyped -- Target filter callback
+  # @rbs is_page_target_callback: untyped -- Page target predicate
+  # @rbs return: Puppeteer::Browser -- Browser instance
   def self.create(product:,
                   connection:,
                   context_ids:,
@@ -37,13 +42,16 @@ class Puppeteer::Browser
     browser
   end
 
-  # @param product [String|nil] 'chrome'
-  # @param {!Puppeteer.Connection} connection
-  # @param {!Array<string>} contextIds
-  # @param {boolean} ignoreHTTPSErrors
-  # @param {?Puppeteer.Viewport} defaultViewport
-  # @param {?Puppeteer.ChildProcess} process
-  # @param {(function():Promise)=} closeCallback
+  # @rbs product: String? -- Browser product (chrome only)
+  # @rbs connection: Puppeteer::Connection -- CDP connection
+  # @rbs context_ids: Array[String] -- Browser context IDs
+  # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
+  # @rbs close_callback: untyped -- Close callback
+  # @rbs target_filter_callback: untyped -- Target filter callback
+  # @rbs is_page_target_callback: untyped -- Page target predicate
+  # @rbs return: void -- No return value
   def initialize(product:,
                  connection:,
                  context_ids:,
@@ -88,7 +96,9 @@ class Puppeteer::Browser
 
   attr_reader :is_page_target_callback
 
-  # @param event_name [Symbol] either of :disconnected, :targetcreated, :targetchanged, :targetdestroyed
+  # @rbs event_name: untyped -- event_name parameter
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def on(event_name, &block)
     unless BrowserEmittedEvents.values.include?(event_name.to_s)
       raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{BrowserEmittedEvents.values.to_a.join(", ")}")
@@ -97,7 +107,9 @@ class Puppeteer::Browser
     super(event_name.to_s, &block)
   end
 
-  # @param event_name [Symbol]
+  # @rbs event_name: untyped -- event_name parameter
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def once(event_name, &block)
     unless BrowserEmittedEvents.values.include?(event_name.to_s)
       raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{BrowserEmittedEvents.values.to_a.join(", ")}")
@@ -136,7 +148,7 @@ class Puppeteer::Browser
     @target_manager.remove_event_listener(*@target_manager_event_listeners)
   end
 
-  # @return [Puppeteer::BrowserRunner::BrowserProcess]
+  # @rbs return: untyped -- Result
   def process
     @process
   end
@@ -145,23 +157,25 @@ class Puppeteer::Browser
     @target_manager
   end
 
-  # @return [Puppeteer::BrowserContext]
+  # @rbs return: untyped -- Result
   def create_incognito_browser_context
     result = @connection.send_message('Target.createBrowserContext')
     browser_context_id = result['browserContextId']
     @contexts[browser_context_id] = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
   end
 
+  # @rbs return: untyped -- Result
   def browser_contexts
     [@default_context].concat(@contexts.values)
   end
 
-  # @return [Puppeteer::BrowserContext]
+  # @rbs return: untyped -- Result
   def default_browser_context
     @default_context
   end
 
-  # @param context_id [String]
+  # @rbs context_id: untyped -- context_id parameter
+  # @rbs return: untyped -- Result
   def dispose_context(context_id)
     return unless context_id
     @connection.send_message('Target.disposeBrowserContext', browserContextId: context_id)
@@ -170,8 +184,9 @@ class Puppeteer::Browser
 
   class MissingBrowserContextError < Puppeteer::Error ; end
 
-  # @param target_info [Puppeteer::Target::TargetInfo]
-  # @param session [CDPSession|nil]
+  # @rbs target_info: untyped -- target_info parameter
+  # @rbs session: untyped -- session parameter
+  # @rbs return: untyped -- Result
   def create_target(target_info, session)
     browser_context_id = target_info.browser_context_id
     context =
@@ -227,11 +242,12 @@ class Puppeteer::Browser
     emit_event('targetdiscovered', target_info)
   end
 
-  # @return [String]
+  # @rbs return: untyped -- Result
   def ws_endpoint
     @connection.url
   end
 
+  # @rbs return: untyped -- Result
   def new_page
     @default_context.new_page
   end
@@ -239,8 +255,8 @@ class Puppeteer::Browser
   class MissingTargetError < Puppeteer::Error ; end
   class CreatePageError < Puppeteer::Error ; end
 
-  # @param {?string} contextId
-  # @return {!Promise<!Puppeteer.Page>}
+  # @rbs context_id: untyped -- context_id parameter
+  # @rbs return: untyped -- Result
   def create_page_in_context(context_id)
     create_target_params = {
       url: 'about:blank',
@@ -264,12 +280,14 @@ class Puppeteer::Browser
 
   # All active targets inside the Browser. In case of multiple browser contexts, returns
   # an array with all the targets in all browser contexts.
+  # @rbs return: untyped -- Result
   def targets
     @target_manager.available_targets.values.select { |target| target.initialized? }
   end
 
 
   # The target associated with the browser.
+  # @rbs return: untyped -- Result
   def target
     targets.find { |target| target.type == 'browser' } or raise 'Browser target is not found'
   end
@@ -279,8 +297,9 @@ class Puppeteer::Browser
     @target_manager.available_targets[target_id]
   end
 
-  # @param predicate [Proc(Puppeteer::Target -> Boolean)]
-  # @return [Puppeteer::Target]
+  # @rbs predicate: untyped -- predicate parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_target(predicate:, timeout: nil)
     timeout_helper = Puppeteer::TimeoutHelper.new('target', timeout_ms: timeout, default_timeout_ms: 30000)
     existing_target = targets.find { |target| predicate.call(target) }
@@ -310,43 +329,49 @@ class Puppeteer::Browser
 
   # @!method async_wait_for_target(predicate:, timeout: nil)
   #
-  # @param predicate [Proc(Puppeteer::Target -> Boolean)]
   define_async_method :async_wait_for_target
 
-  # @return {!Promise<!Array<!Puppeteer.Page>>}
+  # @rbs return: untyped -- Result
   def pages
     browser_contexts.flat_map(&:pages)
   end
 
-  # @return [String]
+  # @rbs return: untyped -- Result
   def version
     Version.fetch(@connection).product
   end
 
-  # @return [String]
+  # @rbs return: untyped -- Result
   def user_agent
     Version.fetch(@connection).user_agent
   end
 
+  # @rbs return: untyped -- Result
   def close
     @close_callback.call
     disconnect
   end
 
+  # @rbs return: untyped -- Result
   def disconnect
     @target_manager.dispose
     @connection.dispose
   end
 
+  # @rbs return: untyped -- Result
   def connected?
     !@connection.closed?
   end
 
   class Version
+    # @rbs connection: untyped -- connection parameter
+    # @rbs return: untyped -- Result
     def self.fetch(connection)
       new(connection.send_message('Browser.getVersion'))
     end
 
+    # @rbs hash: untyped -- hash parameter
+    # @rbs return: void -- No return value
     def initialize(hash)
       @protocol_version = hash['protocolVersion']
       @product = hash['product']

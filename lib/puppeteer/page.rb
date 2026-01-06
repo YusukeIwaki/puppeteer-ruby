@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 require 'base64'
 require 'json'
 require "stringio"
@@ -13,11 +15,11 @@ class Puppeteer::Page
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
 
-  # @param {!Puppeteer.CDPSession} client
-  # @param {!Puppeteer.Target} target
-  # @param {boolean} ignoreHTTPSErrors
-  # @param {?Puppeteer.Viewport} defaultViewport
-  # @return {!Promise<!Page>}
+  # @rbs client: Puppeteer::CDPSession -- CDP session for the page
+  # @rbs target: Puppeteer::Target -- Target associated with the page
+  # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport for new pages
+  # @rbs return: Puppeteer::Page -- Created page instance
   def self.create(client, target, ignore_https_errors, default_viewport)
     page = Puppeteer::Page.new(client, target, ignore_https_errors)
     page.init
@@ -27,9 +29,10 @@ class Puppeteer::Page
     page
   end
 
-  # @param {!Puppeteer.CDPSession} client
-  # @param {!Puppeteer.Target} target
-  # @param {boolean} ignoreHTTPSErrors
+  # @rbs client: Puppeteer::CDPSession -- CDP session for the page
+  # @rbs target: Puppeteer::Target -- Target associated with the page
+  # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs return: void -- No return value
   def initialize(client, target, ignore_https_errors)
     @closed = false
     @client = client
@@ -151,6 +154,7 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs return: untyped -- Result
   def init
     Puppeteer::AsyncUtils.await_promise_all(
       @frame_manager.async_init(@target.target_id),
@@ -159,12 +163,15 @@ class Puppeteer::Page
     )
   end
 
+  # @rbs return: untyped -- Result
   def drag_interception_enabled?
     @user_drag_interception_enabled
   end
   alias_method :drag_interception_enabled, :drag_interception_enabled?
 
-  # @param event_name [Symbol]
+  # @rbs event_name: untyped -- event_name parameter
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def on(event_name, &block)
     unless PageEmittedEvents.values.include?(event_name.to_s)
       raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
@@ -179,7 +186,9 @@ class Puppeteer::Page
     end
   end
 
-  # @param event_name [Symbol]
+  # @rbs event_name: untyped -- event_name parameter
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def once(event_name, &block)
     unless PageEmittedEvents.values.include?(event_name.to_s)
       raise ArgumentError.new("Unknown event name: #{event_name}. Known events are #{PageEmittedEvents.values.to_a.join(", ")}")
@@ -194,6 +203,8 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs event: untyped -- event parameter
+  # @rbs return: untyped -- Result
   def handle_file_chooser(event)
     return if @file_chooser_interceptors.empty?
 
@@ -208,13 +219,15 @@ class Puppeteer::Page
   end
 
   class FileChooserTimeoutError < Puppeteer::Error
+    # @rbs timeout: untyped -- timeout parameter
+    # @rbs return: void -- No return value
     def initialize(timeout:)
       super("waiting for filechooser failed: timeout #{timeout}ms exceeded")
     end
   end
 
-  # @param timeout [Integer]
-  # @return [Puppeteer::FileChooser]
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_file_chooser(timeout: nil)
     if @file_chooser_interceptors.empty?
       @client.send_message('Page.setInterceptFileChooserDialog', enabled: true)
@@ -239,13 +252,16 @@ class Puppeteer::Page
 
   define_async_method :async_wait_for_file_chooser
 
-  # @param [Puppeteer::Geolocation]
+  # @rbs geolocation: untyped -- geolocation parameter
+  # @rbs return: untyped -- Result
   def geolocation=(geolocation)
     @client.send_message('Emulation.setGeolocationOverride', geolocation.to_h)
   end
 
   attr_reader :javascript_enabled, :target, :client
 
+  # @rbs other: untyped -- other parameter
+  # @rbs return: untyped -- Result
   def ==(other)
     other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)
     return true if equal?(other)
@@ -256,10 +272,12 @@ class Puppeteer::Page
   end
   alias_method :javascript_enabled?, :javascript_enabled
 
+  # @rbs return: untyped -- Result
   def browser
     @target.browser
   end
 
+  # @rbs return: untyped -- Result
   def browser_context
     @target.browser_context
   end
@@ -293,58 +311,71 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs return: untyped -- Result
   def main_frame
     @frame_manager.main_frame
   end
 
   attr_reader :touch_screen, :coverage, :tracing, :accessibility
 
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def keyboard(&block)
     @keyboard.instance_eval(&block) unless block.nil?
 
     @keyboard
   end
 
+  # @rbs return: untyped -- Result
   def frames
     @frame_manager.frames
   end
 
+  # @rbs return: untyped -- Result
   def workers
     @workers.values
   end
 
-  # @param value [Bool]
+  # @rbs value: untyped -- value parameter
+  # @rbs return: untyped -- Result
   def request_interception=(value)
     @frame_manager.network_manager.request_interception = value
   end
 
+  # @rbs enabled: untyped -- enabled parameter
+  # @rbs return: untyped -- Result
   def drag_interception_enabled=(enabled)
     @user_drag_interception_enabled = enabled
     @client.send_message('Input.setInterceptDrags', enabled: enabled)
   end
 
+  # @rbs enabled: untyped -- enabled parameter
+  # @rbs return: untyped -- Result
   def offline_mode=(enabled)
     @frame_manager.network_manager.offline_mode = enabled
   end
 
-  # @param network_condition [Puppeteer::NetworkCondition|nil]
+  # @rbs network_condition: untyped -- network_condition parameter
+  # @rbs return: untyped -- Result
   def emulate_network_conditions(network_condition)
     @frame_manager.network_manager.emulate_network_conditions(network_condition)
   end
 
-  # @param {number} timeout
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def default_navigation_timeout=(timeout)
     @timeout_settings.default_navigation_timeout = timeout
   end
 
-  # @param {number} timeout
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def default_timeout=(timeout)
     @timeout_settings.default_timeout = timeout
   end
 
   # `$()` in JavaScript.
-  # @param {string} selector
-  # @return {!Promise<?Puppeteer.ElementHandle>}
+  # @rbs selector: untyped -- selector parameter
+  # @rbs return: untyped -- Result
   def query_selector(selector)
     main_frame.query_selector(selector)
   end
@@ -353,8 +384,8 @@ class Puppeteer::Page
   define_async_method :async_query_selector
 
   # `$$()` in JavaScript.
-  # @param {string} selector
-  # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+  # @rbs selector: untyped -- selector parameter
+  # @rbs return: untyped -- Result
   def query_selector_all(selector)
     main_frame.query_selector_all(selector)
   end
@@ -362,9 +393,9 @@ class Puppeteer::Page
 
   define_async_method :async_query_selector_all
 
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<!Puppeteer.JSHandle>}
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def evaluate_handle(page_function, *args)
     context = main_frame.execution_context
     context.evaluate_handle(page_function, *args)
@@ -372,17 +403,18 @@ class Puppeteer::Page
 
   define_async_method :async_evaluate_handle
 
-  # @param {!Puppeteer.JSHandle} prototypeHandle
-  # @return {!Promise<!Puppeteer.JSHandle>}
+  # @rbs prototype_handle: untyped -- prototype_handle parameter
+  # @rbs return: untyped -- Result
   def query_objects(prototype_handle)
     context = main_frame.execution_context
     context.query_objects(prototype_handle)
   end
 
   # `$eval()` in JavaScript.
-  # @param selector [String]
-  # @param page_function [String]
-  # @return [Object]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def eval_on_selector(selector, page_function, *args)
     main_frame.eval_on_selector(selector, page_function, *args)
   end
@@ -391,9 +423,10 @@ class Puppeteer::Page
   define_async_method :async_eval_on_selector
 
   # `$$eval()` in JavaScript.
-  # @param selector [String]
-  # @param page_function [String]
-  # @return [Object]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def eval_on_selector_all(selector, page_function, *args)
     main_frame.eval_on_selector_all(selector, page_function, *args)
   end
@@ -402,15 +435,16 @@ class Puppeteer::Page
   define_async_method :async_eval_on_selector_all
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @param {string} expression
-  # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+  # @rbs expression: untyped -- expression parameter
+  # @rbs return: untyped -- Result
   def Sx(expression)
     main_frame.Sx(expression)
   end
 
   define_async_method :async_Sx
 
-  # @return [Array<Hash>]
+  # @rbs urls: Array[untyped] -- urls parameter
+  # @rbs return: untyped -- Result
   def cookies(*urls)
     @client.send_message('Network.getCookies', urls: (urls.empty? ? [url] : urls))['cookies']
   end
@@ -424,6 +458,8 @@ class Puppeteer::Page
     raise ArgumentError.new("Each coookie must have #{requires.join(" and ")} attribute.")
   end
 
+  # @rbs cookies: Array[untyped] -- cookies parameter
+  # @rbs return: untyped -- Result
   def delete_cookie(*cookies)
     assert_cookie_params(cookies, requires: %i(name))
 
@@ -435,6 +471,8 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs cookies: Array[untyped] -- cookies parameter
+  # @rbs return: untyped -- Result
   def set_cookie(*cookies)
     assert_cookie_params(cookies, requires: %i(name value))
 
@@ -452,24 +490,27 @@ class Puppeteer::Page
     end
   end
 
-  # @param url [String?]
-  # @param path [String?]
-  # @param content [String?]
-  # @param type [String?]
-  # @param id [String?]
+  # @rbs url: untyped -- url parameter
+  # @rbs path: untyped -- path parameter
+  # @rbs content: untyped -- content parameter
+  # @rbs type: untyped -- type parameter
+  # @rbs id: untyped -- id parameter
+  # @rbs return: untyped -- Result
   def add_script_tag(url: nil, path: nil, content: nil, type: nil, id: nil)
     main_frame.add_script_tag(url: url, path: path, content: content, type: type, id: id)
   end
 
-  # @param url [String?]
-  # @param path [String?]
-  # @param content [String?]
+  # @rbs url: untyped -- url parameter
+  # @rbs path: untyped -- path parameter
+  # @rbs content: untyped -- content parameter
+  # @rbs return: untyped -- Result
   def add_style_tag(url: nil, path: nil, content: nil)
     main_frame.add_style_tag(url: url, path: path, content: content)
   end
 
-  # @param name [String]
-  # @param puppeteer_function [Proc]
+  # @rbs name: untyped -- name parameter
+  # @rbs puppeteer_function: untyped -- puppeteer_function parameter
+  # @rbs return: untyped -- Result
   def expose_function(name, puppeteer_function)
     if @page_bindings[name]
       raise ArgumentError.new("Failed to add page binding with name `#{name}` already exists!")
@@ -514,24 +555,28 @@ class Puppeteer::Page
     nil
   end
 
-  # @param username [String?]
-  # @param password [String?]
+  # @rbs username: untyped -- username parameter
+  # @rbs password: untyped -- password parameter
+  # @rbs return: untyped -- Result
   def authenticate(username: nil, password: nil)
     @frame_manager.network_manager.authenticate(username: username, password: password)
   end
 
-  # @param headers [Hash]
+  # @rbs headers: untyped -- headers parameter
+  # @rbs return: untyped -- Result
   def extra_http_headers=(headers)
     @frame_manager.network_manager.extra_http_headers = headers
   end
 
-  # @param user_agent [String]
-  # @param user_agent_metadata [Hash]
+  # @rbs user_agent: untyped -- user_agent parameter
+  # @rbs user_agent_metadata: untyped -- user_agent_metadata parameter
+  # @rbs return: untyped -- Result
   def set_user_agent(user_agent, user_agent_metadata = nil)
     @frame_manager.network_manager.set_user_agent(user_agent, user_agent_metadata)
   end
   alias_method :user_agent=, :set_user_agent
 
+  # @rbs return: untyped -- Result
   def metrics
     response = @client.send_message('Performance.getMetrics')
     Metrics.new(response['metrics'])
@@ -572,6 +617,8 @@ class Puppeteer::Page
     add_console_message(event['type'], values, event['stackTrace'])
   end
 
+  # @rbs event: untyped -- event parameter
+  # @rbs return: untyped -- Result
   def handle_binding_called(event)
     execution_context_id = event['executionContextId']
     payload =
@@ -661,53 +708,57 @@ class Puppeteer::Page
     @client.send_message('Emulation.setDefaultBackgroundColorOverride')
   end
 
-  # @return [String]
+  # @rbs return: untyped -- Result
   def url
     main_frame.url
   end
 
-  # @return [String]
+  # @rbs return: untyped -- Result
   def content
     main_frame.content
   end
 
-  # @param html [String]
-  # @param timeout [Integer]
-  # @param wait_until [String|Array<String>]
+  # @rbs html: untyped -- html parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs wait_until: untyped -- wait_until parameter
+  # @rbs return: untyped -- Result
   def set_content(html, timeout: nil, wait_until: nil)
     main_frame.set_content(html, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param html [String]
+  # @rbs html: untyped -- html parameter
+  # @rbs return: untyped -- Result
   def content=(html)
     main_frame.set_content(html)
   end
 
-  # @param url [String]
-  # @param rederer [String]
-  # @param timeout [number|nil]
-  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @rbs url: untyped -- url parameter
+  # @rbs referer: untyped -- referer parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs wait_until: untyped -- wait_until parameter
+  # @rbs return: untyped -- Result
   def goto(url, referer: nil, timeout: nil, wait_until: nil)
     main_frame.goto(url, referer: referer, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param timeout [number|nil]
-  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
-  # @return [Puppeteer::HTTPResponse]
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs wait_until: untyped -- wait_until parameter
+  # @rbs return: untyped -- Result
   def reload(timeout: nil, wait_until: nil)
     wait_for_navigation(timeout: timeout, wait_until: wait_until) do
       @client.send_message('Page.reload')
     end
   end
 
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs wait_until: untyped -- wait_until parameter
+  # @rbs return: untyped -- Result
   def wait_for_navigation(timeout: nil, wait_until: nil)
     main_frame.send(:wait_for_navigation, timeout: timeout, wait_until: wait_until)
   end
 
   # @!method async_wait_for_navigation(timeout: nil, wait_until: nil)
   #
-  # @param timeout [number|nil]
-  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   define_async_method :async_wait_for_navigation
 
   private def wait_for_network_manager_event(event_name, predicate:, timeout:)
@@ -774,6 +825,10 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs url: untyped -- url parameter
+  # @rbs predicate: untyped -- predicate parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_request(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
@@ -804,10 +859,12 @@ class Puppeteer::Page
   # Waits until request matches the given predicate
   #  wait_for_request(predicate: -> (req){ req.url.start_with?('https://example.com/search') })
   #
-  # @param url [String]
-  # @param predicate [Proc(Puppeteer::HTTPRequest -> Boolean)]
   define_async_method :async_wait_for_request
 
+  # @rbs url: untyped -- url parameter
+  # @rbs predicate: untyped -- predicate parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_response(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
@@ -830,10 +887,12 @@ class Puppeteer::Page
 
   # @!method async_wait_for_response(url: nil, predicate: nil, timeout: nil)
   #
-  # @param url [String]
-  # @param predicate [Proc(Puppeteer::HTTPRequest -> Boolean)]
   define_async_method :async_wait_for_response
 
+  # @rbs url: untyped -- url parameter
+  # @rbs predicate: untyped -- predicate parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_frame(url: nil, predicate: nil, timeout: nil)
     if !url && !predicate
       raise ArgumentError.new('url or predicate must be specified')
@@ -862,18 +921,18 @@ class Puppeteer::Page
 
   # @!method async_wait_for_frame(url: nil, predicate: nil, timeout: nil)
   #
-  # @param url [String]
-  # @param predicate [Proc(Puppeteer::Frame -> Boolean)]
   define_async_method :async_wait_for_frame
 
-  # @param timeout [number|nil]
-  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs wait_until: untyped -- wait_until parameter
+  # @rbs return: untyped -- Result
   def go_back(timeout: nil, wait_until: nil)
     go(-1, timeout: timeout, wait_until: wait_until)
   end
 
-  # @param timeout [number|nil]
-  # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs wait_until: untyped -- wait_until parameter
+  # @rbs return: untyped -- Result
   def go_forward(timeout: nil, wait_until: nil)
     go(+1, timeout: timeout, wait_until: wait_until)
   end
@@ -890,29 +949,34 @@ class Puppeteer::Page
   end
 
   # Brings page to front (activates tab).
+  # @rbs return: untyped -- Result
   def bring_to_front
     @client.send_message('Page.bringToFront')
   end
 
-  # @param device [Device]
+  # @rbs device: untyped -- device parameter
+  # @rbs return: untyped -- Result
   def emulate(device)
     self.viewport = device.viewport
     self.user_agent = device.user_agent
   end
 
-  # @param {boolean} enabled
+  # @rbs enabled: untyped -- enabled parameter
+  # @rbs return: untyped -- Result
   def javascript_enabled=(enabled)
     return if @javascript_enabled == enabled
     @javascript_enabled = enabled
     @client.send_message('Emulation.setScriptExecutionDisabled', value: !enabled)
   end
 
-  # @param enabled [Boolean]
+  # @rbs enabled: untyped -- enabled parameter
+  # @rbs return: untyped -- Result
   def bypass_csp=(enabled)
     @client.send_message('Page.setBypassCSP', enabled: enabled)
   end
 
-  # @param media_type [String|Symbol|nil] either of (media, print, nil)
+  # @rbs media_type: untyped -- media_type parameter
+  # @rbs return: untyped -- Result
   def emulate_media_type(media_type)
     media_type_str = media_type.to_s
     unless ['screen', 'print', ''].include?(media_type_str)
@@ -921,7 +985,8 @@ class Puppeteer::Page
     @client.send_message('Emulation.setEmulatedMedia', media: media_type_str)
   end
 
-  # @param factor [Number|nil] Factor at which the CPU will be throttled (2x, 2.5x. 3x, ...). Passing `nil` disables cpu throttling.
+  # @rbs factor: untyped -- factor parameter
+  # @rbs return: untyped -- Result
   def emulate_cpu_throttling(factor)
     if factor.nil? || factor >= 1
       @client.send_message('Emulation.setCPUThrottlingRate', rate: factor || 1)
@@ -930,7 +995,8 @@ class Puppeteer::Page
     end
   end
 
-  # @param features [Array]
+  # @rbs features: untyped -- features parameter
+  # @rbs return: untyped -- Result
   def emulate_media_features(features)
     if features.nil?
       @client.send_message('Emulation.setEmulatedMedia', features: nil)
@@ -945,7 +1011,8 @@ class Puppeteer::Page
     end
   end
 
-  # @param timezone_id [String?]
+  # @rbs timezone_id: untyped -- timezone_id parameter
+  # @rbs return: untyped -- Result
   def emulate_timezone(timezone_id)
     @client.send_message('Emulation.setTimezoneOverride', timezoneId: timezone_id || '')
   rescue => err
@@ -965,6 +1032,8 @@ class Puppeteer::Page
     tritanopia
   ].freeze
 
+  # @rbs vision_deficiency_type: untyped -- vision_deficiency_type parameter
+  # @rbs return: untyped -- Result
   def emulate_vision_deficiency(vision_deficiency_type)
     value = vision_deficiency_type || 'none'
     unless VISION_DEFICIENCY_TYPES.include?(value)
@@ -973,8 +1042,9 @@ class Puppeteer::Page
     @client.send_message('Emulation.setEmulatedVisionDeficiency', type: value)
   end
 
-  # @param is_user_active [Boolean]
-  # @param is_screen_unlocked [Boolean]
+  # @rbs is_user_active: untyped -- is_user_active parameter
+  # @rbs is_screen_unlocked: untyped -- is_screen_unlocked parameter
+  # @rbs return: untyped -- Result
   def emulate_idle_state(is_user_active: nil, is_screen_unlocked: nil)
     overrides = {
       isUserActive: is_user_active,
@@ -988,7 +1058,8 @@ class Puppeteer::Page
     end
   end
 
-  # @param viewport [Viewport]
+  # @rbs viewport: untyped -- viewport parameter
+  # @rbs return: untyped -- Result
   def viewport=(viewport)
     needs_reload = @emulation_manager.emulate_viewport(viewport)
     @viewport = viewport
@@ -997,9 +1068,9 @@ class Puppeteer::Page
 
   attr_reader :viewport
 
-  # @param {Function|string} pageFunction
-  # @param {!Array<*>} args
-  # @return {!Promise<*>}
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def evaluate(page_function, *args)
     main_frame.evaluate(page_function, *args)
   end
@@ -1007,11 +1078,15 @@ class Puppeteer::Page
   define_async_method :async_evaluate
 
   class JavaScriptFunction
+    # @rbs expression: untyped -- expression parameter
+    # @rbs args: untyped -- args parameter
+    # @rbs return: void -- No return value
     def initialize(expression, args)
       @expression = expression
       @args = args
     end
 
+    # @rbs return: untyped -- Result
     def source
       "(#{@expression})(#{arguments})"
     end
@@ -1022,15 +1097,21 @@ class Puppeteer::Page
   end
 
   class JavaScriptExpression
+    # @rbs expression: untyped -- expression parameter
+    # @rbs return: void -- No return value
     def initialize(expression)
       @expression = expression
     end
 
+    # @rbs return: untyped -- Result
     def source
       @expression
     end
   end
 
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def evaluate_on_new_document(page_function, *args)
     source =
       if ['=>', 'async', 'function'].any? { |keyword| page_function.include?(keyword) }
@@ -1046,23 +1127,26 @@ class Puppeteer::Page
     @client.send_message('Page.removeScriptToEvaluateOnNewDocument', identifier: identifier)
   end
 
-  # @param {boolean} enabled
+  # @rbs enabled: bool -- enabled parameter
   def cache_enabled=(enabled)
     @frame_manager.network_manager.cache_enabled = enabled
   end
 
-  # @return [String]
+  # @rbs return: untyped -- Result
   def title
     main_frame.title
   end
 
-  # @param type [String] "png"|"jpeg"|"webp"
-  # @param path [String]
-  # @param full_page [Boolean]
-  # @param clip [Hash]
-  # @param quality [Integer]
-  # @param omit_background [Boolean]
-  # @param encoding [String]
+  # @rbs type: untyped -- type parameter
+  # @rbs path: untyped -- path parameter
+  # @rbs full_page: untyped -- full_page parameter
+  # @rbs clip: untyped -- clip parameter
+  # @rbs quality: untyped -- quality parameter
+  # @rbs omit_background: untyped -- omit_background parameter
+  # @rbs encoding: untyped -- encoding parameter
+  # @rbs capture_beyond_viewport: untyped -- capture_beyond_viewport parameter
+  # @rbs from_surface: untyped -- from_surface parameter
+  # @rbs return: untyped -- Result
   def screenshot(type: nil,
                  path: nil,
                  full_page: nil,
@@ -1090,9 +1174,6 @@ class Puppeteer::Page
     end
   end
 
-  # @param {"png"|"jpeg"} format
-  # @param {!ScreenshotOptions=} options
-  # @return {!Promise<!Buffer|!String>}
   private def screenshot_task(format, screenshot_options)
     @client.send_message('Target.activateTarget', targetId: @target.target_id)
 
@@ -1160,12 +1241,14 @@ class Puppeteer::Page
   end
 
   class PrintToPdfIsNotImplementedError < Puppeteer::Error
+    # @rbs return: void -- No return value
     def initialize
       super('pdf() is only available in headless mode. See https://github.com/puppeteer/puppeteer/issues/1829')
     end
   end
 
-  # @return [Enumerable<String>]
+  # @rbs options: untyped -- options parameter
+  # @rbs return: untyped -- Result
   def create_pdf_stream(options = {})
     timeout_helper = Puppeteer::TimeoutHelper.new('Page.printToPDF',
                       timeout_ms: options[:timeout],
@@ -1188,7 +1271,8 @@ class Puppeteer::Page
     ).read_as_chunks
   end
 
-  # @return [String]
+  # @rbs options: untyped -- options parameter
+  # @rbs return: untyped -- Result
   def pdf(options = {})
     chunks = create_pdf_stream(options)
 
@@ -1216,7 +1300,8 @@ class Puppeteer::Page
     end
   end
 
-  # @param run_before_unload [Boolean]
+  # @rbs run_before_unload: untyped -- run_before_unload parameter
+  # @rbs return: untyped -- Result
   def close(run_before_unload: false)
     unless @client.connection
       raise 'Protocol error: Connection closed. Most likely the page has been closed.'
@@ -1236,45 +1321,50 @@ class Puppeteer::Page
     end
   end
 
-  # @return [boolean]
+  # @rbs return: untyped -- Result
   def closed?
     @closed
   end
 
   attr_reader :mouse
 
-  # @param selector [String]
-  # @param delay [Number]
-  # @param button [String] "left"|"right"|"middle"
-  # @param click_count [Number]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs button: untyped -- button parameter
+  # @rbs click_count: untyped -- click_count parameter
+  # @rbs return: untyped -- Result
   def click(selector, delay: nil, button: nil, click_count: nil)
     main_frame.click(selector, delay: delay, button: button, click_count: click_count)
   end
 
   define_async_method :async_click
 
-  # @param {string} selector
+  # @rbs selector: untyped -- selector parameter
+  # @rbs return: untyped -- Result
   def focus(selector)
     main_frame.focus(selector)
   end
 
   define_async_method :async_focus
 
-  # @param {string} selector
+  # @rbs selector: untyped -- selector parameter
+  # @rbs return: untyped -- Result
   def hover(selector)
     main_frame.hover(selector)
   end
 
-  # @param {string} selector
-  # @param {!Array<string>} values
-  # @return {!Promise<!Array<string>>}
+  # @rbs selector: untyped -- selector parameter
+  # @rbs values: Array[untyped] -- values parameter
+  # @rbs return: untyped -- Result
   def select(selector, *values)
     main_frame.select(selector, *values)
   end
 
   define_async_method :async_select
 
-  # @param selector [String]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def tap(selector: nil, &block)
     # resolves double meaning of tap.
     if selector.nil? && block
@@ -1292,45 +1382,49 @@ class Puppeteer::Page
 
   define_async_method :async_tap
 
-  # @param selector [String]
-  # @param text [String]
-  # @param delay [Number]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs text: untyped -- text parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs return: untyped -- Result
   def type_text(selector, text, delay: nil)
     main_frame.type_text(selector, text, delay: delay)
   end
 
   define_async_method :async_type_text
 
-  # @param selector [String]
-  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
-  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
-  # @param timeout [Integer]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs visible: untyped -- visible parameter
+  # @rbs hidden: untyped -- hidden parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     main_frame.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_selector
 
-  # @param milliseconds [Integer] the number of milliseconds to wait.
+  # @rbs milliseconds: untyped -- milliseconds parameter
+  # @rbs return: untyped -- Result
   def wait_for_timeout(milliseconds)
     main_frame.wait_for_timeout(milliseconds)
   end
 
-  # @param xpath [String]
-  # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
-  # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
-  # @param timeout [Integer]
+  # @rbs xpath: untyped -- xpath parameter
+  # @rbs visible: untyped -- visible parameter
+  # @rbs hidden: untyped -- hidden parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
     main_frame.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_xpath
 
-  # @param page_function [String]
-  # @param args [Integer|Array]
-  # @param polling [String]
-  # @param timeout [Integer]
-  # @return [Puppeteer::JSHandle]
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: untyped -- args parameter
+  # @rbs polling: untyped -- polling parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
     main_frame.wait_for_function(page_function, args: args, polling: polling, timeout: timeout)
   end

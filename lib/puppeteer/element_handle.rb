@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 require_relative './element_handle/bounding_box'
 require_relative './element_handle/box_model'
 require_relative './element_handle/offset'
@@ -8,10 +10,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
 
-  # @param context [Puppeteer::ExecutionContext]
-  # @param client [Puppeteer::CDPSession]
-  # @param remote_object [Puppeteer::RemoteObject]
-  # @param frame [Puppeteer::Frame]
+  # @rbs context: Puppeteer::ExecutionContext -- Execution context
+  # @rbs client: Puppeteer::CDPSession -- CDP session
+  # @rbs remote_object: Puppeteer::RemoteObject -- Remote object handle
+  # @rbs frame: Puppeteer::Frame -- Owning frame
+  # @rbs return: void -- No return value
   def initialize(context:, client:, remote_object:, frame:)
     super(context: context, client: client, remote_object: remote_object)
     @frame = frame
@@ -22,6 +25,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   attr_reader :page, :frame, :frame_manager
 
+  # @rbs return: untyped -- Result
   def inspect
     values = %i[context remote_object page disposed].map do |sym|
       value = instance_variable_get(:"@#{sym}")
@@ -38,11 +42,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   #
   # This method does not work across navigations or if the element is detached from DOM.
   #
-  # @param selector - A
   # {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
   # of an element to wait for
-  # @param options - Optional waiting parameters
-  # @returns Promise which resolves when element specified by selector string
   # is added to DOM. Resolves to `null` if waiting for hidden: `true` and
   # selector is not found in DOM.
   # @remarks
@@ -59,6 +60,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # - `timeout`: maximum time to wait in milliseconds. Defaults to `30000`
   # (30 seconds). Pass `0` to disable timeout. The default value can be changed
   # by using the {@link Page.setDefaultTimeout} method.
+  # @rbs selector: String -- CSS selector
+  # @rbs visible: bool? -- Wait for element to be visible
+  # @rbs hidden: bool? -- Wait for element to be hidden
+  # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::ElementHandle? -- Matched element handle
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
   end
@@ -92,11 +98,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # await browser.close();
   # })();
   # ```
-  # @param xpath - A
   # {@link https://developer.mozilla.org/en-US/docs/Web/XPath | xpath} of an
   # element to wait for
-  # @param options - Optional waiting parameters
-  # @returns Promise which resolves when element specified by xpath string is
   # added to DOM. Resolves to `null` if waiting for `hidden: true` and xpath is
   # not found in DOM.
   # @remarks
@@ -113,6 +116,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # - `timeout`: A number which is maximum time to wait for in milliseconds.
   # Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default
   # value can be changed by using the {@link Page.setDefaultTimeout} method.
+  # @rbs xpath: untyped -- xpath parameter
+  # @rbs visible: untyped -- visible parameter
+  # @rbs hidden: untyped -- hidden parameter
+  # @rbs timeout: untyped -- timeout parameter
+  # @rbs return: untyped -- Result
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
     param_xpath =
       if xpath.start_with?('//')
@@ -126,6 +134,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_wait_for_xpath
 
+  # @rbs tag_name: untyped -- tag_name parameter
+  # @rbs return: untyped -- Result
   def to_element(tag_name)
     unless evaluate('(node, tagName) => node.nodeName === tagName.toUpperCase()', tag_name)
       raise ArgumentError.new("Element is not a(n) `#{tag_name}` element")
@@ -133,10 +143,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     self
   end
 
+  # @rbs return: untyped -- Result
   def as_element
     self
   end
 
+  # @rbs return: untyped -- Result
   def content_frame
     node_info = @remote_object.node_info(@client)
     frame_id = node_info['node']['frameId']
@@ -149,6 +161,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   class ScrollIntoViewError < Puppeteer::Error; end
 
+  # @rbs return: untyped -- Result
   def scroll_into_view_if_needed
     js = <<~JAVASCRIPT
       async(element) => {
@@ -199,25 +212,23 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   class ElementNotVisibleError < Puppeteer::Error
+    # @rbs return: void -- No return value
     def initialize
       super("Node is either not visible or not an HTMLElement")
     end
   end
 
   class ElementNotClickableError < Puppeteer::Error
+    # @rbs return: void -- No return value
     def initialize
       super("Node is either not clickable or not an HTMLElement")
     end
   end
 
-  # @param quad [Array<Array<Point>>]]
-  # @param offset [Point]
   private def apply_offsets_to_quad(quad, offset)
     quad.map { |part| part + offset }
   end
 
-  # @param frame [Puppeteer::Frame]
-  # @return [Point]
   private def oopif_offsets(frame)
     offset = Point.new(x: 0, y: 0)
     while frame.parent_frame
@@ -235,6 +246,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     offset
   end
 
+  # @rbs offset: untyped -- offset parameter
+  # @rbs return: untyped -- Result
   def clickable_point(offset = nil)
     offset_param = Offset.from(offset)
 
@@ -290,18 +303,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     quads.first.reduce(:+) / 4
   end
 
-  # @param quad [Array<number>]
-  # @return [Array<Point>]
   private def from_protocol_quad(quad)
     quad.each_slice(2).map do |x, y|
       Point.new(x: x, y: y)
     end
   end
 
-  # @param quad [Array<Point>]
-  # @param width [number]
-  # @param height [number]
-  # @return [Array<Point>]
   private def intersect_quad_with_viewport(quad, width, height)
     quad.map do |point|
       Point.new(
@@ -311,16 +318,18 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
+  # @rbs return: untyped -- Result
   def hover
     scroll_into_view_if_needed
     point = clickable_point
     @page.mouse.move(point.x, point.y)
   end
 
-  # @param delay [Number]
-  # @param button [String] "left"|"right"|"middle"
-  # @param click_count [Number]
-  # @param offset [Hash]
+  # @rbs delay: untyped -- delay parameter
+  # @rbs button: untyped -- button parameter
+  # @rbs click_count: untyped -- click_count parameter
+  # @rbs offset: untyped -- offset parameter
+  # @rbs return: untyped -- Result
   def click(delay: nil, button: nil, click_count: nil, offset: nil)
     scroll_into_view_if_needed
     point = clickable_point(offset)
@@ -330,11 +339,15 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   define_async_method :async_click
 
   class DragInterceptionNotEnabledError < Puppeteer::Error
+    # @rbs return: void -- No return value
     def initialize
       super('Drag Interception is not enabled!')
     end
   end
 
+  # @rbs x: untyped -- x parameter
+  # @rbs y: untyped -- y parameter
+  # @rbs return: untyped -- Result
   def drag(x:, y:)
     unless @page.drag_interception_enabled?
       raise DragInterceptionNotEnabledError.new
@@ -344,25 +357,33 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.mouse.drag(start, Point.new(x: x, y: y))
   end
 
+  # @rbs data: untyped -- data parameter
+  # @rbs return: untyped -- Result
   def drag_enter(data)
     scroll_into_view_if_needed
     target = clickable_point
     @page.mouse.drag_enter(target, data)
   end
 
+  # @rbs data: untyped -- data parameter
+  # @rbs return: untyped -- Result
   def drag_over(data)
     scroll_into_view_if_needed
     target = clickable_point
     @page.mouse.drag_over(target, data)
   end
 
+  # @rbs data: untyped -- data parameter
+  # @rbs return: untyped -- Result
   def drop(data)
     scroll_into_view_if_needed
     target = clickable_point
     @page.mouse.drop(target, data)
   end
 
-  # @param target [ElementHandle]
+  # @rbs target: untyped -- target parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs return: untyped -- Result
   def drag_and_drop(target, delay: nil)
     scroll_into_view_if_needed
     start_point = clickable_point
@@ -370,7 +391,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     @page.mouse.drag_and_drop(start_point, target_point, delay: delay)
   end
 
-  # @return [Array<String>]
+  # @rbs values: Array[untyped] -- values parameter
+  # @rbs return: untyped -- Result
   def select(*values)
     if nonstring = values.find { |value| !value.is_a?(String) }
       raise ArgumentError.new("Values must be strings. Found value \"#{nonstring}\" of type \"#{nonstring.class}\"")
@@ -411,7 +433,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     evaluate(fn, values)
   end
 
-  # @param file_paths [Array<String>]
+  # @rbs file_paths: Array[untyped] -- file_paths parameter
+  # @rbs return: untyped -- Result
   def upload_file(*file_paths)
     is_multiple = evaluate("el => el.multiple")
     if !is_multiple && file_paths.length >= 2
@@ -439,6 +462,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
+  # @rbs block: untyped -- block parameter
+  # @rbs return: untyped -- Result
   def tap(&block)
     return super(&block) if block
 
@@ -449,14 +474,16 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_tap
 
+  # @rbs return: untyped -- Result
   def focus
     evaluate('element => element.focus()')
   end
 
   define_async_method :async_focus
 
-  # @param text [String]
-  # @param delay [number|nil]
+  # @rbs text: untyped -- text parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs return: untyped -- Result
   def type_text(text, delay: nil)
     focus
     @page.keyboard.type_text(text, delay: delay)
@@ -464,9 +491,10 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_type_text
 
-  # @param key [String]
-  # @param text [String]
-  # @param delay [number|nil]
+  # @rbs key: untyped -- key parameter
+  # @rbs delay: untyped -- delay parameter
+  # @rbs text: untyped -- text parameter
+  # @rbs return: untyped -- Result
   def press(key, delay: nil, text: nil)
     focus
     @page.keyboard.press(key, delay: delay)
@@ -474,7 +502,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   define_async_method :async_press
 
-  # @return [BoundingBox|nil]
+  # @rbs return: untyped -- Result
   def bounding_box
     if_present(box_model) do |result_model|
       offset = oopif_offsets(@frame)
@@ -491,13 +519,23 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  # @return [BoxModel|nil]
+  # @rbs return: untyped -- Result
   def box_model
     if_present(@remote_object.box_model(@client)) do |result|
       BoxModel.new(result['model'], offset: oopif_offsets(@frame))
     end
   end
 
+  # @rbs type: untyped -- type parameter
+  # @rbs path: untyped -- path parameter
+  # @rbs full_page: untyped -- full_page parameter
+  # @rbs clip: untyped -- clip parameter
+  # @rbs quality: untyped -- quality parameter
+  # @rbs omit_background: untyped -- omit_background parameter
+  # @rbs encoding: untyped -- encoding parameter
+  # @rbs capture_beyond_viewport: untyped -- capture_beyond_viewport parameter
+  # @rbs from_surface: untyped -- from_surface parameter
+  # @rbs return: untyped -- Result
   def screenshot(type: nil,
                  path: nil,
                  full_page: nil,
@@ -572,29 +610,34 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   # `$()` in JavaScript.
-  # @param selector [String]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs return: untyped -- Result
   def query_selector(selector)
     query_handler_manager.detect_query_handler(selector).query_one(self)
   end
   alias_method :S, :query_selector
 
   # `$$()` in JavaScript.
-  # @param selector [String]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs return: untyped -- Result
   def query_selector_all(selector)
     query_handler_manager.detect_query_handler(selector).query_all(self)
   end
   alias_method :SS, :query_selector_all
 
   class ElementNotFoundError < Puppeteer::Error
+    # @rbs selector: untyped -- selector parameter
+    # @rbs return: void -- No return value
     def initialize(selector)
       super("failed to find element matching selector \"#{selector}\"")
     end
   end
 
   # `$eval()` in JavaScript.
-  # @param selector [String]
-  # @param page_function [String]
-  # @return [Object]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def eval_on_selector(selector, page_function, *args)
     element_handle = query_selector(selector)
     unless element_handle
@@ -610,9 +653,10 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   define_async_method :async_eval_on_selector
 
   # `$$eval()` in JavaScript.
-  # @param selector [String]
-  # @param page_function [String]
-  # @return [Object]
+  # @rbs selector: untyped -- selector parameter
+  # @rbs page_function: untyped -- page_function parameter
+  # @rbs args: Array[untyped] -- args parameter
+  # @rbs return: untyped -- Result
   def eval_on_selector_all(selector, page_function, *args)
     handles = query_handler_manager.detect_query_handler(selector).query_all_array(self)
     result = handles.evaluate(page_function, *args)
@@ -625,8 +669,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   define_async_method :async_eval_on_selector_all
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @param expression [String]
-  # @return [Array<ElementHandle>]
+  # @rbs expression: untyped -- expression parameter
+  # @rbs return: untyped -- Result
   def Sx(expression)
     param_xpath =
       if expression.start_with?('//')
@@ -641,8 +685,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   define_async_method :async_Sx
 
   # in JS, #isIntersectingViewport.
-  # @param threshold [Float|nil]
-  # @return [Boolean]
+  # @rbs threshold: untyped -- threshold parameter
+  # @rbs return: untyped -- Result
   def intersecting_viewport?(threshold: nil)
     option_threshold = threshold || 0
     js = <<~JAVASCRIPT
@@ -662,7 +706,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     evaluate(js, option_threshold)
   end
 
-  # @param quad [Array<Point>]
   private def compute_quad_area(quad)
     # Compute sum of all directed areas of adjacent triangles
     # https://en.wikipedia.org/wiki/Polygon#Simple_polygons
@@ -670,6 +713,9 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   # used in AriaQueryHandler
+  # @rbs accessible_name: untyped -- accessible_name parameter
+  # @rbs role: untyped -- role parameter
+  # @rbs return: untyped -- Result
   def query_ax_tree(accessible_name: nil, role: nil)
     @remote_object.query_ax_tree(@client,
       accessible_name: accessible_name, role: role)
