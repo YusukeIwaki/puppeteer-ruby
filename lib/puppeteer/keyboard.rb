@@ -107,8 +107,8 @@ class Puppeteer::Keyboard
     KeyDescription.new(**description)
   end
 
-  # @rbs key: untyped -- key parameter
-  # @rbs return: untyped -- Result
+  # @rbs key: String -- Key name
+  # @rbs return: void -- No return value
   def up(key)
     description = key_description_for_string(key)
 
@@ -127,17 +127,17 @@ class Puppeteer::Keyboard
 
   define_async_method :async_up
 
-  # @rbs char: untyped -- char parameter
-  # @rbs return: untyped -- Result
+  # @rbs char: String -- Character to insert
+  # @rbs return: void -- No return value
   def send_character(char)
     @client.send_message('Input.insertText', text: char)
   end
 
   define_async_method :async_send_character
 
-  # @rbs text: untyped -- text parameter
-  # @rbs delay: untyped -- delay parameter
-  # @rbs return: untyped -- Result
+  # @rbs text: String -- Text to type
+  # @rbs delay: Numeric? -- Delay between key presses (ms)
+  # @rbs return: void -- No return value
   def type_text(text, delay: nil)
     text.each_char do |char|
       if KEY_DEFINITIONS.include?(char.to_sym)
@@ -153,12 +153,12 @@ class Puppeteer::Keyboard
 
   define_async_method :async_type_text
 
-  # @rbs key: untyped -- key parameter
-  # @rbs delay: untyped -- delay parameter
-  # @rbs text: untyped -- text parameter
-  # @rbs commands: untyped -- commands parameter
-  # @rbs block: untyped -- block parameter
-  # @rbs return: untyped -- Result
+  # @rbs key: String -- Key name
+  # @rbs delay: Numeric? -- Delay between key events (ms)
+  # @rbs text: String? -- Text to input
+  # @rbs commands: Array[String]? -- Editing commands
+  # @rbs block: Proc? -- Optional block for key combo usage
+  # @rbs return: void -- No return value
   def press(key, delay: nil, text: nil, commands: nil, &block)
     down(key, text: text, commands: commands)
     if delay

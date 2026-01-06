@@ -25,7 +25,7 @@ class Puppeteer::Frame
     update_client(client)
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: String -- Inspection string
   def inspect
     values = %i[id parent_frame detached loader_id lifecycle_events child_frames].map do |sym|
       value = instance_variable_get(:"@#{sym}")
@@ -34,7 +34,7 @@ class Puppeteer::Frame
     "#<Puppeteer::Frame #{values.join(' ')}>"
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: Puppeteer::CDPSession -- Current CDP session
   def _client
     @client
   end
@@ -45,20 +45,20 @@ class Puppeteer::Frame
     @puppeteer_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: Puppeteer::Page -- Owning page
   def page
     @frame_manager.page
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: bool -- Whether this is an OOPIF frame
   def oop_frame?
     @client != @frame_manager.client
   end
 
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world
 
-  # @rbs other: untyped -- other parameter
-  # @rbs return: untyped -- Result
+  # @rbs other: Object -- Other object to compare
+  # @rbs return: bool -- Equality result
   def ==(other)
     other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)
     return true if equal?(other)
@@ -68,7 +68,7 @@ class Puppeteer::Frame
     @id == other.id
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: bool -- Whether loading has started
   def has_started_loading?
     @has_started_loading
   end
@@ -91,23 +91,23 @@ class Puppeteer::Frame
 
   define_async_method :async_wait_for_navigation
 
-  # @rbs return: untyped -- Result
+  # @rbs return: Puppeteer::ExecutionContext -- Main world execution context
   def execution_context
     @main_world.execution_context
   end
 
-  # @rbs page_function: untyped -- page_function parameter
-  # @rbs args: Array[untyped] -- args parameter
-  # @rbs return: untyped -- Result
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs return: Puppeteer::JSHandle -- Handle to evaluation result
   def evaluate_handle(page_function, *args)
     @main_world.evaluate_handle(page_function, *args)
   end
 
   define_async_method :async_evaluate_handle
 
-  # @rbs page_function: untyped -- page_function parameter
-  # @rbs args: Array[untyped] -- args parameter
-  # @rbs return: untyped -- Result
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs return: untyped -- Evaluation result
   def evaluate(page_function, *args)
     @main_world.evaluate(page_function, *args)
   end
@@ -115,8 +115,8 @@ class Puppeteer::Frame
   define_async_method :async_evaluate
 
   # `$()` in JavaScript.
-  # @rbs selector: untyped -- selector parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
   def query_selector(selector)
     @main_world.query_selector(selector)
   end
@@ -125,8 +125,8 @@ class Puppeteer::Frame
   define_async_method :async_query_selector
 
   # `$x()` in JavaScript. $ is not allowed to use as a method name in Ruby.
-  # @rbs expression: untyped -- expression parameter
-  # @rbs return: untyped -- Result
+  # @rbs expression: String -- XPath expression
+  # @rbs return: Array[Puppeteer::ElementHandle] -- Matching elements
   def Sx(expression)
     param_xpath =
       if expression.start_with?('//')
@@ -141,10 +141,10 @@ class Puppeteer::Frame
   define_async_method :async_Sx
 
   # `$eval()` in JavaScript.
-  # @rbs selector: untyped -- selector parameter
-  # @rbs page_function: untyped -- page_function parameter
-  # @rbs args: Array[untyped] -- args parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs return: untyped -- Evaluation result
   def eval_on_selector(selector, page_function, *args)
     @main_world.eval_on_selector(selector, page_function, *args)
   end
@@ -153,10 +153,10 @@ class Puppeteer::Frame
   define_async_method :async_eval_on_selector
 
   # `$$eval()` in JavaScript.
-  # @rbs selector: untyped -- selector parameter
-  # @rbs page_function: untyped -- page_function parameter
-  # @rbs args: Array[untyped] -- args parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs return: untyped -- Evaluation result
   def eval_on_selector_all(selector, page_function, *args)
     @main_world.eval_on_selector_all(selector, page_function, *args)
   end
@@ -165,8 +165,8 @@ class Puppeteer::Frame
   define_async_method :async_eval_on_selector_all
 
   # `$$()` in JavaScript.
-  # @rbs selector: untyped -- selector parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs return: Array[Puppeteer::ElementHandle] -- Matching elements
   def query_selector_all(selector)
     @main_world.query_selector_all(selector)
   end
@@ -174,30 +174,30 @@ class Puppeteer::Frame
 
   define_async_method :async_query_selector_all
 
-  # @rbs return: untyped -- Result
+  # @rbs return: String -- Page HTML content
   def content
     @puppeteer_world.content
   end
 
-  # @rbs html: untyped -- html parameter
-  # @rbs timeout: untyped -- timeout parameter
-  # @rbs wait_until: untyped -- wait_until parameter
-  # @rbs return: untyped -- Result
+  # @rbs html: String -- HTML content
+  # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
+  # @rbs wait_until: String | Array[String] | nil -- Lifecycle events to wait for
+  # @rbs return: void -- No return value
   def set_content(html, timeout: nil, wait_until: nil)
     @puppeteer_world.set_content(html, timeout: timeout, wait_until: wait_until)
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: String -- Frame name
   def name
     @name || ''
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: String? -- Frame URL
   def url
     @url
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: Puppeteer::Frame? -- Parent frame
   def parent_frame
     @parent_frame
   end
@@ -206,91 +206,91 @@ class Puppeteer::Frame
     @child_frames
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: Array[Puppeteer::Frame] -- Child frames
   def child_frames
     @child_frames.to_a
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: bool -- Whether the frame is detached
   def detached?
     @detached
   end
 
-  # @rbs url: untyped -- url parameter
-  # @rbs path: untyped -- path parameter
-  # @rbs content: untyped -- content parameter
-  # @rbs type: untyped -- type parameter
-  # @rbs id: untyped -- id parameter
-  # @rbs return: untyped -- Result
+  # @rbs url: String? -- Script URL
+  # @rbs path: String? -- Path to script file
+  # @rbs content: String? -- Script contents
+  # @rbs type: String? -- Script type
+  # @rbs id: String? -- Script element ID
+  # @rbs return: Puppeteer::ElementHandle -- Script element handle
   def add_script_tag(url: nil, path: nil, content: nil, type: nil, id: nil)
     @main_world.add_script_tag(url: url, path: path, content: content, type: type, id: id)
   end
 
-  # @rbs url: untyped -- url parameter
-  # @rbs path: untyped -- path parameter
-  # @rbs content: untyped -- content parameter
-  # @rbs return: untyped -- Result
+  # @rbs url: String? -- Stylesheet URL
+  # @rbs path: String? -- Path to stylesheet file
+  # @rbs content: String? -- Stylesheet contents
+  # @rbs return: Puppeteer::ElementHandle -- Style element handle
   def add_style_tag(url: nil, path: nil, content: nil)
     @main_world.add_style_tag(url: url, path: path, content: content)
   end
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs delay: untyped -- delay parameter
-  # @rbs button: untyped -- button parameter
-  # @rbs click_count: untyped -- click_count parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs delay: Numeric? -- Delay between down and up (ms)
+  # @rbs button: String? -- Mouse button
+  # @rbs click_count: Integer? -- Click count to report
+  # @rbs return: void -- No return value
   def click(selector, delay: nil, button: nil, click_count: nil)
     @puppeteer_world.click(selector, delay: delay, button: button, click_count: click_count)
   end
 
   define_async_method :async_click
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs return: void -- No return value
   def focus(selector)
     @puppeteer_world.focus(selector)
   end
 
   define_async_method :async_focus
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs return: void -- No return value
   def hover(selector)
     @puppeteer_world.hover(selector)
   end
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs values: Array[untyped] -- values parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs values: Array[String] -- Option values to select
+  # @rbs return: Array[String] -- Selected values
   def select(selector, *values)
     @puppeteer_world.select(selector, *values)
   end
 
   define_async_method :async_select
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs return: void -- No return value
   def tap(selector)
     @puppeteer_world.tap(selector)
   end
 
   define_async_method :async_tap
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs text: untyped -- text parameter
-  # @rbs delay: untyped -- delay parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs text: String -- Text to type
+  # @rbs delay: Numeric? -- Delay between key presses (ms)
+  # @rbs return: void -- No return value
   def type_text(selector, text, delay: nil)
     @main_world.type_text(selector, text, delay: delay)
   end
 
   define_async_method :async_type_text
 
-  # @rbs selector: untyped -- selector parameter
-  # @rbs visible: untyped -- visible parameter
-  # @rbs hidden: untyped -- hidden parameter
-  # @rbs timeout: untyped -- timeout parameter
-  # @rbs return: untyped -- Result
+  # @rbs selector: String -- CSS selector
+  # @rbs visible: bool? -- Wait for element to be visible
+  # @rbs hidden: bool? -- Wait for element to be hidden
+  # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     query_handler_manager = Puppeteer::QueryHandlerManager.instance
     query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
@@ -298,17 +298,17 @@ class Puppeteer::Frame
 
   define_async_method :async_wait_for_selector
 
-  # @rbs milliseconds: untyped -- milliseconds parameter
-  # @rbs return: untyped -- Result
+  # @rbs milliseconds: Numeric -- Time to wait in milliseconds
+  # @rbs return: void -- No return value
   def wait_for_timeout(milliseconds)
     Puppeteer::AsyncUtils.sleep_seconds(milliseconds / 1000.0)
   end
 
-  # @rbs xpath: untyped -- xpath parameter
-  # @rbs visible: untyped -- visible parameter
-  # @rbs hidden: untyped -- hidden parameter
-  # @rbs timeout: untyped -- timeout parameter
-  # @rbs return: untyped -- Result
+  # @rbs xpath: String -- XPath expression
+  # @rbs visible: bool? -- Wait for element to be visible
+  # @rbs hidden: bool? -- Wait for element to be hidden
+  # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
   def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
     param_xpath =
       if xpath.start_with?('//')
@@ -322,38 +322,38 @@ class Puppeteer::Frame
 
   define_async_method :async_wait_for_xpath
 
-  # @rbs page_function: untyped -- page_function parameter
-  # @rbs args: untyped -- args parameter
-  # @rbs polling: untyped -- polling parameter
-  # @rbs timeout: untyped -- timeout parameter
-  # @rbs return: untyped -- Result
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs polling: String | Numeric | nil -- Polling strategy
+  # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::JSHandle -- Handle to evaluation result
   def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
     @main_world.wait_for_function(page_function, args: args, polling: polling, timeout: timeout)
   end
 
   define_async_method :async_wait_for_function
 
-  # @rbs return: untyped -- Result
+  # @rbs return: String -- Frame title
   def title
     @puppeteer_world.title
   end
 
-  # @rbs frame_payload: untyped -- frame_payload parameter
-  # @rbs return: untyped -- Result
+  # @rbs frame_payload: Hash[String, untyped] -- Frame payload
+  # @rbs return: void -- No return value
   def navigated(frame_payload)
     @name = frame_payload['name']
     @url = "#{frame_payload['url']}#{frame_payload['urlFragment']}"
   end
 
-  # @rbs url: untyped -- url parameter
-  # @rbs return: untyped -- Result
+  # @rbs url: String -- Updated URL
+  # @rbs return: void -- No return value
   def navigated_within_document(url)
     @url = url
   end
 
-  # @rbs loader_id: untyped -- loader_id parameter
-  # @rbs name: untyped -- name parameter
-  # @rbs return: untyped -- Result
+  # @rbs loader_id: String -- Loader ID
+  # @rbs name: String -- Lifecycle event name
+  # @rbs return: void -- No return value
   def handle_lifecycle_event(loader_id, name)
     if name == 'init'
       @loader_id = loader_id
@@ -362,18 +362,18 @@ class Puppeteer::Frame
     @lifecycle_events << name
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: void -- No return value
   def handle_loading_started
     @has_started_loading = true
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: void -- No return value
   def handle_loading_stopped
     @lifecycle_events << 'DOMContentLoaded'
     @lifecycle_events << 'load'
   end
 
-  # @rbs return: untyped -- Result
+  # @rbs return: void -- No return value
   def detach
     @detached = true
     @main_world.detach

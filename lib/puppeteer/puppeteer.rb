@@ -22,7 +22,7 @@ class Puppeteer::Puppeteer
   # @rbs handle_SIGHUP: bool? -- Handle SIGHUP in browser process
   # @rbs timeout: Integer? -- Launch timeout in milliseconds
   # @rbs dumpio: bool? -- Pipe browser stdout/stderr to current process
-  # @rbs env: Hash[untyped, untyped]? -- Environment variables for browser
+  # @rbs env: Hash[String, String]? -- Environment variables for browser
   # @rbs pipe: bool? -- Use pipe instead of WebSocket
   # @rbs args: Array[String]? -- Additional browser arguments
   # @rbs user_data_dir: String? -- Path to user data directory
@@ -33,6 +33,7 @@ class Puppeteer::Puppeteer
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs wait_for_initial_page: bool? -- Wait for initial page to load
+  # @rbs block: Proc? -- Optional block receiving the browser
   # @rbs return: Puppeteer::Browser -- Browser instance
   def launch(
     product: nil,
@@ -54,7 +55,8 @@ class Puppeteer::Puppeteer
     ignore_https_errors: nil,
     default_viewport: NoViewport.new,
     slow_mo: nil,
-    wait_for_initial_page: nil
+    wait_for_initial_page: nil,
+    &block
   )
     product = product.to_s if product
     if product && product != 'chrome'
@@ -90,9 +92,9 @@ class Puppeteer::Puppeteer
     @product_name = product
     if async_context?
       browser = launcher.launch(options)
-      if block_given?
+      if block
         begin
-          yield(browser)
+          block.call(browser)
         ensure
           browser.close
         end
@@ -108,9 +110,9 @@ class Puppeteer::Puppeteer
         raise
       end
       proxy = Puppeteer::ReactorRunner::Proxy.new(runner, browser, owns_runner: true)
-      if block_given?
+      if block
         begin
-          yield(proxy)
+          block.call(proxy)
         ensure
           proxy.close
         end
@@ -126,6 +128,7 @@ class Puppeteer::Puppeteer
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
+  # @rbs block: Proc? -- Optional block receiving the browser
   # @rbs return: Puppeteer::Browser -- Browser instance
   def connect(
     browser_ws_endpoint: nil,
@@ -133,7 +136,8 @@ class Puppeteer::Puppeteer
     transport: nil,
     ignore_https_errors: nil,
     default_viewport: nil,
-    slow_mo: nil
+    slow_mo: nil,
+    &block
   )
     options = {
       browser_ws_endpoint: browser_ws_endpoint,
@@ -145,9 +149,9 @@ class Puppeteer::Puppeteer
     }.compact
     if async_context?
       browser = Puppeteer::BrowserConnector.new(options).connect_to_browser
-      if block_given?
+      if block
         begin
-          yield(browser)
+          block.call(browser)
         ensure
           browser.disconnect
         end
@@ -163,9 +167,9 @@ class Puppeteer::Puppeteer
         raise
       end
       proxy = Puppeteer::ReactorRunner::Proxy.new(runner, browser, owns_runner: true)
-      if block_given?
+      if block
         begin
-          yield(proxy)
+          block.call(proxy)
         ensure
           proxy.disconnect
         end
@@ -203,8 +207,8 @@ class Puppeteer::Puppeteer
   end
 
   # @rbs name: String -- Custom query handler name
-  # @rbs query_one: untyped -- Query-one handler
-  # @rbs query_all: untyped -- Query-all handler
+  # @rbs query_one: String -- Query-one handler
+  # @rbs query_all: String -- Query-all handler
   # @rbs return: void -- No return value
   def register_custom_query_handler(name:, query_one:, query_all:)
     unless name =~ /\A[a-zA-Z]+\z/
@@ -221,8 +225,8 @@ class Puppeteer::Puppeteer
   end
 
   # @rbs name: String -- Custom query handler name
-  # @rbs query_one: untyped -- Query-one handler
-  # @rbs query_all: untyped -- Query-all handler
+  # @rbs query_one: String -- Query-one handler
+  # @rbs query_all: String -- Query-all handler
   # @rbs return: untyped -- Block result
   def with_custom_query_handler(name:, query_one:, query_all:, &block)
     unless name =~ /\A[a-zA-Z]+\z/

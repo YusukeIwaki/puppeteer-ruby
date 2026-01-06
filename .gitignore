@@ -6,7 +6,9 @@
 /pkg/
 /spec/reports/
 /tmp/
-/sig/
+/sig/**
+!/sig/_external.rbs
+!/sig/_supplementary.rbs
 
 /.vscode
 /Gemfile.lock
