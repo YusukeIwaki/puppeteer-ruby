@@ -139,23 +139,14 @@ RSpec.describe 'Evaluation specs' do
 
     it 'should throw when evaluation triggers reload' do
       with_test_state do |page:, **|
-        error = nil
-        begin
+        expect {
           page.evaluate(<<~JAVASCRIPT)
           () => {
             location.reload();
             return new Promise(() => {});
           }
           JAVASCRIPT
-        rescue => e
-          error = e
-        end
-        expect(error).to be_truthy
-        expect(
-          ['Execution context was destroyed', 'no such frame'].any? do |text|
-            error.message.include?(text)
-          end,
-        ).to eq(true)
+        }.to raise_error(Puppeteer::Error, /Execution context was destroyed|no such frame/)
       end
     end
 
@@ -193,50 +184,33 @@ RSpec.describe 'Evaluation specs' do
 
     it 'should reject promise with exception' do
       with_test_state do |page:, **|
-        error = nil
-        begin
+        expect {
           page.evaluate('() => notExistingObject.property')
-        rescue => e
-          error = e
-        end
-        expect(error).to be_truthy
-        expect(error.message).to include('notExistingObject')
+        }.to raise_error(Puppeteer::Error, /notExistingObject/)
       end
     end
 
     it 'should support thrown strings as error messages' do
       with_test_state do |page:, **|
-        error = nil
-        begin
+        expect {
           page.evaluate('() => { throw "qwerty"; }')
-        rescue => e
-          error = e
-        end
-        expect(error.to_s).to include('qwerty')
+        }.to raise_error(Puppeteer::Error, /qwerty/)
       end
     end
 
     it 'should support thrown numbers as error messages' do
       with_test_state do |page:, **|
-        error = nil
-        begin
+        expect {
           page.evaluate('() => { throw 100500; }')
-        rescue => e
-          error = e
-        end
-        expect(error.to_s).to include('100500')
+        }.to raise_error(Puppeteer::Error, /100500/)
       end
     end
 
     it 'should support thrown platform objects as error messages' do
       with_test_state do |page:, **|
-        error = nil
-        begin
+        expect {
           page.evaluate('() => { throw new DOMException("some DOMException message"); }')
-        rescue => e
-          error = e
-        end
-        expect(error.message).to include('some DOMException message')
+        }.to raise_error(Puppeteer::Error, /some DOMException message/)
       end
     end
 
@@ -394,13 +368,9 @@ RSpec.describe 'Evaluation specs' do
         page.set_content('<section>39</section>')
         element = page.query_selector('section')
         element.dispose
-        error = nil
-        begin
+        expect {
           page.evaluate('(e) => e.textContent', element)
-        rescue => e
-          error = e
-        end
-        expect(error.message).to match(/JSHandles? is disposed/)
+        }.to raise_error(Puppeteer::Error, /JSHandles? is disposed/)
       end
     end
 
@@ -408,21 +378,13 @@ RSpec.describe 'Evaluation specs' do
       with_test_state do |page:, server:, **|
         attach_frame(page, 'frame1', server.empty_page)
         body_handle = page.frames[1].query_selector('body')
-        error = nil
         begin
-          page.evaluate('(body) => body?.innerHTML', body_handle)
-        rescue => e
-          error = e
+          expect {
+            page.evaluate('(body) => body?.innerHTML', body_handle)
+          }.to raise_error(Puppeteer::Error, /JSHandles can be evaluated only in the context they were created|Trying to evaluate JSHandle from different frames/)
         ensure
           body_handle&.dispose
         end
-        expect(error).to be_truthy
-        expect(
-          [
-            'JSHandles can be evaluated only in the context they were created',
-            "Trying to evaluate JSHandle from different frames. Usually this means you're using a handle from a page on a different page.",
-          ].any? { |message| error.message.include?(message) },
-        ).to eq(true)
       end
     end
 
@@ -463,8 +425,7 @@ RSpec.describe 'Evaluation specs' do
 
     it 'should throw error with detailed information on exception inside promise' do
       with_test_state do |page:, **|
-        error = nil
-        begin
+        expect {
           page.evaluate(<<~JAVASCRIPT)
           () => {
             return new Promise(() => {
@@ -472,10 +433,7 @@ RSpec.describe 'Evaluation specs' do
             });
           }
           JAVASCRIPT
-        rescue => e
-          error = e
-        end
-        expect(error.message).to include('Error in promise')
+        }.to raise_error(Puppeteer::Error, /Error in promise/)
       end
     end
 
