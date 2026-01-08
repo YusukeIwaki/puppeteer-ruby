@@ -14,7 +14,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @rbs client: Puppeteer::CDPSession -- CDP session
   # @rbs remote_object: Puppeteer::RemoteObject -- Remote object handle
   # @rbs frame: Puppeteer::Frame -- Owning frame
-  # @rbs return: void -- No return value
   def initialize(context:, client:, remote_object:, frame:)
     super(context: context, client: client, remote_object: remote_object)
     @frame = frame
@@ -212,23 +211,26 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   class ElementNotVisibleError < Puppeteer::Error
-    # @rbs return: void -- No return value
     def initialize
       super("Node is either not visible or not an HTMLElement")
     end
   end
 
   class ElementNotClickableError < Puppeteer::Error
-    # @rbs return: void -- No return value
     def initialize
       super("Node is either not clickable or not an HTMLElement")
     end
   end
 
+  # @rbs quad: Array[Point] -- Quad points
+  # @rbs offset: Point -- Offset to apply
+  # @rbs return: Array[Point] -- Offset quad points
   private def apply_offsets_to_quad(quad, offset)
     quad.map { |part| part + offset }
   end
 
+  # @rbs frame: Puppeteer::Frame -- Frame to calculate offsets for
+  # @rbs return: Point -- Calculated offset
   private def oopif_offsets(frame)
     offset = Point.new(x: 0, y: 0)
     while frame.parent_frame
@@ -303,6 +305,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     quads.first.reduce(:+) / 4
   end
 
+  # @rbs quad: Array[Numeric] -- Protocol quad coordinates
+  # @rbs return: Array[Point] -- Point array
   private def from_protocol_quad(quad)
     quad.each_slice(2).map do |x, y|
       Point.new(x: x, y: y)
@@ -339,7 +343,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   define_async_method :async_click
 
   class DragInterceptionNotEnabledError < Puppeteer::Error
-    # @rbs return: void -- No return value
     def initialize
       super('Drag Interception is not enabled!')
     end
@@ -627,7 +630,6 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   class ElementNotFoundError < Puppeteer::Error
     # @rbs selector: String -- CSS selector
-    # @rbs return: void -- No return value
     def initialize(selector)
       super("failed to find element matching selector \"#{selector}\"")
     end

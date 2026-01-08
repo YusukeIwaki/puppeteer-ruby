@@ -170,7 +170,7 @@ class Puppeteer::Page
   alias_method :drag_interception_enabled, :drag_interception_enabled?
 
   # @rbs event_name: (String | Symbol) -- Page event name
-  # @rbs block: Proc -- Event handler
+  # @rbs &block: ^(untyped) -> void -- Event handler
   # @rbs return: String -- Listener ID
   def on(event_name, &block)
     unless PageEmittedEvents.values.include?(event_name.to_s)
@@ -187,7 +187,7 @@ class Puppeteer::Page
   end
 
   # @rbs event_name: (String | Symbol) -- Page event name
-  # @rbs block: Proc -- Event handler
+  # @rbs &block: ^(untyped) -> void -- Event handler
   # @rbs return: String -- Listener ID
   def once(event_name, &block)
     unless PageEmittedEvents.values.include?(event_name.to_s)

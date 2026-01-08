@@ -97,7 +97,7 @@ class Puppeteer::Browser
   attr_reader :is_page_target_callback
 
   # @rbs event_name: (String | Symbol) -- Browser event name
-  # @rbs block: Proc -- Event handler
+  # @rbs &block: ^(untyped) -> void -- Event handler
   # @rbs return: String -- Listener ID
   def on(event_name, &block)
     unless BrowserEmittedEvents.values.include?(event_name.to_s)
@@ -108,7 +108,7 @@ class Puppeteer::Browser
   end
 
   # @rbs event_name: (String | Symbol) -- Browser event name
-  # @rbs block: Proc -- Event handler
+  # @rbs &block: ^(untyped) -> void -- Event handler
   # @rbs return: String -- Listener ID
   def once(event_name, &block)
     unless BrowserEmittedEvents.values.include?(event_name.to_s)
