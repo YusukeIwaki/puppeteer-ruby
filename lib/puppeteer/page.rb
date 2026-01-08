@@ -1123,6 +1123,8 @@ class Puppeteer::Page
     @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
   end
 
+  # @rbs identifier: String -- Script identifier to remove
+  # @rbs return: void
   def remove_script_to_evaluate_on_new_document(identifier)
     @client.send_message('Page.removeScriptToEvaluateOnNewDocument', identifier: identifier)
   end

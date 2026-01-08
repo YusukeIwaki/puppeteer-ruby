@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class Puppeteer::ExecutionContext
   include Puppeteer::IfPresent
   using Puppeteer::DefineAsyncMethod
@@ -162,11 +164,13 @@ class Puppeteer::ExecutionContext
       end
     end
 
+    # @rbs return: String -- JavaScript function declaration
     private def function_declaration
       expression = @return_by_value ? serialized_function_declaration : @expression
       "#{expression}\n#{suffix}\n"
     end
 
+    # @rbs return: String -- Wrapped function with serialization
     private def serialized_function_declaration
       <<~JAVASCRIPT
       async function(...__args) {
@@ -177,6 +181,7 @@ class Puppeteer::ExecutionContext
       JAVASCRIPT
     end
 
+    # @rbs return: String -- JavaScript serialization helper source
     private def serialized_value_source
       <<~JAVASCRIPT
       const OMIT = Symbol('omit');
