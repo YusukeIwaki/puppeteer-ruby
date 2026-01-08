@@ -1042,6 +1042,10 @@ class Puppeteer::Page
     @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
   end
 
+  def remove_script_to_evaluate_on_new_document(identifier)
+    @client.send_message('Page.removeScriptToEvaluateOnNewDocument', identifier: identifier)
+  end
+
   # @param {boolean} enabled
   def cache_enabled=(enabled)
     @frame_manager.network_manager.cache_enabled = enabled

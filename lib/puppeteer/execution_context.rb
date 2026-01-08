@@ -109,7 +109,7 @@ class Puppeteer::ExecutionContext
       # But we don't support the syntax here.
 
       result = client.send_message('Runtime.callFunctionOn',
-        functionDeclaration: "#{@expression}\n#{suffix}\n",
+        functionDeclaration: function_declaration,
         executionContextId: context_id,
         arguments: converted_args,
         returnByValue: @return_by_value,
@@ -154,10 +154,107 @@ class Puppeteer::ExecutionContext
           end
 
           arg.remote_object.converted_arg
+        elsif arg.is_a?(Regexp)
+          { value: arg.source }
         else
           { value: arg }
         end
       end
+    end
+
+    private def function_declaration
+      expression = @return_by_value ? serialized_function_declaration : @expression
+      "#{expression}\n#{suffix}\n"
+    end
+
+    private def serialized_function_declaration
+      <<~JAVASCRIPT
+      async function(...__args) {
+        const fn = #{@expression};
+        const result = await fn.apply(globalThis, __args);
+        #{serialized_value_source}
+      }
+      JAVASCRIPT
+    end
+
+    private def serialized_value_source
+      <<~JAVASCRIPT
+      const OMIT = Symbol('omit');
+      const UNDEFINED_SENTINEL = { __puppeteer_unserializable__: true };
+      const NUMBER_SENTINEL = (value) => ({ __puppeteer_number__: value });
+      const REGEXP_SENTINEL = (source, flags) => ({ __puppeteer_regexp__: { source, flags } });
+      const seen = new WeakSet();
+      const isPlainObject = (value) => {
+        if (!value || typeof value !== 'object') {
+          return false;
+        }
+        const proto = Object.getPrototypeOf(value);
+        return proto === Object.prototype || proto === null;
+      };
+      const serialize = (value, allowOmit) => {
+        if (value === undefined) {
+          return allowOmit ? OMIT : UNDEFINED_SENTINEL;
+        }
+        if (typeof value === 'symbol' || typeof value === 'function') {
+          return UNDEFINED_SENTINEL;
+        }
+        if (typeof value === 'number') {
+          if (Number.isNaN(value)) {
+            return NUMBER_SENTINEL('NaN');
+          }
+          if (Object.is(value, -0)) {
+            return NUMBER_SENTINEL('-0');
+          }
+          if (value === Infinity) {
+            return NUMBER_SENTINEL('Infinity');
+          }
+          if (value === -Infinity) {
+            return NUMBER_SENTINEL('-Infinity');
+          }
+        }
+        if (typeof value === 'bigint') {
+          return value;
+        }
+        if (value === null || typeof value !== 'object') {
+          return value;
+        }
+        if (typeof Window !== 'undefined' && value === window) {
+          return UNDEFINED_SENTINEL;
+        }
+        if (typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap) {
+          return UNDEFINED_SENTINEL;
+        }
+        if (value instanceof RegExp) {
+          return REGEXP_SENTINEL(value.source, value.flags || '');
+        }
+        if (value instanceof Promise) {
+          return {};
+        }
+        if (seen.has(value)) {
+          return UNDEFINED_SENTINEL;
+        }
+        seen.add(value);
+        if (Array.isArray(value)) {
+          return value.map((item) => {
+            const serialized = serialize(item, false);
+            return serialized === OMIT ? UNDEFINED_SENTINEL : serialized;
+          });
+        }
+        if (!isPlainObject(value)) {
+          return UNDEFINED_SENTINEL;
+        }
+        const result = {};
+        for (const [key, val] of Object.entries(value)) {
+          const serialized = serialize(val, true);
+          if (serialized === OMIT) {
+            continue;
+          }
+          result[key] = serialized;
+        }
+        return result;
+      };
+      return serialize(result, false);
+      JAVASCRIPT
     end
 
     #   /**

@@ -3,6 +3,10 @@ class Puppeteer::RemoteObject
   include Puppeteer::DebugPrint
   using Puppeteer::DefineAsyncMethod
 
+  UNSERIALIZABLE_SENTINEL_KEY = '__puppeteer_unserializable__'
+  NUMBER_SENTINEL_KEY = '__puppeteer_number__'
+  REGEXP_SENTINEL_KEY = '__puppeteer_regexp__'
+
   # @param payload [Hash]
   def initialize(payload)
     @object_id = payload['objectId']
@@ -10,6 +14,7 @@ class Puppeteer::RemoteObject
     @sub_type = payload['subtype']
     @unserializable_value = payload['unserializableValue']
     @value = payload['value']
+    @description = payload['description']
   end
 
   attr_reader :sub_type
@@ -112,24 +117,85 @@ class Puppeteer::RemoteObject
   # helper#valueFromRemoteObject
   def value
     if @unserializable_value
-      # if (remoteObject.type === 'bigint' && typeof BigInt !== 'undefined')
-      #   return BigInt(remoteObject.unserializableValue.replace('n', ''));
-      # switch (remoteObject.unserializableValue) {
-      #   case '-0':
-      #     return -0;
-      #   case 'NaN':
-      #     return NaN;
-      #   case 'Infinity':
-      #     return Infinity;
-      #   case '-Infinity':
-      #     return -Infinity;
-      #   default:
-      #     throw new Error('Unsupported unserializable value: ' + remoteObject.unserializableValue);
-      # }
-      raise NotImplementedError.new('unserializable_value is not implemented yet')
-    else
-      @value
+      if @type == 'bigint' || @unserializable_value.end_with?('n')
+        return Integer(@unserializable_value.delete_suffix('n'))
+      end
+
+      case @unserializable_value
+      when '-0'
+        -0.0
+      when 'NaN'
+        Float::NAN
+      when 'Infinity'
+        Float::INFINITY
+      when '-Infinity'
+        -Float::INFINITY
+      else
+        raise NotImplementedError.new("Unsupported unserializable value: #{@unserializable_value}")
+      end
     end
+
+    if @sub_type == 'regexp' && @description
+      source, flags = parse_regexp(@description)
+      return Regexp.new(source, regexp_options(flags))
+    end
+
+    normalize_serialized_value(@value)
+  end
+
+  private def normalize_serialized_value(value)
+    case value
+    when Array
+      value.map { |item| normalize_serialized_value(item) }
+    when Hash
+      if value.keys == [UNSERIALIZABLE_SENTINEL_KEY] && value[UNSERIALIZABLE_SENTINEL_KEY] == true
+        nil
+      elsif value.keys == [NUMBER_SENTINEL_KEY]
+        unserializable_number(value[NUMBER_SENTINEL_KEY])
+      elsif value.keys == [REGEXP_SENTINEL_KEY] && value[REGEXP_SENTINEL_KEY].is_a?(Hash)
+        regexp_value = value[REGEXP_SENTINEL_KEY]
+        source = regexp_value['source'].to_s
+        flags = regexp_value['flags'].to_s
+        Regexp.new(source, regexp_options(flags))
+      else
+        value.transform_values { |item| normalize_serialized_value(item) }
+      end
+    else
+      value
+    end
+  end
+
+  private def unserializable_number(value)
+    case value
+    when '-0'
+      -0.0
+    when 'NaN'
+      Float::NAN
+    when 'Infinity'
+      Float::INFINITY
+    when '-Infinity'
+      -Float::INFINITY
+    else
+      value
+    end
+  end
+
+  private def parse_regexp(description)
+    return [description, ''] unless description.start_with?('/')
+
+    last_slash = description.rindex('/')
+    return [description, ''] unless last_slash && last_slash > 0
+
+    source = description[1...last_slash]
+    flags = description[(last_slash + 1)..]
+    [source, flags || '']
+  end
+
+  private def regexp_options(flags)
+    options = 0
+    options |= Regexp::IGNORECASE if flags.include?('i')
+    options |= Regexp::MULTILINE if flags.include?('m')
+    options
   end
 
   # @param client [Puppeteer::CDPSession]
