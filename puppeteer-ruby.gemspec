@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rbs-inline'
   spec.add_development_dependency 'rubocop', '~> 1.50.0'
   spec.add_development_dependency 'rubocop-rspec', '~> 2.17.1'
-  spec.add_development_dependency 'sinatra', '< 4.0.0'
+  spec.add_development_dependency 'sinatra', '< 5.0.0'
   spec.add_development_dependency 'steep'
   spec.add_development_dependency 'webrick'
 end
