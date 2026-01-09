@@ -16,7 +16,7 @@ class Puppeteer::Env
   end
 
   def windows?
-    RUBY_PLATFORM =~ /mswin|mingw|cygwin/
+    !!(RUBY_PLATFORM =~ /mswin|mingw|cygwin/)
   end
 end
 

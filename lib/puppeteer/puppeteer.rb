@@ -1,7 +1,10 @@
+# rbs_inline: enabled
+
 class Puppeteer::Puppeteer
-  # @param project_root [String]
-  # @param prefereed_revision [String]
-  # @param is_puppeteer_core [String]
+  # @rbs project_root: String -- Project root directory
+  # @rbs preferred_revision: String -- Preferred Chromium revision
+  # @rbs is_puppeteer_core: bool -- Whether puppeteer-core mode is enabled
+  # @rbs return: void -- No return value
   def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
     @project_root = project_root
     @preferred_revision = preferred_revision
@@ -10,25 +13,28 @@ class Puppeteer::Puppeteer
 
   class NoViewport ; end
 
-  # @param product [String] 'chrome'
-  # @param channel [String|Symbol]
-  # @param executable_path [String]
-  # @param ignore_default_args [Array<String>|nil]
-  # @param handle_SIGINT [Boolean]
-  # @param handle_SIGTERM [Boolean]
-  # @param handle_SIGHUP [Boolean]
-  # @param timeout [Integer]
-  # @param dumpio [Boolean]
-  # @param env [Hash]
-  # @param pipe [Boolean]
-  # @param args [Array<String>]
-  # @param user_data_dir [String]
-  # @param devtools [Boolean]
-  # @param headless [Boolean]
-  # @param ignore_https_errors [Boolean]
-  # @param default_viewport [Puppeteer::Viewport|nil]
-  # @param slow_mo [Integer]
-  # @return [Puppeteer::Browser]
+  # @rbs product: String? -- Browser product (chrome only)
+  # @rbs channel: (String | Symbol)? -- Browser channel
+  # @rbs executable_path: String? -- Path to browser executable
+  # @rbs ignore_default_args: Array[String]? -- Arguments to exclude from defaults
+  # @rbs handle_SIGINT: bool? -- Handle SIGINT in browser process
+  # @rbs handle_SIGTERM: bool? -- Handle SIGTERM in browser process
+  # @rbs handle_SIGHUP: bool? -- Handle SIGHUP in browser process
+  # @rbs timeout: Integer? -- Launch timeout in milliseconds
+  # @rbs dumpio: bool? -- Pipe browser stdout/stderr to current process
+  # @rbs env: Hash[String, String]? -- Environment variables for browser
+  # @rbs pipe: bool? -- Use pipe instead of WebSocket
+  # @rbs args: Array[String]? -- Additional browser arguments
+  # @rbs user_data_dir: String? -- Path to user data directory
+  # @rbs devtools: bool? -- Auto-open DevTools
+  # @rbs debugging_port: Integer? -- Remote debugging port
+  # @rbs headless: bool? -- Run browser in headless mode
+  # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs slow_mo: Integer? -- Delay between operations (ms)
+  # @rbs wait_for_initial_page: bool? -- Wait for initial page to load
+  # @rbs block: Proc? -- Optional block receiving the browser
+  # @rbs return: Puppeteer::Browser -- Browser instance
   def launch(
     product: nil,
     channel: nil,
@@ -49,7 +55,8 @@ class Puppeteer::Puppeteer
     ignore_https_errors: nil,
     default_viewport: NoViewport.new,
     slow_mo: nil,
-    wait_for_initial_page: nil
+    wait_for_initial_page: nil,
+    &block
   )
     product = product.to_s if product
     if product && product != 'chrome'
@@ -85,9 +92,9 @@ class Puppeteer::Puppeteer
     @product_name = product
     if async_context?
       browser = launcher.launch(options)
-      if block_given?
+      if block
         begin
-          yield(browser)
+          block.call(browser)
         ensure
           browser.close
         end
@@ -103,9 +110,9 @@ class Puppeteer::Puppeteer
         raise
       end
       proxy = Puppeteer::ReactorRunner::Proxy.new(runner, browser, owns_runner: true)
-      if block_given?
+      if block
         begin
-          yield(proxy)
+          block.call(proxy)
         ensure
           proxy.close
         end
@@ -115,20 +122,22 @@ class Puppeteer::Puppeteer
     end
   end
 
-  # @param browser_ws_endpoint [String]
-  # @param browser_url [String]
-  # @param transport [Puppeteer::WebSocketTransport]
-  # @param ignore_https_errors [Boolean]
-  # @param default_viewport [Puppeteer::Viewport|nil]
-  # @param slow_mo [Integer]
-  # @return [Puppeteer::Browser]
+  # @rbs browser_ws_endpoint: String? -- Browser WebSocket endpoint
+  # @rbs browser_url: String? -- Browser HTTP URL for WebSocket discovery
+  # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
+  # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs slow_mo: Integer? -- Delay between operations (ms)
+  # @rbs block: Proc? -- Optional block receiving the browser
+  # @rbs return: Puppeteer::Browser -- Browser instance
   def connect(
     browser_ws_endpoint: nil,
     browser_url: nil,
     transport: nil,
     ignore_https_errors: nil,
     default_viewport: nil,
-    slow_mo: nil
+    slow_mo: nil,
+    &block
   )
     options = {
       browser_ws_endpoint: browser_ws_endpoint,
@@ -140,9 +149,9 @@ class Puppeteer::Puppeteer
     }.compact
     if async_context?
       browser = Puppeteer::BrowserConnector.new(options).connect_to_browser
-      if block_given?
+      if block
         begin
-          yield(browser)
+          block.call(browser)
         ensure
           browser.disconnect
         end
@@ -158,9 +167,9 @@ class Puppeteer::Puppeteer
         raise
       end
       proxy = Puppeteer::ReactorRunner::Proxy.new(runner, browser, owns_runner: true)
-      if block_given?
+      if block
         begin
-          yield(proxy)
+          block.call(proxy)
         ensure
           proxy.disconnect
         end
@@ -170,7 +179,8 @@ class Puppeteer::Puppeteer
     end
   end
 
-  # @return [String]
+  # @rbs channel: String? -- Browser channel
+  # @rbs return: String -- Executable path
   def executable_path(channel: nil)
     launcher.executable_path(channel: channel)
   end
@@ -184,7 +194,7 @@ class Puppeteer::Puppeteer
     )
   end
 
-  # @return [String]
+  # @rbs return: String -- Product name
   def product
     launcher.product
   end
@@ -196,6 +206,10 @@ class Puppeteer::Puppeteer
     false
   end
 
+  # @rbs name: String -- Custom query handler name
+  # @rbs query_one: String -- Query-one handler
+  # @rbs query_all: String -- Query-all handler
+  # @rbs return: void -- No return value
   def register_custom_query_handler(name:, query_one:, query_all:)
     unless name =~ /\A[a-zA-Z]+\z/
       raise ArgumentError.new("Custom query handler names may only contain [a-zA-Z]")
@@ -210,6 +224,10 @@ class Puppeteer::Puppeteer
     Puppeteer::QueryHandlerManager.instance.query_handlers[handler_name] = handler
   end
 
+  # @rbs name: String -- Custom query handler name
+  # @rbs query_one: String -- Query-one handler
+  # @rbs query_all: String -- Query-all handler
+  # @rbs return: untyped -- Block result
   def with_custom_query_handler(name:, query_one:, query_all:, &block)
     unless name =~ /\A[a-zA-Z]+\z/
       raise ArgumentError.new("Custom query handler names may only contain [a-zA-Z]")
@@ -232,26 +250,21 @@ class Puppeteer::Puppeteer
     end
   end
 
-  # @return [Puppeteer::Devices]
+  # @rbs return: Puppeteer::Devices -- Devices registry
   def devices
     Puppeteer::Devices
   end
 
-  # # @return {Object}
-  # def errors
-  #   # ???
-  # end
-
-  # @return [Puppeteer::NetworkConditions]
+  # @rbs return: Puppeteer::NetworkConditions -- Network conditions registry
   def network_conditions
     Puppeteer::NetworkConditions
   end
 
-  # @param args [Array<String>]
-  # @param user_data_dir [String]
-  # @param devtools [Boolean]
-  # @param headless [Boolean]
-  # @return [Array<String>]
+  # @rbs args: Array[String]? -- Additional arguments
+  # @rbs user_data_dir: String? -- Path to user data directory
+  # @rbs devtools: bool? -- Enable DevTools
+  # @rbs headless: bool? -- Run browser in headless mode
+  # @rbs return: Array[String] -- Default launch arguments
   def default_args(args: nil, user_data_dir: nil, devtools: nil, headless: nil)
     options = {
       args: args,

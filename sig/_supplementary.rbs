@@ -1,0 +1,421 @@
+module Puppeteer
+  def self.env: () -> Puppeteer::Env
+  def env: () -> Puppeteer::Env
+end
+
+class Puppeteer::Env
+  def debug?: () -> bool
+  def ci?: () -> bool
+  def darwin?: () -> bool
+  def windows?: () -> bool
+end
+
+module Puppeteer::DebugPrint
+  def debug_puts: (*untyped, **untyped) -> void
+  def debug_print: (*untyped) -> void
+end
+
+module Puppeteer::EventCallbackable
+  class EventListeners
+    include Enumerable[Proc]
+
+    def initialize: () -> void
+    def add: () { (*untyped, **untyped) -> untyped } -> String
+    def delete: (String id) -> untyped
+    def each: () { (Proc) -> untyped } -> void
+  end
+
+  def add_event_listener: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def on: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def remove_event_listener: (*String id_args) -> void
+  def observe_first: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def once: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def on_event: (untyped event_name) { (*untyped, **untyped) -> untyped } -> void
+  def emit_event: (untyped event_name, *untyped args, **untyped kwargs) -> untyped
+end
+
+module Puppeteer::IfPresent
+  def if_present: (untyped target) { (untyped) -> untyped } -> untyped
+end
+
+class Puppeteer::Error < StandardError
+end
+
+class Puppeteer::TimeoutError < Puppeteer::Error
+end
+
+class Puppeteer::JSHandle
+  include Puppeteer::IfPresent
+
+  def self.create: (context: untyped, remote_object: untyped) -> Puppeteer::JSHandle
+
+  def initialize: (context: untyped, client: untyped, remote_object: untyped) -> void
+
+  attr_reader context: untyped
+  attr_reader remote_object: untyped
+
+  def execution_context: () -> untyped
+  def evaluate: (untyped page_function, *untyped args) -> untyped
+  def evaluate_handle: (untyped page_function, *untyped args) -> Puppeteer::JSHandle
+  def property: (String name) -> Puppeteer::JSHandle
+  def []: (String name) -> Puppeteer::JSHandle
+  def properties: () -> Hash[String, Puppeteer::JSHandle]
+  def json_value: () -> untyped
+  def as_element: () -> Puppeteer::ElementHandle?
+  def dispose: () -> void
+  def disposed?: () -> bool
+  def to_s: () -> String
+  def inspect: () -> String
+end
+
+
+class Puppeteer::ElementHandle::Point
+  def initialize: (x: Numeric, y: Numeric) -> void
+  def +: (Puppeteer::ElementHandle::Point other) -> Puppeteer::ElementHandle::Point
+  def /: (Numeric num) -> Puppeteer::ElementHandle::Point
+  def ==: (untyped other) -> bool
+  attr_reader x: Numeric
+  attr_reader y: Numeric
+end
+
+class Puppeteer::ElementHandle::Offset
+  def initialize: (x: Numeric, y: Numeric) -> void
+  def self.from: (Puppeteer::ElementHandle::Offset | Hash[Symbol, Numeric] | nil offset) -> Puppeteer::ElementHandle::Offset?
+  attr_reader x: Numeric
+  attr_reader y: Numeric
+end
+
+class Puppeteer::ElementHandle::BoundingBox
+  def initialize: (x: Numeric, y: Numeric, width: Numeric, height: Numeric) -> void
+  attr_reader x: Numeric
+  attr_reader y: Numeric
+  attr_reader width: Numeric
+  attr_reader height: Numeric
+end
+
+class Puppeteer::ElementHandle::BoxModel
+  def initialize: (Hash[String, untyped] result_model, offset: Puppeteer::ElementHandle::Point) -> void
+  attr_reader content: Array[Puppeteer::ElementHandle::Point]
+  attr_reader padding: Array[Puppeteer::ElementHandle::Point]
+  attr_reader border: Array[Puppeteer::ElementHandle::Point]
+  attr_reader margin: Array[Puppeteer::ElementHandle::Point]
+  attr_reader width: Numeric
+  attr_reader height: Numeric
+end
+
+class Puppeteer::FileChooser
+  def initialize: (Puppeteer::ElementHandle element, Hash[String, untyped] event) -> void
+  def multiple?: () -> bool
+  def accept: (Array[String] file_paths) -> void
+  def cancel: () -> void
+end
+
+class Puppeteer::Geolocation
+  def initialize: (latitude: Numeric, longitude: Numeric, ?accuracy: Numeric) -> void
+  def to_h: () -> Hash[Symbol, Numeric]
+end
+
+class Puppeteer::Devices
+end
+
+class Puppeteer::Device
+  def initialize: (name: String, user_agent: String, viewport: Puppeteer::Viewport) -> void
+end
+
+class Puppeteer::BrowserContext
+  include Puppeteer::EventCallbackable
+
+  def initialize: (Puppeteer::Connection connection, Puppeteer::Browser browser, String? context_id) -> void
+  def ==: (untyped other) -> bool
+  def on: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def once: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def targets: () -> Array[Puppeteer::Target]
+  def wait_for_target: (predicate: Proc, ?timeout: Numeric?) -> Puppeteer::Target
+  def pages: () -> Array[Puppeteer::Page]
+  def incognito?: () -> bool
+  def closed?: () -> bool
+  def override_permissions: (String origin, Array[String] permissions) -> void
+  def clear_permission_overrides: () -> void
+  def new_page: () -> Puppeteer::Page
+  def browser: () -> Puppeteer::Browser
+  def close: () -> void
+end
+
+class Puppeteer::Frame
+end
+
+class Puppeteer::FrameManager
+  include Puppeteer::EventCallbackable
+
+  def initialize: (Puppeteer::CDPSession client, Puppeteer::Page page, bool ignore_https_errors, untyped timeout_settings) -> void
+  attr_reader client: Puppeteer::CDPSession
+  attr_reader timeout_settings: untyped
+  attr_reader network_manager: untyped
+
+  def navigate_frame: (Puppeteer::Frame frame, String url, ?referer: String?, ?timeout: Numeric?, ?wait_until: (String | Array[String] | nil)) -> Puppeteer::HTTPResponse?
+  def wait_for_frame_navigation: (Puppeteer::Frame frame, ?timeout: Numeric?, ?wait_until: (String | Array[String] | nil)) -> Puppeteer::HTTPResponse?
+  def handle_attached_to_target: (Puppeteer::Target target) -> void
+  def handle_detached_from_target: (Puppeteer::Target target) -> void
+  def handle_lifecycle_event: (Hash[String, untyped] event) -> void
+  def handle_frame_started_loading: (String frame_id) -> void
+  def handle_frame_stopped_loading: (String frame_id) -> void
+  def handle_frame_tree: (Puppeteer::CDPSession session, Hash[String, untyped] frame_tree) -> void
+  def page: () -> Puppeteer::Page
+  def main_frame: () -> Puppeteer::Frame
+  def frames: () -> Array[Puppeteer::Frame]
+  def frame: (String frame_id) -> Puppeteer::Frame?
+  def handle_frame_attached: (Puppeteer::CDPSession session, String frame_id, String? parent_frame_id) -> void
+  def handle_frame_navigated: (Hash[String, untyped] frame_payload) -> void
+  def handle_frame_navigated_within_document: (String frame_id, String url) -> void
+  def handle_frame_detached: (String frame_id, String reason) -> void
+  def handle_execution_context_created: (Hash[String, untyped] context_payload, Puppeteer::CDPSession session) -> void
+  def handle_execution_context_destroyed: (Integer execution_context_id, Puppeteer::CDPSession session) -> void
+  def handle_execution_contexts_cleared: (Puppeteer::CDPSession session) -> void
+  def execution_context_by_id: (Integer context_id, Puppeteer::CDPSession session) -> Puppeteer::ExecutionContext
+
+  private
+
+  def setup_listeners: (Puppeteer::CDPSession client) -> void
+  def init: (String target_id, ?Puppeteer::CDPSession cdp_session) -> void
+  def attach_child_frame: (Puppeteer::Frame parent_frame, String parent_frame_id, String frame_id, Puppeteer::CDPSession? session) -> void
+  def reattach_frame: (Puppeteer::Frame frame, String frame_id, bool is_main_frame, Hash[String, untyped] frame_payload) -> void
+  def ensure_isolated_world: (Puppeteer::CDPSession session, String name) -> void
+  def remove_frame_recursively: (Puppeteer::Frame frame) -> void
+  def assert_no_legacy_navigation_options: (wait_until: (String | Array[String] | nil)) -> void
+end
+
+class Puppeteer::HTTPResponse
+  def initialize: (untyped client, untyped request, Hash[String, untyped] response_payload, Hash[String, untyped]? extra_info) -> void
+  def ok?: () -> bool
+  def buffer: () -> String
+  def text: () -> String
+  def json: () -> untyped
+  def from_cache?: () -> bool
+  def from_service_worker?: () -> bool
+  def frame: () -> Puppeteer::Frame?
+
+  private
+
+  def parse_status_text_from_extra_info: (Hash[String, untyped]? extra_info) -> String?
+end
+
+class Puppeteer::NetworkCondition
+  def initialize: (download: Numeric, upload: Numeric, latency: Numeric) -> void
+  def self.new: (download: Numeric, upload: Numeric, latency: Numeric) -> Puppeteer::NetworkCondition
+end
+
+module Puppeteer::NetworkConditions
+  def slow_3g: () -> Puppeteer::NetworkCondition
+  def fast_3g: () -> Puppeteer::NetworkCondition
+
+  def self.slow_3g: () -> Puppeteer::NetworkCondition
+  def self.fast_3g: () -> Puppeteer::NetworkCondition
+end
+
+class Puppeteer::Target
+  class TargetInfo
+    def initialize: (Hash[String, untyped] options) -> void
+  end
+
+  def initialize: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, is_page_target_callback: Proc) -> void
+  def self.new: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, is_page_target_callback: Proc) -> Puppeteer::Target
+
+  def closed_callback: () -> void
+  def ignore_initialize_callback_promise: () -> void
+  def initialized?: () -> bool
+  def session: () -> Puppeteer::CDPSession?
+  def create_cdp_session: () -> Puppeteer::CDPSession
+  def target_manager: () -> untyped
+  def page: () -> Puppeteer::Page?
+  def url: () -> String
+  def type: () -> String
+  def raw_type: () -> String
+  def browser: () -> Puppeteer::Browser
+  def browser_context: () -> Puppeteer::BrowserContext
+  def opener: () -> Puppeteer::Target?
+  def handle_target_info_changed: (Puppeteer::Target::TargetInfo target_info) -> void
+
+  private
+
+  def handle_initialized: (bool success) -> bool
+end
+
+class Puppeteer::Page::Metrics
+  def initialize: (Hash[String, untyped] metrics_response) -> void
+  def []: (String key) -> untyped
+end
+
+class Puppeteer::Viewport
+  def initialize: (width: Integer, height: Integer, ?device_scale_factor: Numeric, ?is_mobile: bool, ?has_touch: bool, ?is_landscape: bool) -> void
+  attr_reader width: Integer
+  attr_reader height: Integer
+  attr_reader device_scale_factor: Numeric
+  def mobile?: () -> bool
+  def has_touch?: () -> bool
+  def landscape?: () -> bool
+  def merge: (?width: Integer?, ?height: Integer?, ?device_scale_factor: Numeric?, ?is_mobile: bool?, ?has_touch: bool?, ?is_landscape: bool?) -> Puppeteer::Viewport
+end
+
+class Puppeteer::WebSocketTransport
+  class ClosedError < Puppeteer::Error
+  end
+
+  def self.create: (String url) -> Puppeteer::WebSocketTransport
+  def initialize: (String url) -> void
+  def connect: () -> untyped
+  def send_text: (String message) -> void
+  def close: () -> void
+  def on_close: () { (untyped, untyped) -> untyped } -> void
+  def on_message: () { (String) -> untyped } -> void
+  def connected?: () -> bool
+  def closed?: () -> bool
+
+  private
+
+  def receive_loop: (untyped connection) -> void
+end
+
+class Puppeteer::Connection
+  include Puppeteer::DebugPrint
+  include Puppeteer::EventCallbackable
+
+  def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay) -> void
+  def closed?: () -> bool
+  def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection
+  def session: (String session_id) -> Puppeteer::CDPSession?
+  def url: () -> String
+  def send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
+  def async_send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
+  def generate_id: () { (Integer) -> untyped } -> untyped
+  def raw_send: (id: Integer, message: Hash[Symbol | String, untyped]) -> void
+  def on_close: () { (untyped, untyped) -> untyped } -> void
+  def on_message: () { (String) -> untyped } -> void
+  def dispose: () -> void
+  def auto_attached?: (String target_id) -> bool
+  def create_session: (untyped target_info, ?auto_attach_emulated: bool) -> Puppeteer::CDPSession
+
+  private
+
+  def sleep_before_handling_message: (Hash[String, untyped] message) -> void
+  def should_handle_synchronously?: (Hash[String, untyped] message) -> bool
+  def request_debug_printer: () -> untyped
+  def response_debug_printer: () -> untyped
+  def handle_message: (Hash[String, untyped] message) -> void
+  def handle_close: () -> void
+end
+
+class Puppeteer::CDPSession
+  include Puppeteer::DebugPrint
+  include Puppeteer::EventCallbackable
+
+  def initialize: (Puppeteer::Connection connection, String target_type, String session_id) -> void
+  def id: () -> String
+  attr_reader connection: Puppeteer::Connection
+  def mark_ready: () -> void
+  def wait_for_ready: () -> untyped
+  def send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
+  def async_send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
+  def handle_message: (Hash[Symbol | String, untyped] message) -> void
+  def detach: () -> void
+  def handle_closed: () -> void
+  def on: (String event_name) { (*untyped, **untyped) -> untyped } -> String
+  def once: (String event_name) { (*untyped, **untyped) -> untyped } -> String
+
+  private
+
+  def callback_with_message: (untyped callback, Hash[Symbol | String, untyped] message) -> void
+end
+
+class Puppeteer::BrowserRunner
+  def initialize: (String executable_path, Array[String] process_arguments, String user_data_dir, bool using_temp_user_data_dir) -> void
+  def start: (?executable_path: String?, ?ignore_default_args: Array[String]?, ?handle_SIGINT: bool?, ?handle_SIGTERM: bool?, ?handle_SIGHUP: bool?, ?timeout: Integer?, ?dumpio: bool?, ?env: Hash[String, String]?, ?pipe: bool?) -> void
+  def close: () -> void
+  def kill: () -> void
+  def setup_connection: (use_pipe: bool, timeout: Integer?, slow_mo: Integer?, preferred_revision: String?) -> Puppeteer::Connection
+
+  private
+
+  def wait_for_ws_endpoint: (Puppeteer::BrowserRunner::BrowserProcess browser_process, Numeric? timeout, String? preferred_revision) -> String
+
+  class BrowserProcess
+    def initialize: (Hash[String, String] env, String executable_path, Array[String]? args) -> void
+    def kill: () -> void
+    def dispose: () -> void
+    attr_reader stdout: untyped
+    attr_reader stderr: untyped
+    attr_reader spawnargs: Array[String]
+  end
+end
+
+class Puppeteer::HTTPRequest
+  include Puppeteer::DebugPrint
+  include Puppeteer::IfPresent
+
+  class InternalAccessor
+    def initialize: (Puppeteer::HTTPRequest request) -> void
+    def request_id: () -> untyped
+    def interception_id: () -> untyped
+    def response=: (untyped response) -> void
+    def redirect_chain: () -> Array[Puppeteer::HTTPRequest]
+    def failure_text=: (String? failure_text) -> void
+    def from_memory_cache=: (bool from_memory_cache) -> void
+    def from_memory_cache?: () -> bool
+  end
+
+  class InterceptResolutionState
+    def self.abort: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
+    def self.respond: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
+    def self.continue: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
+    def self.disabled: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
+    def self.none: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
+    def self.already_handled: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
+
+    def initialize: (action: String, priority: Integer?) -> void
+    def priority_unspecified?: () -> bool
+    attr_reader action: String
+    attr_reader priority: Integer?
+  end
+
+  class InterceptionNotEnabledError < Puppeteer::Error
+    def initialize: () -> void
+  end
+
+  class AlreadyHandledError < Puppeteer::Error
+    def initialize: () -> void
+  end
+
+  def initialize: (untyped client, untyped frame, untyped interception_id, untyped allow_interception, Hash[Symbol | String, untyped] event, Array[Puppeteer::HTTPRequest] redirect_chain) -> void
+  def inspect: () -> String
+  def continue_request_overrides: () -> Hash[Symbol, untyped]
+  def response_for_request: () -> untyped
+  def abort_error_reason: () -> untyped
+  def intercept_resolution_state: () -> Puppeteer::HTTPRequest::InterceptResolutionState
+  def intercept_resolution_handled?: () -> bool
+  def enqueue_intercept_action: (Proc pending_handler) -> void
+  def finalize_interceptions: () -> void
+  def navigation_request?: () -> bool
+  def redirect_chain: () -> Array[Puppeteer::HTTPRequest]
+  def failure: () -> untyped
+  def continue: (?url: String?, ?method: String?, ?post_data: String?, ?headers: Hash[String, String]?, ?priority: Integer?) -> void
+  def respond: (?status: Integer?, ?headers: Hash[String, String]?, ?content_type: String?, ?body: String?, ?priority: Integer?) -> void
+  def abort: (?error_code: Symbol, ?priority: Integer?) -> void
+
+  attr_reader internal: Puppeteer::HTTPRequest::InternalAccessor
+  attr_reader url: String
+  attr_reader resource_type: String
+  attr_reader post_data: untyped
+  attr_reader headers: Hash[String, String]
+  attr_reader response: untyped
+  attr_reader frame: untyped
+  attr_reader initiator: untyped
+
+  private
+
+  def assert_interception_allowed: () -> void
+  def assert_interception_not_handled: () -> void
+  def can_be_intercepted?: () -> bool
+  def headers_to_array: (Hash[Symbol | String, untyped]? headers) -> Array[Hash[Symbol, String | Symbol]]?
+  def continue_impl: (Hash[Symbol, untyped] overrides) -> void
+  def respond_impl: (?status: Integer?, ?headers: Hash[String, String]?, ?content_type: String?, ?body: String?) -> void
+  def abort_impl: (String error_reason) -> void
+end

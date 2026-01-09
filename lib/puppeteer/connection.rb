@@ -167,7 +167,7 @@ class Puppeteer::Connection
     #
     # So we have to know the message id in advance before send_text.
     #
-    payload = JSON.fast_generate(message.compact.merge(id: id))
+    payload = JSON.generate(message.compact.merge(id: id))
     @transport.send_text(payload)
     request_debug_printer.handle_payload(payload)
   end

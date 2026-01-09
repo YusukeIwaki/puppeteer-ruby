@@ -42,7 +42,7 @@ class Puppeteer::HTTPResponse
       port: response_payload['remotePort'],
     )
 
-    @status_text = parse_štatus_text_from_extra_info(extra_info) || response_payload['statusText']
+    @status_text = parse_status_text_from_extra_info(extra_info) || response_payload['statusText']
     @url = request.url
     @from_disk_cache = !!response_payload['fromDiskCache']
     @from_service_worker = !!response_payload['fromServiceWorker']
@@ -72,7 +72,7 @@ class Puppeteer::HTTPResponse
     "#<Puppeteer::HTTPRequest #{values.join(' ')}>"
   end
 
-  private def parse_štatus_text_from_extra_info(extra_info)
+  private def parse_status_text_from_extra_info(extra_info)
     return nil if !extra_info || !extra_info['headersText']
     first_line = extra_info['headersText'].split("\r").first
     return nil unless first_line

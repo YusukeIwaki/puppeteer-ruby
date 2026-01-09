@@ -251,7 +251,7 @@ RSpec.configure do |config|
       Puppeteer.launch(**options, &block)
     end
 
-    def with_test_state(incognito: nil, create_page: true, browser: nil)
+    def with_test_state(incognito: nil, create_page: true, browser: nil, &block)
       browser ||= $shared_browser or raise 'Shared browser not started'
       server = $shared_test_server
       https_server = $shared_https_test_server
@@ -270,7 +270,7 @@ RSpec.configure do |config|
       page = create_page ? context.new_page : nil
 
       begin
-        yield(page: page, server: server, https_server: https_server, browser: browser, context: context)
+        block.call(page: page, server: server, https_server: https_server, browser: browser, context: context)
       ensure
         page&.close unless page&.closed?
 

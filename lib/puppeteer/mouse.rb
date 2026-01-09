@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class Puppeteer::Mouse
   using Puppeteer::DefineAsyncMethod
 
@@ -19,8 +21,9 @@ class Puppeteer::Mouse
     FORWARD = 1 << 4
   end
 
-  # @param {Puppeteer.CDPSession} client
-  # @param keyboard [Puppeteer::Keyboard]
+  # @rbs client: Puppeteer::CDPSession -- CDP session
+  # @rbs keyboard: Puppeteer::Keyboard -- Keyboard instance
+  # @rbs return: void -- No return value
   def initialize(client, keyboard)
     @client = client
     @keyboard = keyboard
@@ -37,6 +40,7 @@ class Puppeteer::Mouse
     @dispatch_mutex = Mutex.new
   end
 
+  # @rbs return: void -- No return value
   def reset
     [
       [ButtonFlag::RIGHT, Button::RIGHT],
@@ -54,9 +58,10 @@ class Puppeteer::Mouse
 
   define_async_method :async_reset
 
-  # @param x [number]
-  # @param y [number]
-  # @param steps [number]
+  # @rbs x: Numeric -- X coordinate
+  # @rbs y: Numeric -- Y coordinate
+  # @rbs steps: Integer? -- Number of intermediate steps
+  # @rbs return: void -- No return value
   def move(x, y, steps: nil)
     move_steps = (steps || 1).to_i
 
@@ -93,9 +98,13 @@ class Puppeteer::Mouse
 
   define_async_method :async_move
 
-  # @param x [number]
-  # @param y [number]
-  # @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @rbs x: Numeric -- X coordinate
+  # @rbs y: Numeric -- Y coordinate
+  # @rbs delay: Numeric? -- Delay between down and up (ms)
+  # @rbs button: String? -- Mouse button
+  # @rbs click_count: Integer? -- Click count to report
+  # @rbs count: Integer? -- Number of click repetitions
+  # @rbs return: void -- No return value
   def click(x, y, delay: nil, button: nil, click_count: nil, count: nil)
     count ||= 1
     click_count ||= count
@@ -121,7 +130,9 @@ class Puppeteer::Mouse
 
   define_async_method :async_click
 
-  # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @rbs button: String? -- Mouse button
+  # @rbs click_count: Integer? -- Click count to report
+  # @rbs return: void -- No return value
   def down(button: nil, click_count: nil)
     button ||= Button::LEFT
     flag = button_flag(button)
@@ -145,7 +156,9 @@ class Puppeteer::Mouse
 
   define_async_method :async_down
 
-  # @param {!{button?: "left"|"right"|"middle", clickCount?: number}=} options
+  # @rbs button: String? -- Mouse button
+  # @rbs click_count: Integer? -- Click count to report
+  # @rbs return: void -- No return value
   def up(button: nil, click_count: nil)
     button ||= Button::LEFT
     flag = button_flag(button)
@@ -171,8 +184,9 @@ class Puppeteer::Mouse
 
   # Dispatches a `mousewheel` event.
   #
-  # @param delta_x [Integer]
-  # @param delta_y [Integer]
+  # @rbs delta_x: Numeric -- Scroll delta X
+  # @rbs delta_y: Numeric -- Scroll delta Y
+  # @rbs return: void -- No return value
   def wheel(delta_x: 0, delta_y: 0)
     current_state = state
     position = current_state[:position]
@@ -188,6 +202,9 @@ class Puppeteer::Mouse
     )
   end
 
+  # @rbs start: Puppeteer::ElementHandle::Point -- Drag start point
+  # @rbs target: Puppeteer::ElementHandle::Point -- Drag end point
+  # @rbs return: Hash[String, untyped] -- Drag data payload
   def drag(start, target)
     promise = Async::Promise.new.tap do |future|
       @client.once('Input.dragIntercepted') do |event|
@@ -200,6 +217,9 @@ class Puppeteer::Mouse
     promise.wait
   end
 
+  # @rbs target: Puppeteer::ElementHandle::Point -- Drag target point
+  # @rbs data: Hash[String, untyped] -- Drag data payload
+  # @rbs return: void -- No return value
   def drag_enter(target, data)
     @client.send_message('Input.dispatchDragEvent',
       type: 'dragEnter',
@@ -210,6 +230,9 @@ class Puppeteer::Mouse
     )
   end
 
+  # @rbs target: Puppeteer::ElementHandle::Point -- Drag target point
+  # @rbs data: Hash[String, untyped] -- Drag data payload
+  # @rbs return: void -- No return value
   def drag_over(target, data)
     @client.send_message('Input.dispatchDragEvent',
       type: 'dragOver',
@@ -220,6 +243,9 @@ class Puppeteer::Mouse
     )
   end
 
+  # @rbs target: Puppeteer::ElementHandle::Point -- Drag target point
+  # @rbs data: Hash[String, untyped] -- Drag data payload
+  # @rbs return: void -- No return value
   def drop(target, data)
     @client.send_message('Input.dispatchDragEvent',
       type: 'drop',
@@ -230,6 +256,10 @@ class Puppeteer::Mouse
     )
   end
 
+  # @rbs start: Puppeteer::ElementHandle::Point -- Drag start point
+  # @rbs target: Puppeteer::ElementHandle::Point -- Drag end point
+  # @rbs delay: Numeric? -- Delay before drop (ms)
+  # @rbs return: void -- No return value
   def drag_and_drop(start, target, delay: nil)
     data = drag(start, target)
     drag_enter(target, data)
@@ -262,7 +292,9 @@ class Puppeteer::Mouse
     end
   end
 
-  private def with_transaction
+  # @rbs block: Proc -- Block receiving state update callback
+  # @rbs return: untyped -- Block result
+  private def with_transaction(&block)
     transaction = {}
     @state_mutex.synchronize do
       @transactions << transaction
@@ -274,7 +306,7 @@ class Puppeteer::Mouse
           transaction.merge!(updates)
         end
       end
-      yield update_state
+      block.call(update_state)
 
       @state_mutex.synchronize do
         @base_state = merge_state(@base_state, transaction)

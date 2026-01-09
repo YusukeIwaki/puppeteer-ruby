@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 # providing #valueFromRemoteObject, #releaseObject
 class Puppeteer::RemoteObject
   include Puppeteer::DebugPrint
@@ -143,6 +145,8 @@ class Puppeteer::RemoteObject
     normalize_serialized_value(@value)
   end
 
+  # @rbs value: untyped -- Serialized value from JavaScript
+  # @rbs return: untyped -- Normalized Ruby value
   private def normalize_serialized_value(value)
     case value
     when Array
@@ -165,6 +169,8 @@ class Puppeteer::RemoteObject
     end
   end
 
+  # @rbs value: String -- Special number string
+  # @rbs return: Float | String -- Parsed number or original value
   private def unserializable_number(value)
     case value
     when '-0'
@@ -180,17 +186,21 @@ class Puppeteer::RemoteObject
     end
   end
 
+  # @rbs description: String -- Regexp description string
+  # @rbs return: [String, String] -- Source and flags tuple
   private def parse_regexp(description)
     return [description, ''] unless description.start_with?('/')
 
     last_slash = description.rindex('/')
     return [description, ''] unless last_slash && last_slash > 0
 
-    source = description[1...last_slash]
-    flags = description[(last_slash + 1)..]
-    [source, flags || '']
+    source = description[1...last_slash] || ''
+    flags = description[(last_slash + 1)..] || ''
+    [source, flags]
   end
 
+  # @rbs flags: String -- Regexp flags string
+  # @rbs return: Integer -- Ruby Regexp options
   private def regexp_options(flags)
     options = 0
     options |= Regexp::IGNORECASE if flags.include?('i')

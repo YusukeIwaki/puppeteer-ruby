@@ -33,3 +33,19 @@ jobs:
       run: |
         bundle exec ruby development/generate_api_coverage.rb
         git diff --exit-code
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.4
+        bundler-cache: true
+    - name: Generate RBS files
+      run: bundle exec rake rbs
+    - name: Validate RBS syntax
+      run: rbs -I sig parse sig/**/*.rbs
+    - name: Run Steep type check
+      run: bundle exec steep check

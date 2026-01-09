@@ -12,9 +12,11 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/YusukeIwaki/puppeteer-ruby'
 
   spec.files         = Dir.chdir(File.expand_path(__dir__)) do
-    `git ls-files -z`.split("\x0").reject do |f|
+    git_files = `git ls-files -z`.split("\x0").reject do |f|
       f.match(%r{^(test|spec|features)/}) || f.include?(".git") || f.include?(".circleci") || f.start_with?("development/")
     end
+    sig_files = Dir.glob("sig/**/*.rbs")
+    git_files + sig_files
   end
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
@@ -34,9 +36,10 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rollbar'
   spec.add_development_dependency 'rspec', '~> 3.13.2'
   spec.add_development_dependency 'rspec_junit_formatter' # for CircleCI.
+  spec.add_development_dependency 'rbs-inline'
   spec.add_development_dependency 'rubocop', '~> 1.50.0'
   spec.add_development_dependency 'rubocop-rspec', '~> 2.17.1'
   spec.add_development_dependency 'sinatra', '< 4.0.0'
+  spec.add_development_dependency 'steep'
   spec.add_development_dependency 'webrick'
-  spec.add_development_dependency 'yard'
 end

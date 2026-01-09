@@ -38,6 +38,39 @@
 - Custom errors inherit from `Puppeteer::Error`.
 - Use `Puppeteer::AsyncUtils` for async operations; see `CLAUDE/concurrency.md` for patterns.
 
+## Type Annotations (rbs-inline)
+
+- Add `# rbs_inline: enabled` at the top of the file (after `# frozen_string_literal: true` if present).
+- Use doc-style `# @rbs` annotations for parameters and return types.
+- Always include descriptions with `--` (example: `# @rbs url: String -- Target URL`).
+- Use `A?` for nullable types and `A | B | nil` for unions that include nil.
+- Avoid `@rbs!` blocks (RubyMine doesn't recognize them).
+- Avoid `**options` in public APIs; RubyMine shows it as `untyped`. Prefer explicit keyword args.
+
+**Generate signatures:**
+- `bundle exec rake rbs` (writes to `sig/`, which is gitignored)
+- `bundle exec steep check` (after generating RBS)
+
+**Manually maintained signatures (tracked):**
+- `sig/_external.rbs` for external dependency stubs.
+- `sig/_supplementary.rbs` for types rbs-inline cannot infer (e.g., `extend self`, singleton helpers).
+
+**Example:**
+```ruby
+# frozen_string_literal: true
+# rbs_inline: enabled
+
+class Example
+  attr_reader :name #: String
+
+  # @rbs name: String -- The name to set
+  # @rbs return: void -- No return value
+  def initialize(name)
+    @name = name
+  end
+end
+```
+
 ## Testing Guidelines
 
 - Integration tests are `spec/integration/` with `type: :puppeteer` helpers.
