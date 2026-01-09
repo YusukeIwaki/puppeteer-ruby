@@ -37,7 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 3.13.2'
   spec.add_development_dependency 'rspec_junit_formatter' # for CircleCI.
   spec.add_development_dependency 'rbs-inline'
-  spec.add_development_dependency 'rubocop', '~> 1.50.0'
+  spec.add_development_dependency 'rubocop', '~> 1.82.1'
   spec.add_development_dependency 'rubocop-rspec', '~> 2.17.1'
   spec.add_development_dependency 'sinatra', '< 5.0.0'
   spec.add_development_dependency 'steep'
