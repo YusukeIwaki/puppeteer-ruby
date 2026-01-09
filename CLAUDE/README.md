@@ -11,6 +11,7 @@ This directory contains in-depth documentation for AI agents and developers work
 | [cdp_protocol.md](./cdp_protocol.md) | Chrome DevTools Protocol usage |
 | [concurrency.md](./concurrency.md) | Concurrency model and migration plans |
 | [porting_puppeteer.md](./porting_puppeteer.md) | Guide for porting from TypeScript Puppeteer |
+| [rbs_type_checking.md](./rbs_type_checking.md) | RBS type annotations and Steep type checking |
 
 ## Quick Navigation
 

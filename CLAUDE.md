@@ -44,6 +44,9 @@ bundle exec rubocop
 
 # Auto-fix RuboCop issues
 bundle exec rubocop -a
+
+# Run Steep type check
+bundle exec steep check
 ```
 
 ## Architecture
@@ -194,7 +197,8 @@ end
 
 1. Run tests: `bundle exec rspec`
 2. Run RuboCop: `bundle exec rubocop`
-3. Update `docs/api_coverage.md` if adding new API methods
+3. Run type check: `bundle exec steep check`
+4. Update `docs/api_coverage.md` if adding new API methods
 
 ### Pull Request Guidelines
 
@@ -217,3 +221,4 @@ For in-depth information on specific topics, see the [CLAUDE/](./CLAUDE/) direct
 - [cdp_protocol.md](./CLAUDE/cdp_protocol.md) - CDP protocol details
 - [concurrency.md](./CLAUDE/concurrency.md) - Concurrency patterns
 - [porting_puppeteer.md](./CLAUDE/porting_puppeteer.md) - Guide for porting from TypeScript
+- [rbs_type_checking.md](./CLAUDE/rbs_type_checking.md) - RBS type annotations and Steep type checking
