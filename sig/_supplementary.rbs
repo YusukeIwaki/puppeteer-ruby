@@ -68,38 +68,6 @@ class Puppeteer::JSHandle
   def inspect: () -> String
 end
 
-class Puppeteer::ExecutionContext
-  def initialize: (Puppeteer::CDPSession client, Hash[String, untyped] context_payload, untyped world) -> void
-  attr_reader client: Puppeteer::CDPSession
-  attr_reader world: untyped
-
-  def evaluate: (String page_function, *untyped args) -> untyped
-  def evaluate_handle: (String page_function, *untyped args) -> Puppeteer::JSHandle
-
-  private
-
-  def _context_id: () -> Integer
-  def _context_name: () -> String?
-  def evaluate_internal: (bool return_by_value, String page_function, *untyped args) -> untyped
-end
-
-class Puppeteer::RemoteObject
-  def initialize: (Hash[String, untyped] payload) -> void
-  attr_reader sub_type: String?
-
-  def evaluate_self: (Puppeteer::CDPSession client) -> Puppeteer::RemoteObject?
-  def type_str: () -> String?
-  def properties: (Puppeteer::CDPSession client) -> Hash[String, untyped]
-  def node_info: (Puppeteer::CDPSession client) -> Hash[String, untyped]
-  def content_quads: (Puppeteer::CDPSession client) -> Hash[String, untyped]
-  def box_model: (Puppeteer::CDPSession client) -> Hash[String, untyped]?
-  def query_ax_tree: (Puppeteer::CDPSession client, ?accessible_name: String?, ?role: String?) -> Array[Hash[String, untyped]]
-  def value: () -> untyped
-  def release: (Puppeteer::CDPSession client) -> void
-  def converted_arg: () -> Hash[Symbol, untyped]
-  def set_file_input_files: (Puppeteer::CDPSession client, Array[String] files, untyped backend_node_id) -> void
-  def scroll_into_view_if_needed: (Puppeteer::CDPSession client) -> void
-end
 
 class Puppeteer::ElementHandle::Point
   def initialize: (x: Numeric, y: Numeric) -> void

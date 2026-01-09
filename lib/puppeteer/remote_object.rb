@@ -194,9 +194,9 @@ class Puppeteer::RemoteObject
     last_slash = description.rindex('/')
     return [description, ''] unless last_slash && last_slash > 0
 
-    source = description[1...last_slash]
-    flags = description[(last_slash + 1)..]
-    [source, flags || '']
+    source = description[1...last_slash] || ''
+    flags = description[(last_slash + 1)..] || ''
+    [source, flags]
   end
 
   # @rbs flags: String -- Regexp flags string
