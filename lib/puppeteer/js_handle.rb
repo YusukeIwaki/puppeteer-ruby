@@ -106,17 +106,15 @@ class Puppeteer::JSHandle
   end
 
   def json_value
-    # original logic was:
-    #   if (this._remoteObject.objectId) {
-    #     const response = await this._client.send('Runtime.callFunctionOn', {
-    #       functionDeclaration: 'function() { return this; }',
-    #       objectId: this._remoteObject.objectId,
-    #       returnByValue: true,
-    #       awaitPromise: true,
-    #     });
-    #     return helper.valueFromRemoteObject(response.result);
+    # Node.js Puppeteer:
+    #   if (!this.#remoteObject.objectId) {
+    #     return valueFromRemoteObject(this.#remoteObject);
     #   }
-    #   return helper.valueFromRemoteObject(this._remoteObject);
+    #   const value = await this.evaluate(object => object);
+    #   if (value === undefined) {
+    #     throw new Error('Could not serialize referenced object');
+    #   }
+    #   return value;
     if !@remote_object.object_id?
       return @remote_object.value
     end
