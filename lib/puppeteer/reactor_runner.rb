@@ -180,14 +180,30 @@ module Puppeteer
       value
     end
 
-    def unwrap(value)
+    def unwrap(value, seen = nil)
+      seen ||= {}
+
       case value
       when Proxy
         value.__getobj__
       when Array
-        value.map { |item| unwrap(item) }
+        object_id = value.object_id
+        return seen[object_id] if seen.key?(object_id)
+
+        result = []
+        seen[object_id] = result
+        value.each { |item| result << unwrap(item, seen) }
+        result
       when Hash
-        value.transform_values { |item| unwrap(item) }
+        object_id = value.object_id
+        return seen[object_id] if seen.key?(object_id)
+
+        result = {}
+        seen[object_id] = result
+        value.each do |key, item|
+          result[unwrap(key, seen)] = unwrap(item, seen)
+        end
+        result
       else
         value
       end

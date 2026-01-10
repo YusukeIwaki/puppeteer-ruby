@@ -1,5 +1,7 @@
 # rbs_inline: enabled
 
+require 'time'
+
 # providing #valueFromRemoteObject, #releaseObject
 class Puppeteer::RemoteObject
   include Puppeteer::DebugPrint
@@ -19,7 +21,17 @@ class Puppeteer::RemoteObject
     @description = payload['description']
   end
 
-  attr_reader :sub_type
+  attr_reader :sub_type, :type, :description
+
+  # @rbs return: bool
+  def object_id?
+    !@object_id.nil?
+  end
+
+  # @rbs return: String?
+  def object_id_value
+    @object_id
+  end
 
   # @return [Future<Puppeteer::RemoteObject|nil>]
   def evaluate_self(client)
@@ -37,14 +49,23 @@ class Puppeteer::RemoteObject
     #   }
 
     if @object_id
-      params = {
-        'functionDeclaration': 'function() { return this; }',
-        'objectId': @object_id,
-        'returnByValue': true,
-        'awaitPromise': true,
-      }
-      response = client.send_message('Runtime.callFunctionOn', params)
-      Puppeteer::RemoteObject.new(response['result'])
+      begin
+        params = {
+          'functionDeclaration': 'function() { return this; }',
+          'objectId': @object_id,
+          'returnByValue': true,
+          'awaitPromise': true,
+        }
+        response = client.send_message('Runtime.callFunctionOn', params)
+        Puppeteer::RemoteObject.new(response['result'])
+      rescue Puppeteer::Connection::ProtocolError => err
+        if err.message.include?('Object reference chain is too long') ||
+          err.message.include?("Object couldn't be returned by value")
+
+          return Puppeteer::RemoteObject.new('type' => 'undefined')
+        end
+        raise
+      end
     else
       nil
     end
@@ -59,7 +80,10 @@ class Puppeteer::RemoteObject
     #     return 'JSHandle@' + type;
     #   }
     if @object_id
-      @sub_type || @type
+      return @sub_type if @sub_type
+      return 'window' if @type == 'object' && @description == 'Window'
+
+      @type
     else
       nil
     end
@@ -137,6 +161,10 @@ class Puppeteer::RemoteObject
       end
     end
 
+    if @sub_type == 'date'
+      return parse_date_value(@value)
+    end
+
     if @sub_type == 'regexp' && @description
       source, flags = parse_regexp(@description)
       return Regexp.new(source, regexp_options(flags))
@@ -197,6 +225,21 @@ class Puppeteer::RemoteObject
     source = description[1...last_slash] || ''
     flags = description[(last_slash + 1)..] || ''
     [source, flags]
+  end
+
+  # @rbs value: untyped -- Date value from CDP
+  # @rbs return: Time? -- Parsed Ruby time
+  private def parse_date_value(value)
+    case value
+    when String
+      Time.iso8601(value)
+    when Numeric
+      Time.at(value / 1000.0)
+    else
+      nil
+    end
+  rescue ArgumentError
+    value
   end
 
   # @rbs flags: String -- Regexp flags string

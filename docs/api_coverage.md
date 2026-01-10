@@ -251,7 +251,7 @@
 * getProperty => `#[]`
 * jsonValue => `#json_value`
 * remoteObject => `#remote_object`
-* ~~toString~~
+* toString => `#to_s`
 
 ## Keyboard
 
