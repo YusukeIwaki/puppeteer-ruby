@@ -33,44 +33,6 @@ class Puppeteer::RemoteObject
     @object_id
   end
 
-  # @return [Future<Puppeteer::RemoteObject|nil>]
-  def evaluate_self(client)
-    # ported logic from JSHandle#json_value.
-
-    # original logic:
-    #   if (this._remoteObject.objectId) {
-    #     const response = await this._client.send('Runtime.callFunctionOn', {
-    #       functionDeclaration: 'function() { return this; }',
-    #       objectId: this._remoteObject.objectId,
-    #       returnByValue: true,
-    #       awaitPromise: true,
-    #     });
-    #     return helper.valueFromRemoteObject(response.result);
-    #   }
-
-    if @object_id
-      begin
-        params = {
-          'functionDeclaration': 'function() { return this; }',
-          'objectId': @object_id,
-          'returnByValue': true,
-          'awaitPromise': true,
-        }
-        response = client.send_message('Runtime.callFunctionOn', params)
-        Puppeteer::RemoteObject.new(response['result'])
-      rescue Puppeteer::Connection::ProtocolError => err
-        if err.message.include?('Object reference chain is too long') ||
-          err.message.include?("Object couldn't be returned by value")
-
-          return Puppeteer::RemoteObject.new('type' => 'undefined')
-        end
-        raise
-      end
-    else
-      nil
-    end
-  end
-
   # @return [String]
   def type_str
     # used in JSHandle#to_s

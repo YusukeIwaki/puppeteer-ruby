@@ -106,12 +106,31 @@ class Puppeteer::JSHandle
   end
 
   def json_value
+    # original logic was:
+    #   if (this._remoteObject.objectId) {
+    #     const response = await this._client.send('Runtime.callFunctionOn', {
+    #       functionDeclaration: 'function() { return this; }',
+    #       objectId: this._remoteObject.objectId,
+    #       returnByValue: true,
+    #       awaitPromise: true,
+    #     });
+    #     return helper.valueFromRemoteObject(response.result);
+    #   }
+    #   return helper.valueFromRemoteObject(this._remoteObject);
+    if !@remote_object.object_id?
+      return @remote_object.value
+    end
+
     if @remote_object.sub_type == 'date'
       iso_value = evaluate('(object) => object.toISOString()')
       return Time.iso8601(iso_value) if iso_value
     end
 
-    @remote_object.evaluate_self(@client)&.value || @remote_object.value
+    value = evaluate('(object) => object')
+    if value.nil?
+      raise Puppeteer::Error.new('Could not serialize referenced object')
+    end
+    value
   end
 
   def as_element
