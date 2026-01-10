@@ -100,6 +100,7 @@ class RubyMethodName
     '$x' => :Sx,
     'type' => :type_text,
     'getProperty' => :[],
+    'toString' => :to_s,
   }.freeze
 
   def candidates
