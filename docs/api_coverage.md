@@ -130,11 +130,16 @@
 * drop
 * focus
 * hover
+* isHidden => `#hidden?`
 * isIntersectingViewport => `#intersecting_viewport?`
+* isVisible => `#visible?`
 * press
 * screenshot
 * select
 * tap
+* touchEnd => `#touch_end`
+* touchMove => `#touch_move`
+* touchStart => `#touch_start`
 * toElement => `#to_element`
 * type => `#type_text`
 * uploadFile => `#upload_file`
@@ -391,9 +396,12 @@
 ## TimeoutError
 
 
-## ~~Touchscreen~~
+## Touchscreen
 
-* ~~tap~~
+* tap
+* touchEnd => `#touch_end`
+* touchMove => `#touch_move`
+* touchStart => `#touch_start`
 
 ## Tracing
 

@@ -316,7 +316,8 @@ class Puppeteer::Page
     @frame_manager.main_frame
   end
 
-  attr_reader :touch_screen, :coverage, :tracing, :accessibility
+  attr_reader :touchscreen, :coverage, :tracing, :accessibility
+  alias_method :touch_screen, :touchscreen
 
   # @rbs block: Proc? -- Optional block for instance_eval
   # @rbs return: Puppeteer::Keyboard -- Keyboard instance

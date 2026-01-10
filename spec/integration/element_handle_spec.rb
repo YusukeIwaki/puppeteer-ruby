@@ -2,6 +2,36 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::ElementHandle do
   include_context 'with test state'
+
+  def initialize_touch_event_report(page)
+    events = []
+    page.expose_function('reportTouchEvent', -> (event) { events << event })
+    page.evaluate(<<~JAVASCRIPT)
+    () => {
+      document.body.addEventListener('touchstart', reportTouchEvent);
+      document.body.addEventListener('touchmove', reportTouchEvent);
+      document.body.addEventListener('touchend', reportTouchEvent);
+      function reportTouchEvent(e) {
+        const toReport = {
+          changed: getReportableTouchList(e.changedTouches),
+          touches: getReportableTouchList(e.touches),
+        };
+        window.reportTouchEvent(toReport);
+      }
+      function getReportableTouchList(list) {
+        return [...list].map(t => [t.pageX, t.pageY]);
+      }
+    }
+    JAVASCRIPT
+    events
+  end
+
+  def wait_for_event_count(events, count)
+    Timeout.timeout(1) do
+      sleep 0.01 until events.length >= count
+    end
+  end
+
   describe '#bounding_box' do
     it 'should work', sinatra: true do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)
@@ -129,6 +159,81 @@ RSpec.describe Puppeteer::ElementHandle do
       element = page.query_selector('div')
       expect(element.box_model).to be_nil
     end
+
+    it 'should correctly compute box model with offsets' do
+      border = 10
+      padding = 11
+      margin = 12
+      width = 200
+      height = 100
+      vertical_offset = 100
+      horizontal_offset = 100
+      page.content = <<~HTML
+        <div
+          style="position:absolute; left: #{horizontal_offset}px; top: #{vertical_offset}px; width: #{width}px; height: #{height}px; border: #{border}px solid green; padding: #{padding}px; margin: #{margin}px;"
+          id="box"
+        ></div>
+      HTML
+
+      element = page.query_selector('#box')
+      box_model = element.box_model
+
+      make_quad = lambda do |top_left, bottom_right|
+        [
+          { x: top_left[:x], y: top_left[:y] },
+          { x: bottom_right[:x], y: top_left[:y] },
+          { x: bottom_right[:x], y: bottom_right[:y] },
+          { x: top_left[:x], y: bottom_right[:y] },
+        ]
+      end
+
+      quad_points = lambda do |quad|
+        quad.map { |point| { x: point.x, y: point.y } }
+      end
+
+      expect(quad_points.call(box_model.content)).to eq(make_quad.call(
+        {
+          x: horizontal_offset + padding + margin + border,
+          y: vertical_offset + padding + margin + border,
+        },
+        {
+          x: horizontal_offset + width + padding + margin + border,
+          y: vertical_offset + height + padding + margin + border,
+        },
+      ))
+      expect(quad_points.call(box_model.padding)).to eq(make_quad.call(
+        {
+          x: horizontal_offset + margin + border,
+          y: vertical_offset + margin + border,
+        },
+        {
+          x: horizontal_offset + width + padding * 2 + margin + border,
+          y: vertical_offset + padding * 2 + height + margin + border,
+        },
+      ))
+      expect(quad_points.call(box_model.border)).to eq(make_quad.call(
+        {
+          x: horizontal_offset + margin,
+          y: vertical_offset + margin,
+        },
+        {
+          x: horizontal_offset + width + padding * 2 + margin + border * 2,
+          y: vertical_offset + padding * 2 + height + margin + border * 2,
+        },
+      ))
+      expect(quad_points.call(box_model.margin)).to eq(make_quad.call(
+        {
+          x: horizontal_offset,
+          y: vertical_offset,
+        },
+        {
+          x: horizontal_offset + width + padding * 2 + margin * 2 + border * 2,
+          y: vertical_offset + padding * 2 + height + margin * 2 + border * 2,
+        },
+      ))
+      expect(box_model.width).to eq(width + padding * 2 + border * 2)
+      expect(box_model.height).to eq(height + padding * 2 + border * 2)
+    end
   end
 
   describe '#contentFrame' do
@@ -143,11 +248,54 @@ RSpec.describe Puppeteer::ElementHandle do
     end
   end
 
+  describe '#visible? and #hidden?' do
+    it 'should work' do
+      page.content = '<div style="display: none">text</div>'
+      element = page.wait_for_selector('div')
+      expect(element.visible?).to eq(false)
+      expect(element.hidden?).to eq(true)
+
+      element.evaluate('(element) => element.style.removeProperty(\'display\')')
+      expect(element.visible?).to eq(true)
+      expect(element.hidden?).to eq(false)
+    end
+  end
+
   describe '#click' do
     it 'should work', sinatra: true do
       page.goto("#{server_prefix}/input/button.html")
       page.query_selector('button').click
       expect(page.evaluate('() => globalThis.result')).to eq('Clicked')
+    end
+
+    it 'should return Point data' do
+      clicks = []
+      page.expose_function('reportClick', -> (x, y) { clicks << [x, y] })
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+        document.body.addEventListener('click', (e) => {
+          window.reportClick(e.clientX, e.clientY);
+        });
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+      div_handle.click
+      div_handle.click(offset: { x: 10, y: 15 })
+
+      Timeout.timeout(1) do
+        until clicks.count == 2
+          sleep 0.01
+        end
+      end
+      expect(clicks[0]).to eq([45 + 60, 45 + 30]) # margin + middle point offset
+      expect(clicks[1]).to eq([30 + 10, 30 + 15]) # margin + offset
     end
 
     it 'should work for Shadow DOM v1', sinatra: true do
@@ -189,10 +337,12 @@ RSpec.describe Puppeteer::ElementHandle do
       br = page.query_selector('br')
       expect { br.click }.to raise_error(/Node is either not visible or not an HTMLElement/)
     end
+  end
 
-    it 'should work with offset' do
-      clicks = []
-      page.expose_function('reportClick', -> (x, y) { clicks << [x, y] })
+  describe '#touch_start' do
+    it 'should work' do
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500, has_touch: true)
+      events = initialize_touch_event_report(page)
 
       page.evaluate(<<~JAVASCRIPT)
       () => {
@@ -201,23 +351,168 @@ RSpec.describe Puppeteer::ElementHandle do
         document.body.innerHTML = `
           <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
         `;
-        document.body.addEventListener('click', (e) => {
-          window.reportClick(e.clientX, e.clientY);
-        });
       }
       JAVASCRIPT
 
       div_handle = page.query_selector('div')
-      div_handle.click
-      div_handle.click(offset: { x: 10, y: 15 })
+      touch = div_handle.touch_start
+      wait_for_event_count(events, 1)
 
-      Timeout.timeout(1) do
-        until clicks.count == 2
-          sleep 0.01
-        end
-      end
-      expect(clicks[0]).to eq([45 + 60, 45 + 30]) # margin + middle point offset
-      expect(clicks[1]).to eq([30 + 10, 30 + 15]) # margin + offset
+      expected_touch_location = [45 + 60, 45 + 30] # margin + middle point offset
+      expect(events).to eq([
+        {
+          'changed' => [expected_touch_location],
+          'touches' => [expected_touch_location],
+        },
+      ])
+      expect(touch).to be_a(Puppeteer::TouchHandle)
+    end
+
+    it 'should work with the returned Touch' do
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500, has_touch: true)
+      events = initialize_touch_event_report(page)
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+      touch = div_handle.touch_start
+      touch.move(150, 150)
+
+      wait_for_event_count(events, 2)
+
+      expected_touch_location = [45 + 60, 45 + 30] # margin + middle point offset
+      expect(events).to eq([
+        {
+          'changed' => [expected_touch_location],
+          'touches' => [expected_touch_location],
+        },
+        {
+          'changed' => [[150, 150]],
+          'touches' => [[150, 150]],
+        },
+      ])
+    end
+  end
+
+  describe '#touch_move' do
+    it 'should work' do
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500, has_touch: true)
+      events = initialize_touch_event_report(page)
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+
+      page.touchscreen.touch_start(200, 200)
+      div_handle.touch_move
+
+      wait_for_event_count(events, 2)
+
+      expected_touch_location = [45 + 60, 45 + 30] # margin + middle point offset
+      expect(events).to eq([
+        {
+          'changed' => [[200, 200]],
+          'touches' => [[200, 200]],
+        },
+        {
+          'changed' => [expected_touch_location],
+          'touches' => [expected_touch_location],
+        },
+      ])
+    end
+
+    it 'should work with a pre-existing Touch' do
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500, has_touch: true)
+      events = initialize_touch_event_report(page)
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+      page.touchscreen.touch_start(200, 200)
+      second_touch = page.touchscreen.touch_start(200, 100)
+      div_handle.touch_move(second_touch)
+
+      wait_for_event_count(events, 3)
+
+      expected_touch_location = [45 + 60, 45 + 30] # margin + middle point offset
+      expect(events).to eq([
+        {
+          'changed' => [[200, 200]],
+          'touches' => [[200, 200]],
+        },
+        {
+          'changed' => [[200, 100]],
+          'touches' => [
+            [200, 200],
+            [200, 100],
+          ],
+        },
+        {
+          'changed' => [expected_touch_location],
+          'touches' => [
+            [200, 200],
+            expected_touch_location,
+          ],
+        },
+      ])
+    end
+  end
+
+  describe '#touch_end' do
+    it 'should work' do
+      page.viewport = Puppeteer::Viewport.new(width: 500, height: 500, has_touch: true)
+      events = initialize_touch_event_report(page)
+
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        document.body.style.padding = '0';
+        document.body.style.margin = '0';
+        document.body.innerHTML = `
+          <div style="cursor: pointer; width: 120px; height: 60px; margin: 30px; padding: 15px;"></div>
+        `;
+      }
+      JAVASCRIPT
+
+      div_handle = page.query_selector('div')
+
+      page.touchscreen.touch_start(100, 100)
+      div_handle.touch_end
+      wait_for_event_count(events, 2)
+
+      expect(events).to eq([
+        {
+          'changed' => [[100, 100]],
+          'touches' => [[100, 100]],
+        },
+        {
+          'changed' => [[100, 100]],
+          'touches' => [],
+        },
+      ])
     end
   end
 
@@ -248,6 +543,48 @@ RSpec.describe Puppeteer::ElementHandle do
         x: 30 + 10, # margin + offset
         y: 30 + 15, # margin + offset
       })
+    end
+
+    it 'should not work if click box is not visible' do
+      page.content = '<button style="width: 10px; height: 10px; position: absolute; left: -20px"></button>'
+      handle = page.query_selector('button')
+      expect { handle.clickable_point }.to raise_error(Puppeteer::ElementHandle::ElementNotVisibleError)
+
+      page.content = '<button style="width: 10px; height: 10px; position: absolute; right: -20px"></button>'
+      handle = page.query_selector('button')
+      expect { handle.clickable_point }.to raise_error(Puppeteer::ElementHandle::ElementNotVisibleError)
+
+      page.content = '<button style="width: 10px; height: 10px; position: absolute; top: -20px"></button>'
+      handle = page.query_selector('button')
+      expect { handle.clickable_point }.to raise_error(Puppeteer::ElementHandle::ElementNotVisibleError)
+
+      page.content = '<button style="width: 10px; height: 10px; position: absolute; bottom: -20px"></button>'
+      handle = page.query_selector('button')
+      expect { handle.clickable_point }.to raise_error(Puppeteer::ElementHandle::ElementNotVisibleError)
+    end
+
+    it 'should not work if click box is not visible due to iframe' do
+      page.content = <<~HTML
+        <iframe
+          name="frame"
+          style="position: absolute; left: -100px"
+          srcdoc="<button style='width: 10px; height: 10px;'></button>"
+        ></iframe>
+      HTML
+      frame = page.wait_for_frame(predicate: -> (frame) { frame.name == 'frame' })
+      handle = frame.query_selector('button')
+      expect { handle.clickable_point }.to raise_error(Puppeteer::ElementHandle::ElementNotVisibleError)
+
+      page.content = <<~HTML
+        <iframe
+          name="frame2"
+          style="position: absolute; top: -100px"
+          srcdoc="<button style='width: 10px; height: 10px;'></button>"
+        ></iframe>
+      HTML
+      frame = page.wait_for_frame(predicate: -> (frame) { frame.name == 'frame2' })
+      handle = frame.query_selector('button')
+      expect { handle.clickable_point }.to raise_error(Puppeteer::ElementHandle::ElementNotVisibleError)
     end
 
     it 'should work for iframes' do
@@ -358,6 +695,36 @@ RSpec.describe Puppeteer::ElementHandle do
       # sometimes we expect to return false by isIntersectingViewport1
       button = page.query_selector('#btn0')
       expect(button.intersecting_viewport?(threshold: 1)).to eq(true)
+    end
+
+    it 'should work with svg elements' do
+      page.goto("#{server_prefix}/inline-svg.html")
+
+      visible_circle = page.query_selector('circle')
+      visible_svg = page.query_selector('svg')
+
+      circle_threshold_one = visible_circle.intersecting_viewport?(threshold: 1)
+      circle_threshold_zero = visible_circle.intersecting_viewport?(threshold: 0)
+      svg_threshold_one = visible_svg.intersecting_viewport?(threshold: 1)
+      svg_threshold_zero = visible_svg.intersecting_viewport?(threshold: 0)
+
+      expect(circle_threshold_one).to eq(true)
+      expect(circle_threshold_zero).to eq(true)
+      expect(svg_threshold_one).to eq(true)
+      expect(svg_threshold_zero).to eq(true)
+
+      invisible_circle = page.query_selector('div circle')
+      invisible_svg = page.query_selector('div svg')
+
+      invisible_circle_threshold_one = invisible_circle.intersecting_viewport?(threshold: 1)
+      invisible_circle_threshold_zero = invisible_circle.intersecting_viewport?(threshold: 0)
+      invisible_svg_threshold_one = invisible_svg.intersecting_viewport?(threshold: 1)
+      invisible_svg_threshold_zero = invisible_svg.intersecting_viewport?(threshold: 0)
+
+      expect(invisible_circle_threshold_one).to eq(false)
+      expect(invisible_circle_threshold_zero).to eq(false)
+      expect(invisible_svg_threshold_one).to eq(false)
+      expect(invisible_svg_threshold_zero).to eq(false)
     end
   end
 
@@ -517,6 +884,26 @@ RSpec.describe Puppeteer::ElementHandle do
       element = page.query_selector('.foo')
       div = element.to_element('div')
       expect(div).to be_a(Puppeteer::ElementHandle)
+    end
+  end
+
+  describe 'disposal' do
+    it 'should dispose element handles' do
+      page.content = '<div>test</div>'
+      element = page.query_selector('div')
+      expect(element.disposed?).to eq(false)
+      element.dispose
+      expect(element.disposed?).to eq(true)
+    end
+  end
+
+  describe 'move' do
+    it 'should work' do
+      page.content = '<div>test</div>'
+      element = page.query_selector('div')
+      moved = element.move
+      expect(moved).to eq(element)
+      expect(element.evaluate('el => el.textContent')).to eq('test')
     end
   end
 end
