@@ -45,27 +45,7 @@ class Puppeteer::TimeoutError < Puppeteer::Error
 end
 
 class Puppeteer::JSHandle
-  include Puppeteer::IfPresent
-
-  def self.create: (context: untyped, remote_object: untyped) -> Puppeteer::JSHandle
-
-  def initialize: (context: untyped, client: untyped, remote_object: untyped) -> void
-
-  attr_reader context: untyped
-  attr_reader remote_object: untyped
-
-  def execution_context: () -> untyped
-  def evaluate: (untyped page_function, *untyped args) -> untyped
-  def evaluate_handle: (untyped page_function, *untyped args) -> Puppeteer::JSHandle
-  def property: (String name) -> Puppeteer::JSHandle
-  def []: (String name) -> Puppeteer::JSHandle
-  def properties: () -> Hash[String, Puppeteer::JSHandle]
-  def json_value: () -> untyped
-  def as_element: () -> Puppeteer::ElementHandle?
-  def dispose: () -> void
-  def disposed?: () -> bool
-  def to_s: () -> String
-  def inspect: () -> String
+  def async_dispose_symbol: () -> untyped
 end
 
 
