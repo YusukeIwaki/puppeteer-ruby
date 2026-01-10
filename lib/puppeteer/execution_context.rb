@@ -148,6 +148,10 @@ class Puppeteer::ExecutionContext
       #     if (Object.is(arg, NaN))
       #       return { unserializableValue: 'NaN' };
       @args.map do |arg|
+        if recursive_object?(arg)
+          raise EvaluationError.new('Recursive objects are not allowed.')
+        end
+
         if arg && arg.is_a?(Puppeteer::JSHandle)
           if arg.context != @execution_context
             raise EvaluationError.new('JSHandles can be evaluated only in the context they were created!')
@@ -162,6 +166,35 @@ class Puppeteer::ExecutionContext
           { value: arg }
         end
       end
+    end
+
+    # @rbs value: untyped -- Value to check for cycles
+    # @rbs stack: Hash[Integer, bool]? -- Current stack for cycle detection
+    # @rbs visited: Hash[Integer, bool]? -- Already visited objects
+    # @rbs return: bool -- Whether the value contains cycles
+    private def recursive_object?(value, stack = nil, visited = nil)
+      return false unless value.is_a?(Hash) || value.is_a?(Array)
+
+      stack ||= {}
+      visited ||= {}
+      object_id = value.object_id
+      return true if stack[object_id]
+      return false if visited[object_id]
+
+      visited[object_id] = true
+      stack[object_id] = true
+
+      has_cycle =
+        if value.is_a?(Array)
+          value.any? { |item| recursive_object?(item, stack, visited) }
+        else
+          value.any? do |key, item|
+            recursive_object?(key, stack, visited) || recursive_object?(item, stack, visited)
+          end
+        end
+
+      stack.delete(object_id)
+      has_cycle
     end
 
     # @rbs return: String -- JavaScript function declaration
@@ -292,7 +325,7 @@ class Puppeteer::ExecutionContext
     # https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer
     # But we don't support the syntax here.
     js_object =
-      if ['=>', 'async', 'function'].any? { |keyword| page_function.include?(keyword) }
+      if function_string?(page_function)
         JavaScriptFunction.new(self, page_function, args, return_by_value)
       else
         JavaScriptExpression.new(self, page_function, return_by_value)
@@ -302,5 +335,15 @@ class Puppeteer::ExecutionContext
       client: @client,
       context_id: @context_id,
     )
+  end
+
+  # @rbs page_function: String -- JavaScript code to check
+  # @rbs return: bool -- Whether the code represents a function
+  private def function_string?(page_function)
+    stripped = page_function.lstrip
+    return true if page_function.include?('=>')
+    return true if stripped.start_with?('async function')
+
+    stripped.start_with?('function')
   end
 end
