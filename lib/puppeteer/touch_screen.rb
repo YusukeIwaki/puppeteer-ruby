@@ -86,3 +86,5 @@ class Puppeteer::TouchScreen
     )
   end
 end
+
+Puppeteer::Touchscreen = Puppeteer::TouchScreen unless Puppeteer.const_defined?(:Touchscreen)

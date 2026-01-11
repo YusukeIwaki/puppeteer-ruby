@@ -1,12 +1,11 @@
 # API coverages
-- Puppeteer version: v19.5.0
+- Puppeteer version: v20.0.0
 - puppeteer-ruby version: 0.45.6
 
 ## Puppeteer
 
 * ~~clearCustomQueryHandlers~~
 * connect
-* ~~createBrowserFetcher~~
 * ~~customQueryHandlerNames~~
 * defaultArgs => `#default_args`
 * devices
@@ -52,17 +51,6 @@
 * targets
 * waitForTarget => `#wait_for_target`
 
-## ~~BrowserFetcher~~
-
-* ~~canDownload~~
-* ~~download~~
-* ~~host~~
-* ~~localRevisions~~
-* ~~platform~~
-* ~~product~~
-* ~~remove~~
-* ~~revisionInfo~~
-
 ## CDPSession
 
 * connection
@@ -102,6 +90,15 @@
 ## ~~CustomError~~
 
 
+## ~~DeviceRequestPrompt~~
+
+* ~~cancel~~
+* ~~select~~
+* ~~waitForDevice~~
+
+## ~~DeviceRequestPromptDevice~~
+
+
 ## Dialog
 
 * accept
@@ -135,12 +132,13 @@
 * isVisible => `#visible?`
 * press
 * screenshot
+* ~~scrollIntoView~~
 * select
 * tap
+* toElement => `#to_element`
 * touchEnd => `#touch_end`
 * touchMove => `#touch_move`
 * touchStart => `#touch_start`
-* toElement => `#to_element`
 * type => `#type_text`
 * uploadFile => `#upload_file`
 * waitForSelector => `#wait_for_selector`
@@ -192,6 +190,7 @@
 * title
 * type => `#type_text`
 * url
+* ~~waitForDevicePrompt~~
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
 * waitForSelector => `#wait_for_selector`
@@ -252,6 +251,7 @@
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * getProperties => `#properties`
+* getProperty => `#[]`
 * getProperty => `#[]`
 * getProperty => `#[]`
 * jsonValue => `#json_value`
@@ -331,6 +331,8 @@
 * queryObjects => `#query_objects`
 * reload
 * screenshot
+* screenshot
+* screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
 * setCacheEnabled => `#cache_enabled=`
@@ -352,6 +354,7 @@
 * type => `#type_text`
 * url
 * viewport
+* ~~waitForDevicePrompt~~
 * waitForFileChooser => `#wait_for_file_chooser`
 * waitForFrame => `#wait_for_frame`
 * waitForFunction => `#wait_for_function`

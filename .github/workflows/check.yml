@@ -24,6 +24,16 @@ jobs:
       run: |
         cd puppeteer
         git checkout puppeteer-core-v$(cat ../development/DOCS_VERSION)
+        ruby - <<'RUBY'
+        require 'json'
+        path = File.join('packages', 'puppeteer', 'api-extractor.json')
+        json = JSON.parse(File.read(path))
+        json['docModel'] = {
+          'enabled' => true,
+          'apiJsonFilePath' => '<projectFolder>/../../docs/<unscopedPackageName>.api.json',
+        }
+        File.write(path, JSON.pretty_generate(json) + "\n")
+        RUBY
         npm install && npm run build
         cd ../
         cp puppeteer/docs/puppeteer.api.json development/puppeteer.api.json
