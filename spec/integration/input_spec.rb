@@ -89,21 +89,21 @@ RSpec.describe 'input tests' do
 
     it 'should respect timeout' do
       with_test_state do |page:, **|
-        expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
+        expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(Puppeteer::TimeoutError)
       end
     end
 
     it 'should respect default timeout when there is no custom timeout' do
       with_test_state do |page:, **|
         page.default_timeout = 1
-        expect { page.wait_for_file_chooser }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
+        expect { page.wait_for_file_chooser }.to raise_error(Puppeteer::TimeoutError)
       end
     end
 
     it 'should prioritize exact timeout over default timeout' do
       with_test_state do |page:, **|
         page.default_timeout = 0
-        expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(/waiting for filechooser failed: timeout 1ms exceeded/)
+        expect { page.wait_for_file_chooser(timeout: 1) }.to raise_error(Puppeteer::TimeoutError)
       end
     end
 
