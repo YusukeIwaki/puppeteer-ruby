@@ -30,6 +30,14 @@ module Puppeteer
         @owns_runner = owns_runner
       end
 
+      def tap(*args, **kwargs, &block)
+        if args.empty? && kwargs.empty? && block
+          super(&block)
+        else
+          method_missing(:tap, *args, **kwargs, &block)
+        end
+      end
+
       def method_missing(name, *args, **kwargs, &block)
         if @runner.closed?
           return false if name == :connected?
