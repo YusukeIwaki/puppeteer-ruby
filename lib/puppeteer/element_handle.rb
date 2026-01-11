@@ -147,6 +147,39 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     self
   end
 
+  # @rbs return: bool -- Whether element is visible
+  def visible?
+    check_visibility(true)
+  end
+
+  # @rbs return: bool -- Whether element is hidden
+  def hidden?
+    check_visibility(false)
+  end
+
+  # @rbs visible: bool -- Expected visibility state
+  # @rbs return: bool -- Whether visibility matches
+  private def check_visibility(visible)
+    js = <<~JAVASCRIPT
+      (node, visible) => {
+        if (!node) return visible === false;
+        const element =
+          node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+        if (!element) return visible === false;
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        const isVisible =
+          style &&
+          style.visibility !== 'hidden' &&
+          style.visibility !== 'collapse' &&
+          rect.width !== 0 &&
+          rect.height !== 0;
+        return visible === isVisible;
+      }
+    JAVASCRIPT
+    evaluate(js, visible)
+  end
+
   # @rbs return: Puppeteer::Frame? -- Frame that owns this element
   def content_frame
     node_info = @remote_object.node_info(@client)
@@ -341,6 +374,37 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   end
 
   define_async_method :async_click
+
+  # @rbs return: Puppeteer::TouchHandle -- Touch handle
+  def touch_start
+    scroll_into_view_if_needed
+    point = clickable_point
+    @page.touchscreen.touch_start(point.x, point.y)
+  end
+
+  define_async_method :async_touch_start
+
+  # @rbs touch: Puppeteer::TouchHandle? -- Optional touch handle
+  # @rbs return: void -- No return value
+  def touch_move(touch = nil)
+    scroll_into_view_if_needed
+    point = clickable_point
+    if touch
+      touch.move(point.x, point.y)
+    else
+      @page.touchscreen.touch_move(point.x, point.y)
+    end
+  end
+
+  define_async_method :async_touch_move
+
+  # @rbs return: void -- No return value
+  def touch_end
+    scroll_into_view_if_needed
+    @page.touchscreen.touch_end
+  end
+
+  define_async_method :async_touch_end
 
   class DragInterceptionNotEnabledError < Puppeteer::Error
     def initialize

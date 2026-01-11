@@ -24,3 +24,5 @@
 diff-*.png
 *.github.pdf
 .envrc
+
+/.ruby-version
