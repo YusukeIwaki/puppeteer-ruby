@@ -99,6 +99,25 @@ RSpec.describe 'BrowserContext', browser_context: :incognito do
 end
 ```
 
+### OOPIF (Out-of-Process IFrame) Tests
+
+For tests requiring cross-process iframes, use `enable_site_per_process_flag: true`:
+
+```ruby
+it 'clicks button in cross-process iframe', enable_site_per_process_flag: true do
+  with_test_state do |page:, server:, **|
+    page.goto(server.empty_page)
+    # Use cross_process_prefix (127.0.0.1) instead of prefix (localhost)
+    attach_frame(page, 'frame-id', "#{server.cross_process_prefix}/input/button.html")
+
+    frame = page.frames[1]
+    frame.click('button')
+  end
+end
+```
+
+This metadata launches Chrome with `--site-per-process` and `--host-rules=MAP * 127.0.0.1` flags.
+
 ## Running Tests
 
 ### Basic Commands

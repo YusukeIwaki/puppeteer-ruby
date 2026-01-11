@@ -364,13 +364,14 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
 
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Click count to report
+  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
+  # @rbs count: Integer? -- Number of clicks to perform
   # @rbs offset: Puppeteer::ElementHandle::Offset | Hash[Symbol, Numeric] | nil -- Click offset
   # @rbs return: void -- No return value
-  def click(delay: nil, button: nil, click_count: nil, offset: nil)
+  def click(delay: nil, button: nil, click_count: nil, count: nil, offset: nil)
     scroll_into_view_if_needed
     point = clickable_point(offset)
-    @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count)
+    @page.mouse.click(point.x, point.y, delay: delay, button: button, click_count: click_count, count: count)
   end
 
   define_async_method :async_click
