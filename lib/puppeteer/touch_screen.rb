@@ -18,7 +18,7 @@ class Puppeteer::TouchScreen
   # @rbs return: void -- No return value
   def tap(x, y)
     touch = touch_start(x, y)
-    touch_end_handle(touch)
+    touch.end
   end
 
   define_async_method :async_tap
@@ -27,11 +27,18 @@ class Puppeteer::TouchScreen
   # @rbs y: Numeric -- Y coordinate
   # @rbs return: Puppeteer::TouchHandle -- Touch handle
   def touch_start(x, y)
-    wait_for_touch_frame
     @touch_id_counter += 1
-    touch = Puppeteer::TouchHandle.new(self, @touch_id_counter, x: x, y: y)
+    touch_point = {
+      x: x.round,
+      y: y.round,
+      radiusX: 0.5,
+      radiusY: 0.5,
+      force: 0.5,
+      id: @touch_id_counter,
+    }
+    touch = Puppeteer::TouchHandle.new(self, touch_point)
+    touch.start
     @touches << touch
-    dispatch_touch_event('touchStart')
     touch
   end
 
@@ -42,7 +49,7 @@ class Puppeteer::TouchScreen
   # @rbs return: void -- No return value
   def touch_move(x, y)
     touch = @touches.first
-    raise ArgumentError.new('No touch points available') unless touch
+    raise Puppeteer::TouchError.new('Must start a new Touch first') unless touch
 
     touch.move(x, y)
   end
@@ -51,58 +58,31 @@ class Puppeteer::TouchScreen
 
   # @rbs return: void -- No return value
   def touch_end
-    return if @touches.empty?
+    touch = @touches.shift
+    raise Puppeteer::TouchError.new('Must start a new Touch first') unless touch
 
-    @touches.clear
-    dispatch_touch_event('touchEnd')
+    touch.end
   end
 
   define_async_method :async_touch_end
 
-  # @rbs touch: Puppeteer::TouchHandle -- Touch handle to move
+  # @rbs touch: Puppeteer::TouchHandle -- Touch handle to remove
   # @rbs return: void -- No return value
-  def touch_move_handle(touch)
-    assert_active_touch(touch)
-    dispatch_touch_event('touchMove')
+  private def remove_handle(touch)
+    index = @touches.index(touch)
+    return unless index
+
+    @touches.delete_at(index)
   end
 
-  # @rbs touch: Puppeteer::TouchHandle -- Touch handle to end
+  # @rbs type: String -- Touch event type
+  # @rbs touch_points: Array[Hash[Symbol, Numeric]] -- Touch points payload
   # @rbs return: void -- No return value
-  def touch_end_handle(touch)
-    assert_active_touch(touch)
-    @touches.delete(touch)
-    dispatch_touch_event('touchEnd')
-  end
-
-  private def wait_for_touch_frame
-    # Touches appear to be lost during the first frame after navigation.
-    # This waits a frame before sending the touch.
-    # @see https://crbug.com/613219
-    @client.send_message('Runtime.evaluate',
-      expression: 'new Promise(x => requestAnimationFrame(() => requestAnimationFrame(x)))',
-      awaitPromise: true,
-    )
-  end
-
-  private def dispatch_touch_event(type)
+  private def dispatch_touch_event(type, touch_points)
     @client.send_message('Input.dispatchTouchEvent',
       type: type,
-      touchPoints: @touches.map { |touch| touch_point(touch) },
+      touchPoints: touch_points,
       modifiers: @keyboard.modifiers,
     )
-  end
-
-  private def touch_point(touch)
-    {
-      x: touch.x.round,
-      y: touch.y.round,
-      id: touch.touch_id,
-    }
-  end
-
-  private def assert_active_touch(touch)
-    return if @touches.include?(touch)
-
-    raise ArgumentError.new('Touch handle is not active')
   end
 end

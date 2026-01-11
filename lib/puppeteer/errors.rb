@@ -4,3 +4,5 @@
 class Puppeteer::Error < StandardError; end
 
 class Puppeteer::TimeoutError < Puppeteer::Error; end
+
+class Puppeteer::TouchError < Puppeteer::Error; end
