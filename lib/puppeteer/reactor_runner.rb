@@ -30,11 +30,19 @@ module Puppeteer
         @owns_runner = owns_runner
       end
 
+      # Override tap to distinguish between Ruby's Object#tap and Puppeteer's tap method.
+      # When called with a block only (Ruby's tap), delegate to super.
+      # When called with args (Puppeteer's tap), route through the reactor.
       def tap(*args, **kwargs, &block)
         if args.empty? && kwargs.empty? && block
           super(&block)
         else
-          method_missing(:tap, *args, **kwargs, &block)
+          @runner.sync do
+            args = args.map { |arg| @runner.unwrap(arg) }
+            kwargs = kwargs.transform_values { |value| @runner.unwrap(value) }
+            result = __getobj__.public_send(:tap, *args, **kwargs, &block)
+            @runner.wrap(result)
+          end
         end
       end
 
