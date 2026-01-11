@@ -218,14 +218,6 @@ class Puppeteer::Page
     end
   end
 
-  class FileChooserTimeoutError < Puppeteer::Error
-    # @rbs timeout: Numeric -- Timeout in milliseconds
-    # @rbs return: void -- No return value
-    def initialize(timeout:)
-      super("waiting for filechooser failed: timeout #{timeout}ms exceeded")
-    end
-  end
-
   # @rbs timeout: Numeric? -- Timeout in milliseconds
   # @rbs return: Puppeteer::FileChooser -- File chooser handle
   def wait_for_file_chooser(timeout: nil)
@@ -244,7 +236,7 @@ class Puppeteer::Page
         Puppeteer::AsyncUtils.async_timeout(option_timeout, promise).wait
       end
     rescue Async::TimeoutError
-      raise FileChooserTimeoutError.new(timeout: option_timeout)
+      raise Puppeteer::TimeoutError.new("Waiting for `FileChooser` failed: #{option_timeout}ms exceeded")
     ensure
       @file_chooser_interceptors.delete(promise)
     end

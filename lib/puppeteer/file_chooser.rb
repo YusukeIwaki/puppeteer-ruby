@@ -25,5 +25,11 @@ class Puppeteer::FileChooser
       raise 'Cannot cancel FileChooser which is already handled!'
     end
     @handled = true
+    js = <<~JAVASCRIPT
+    (element) => {
+      element.dispatchEvent(new Event('cancel', { bubbles: true }));
+    }
+    JAVASCRIPT
+    @element.evaluate(js)
   end
 end
