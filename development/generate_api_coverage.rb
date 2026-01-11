@@ -238,10 +238,15 @@ File.open(File.join('.', 'docs', 'api_coverage.md'), 'w') do |f|
 end
 
 require 'puppeteer'
+CLASS_ALIAS_MAP = {
+  'Touchscreen' => 'TouchScreen',
+}.freeze
+
 class_docs.each do |class_doc|
+  impl_name = CLASS_ALIAS_MAP.fetch(class_doc.name, class_doc.name)
   klass =
-    if Puppeteer.const_defined?(class_doc.name)
-      impl = Puppeteer.const_get(class_doc.name)
+    if Puppeteer.const_defined?(impl_name)
+      impl = Puppeteer.const_get(impl_name)
       ImplementedClassPresenter.new(impl, class_doc)
     else
       UnimplementedClassPresenter.new(class_doc)
