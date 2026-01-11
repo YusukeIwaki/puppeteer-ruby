@@ -85,36 +85,51 @@ Translate the TypeScript to idiomatic Ruby:
 
 ```ruby
 # lib/puppeteer/frame.rb
-def click(selector, delay: nil, button: nil, click_count: nil)
+def click(selector, delay: nil, button: nil, click_count: nil, count: nil)
   handle = query_selector(selector)
   raise ArgumentError, "No element found for selector: #{selector}" unless handle
 
   begin
-    handle.click(delay: delay, button: button, click_count: click_count)
+    handle.click(delay: delay, button: button, click_count: click_count, count: count)
   ensure
     handle.dispose
   end
 end
 
 # lib/puppeteer/element_handle.rb
-def click(delay: nil, button: nil, click_count: nil, offset: nil)
+def click(delay: nil, button: nil, click_count: nil, count: nil, offset: nil)
   scroll_into_view_if_needed
   point = clickable_point(offset: offset)
   @page.mouse.click(point.x, point.y,
     delay: delay,
     button: button,
-    click_count: click_count
+    click_count: click_count,
+    count: count
   )
 end
 
 # lib/puppeteer/mouse.rb
-def click(x, y, delay: nil, button: nil, click_count: nil)
+def click(x, y, delay: nil, button: nil, click_count: nil, count: nil)
   move(x, y)
   down(button: button, click_count: click_count)
   sleep(delay / 1000.0) if delay
   up(button: button, click_count: click_count)
 end
 ```
+
+Note: `click_count` is deprecated (mirrors Puppeteer's `clickCount` deprecation). Use `count` for multiple clicks and let `click_count` default to `count`.
+
+### Mouse Button Types
+
+The `button` parameter accepts these values (defined in `Puppeteer::Mouse::Button`):
+
+| Value | Button Code | Description |
+|-------|-------------|-------------|
+| `'left'` | 0 | Primary button (default) |
+| `'right'` | 2 | Secondary button (context menu) |
+| `'middle'` | 1 | Auxiliary button (wheel click) |
+| `'back'` | 3 | Browser back button |
+| `'forward'` | 4 | Browser forward button |
 
 ### Key Translation Patterns
 

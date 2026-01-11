@@ -1334,10 +1334,11 @@ class Puppeteer::Page
   # @rbs selector: String -- CSS selector
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Click count to report
+  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
+  # @rbs count: Integer? -- Number of clicks to perform
   # @rbs return: void -- No return value
-  def click(selector, delay: nil, button: nil, click_count: nil)
-    main_frame.click(selector, delay: delay, button: button, click_count: click_count)
+  def click(selector, delay: nil, button: nil, click_count: nil, count: nil)
+    main_frame.click(selector, delay: delay, button: button, click_count: click_count, count: count)
   end
 
   define_async_method :async_click

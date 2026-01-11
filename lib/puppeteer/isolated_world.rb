@@ -355,10 +355,11 @@ class Puppeteer::IsolaatedWorld
   # @param selector [String]
   # @param delay [Number]
   # @param button [String] "left"|"right"|"middle"
-  # @param click_count [Number]
-  def click(selector, delay: nil, button: nil, click_count: nil)
+  # @param click_count [Number] Deprecated: use count (click_count only sets clickCount)
+  # @param count [Number]
+  def click(selector, delay: nil, button: nil, click_count: nil, count: nil)
     handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
-    handle.click(delay: delay, button: button, click_count: click_count)
+    handle.click(delay: delay, button: button, click_count: click_count, count: count)
     handle.dispose
   end
 

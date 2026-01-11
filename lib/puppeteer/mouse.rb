@@ -102,10 +102,11 @@ class Puppeteer::Mouse
   # @rbs y: Numeric -- Y coordinate
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Click count to report
+  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
   # @rbs count: Integer? -- Number of click repetitions
   # @rbs return: void -- No return value
   def click(x, y, delay: nil, button: nil, click_count: nil, count: nil)
+    warn_deprecated_click_count if !click_count.nil?
     count ||= 1
     click_count ||= count
     if count < 1
@@ -129,6 +130,19 @@ class Puppeteer::Mouse
   end
 
   define_async_method :async_click
+
+  private def warn_deprecated_click_count
+    return if self.class.deprecated_click_count_warned
+
+    self.class.deprecated_click_count_warned = true
+    warn('DEPRECATED: `click_count` is deprecated; use `count` instead.')
+  end
+
+  class << self
+    attr_accessor :deprecated_click_count_warned
+  end
+
+  self.deprecated_click_count_warned = false
 
   # @rbs button: String? -- Mouse button
   # @rbs click_count: Integer? -- Click count to report

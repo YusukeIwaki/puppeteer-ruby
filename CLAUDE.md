@@ -27,6 +27,11 @@ bundle exec rspec spec/integration/page_spec.rb
 DEBUG=1 bundle exec rspec spec/integration/page_spec.rb
 ```
 
+> **Note for Codex CLI**: When executing RSpec from Codex CLI, always use `rbenv exec`:
+> ```bash
+> rbenv exec bundle exec rspec spec/integration/click_spec.rb
+> ```
+
 ### Key Environment Variables
 
 | Variable | Description |
