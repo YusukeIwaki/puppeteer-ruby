@@ -677,19 +677,70 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     Puppeteer::QueryHandlerManager.instance
   end
 
+  private def query_selector_in_isolated_world(selector)
+    puppeteer_world = frame.puppeteer_world
+    if execution_context == puppeteer_world.execution_context
+      return query_handler_manager.detect_query_handler(selector).query_one(self)
+    end
+
+    adopted = puppeteer_world.adopt_handle(self)
+    begin
+      result = query_handler_manager.detect_query_handler(selector).query_one(adopted)
+      return nil unless result
+
+      if result.execution_context == frame.main_world.execution_context
+        return result
+      end
+
+      frame.main_world.transfer_handle(result)
+    ensure
+      adopted.dispose
+    end
+  end
+
+  private def query_selector_all_in_isolated_world(selector)
+    puppeteer_world = frame.puppeteer_world
+    if execution_context == puppeteer_world.execution_context
+      results = query_handler_manager.detect_query_handler(selector).query_all(self)
+      return results || []
+    end
+
+    adopted = puppeteer_world.adopt_handle(self)
+    begin
+      results = query_handler_manager.detect_query_handler(selector).query_all(adopted)
+      return [] unless results
+
+      results.map do |handle|
+        if handle.execution_context == frame.main_world.execution_context
+          handle
+        else
+          frame.main_world.transfer_handle(handle)
+        end
+      end
+    ensure
+      adopted.dispose
+    end
+  end
+
   # `$()` in JavaScript.
   # @rbs selector: String -- CSS selector
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
   def query_selector(selector)
-    query_handler_manager.detect_query_handler(selector).query_one(self)
+    query_selector_in_isolated_world(selector)
   end
   alias_method :S, :query_selector
 
   # `$$()` in JavaScript.
   # @rbs selector: String -- CSS selector
+  # @rbs isolate: bool? -- Use isolated world for queries
   # @rbs return: Array[Puppeteer::ElementHandle] -- Matching elements
-  def query_selector_all(selector)
-    query_handler_manager.detect_query_handler(selector).query_all(self)
+  def query_selector_all(selector, isolate: nil)
+    if isolate == false
+      results = query_handler_manager.detect_query_handler(selector).query_all(self)
+      return results || []
+    end
+
+    query_selector_all_in_isolated_world(selector)
   end
   alias_method :SS, :query_selector_all
 
