@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'thread'
 
 RSpec.describe Puppeteer::Page do
   include_context 'with test state'
@@ -112,23 +113,55 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'removing and adding event handlers' do
-    it 'should correctly fire event handlers as they are added and then removed', pending: 'Page#off is not implemented', sinatra: true do
-      handler = double('ResponseHandler')
-      allow(handler).to receive(:on_response)
+    it 'should correctly fire event handlers as they are added and then removed', sinatra: true do
+      calls = 0
+      on_response = lambda do |response|
+        next if response.url.include?('favicon.ico')
 
-      page.on('response') { handler.on_response }
+        calls += 1
+      end
+
+      page.on('response', &on_response)
       page.goto(server_empty_page)
-      expect(handler).to have_received(:on_response).once
+      expect(calls).to eq(1)
 
-      page.off('response') { handler.on_response }
+      page.off('response', on_response)
       page.goto(server_empty_page)
       # Still one because we removed the handler.
-      expect(handler).to have_received(:on_response).once
+      expect(calls).to eq(1)
 
-      page.on('response') { handler.on_response }
+      page.on('response', &on_response)
       page.goto(server_empty_page)
       # Two now because we added the handler back.
-      expect(handler).to have_received(:on_response).twice
+      expect(calls).to eq(2)
+    end
+
+    it 'should correctly added and removed request events', sinatra: true do
+      calls = 0
+      on_request = lambda do |request|
+        next if request.url.include?('favicon.ico')
+
+        calls += 1
+      end
+
+      page.on('request', &on_request)
+      page.on('request', &on_request)
+      page.goto(server_empty_page)
+      expect(calls).to eq(2)
+
+      page.off('request', on_request)
+      page.goto(server_empty_page)
+      # Still one because we removed the handler.
+      expect(calls).to eq(3)
+
+      page.off('request', on_request)
+      page.goto(server_empty_page)
+      expect(calls).to eq(3)
+
+      page.on('request', &on_request)
+      page.goto(server_empty_page)
+      # Two now because we added the handler back.
+      expect(calls).to eq(4)
     end
   end
 
@@ -471,49 +504,37 @@ RSpec.describe Puppeteer::Page do
     #     ]);
     #   });
   end
-  #   it('should not fail for window object', async () => {
-  #     const { page } = getTestState();
+  it 'should not fail for window object' do
+    message = await_promises(
+      Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+      async_promise { page.evaluate('() => console.error(window)') },
+    ).first
+    expect(['JSHandle@object', 'JSHandle@window']).to include(message.text)
+  end
 
-  #     let message = null;
-  #     page.once('console', (msg) => (message = msg));
-  #     await Promise.all([
-  #       page.evaluate(() => console.error(window)),
-  #       waitEvent(page, 'console'),
-  #     ]);
-  #     expect(message.text()).toBe('JSHandle@object');
-  #   });
-  #   it('should trigger correct Log', async () => {
-  #     const { page, server, isChrome } = getTestState();
+  it 'should trigger correct Log' do
+    page.goto("#{server_prefix}/empty.html")
+    message = await_promises(
+      Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+      async_promise do
+        page.evaluate('async (url) => fetch(url).catch(() => {})', "#{server_cross_process_prefix}/empty.html")
+      end,
+    ).first
+    expect(message.text).to include('Access-Control-Allow-Origin')
+    expect(message.log_type).to eq('error')
+  end
 
-  #     await page.goto('about:blank');
-  #     const [message] = await Promise.all([
-  #       waitEvent(page, 'console'),
-  #       page.evaluate(
-  #         async (url: string) => fetch(url).catch(() => {}),
-  #         server.EMPTY_PAGE
-  #       ),
-  #     ]);
-  #     expect(message.text()).toContain('Access-Control-Allow-Origin');
-  #     if (isChrome) expect(message.type()).toEqual('error');
-  #     else expect(message.type()).toEqual('warn');
-  #   });
-  #   it('should have location when fetch fails', async () => {
-  #     const { page, server } = getTestState();
-
-  #     // The point of this test is to make sure that we report console messages from
-  #     // Log domain: https://vanilla.aslushnikov.com/?Log.entryAdded
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [message] = await Promise.all([
-  #       waitEvent(page, 'console'),
-  #       page.setContent(`<script>fetch('http://wat');</script>`),
-  #     ]);
-  #     expect(message.text()).toContain(`ERR_NAME_NOT_RESOLVED`);
-  #     expect(message.type()).toEqual('error');
-  #     expect(message.location()).toEqual({
-  #       url: 'http://wat/',
-  #       lineNumber: undefined,
-  #     });
-  #   });
+  it 'should have location when fetch fails' do
+    page.goto(server_empty_page)
+    message = await_promises(
+      Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+      async_promise { page.set_content("<script>fetch('http://wat');</script>") },
+    ).first
+    expect(message.text).to include('ERR_NAME_NOT_RESOLVED')
+    expect(message.log_type).to eq('error')
+    expect(message.location.url).to eq('http://wat/')
+    expect(message.location.line_number).to satisfy { |line| line.nil? || line < 0 }
+  end
   it 'should have location and stack trace for console API calls', sinatra: true do
     page.goto(server_empty_page)
 
@@ -545,33 +566,27 @@ RSpec.describe Puppeteer::Page do
     #     },
     #   ]);
   end
-  #   // @see https://github.com/puppeteer/puppeteer/issues/3865
-  #   it('should not throw when there are console messages in detached iframes', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.evaluate(async () => {
-  #       // 1. Create a popup that Puppeteer is not connected to.
-  #       const win = window.open(
-  #         window.location.href,
-  #         'Title',
-  #         'toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=780,height=200,top=0,left=0'
-  #       );
-  #       await new Promise((x) => (win.onload = x));
-  #       // 2. In this popup, create an iframe that console.logs a message.
-  #       win.document.body.innerHTML = `<iframe src='/consolelog.html'></iframe>`;
-  #       const frame = win.document.querySelector('iframe');
-  #       await new Promise((x) => (frame.onload = x));
-  #       // 3. After that, remove the iframe.
-  #       frame.remove();
-  #     });
-  #     const popupTarget = page
-  #       .browserContext()
-  #       .targets()
-  #       .find((target) => target !== page.target());
-  #     // 4. Connect to the popup and make sure it doesn't throw.
-  #     await popupTarget.page();
-  #   });
+  # @see https://github.com/puppeteer/puppeteer/issues/3865
+  it 'should not throw when there are console messages in detached iframes' do
+    page.goto(server_empty_page)
+    page.evaluate(<<~JAVASCRIPT)
+    async () => {
+      const win = window.open(
+        window.location.href,
+        'Title',
+        'toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=780,height=200,top=0,left=0'
+      );
+      await new Promise((x) => (win.onload = x));
+      win.document.body.innerHTML = `<iframe src='/consolelog.html'></iframe>`;
+      const frame = win.document.querySelector('iframe');
+      await new Promise((x) => (frame.onload = x));
+      frame.remove();
+    }
+    JAVASCRIPT
+    popup_target = page.browser_context.targets.last
+    popup_page = popup_target.page
+    expect(popup_page).not_to eq(page)
+  end
   # });
 
   describe 'Page.Events.DOMContentLoaded' do
@@ -704,73 +719,217 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describe('Page.waitForResponse', function () {
-  #   it('should work', async () => {
-  #     const { page, server } = getTestState();
+  describe 'Page.waitForResponse', sinatra: true do
+    it 'should work' do
+      page.goto(server_empty_page)
+      response = page.wait_for_response(url: "#{server_prefix}/digits/2.png") do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [response] = await Promise.all([
-  #       page.waitForResponse(server.PREFIX + '/digits/2.png'),
-  #       page.evaluate(() => {
-  #         fetch('/digits/1.png');
-  #         fetch('/digits/2.png');
-  #         fetch('/digits/3.png');
-  #       }),
-  #     ]);
-  #     expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  #   it('should respect timeout', async () => {
-  #     const { page, puppeteer } = getTestState();
+    it 'should respect timeout' do
+      page.goto(server_empty_page)
+      expect { page.wait_for_response(predicate: ->(_) { false }, timeout: 1) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
 
-  #     let error = null;
-  #     await page
-  #       .waitForResponse(() => false, { timeout: 1 })
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-  #   });
-  #   it('should respect default timeout', async () => {
-  #     const { page, puppeteer } = getTestState();
+    it 'should respect default timeout' do
+      page.goto(server_empty_page)
+      page.default_timeout = 1
+      expect { page.wait_for_response(predicate: ->(_) { false }) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
 
-  #     let error = null;
-  #     page.setDefaultTimeout(1);
-  #     await page
-  #       .waitForResponse(() => false)
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-  #   });
-  #   it('should work with predicate', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with predicate' do
+      page.goto(server_empty_page)
+      predicate = ->(response) { response.url == "#{server_prefix}/digits/2.png" }
+      response = page.wait_for_response(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [response] = await Promise.all([
-  #       page.waitForResponse(
-  #         (response) => response.url() === server.PREFIX + '/digits/2.png'
-  #       ),
-  #       page.evaluate(() => {
-  #         fetch('/digits/1.png');
-  #         fetch('/digits/2.png');
-  #         fetch('/digits/3.png');
-  #       }),
-  #     ]);
-  #     expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  #   it('should work with no timeout', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with async predicate' do
+      page.goto(server_empty_page)
+      predicate = ->(response) { Async { response.url == "#{server_prefix}/digits/2.png" } }
+      response = page.wait_for_response(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [response] = await Promise.all([
-  #       page.waitForResponse(server.PREFIX + '/digits/2.png', { timeout: 0 }),
-  #       page.evaluate(() =>
-  #         setTimeout(() => {
-  #           fetch('/digits/1.png');
-  #           fetch('/digits/2.png');
-  #           fetch('/digits/3.png');
-  #         }, 50)
-  #       ),
-  #     ]);
-  #     expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  # });
+    it 'should work with no timeout' do
+      page.goto(server_empty_page)
+      response = page.wait_for_response(url: "#{server_prefix}/digits/2.png", timeout: 0) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => setTimeout(() => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }, 50)
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
+
+    it 'should be cancellable' do
+      skip('AbortSignal is not supported')
+    end
+  end
+
+  describe 'Page.waitForNetworkIdle', sinatra: true do
+    it 'should work' do
+      page.goto(server_empty_page)
+      result = nil
+      wait_promise = async_promise do
+        result = page.wait_for_network_idle
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      evaluate_promise = async_promise do
+        page.evaluate(<<~JAVASCRIPT)
+        async () => {
+          await Promise.all([fetch('/digits/1.png'), fetch('/digits/2.png')]);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          await fetch('/digits/3.png');
+          await new Promise(resolve => setTimeout(resolve, 200));
+          await fetch('/digits/4.png');
+        }
+        JAVASCRIPT
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      t1, t2 = await_promises(wait_promise, evaluate_promise)
+      expect(result).to be_nil
+      expect(t1).to be > t2
+      expect(t1 - t2).to be >= 0.4
+    end
+
+    it 'should respect timeout' do
+      expect { page.wait_for_network_idle(timeout: 1) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
+
+    it 'should respect idleTime' do
+      page.goto(server_empty_page)
+      wait_promise = async_promise do
+        page.wait_for_network_idle(idle_time: 10)
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      evaluate_promise = async_promise do
+        page.evaluate(<<~JAVASCRIPT)
+        async () => {
+          await Promise.all([fetch('/digits/1.png'), fetch('/digits/2.png')]);
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
+        JAVASCRIPT
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      t1, t2 = await_promises(wait_promise, evaluate_promise)
+      expect(t2).to be > t1
+    end
+
+    it 'should work with no timeout' do
+      page.goto(server_empty_page)
+      wait_promise = async_promise do
+        page.wait_for_network_idle(timeout: 0)
+      end
+      evaluate_promise = async_promise do
+        page.evaluate(<<~JAVASCRIPT)
+        () => setTimeout(() => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }, 50)
+        JAVASCRIPT
+      end
+      result = await_promises(wait_promise, evaluate_promise).first
+      expect(result).to be_nil
+    end
+
+    it 'should work with aborted requests' do
+      page.goto("#{server_prefix}/abort-request.html")
+      element = page.query_selector('#abort')
+      element.click
+      expect { page.wait_for_network_idle }.not_to raise_error
+    end
+
+    it 'should work with delayed response' do
+      page.goto(server_empty_page)
+      response_started = Queue.new
+      response_continue = Queue.new
+      server.set_route('/fetch-request-b.js') do |_request, writer|
+        response_started << true
+        response_continue.pop
+        writer.finish
+      end
+
+      t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      wait_promise = async_promise do
+        page.wait_for_network_idle(idle_time: 100)
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      response_promise = async_promise do
+        response_started.pop
+        sleep 0.3
+        response_continue << true
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      fetch_promise = async_promise do
+        page.evaluate('async () => { await fetch("/fetch-request-b.js"); }')
+      end
+
+      t1, t2 = await_promises(wait_promise, response_promise, fetch_promise).first(2)
+      expect(t1).to be > t2
+      expect(t1 - t0).to be > 0.4
+      expect(t1 - t2).to be >= 0.1
+    end
+
+    it 'should be cancelable' do
+      skip('AbortSignal is not supported')
+    end
+  end
+
+  describe 'Page.waitForFrame', sinatra: true do
+    include Utils::AttachFrame
+
+    it 'should work' do
+      page.goto(server_empty_page)
+      waited_frame = page.wait_for_frame(predicate: ->(frame) { frame.url.end_with?('/title.html') }) do
+        attach_frame(page, 'frame2', "#{server_prefix}/title.html")
+      end
+      expect(waited_frame.parent_frame).to eq(page.main_frame)
+    end
+
+    it 'should work with a URL predicate' do
+      page.goto(server_empty_page)
+      waited_frame = page.wait_for_frame(url: "#{server_prefix}/title.html") do
+        attach_frame(page, 'frame2', "#{server_prefix}/title.html")
+      end
+      expect(waited_frame.parent_frame).to eq(page.main_frame)
+    end
+
+    it 'should be cancellable' do
+      skip('AbortSignal is not supported')
+    end
+  end
 
   describe 'Page#expose_function' do
     it 'should work' do
@@ -855,6 +1014,19 @@ RSpec.describe Puppeteer::Page do
 
       result = page.evaluate('async () => { return await globalThis.complexObject({x:5}, {x:2}) }')
       expect(result).to eq({ 'x' => 7 })
+    end
+  end
+
+  describe 'Page#remove_exposed_function' do
+    it 'should work' do
+      page.expose_function('compute', ->(a, b) { a * b })
+      result = page.evaluate('async function() { return await globalThis.compute(9, 4) }')
+      expect(result).to eq(36)
+      page.remove_exposed_function('compute')
+
+      expect {
+        page.evaluate('async function() { return await globalThis.compute(9, 4) }')
+      }.to raise_error(Puppeteer::Error)
     end
   end
 
@@ -1246,6 +1418,23 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
+  describe 'Page.reload', sinatra: true do
+    it 'should enable or disable the cache based on reload params' do
+      page.goto("#{server_prefix}/cached/one-style.html")
+      cached_request = await_promises(
+        async_promise { server.wait_for_request('/cached/one-style.html') },
+        async_promise { page.reload },
+      ).first
+      expect(cached_request.headers['if-modified-since']).not_to be_nil
+
+      non_cached_request = await_promises(
+        async_promise { server.wait_for_request('/cached/one-style.html') },
+        async_promise { page.reload(ignore_cache: true) },
+      ).first
+      expect(non_cached_request.headers['if-modified-since']).to be_nil
+    end
+  end
+
   describe '#cache_enabled', browser_context: :incognito, sinatra: true do
     before {
       sinatra.get("/cached/_one-style.css") {
@@ -1575,6 +1764,31 @@ RSpec.describe Puppeteer::Page do
     it 'should return the correct browser context instance' do
       expect(page.browser_context).to be_a(Puppeteer::BrowserContext)
       expect(page.browser_context.pages.last).to eq(page)
+    end
+  end
+
+  describe '#client' do
+    it 'should return the client instance' do
+      expect(page.client).to be_a(Puppeteer::CDPSession)
+    end
+  end
+
+  describe '#bring_to_front' do
+    it 'should work' do
+      context = page.browser_context
+      page1 = context.new_page
+      page2 = context.new_page
+
+      page1.bring_to_front
+      expect(page1.evaluate('() => document.visibilityState')).to eq('visible')
+      expect(page2.evaluate('() => document.visibilityState')).to eq('hidden')
+
+      page2.bring_to_front
+      expect(page1.evaluate('() => document.visibilityState')).to eq('hidden')
+      expect(page2.evaluate('() => document.visibilityState')).to eq('visible')
+
+      page1.close
+      page2.close
     end
   end
 end

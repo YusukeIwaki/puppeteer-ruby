@@ -2,6 +2,7 @@
 
 require 'base64'
 require 'json'
+require 'objspace'
 require "stringio"
 
 require_relative './page/metrics'
@@ -46,9 +47,12 @@ class Puppeteer::Page
     @emulation_manager = Puppeteer::EmulationManager.new(client)
     @tracing = Puppeteer::Tracing.new(client)
     @page_bindings = {}
+    @page_binding_ids = {}
     @coverage = Puppeteer::Coverage.new(client)
     @javascript_enabled = true
     @screenshot_task_queue = ScreenshotTaskQueue.new
+    @inflight_requests = Set.new
+    @request_intercepted_listener_map = ObjectSpace::WeakMap.new
 
     @workers = {}
     @user_drag_interception_enabled = false
@@ -71,15 +75,19 @@ class Puppeteer::Page
 
     network_manager = @frame_manager.network_manager
     network_manager.on_event(NetworkManagerEmittedEvents::Request) do |event|
+      @inflight_requests.add(event)
       emit_event(PageEmittedEvents::Request, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::Response) do |event|
+      @inflight_requests.delete(event.request)
       emit_event(PageEmittedEvents::Response, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::RequestFailed) do |event|
+      @inflight_requests.delete(event)
       emit_event(PageEmittedEvents::RequestFailed, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::RequestFinished) do |event|
+      @inflight_requests.delete(event)
       emit_event(PageEmittedEvents::RequestFinished, event)
     end
     @file_chooser_interception_is_disabled = false
@@ -178,9 +186,9 @@ class Puppeteer::Page
     end
 
     if event_name.to_s == 'request'
-      super('request') do |req|
-        req.enqueue_intercept_action(-> { block.call(req) })
-      end
+      wrapped = ->(req) { req.enqueue_intercept_action(-> { block.call(req) }) }
+      @request_intercepted_listener_map[block] = wrapped
+      super('request', &wrapped)
     else
       super(event_name.to_s, &block)
     end
@@ -195,11 +203,31 @@ class Puppeteer::Page
     end
 
     if event_name.to_s == 'request'
-      super('request') do |req|
-        req.enqueue_intercept_action(-> { block.call(req) })
-      end
+      wrapped = ->(req) { req.enqueue_intercept_action(-> { block.call(req) }) }
+      @request_intercepted_listener_map[block] = wrapped
+      super('request', &wrapped)
     else
       super(event_name.to_s, &block)
+    end
+  end
+
+  # @rbs event_name_or_id: (String | Symbol) -- Page event name or listener ID
+  # @rbs listener: Proc? -- Event handler to remove
+  # @rbs return: void -- No return value
+  def off(event_name_or_id, listener = nil, &block)
+    listener ||= block
+    if listener && PageEmittedEvents.values.include?(event_name_or_id.to_s)
+      event_name = event_name_or_id.to_s
+      if event_name == 'request'
+        wrapped = @request_intercepted_listener_map[listener]
+        return unless wrapped
+        @request_intercepted_listener_map.delete(listener)
+        super(event_name, wrapped)
+      else
+        super(event_name, listener)
+      end
+    else
+      super(event_name_or_id)
     end
   end
 
@@ -539,13 +567,39 @@ class Puppeteer::Page
 
     source = JavaScriptFunction.new(add_page_binding, ['exposedFun', name]).source
     @client.send_message('Runtime.addBinding', name: name)
-    @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
+    script = @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
+    @page_binding_ids[name] = script['identifier']
 
     promises = @frame_manager.frames.map do |frame|
       frame.async_evaluate("() => #{source}")
     end
     Puppeteer::AsyncUtils.await_promise_all(*promises)
 
+    nil
+  end
+
+  # @rbs name: String -- Binding name
+  # @rbs return: void -- No return value
+  def remove_exposed_function(name)
+    identifier = @page_binding_ids[name]
+    unless identifier
+      raise ArgumentError.new("Function with name \"#{name}\" does not exist")
+    end
+
+    @page_binding_ids.delete(name)
+    @page_bindings.delete(name)
+
+    @client.send_message('Runtime.removeBinding', name: name)
+    @client.send_message('Page.removeScriptToEvaluateOnNewDocument', identifier: identifier)
+
+    remove_script = '(name) => { delete window[name]; }'
+    @frame_manager.frames.each do |frame|
+      begin
+        frame.evaluate(remove_script, name)
+      rescue StandardError
+        nil
+      end
+    end
     nil
   end
 
@@ -737,10 +791,18 @@ class Puppeteer::Page
 
   # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
   # @rbs wait_until: String | Array[String] | nil -- Lifecycle events to wait for
+  # @rbs ignore_cache: bool? -- Skip cache when reloading
   # @rbs return: Puppeteer::HTTPResponse? -- Navigation response
-  def reload(timeout: nil, wait_until: nil)
+  def reload(timeout: nil, wait_until: nil, ignore_cache: nil)
+    params = {}
+    params[:ignoreCache] = ignore_cache unless ignore_cache.nil?
+
     wait_for_navigation(timeout: timeout, wait_until: wait_until) do
-      @client.send_message('Page.reload')
+      if params.empty?
+        @client.send_message('Page.reload')
+      else
+        @client.send_message('Page.reload', **params)
+      end
     end
   end
 
@@ -761,7 +823,7 @@ class Puppeteer::Page
     promise = Async::Promise.new
 
     listener_id = @frame_manager.network_manager.add_event_listener(event_name) do |event_target|
-      if predicate.call(event_target)
+      if Puppeteer::AsyncUtils.await(predicate.call(event_target))
         promise.resolve(event_target)
       end
     end
@@ -788,7 +850,7 @@ class Puppeteer::Page
 
     listener_ids = event_names.map do |event_name|
       @frame_manager.add_event_listener(event_name) do |event_target|
-        if predicate.call(event_target)
+        if Puppeteer::AsyncUtils.await(predicate.call(event_target))
           promise.resolve(event_target) unless promise.resolved?
         end
       end
@@ -882,6 +944,57 @@ class Puppeteer::Page
   # @!method async_wait_for_response(url: nil, predicate: nil, timeout: nil)
   #
   define_async_method :async_wait_for_response
+
+  # @rbs idle_time: Numeric -- Idle time to wait for in milliseconds
+  # @rbs timeout: Numeric? -- Timeout in milliseconds
+  # @rbs concurrency: Integer -- Allowed number of concurrent requests
+  # @rbs return: void -- No return value
+  def wait_for_network_idle(idle_time: 500, timeout: nil, concurrency: 0)
+    option_timeout = timeout || @timeout_settings.timeout
+
+    promise = Async::Promise.new
+    idle_timer = nil
+
+    schedule_idle = lambda do
+      return if @inflight_requests.size > concurrency
+
+      idle_timer&.stop
+      idle_timer = Async do
+        Puppeteer::AsyncUtils.sleep_seconds(idle_time / 1000.0)
+        promise.resolve(nil) unless promise.resolved?
+      end
+    end
+
+    request_listener = on('request') do
+      idle_timer&.stop
+      idle_timer = nil
+    end
+    response_listener = on('response') { schedule_idle.call }
+    request_finished_listener = on('requestfinished') { schedule_idle.call }
+    request_failed_listener = on('requestfailed') { schedule_idle.call }
+
+    schedule_idle.call
+
+    begin
+      if option_timeout == 0
+        Puppeteer::AsyncUtils.await_promise_race(promise, session_close_promise)
+      else
+        Puppeteer::AsyncUtils.async_timeout(option_timeout, -> {
+          Puppeteer::AsyncUtils.await_promise_race(promise, session_close_promise)
+        }).wait
+      end
+    rescue Async::TimeoutError
+      raise Puppeteer::TimeoutError.new("waiting for network idle failed: timeout #{option_timeout}ms exceeded")
+    ensure
+      off(request_listener)
+      off(response_listener)
+      off(request_finished_listener)
+      off(request_failed_listener)
+      idle_timer&.stop
+    end
+  end
+
+  define_async_method :async_wait_for_network_idle
 
   # @rbs url: String? -- URL to match
   # @rbs predicate: Proc? -- Predicate to match

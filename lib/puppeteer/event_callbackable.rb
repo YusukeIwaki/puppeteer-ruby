@@ -20,6 +20,12 @@ module Puppeteer::EventCallbackable
       @listeners.delete(id)
     end
 
+    # @param handler [Proc] Listener proc
+    def delete_by_handler(handler)
+      id, = @listeners.find { |_, listener| listener == handler }
+      @listeners.delete(id) if id
+    end
+
     # @implement Enumerable#each
     def each(&block)
       @listeners.values.each(&block)
@@ -32,6 +38,15 @@ module Puppeteer::EventCallbackable
   end
 
   alias_method :on, :add_event_listener
+
+  def off(event_name_or_id, listener = nil, &block)
+    listener ||= block
+    if listener
+      (@event_listeners ||= {})[event_name_or_id]&.delete_by_handler(listener)
+    else
+      remove_event_listener(event_name_or_id)
+    end
+  end
 
   def remove_event_listener(*id_args)
     (@event_listeners ||= {}).each do |event_name, listeners|

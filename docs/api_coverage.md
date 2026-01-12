@@ -149,7 +149,7 @@
 * ~~addListener~~
 * ~~emit~~
 * ~~listenerCount~~
-* ~~off~~
+* off
 * ~~on~~
 * ~~once~~
 * ~~removeAllListeners~~
@@ -173,9 +173,11 @@
 * addStyleTag => `#add_style_tag`
 * childFrames => `#child_frames`
 * click
+* client
 * content
 * evaluate
 * evaluateHandle => `#evaluate_handle`
+* frameElement => `#frame_element`
 * focus
 * goto
 * hover
@@ -294,6 +296,7 @@
 * bringToFront => `#bring_to_front`
 * browser
 * browserContext => `#browser_context`
+* client
 * click
 * close
 * content
@@ -312,6 +315,7 @@
 * evaluateHandle => `#evaluate_handle`
 * evaluateOnNewDocument => `#evaluate_on_new_document`
 * exposeFunction => `#expose_function`
+* removeExposedFunction => `#remove_exposed_function`
 * focus
 * frames
 * ~~getDefaultTimeout~~
@@ -324,7 +328,7 @@
 * isJavaScriptEnabled => `#javascript_enabled?`
 * mainFrame => `#main_frame`
 * metrics
-* ~~off~~
+* off
 * on
 * once
 * pdf
@@ -359,7 +363,7 @@
 * waitForFrame => `#wait_for_frame`
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
-* ~~waitForNetworkIdle~~
+* waitForNetworkIdle => `#wait_for_network_idle`
 * waitForRequest => `#wait_for_request`
 * waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`
