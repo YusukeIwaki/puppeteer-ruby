@@ -74,12 +74,20 @@ class Puppeteer::CustomQueryHandler
   def query_all_array(element, selector)
     if @query_all
       handles = element.evaluate_handle(@query_all, selector)
-      return handles.evaluate_handle('(res) => Array.from(res)')
+      begin
+        return handles.evaluate_handle('(res) => Array.from(res)')
+      ensure
+        handles.dispose
+      end
     end
 
     if @query_one
       elements = query_all(element, selector)
-      return element.execution_context.evaluate_handle('(...elements) => elements', *elements)
+      begin
+        return element.execution_context.evaluate_handle('(...elements) => elements', *elements)
+      ensure
+        elements.each(&:dispose)
+      end
     end
 
     raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
