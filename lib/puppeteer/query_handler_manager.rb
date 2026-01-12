@@ -3,12 +3,38 @@ require 'singleton'
 class Puppeteer::QueryHandlerManager
   include Singleton
 
+  DEFAULT_QUERY_HANDLER_NAMES = %i[aria xpath text].freeze
+
   def query_handlers
     @query_handlers ||= {
       aria: Puppeteer::AriaQueryHandler.new,
       xpath: xpath_handler,
       text: text_query_handler,
     }
+  end
+
+  def custom_query_handler_names
+    query_handlers.keys.reject { |name| DEFAULT_QUERY_HANDLER_NAMES.include?(name) }.map(&:to_s)
+  end
+
+  def unregister_custom_query_handler(name)
+    handler_name = name.to_sym
+    if DEFAULT_QUERY_HANDLER_NAMES.include?(handler_name)
+      raise ArgumentError.new("Cannot unregister built-in query handler: #{name}")
+    end
+    unless query_handlers.key?(handler_name)
+      raise ArgumentError.new("Cannot unregister unknown handler: #{name}")
+    end
+
+    query_handlers.delete(handler_name)
+  end
+
+  def clear_custom_query_handlers
+    query_handlers.each_key do |name|
+      next if DEFAULT_QUERY_HANDLER_NAMES.include?(name)
+
+      query_handlers.delete(name)
+    end
   end
 
   private def default_handler

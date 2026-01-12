@@ -179,8 +179,8 @@ class Puppeteer::IsolaatedWorld
   # `$$()` in JavaScript.
   # @param {string} selector
   # @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-  def query_selector_all(selector)
-    document.query_selector_all(selector)
+  def query_selector_all(selector, isolate: nil)
+    document.query_selector_all(selector, isolate: isolate)
   end
   alias_method :SS, :query_selector_all
 

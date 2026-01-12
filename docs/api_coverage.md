@@ -4,9 +4,9 @@
 
 ## Puppeteer
 
-* ~~clearCustomQueryHandlers~~
+* clearCustomQueryHandlers => `#clear_custom_query_handlers`
 * connect
-* ~~customQueryHandlerNames~~
+* customQueryHandlerNames => `#custom_query_handler_names`
 * defaultArgs => `#default_args`
 * devices
 * ~~errors~~
@@ -15,7 +15,7 @@
 * networkConditions => `#network_conditions`
 * ~~puppeteer~~
 * registerCustomQueryHandler => `#register_custom_query_handler`
-* ~~unregisterCustomQueryHandler~~
+* unregisterCustomQueryHandler => `#unregister_custom_query_handler`
 
 ## ~~Accessibility~~
 

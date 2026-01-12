@@ -207,36 +207,43 @@ class Puppeteer::Puppeteer
   end
 
   # @rbs name: String -- Custom query handler name
-  # @rbs query_one: String -- Query-one handler
-  # @rbs query_all: String -- Query-all handler
+  # @rbs query_one: String? -- Query-one handler
+  # @rbs query_all: String? -- Query-all handler
   # @rbs return: void -- No return value
-  def register_custom_query_handler(name:, query_one:, query_all:)
+  def register_custom_query_handler(name:, query_one: nil, query_all: nil)
     unless name =~ /\A[a-zA-Z]+\z/
       raise ArgumentError.new("Custom query handler names may only contain [a-zA-Z]")
     end
 
+    if query_one.nil? && query_all.nil?
+      raise ArgumentError.new('At least one query method must be implemented.')
+    end
+
+    handler = Puppeteer::CustomQueryHandler.new(query_one: query_one, query_all: query_all)
     handler_name = name.to_sym
     if query_handler_manager.query_handlers.key?(handler_name)
       raise ArgumentError.new("A query handler named #{name} already exists")
     end
 
-    handler = Puppeteer::CustomQueryHandler.new(query_one: query_one, query_all: query_all)
-    Puppeteer::QueryHandlerManager.instance.query_handlers[handler_name] = handler
+    query_handler_manager.query_handlers[handler_name] = handler
   end
 
   # @rbs name: String -- Custom query handler name
-  # @rbs query_one: String -- Query-one handler
-  # @rbs query_all: String -- Query-all handler
+  # @rbs query_one: String? -- Query-one handler
+  # @rbs query_all: String? -- Query-all handler
   # @rbs return: untyped -- Block result
-  def with_custom_query_handler(name:, query_one:, query_all:, &block)
+  def with_custom_query_handler(name:, query_one: nil, query_all: nil, &block)
     unless name =~ /\A[a-zA-Z]+\z/
       raise ArgumentError.new("Custom query handler names may only contain [a-zA-Z]")
+    end
+
+    if query_one.nil? && query_all.nil?
+      raise ArgumentError.new('At least one query method must be implemented.')
     end
 
     handler_name = name.to_sym
 
     handler = Puppeteer::CustomQueryHandler.new(query_one: query_one, query_all: query_all)
-    query_handler_manager = Puppeteer::QueryHandlerManager.instance
     original = query_handler_manager.query_handlers.delete(handler_name)
     query_handler_manager.query_handlers[handler_name] = handler
     begin
@@ -248,6 +255,26 @@ class Puppeteer::Puppeteer
         query_handler_manager.query_handlers.delete(handler_name)
       end
     end
+  end
+
+  # @rbs name: String -- Custom query handler name
+  # @rbs return: void -- No return value
+  def unregister_custom_query_handler(name:)
+    query_handler_manager.unregister_custom_query_handler(name)
+  end
+
+  # @rbs return: void -- No return value
+  def clear_custom_query_handlers
+    query_handler_manager.clear_custom_query_handlers
+  end
+
+  # @rbs return: Array[String] -- Registered custom query handler names
+  def custom_query_handler_names
+    query_handler_manager.custom_query_handler_names
+  end
+
+  private def query_handler_manager
+    Puppeteer::QueryHandlerManager.instance
   end
 
   # @rbs return: Puppeteer::Devices -- Devices registry

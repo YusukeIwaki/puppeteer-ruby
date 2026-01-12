@@ -166,9 +166,10 @@ class Puppeteer::Frame
 
   # `$$()` in JavaScript.
   # @rbs selector: String -- CSS selector
+  # @rbs isolate: bool? -- Use isolated world for queries
   # @rbs return: Array[Puppeteer::ElementHandle] -- Matching elements
-  def query_selector_all(selector)
-    @main_world.query_selector_all(selector)
+  def query_selector_all(selector, isolate: nil)
+    @main_world.query_selector_all(selector, isolate: isolate)
   end
   alias_method :SS, :query_selector_all
 

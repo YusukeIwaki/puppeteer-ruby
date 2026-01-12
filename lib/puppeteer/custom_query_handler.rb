@@ -7,18 +7,20 @@ class Puppeteer::CustomQueryHandler
   end
 
   def query_one(element, selector)
-    unless @query_one
-      raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
+    if @query_one
+      return query_one_with_query_one(element, selector)
     end
 
-    handle = element.evaluate_handle(@query_one, selector)
-    element = handle.as_element
+    if @query_all
+      elements = query_all_with_query_all(element, selector)
+      return nil if elements.empty?
 
-    if element
-      return element
+      first = elements.shift
+      elements.each(&:dispose)
+      return first
     end
-    handle.dispose
-    nil
+
+    raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
   end
 
   def wait_for(element_or_frame, selector, visible: nil, hidden: nil, timeout: nil)
@@ -57,22 +59,55 @@ class Puppeteer::CustomQueryHandler
   end
 
   def query_all(element, selector)
-    unless @query_all
-      raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
+    if @query_all
+      return query_all_with_query_all(element, selector)
     end
 
+    if @query_one
+      element_handle = query_one_with_query_one(element, selector)
+      return element_handle ? [element_handle] : []
+    end
+
+    raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
+  end
+
+  def query_all_array(element, selector)
+    if @query_all
+      handles = element.evaluate_handle(@query_all, selector)
+      begin
+        return handles.evaluate_handle('(res) => Array.from(res)')
+      ensure
+        handles.dispose
+      end
+    end
+
+    if @query_one
+      elements = query_all(element, selector)
+      begin
+        return element.execution_context.evaluate_handle('(...elements) => elements', *elements)
+      ensure
+        elements.each(&:dispose)
+      end
+    end
+
+    raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
+  end
+
+  private def query_one_with_query_one(element, selector)
+    handle = element.evaluate_handle(@query_one, selector)
+    element = handle.as_element
+
+    if element
+      return element
+    end
+    handle.dispose
+    nil
+  end
+
+  private def query_all_with_query_all(element, selector)
     handles = element.evaluate_handle(@query_all, selector)
     properties = handles.properties
     handles.dispose
     properties.values.map(&:as_element).compact
-  end
-
-  def query_all_array(element, selector)
-    unless @query_all
-      raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
-    end
-
-    handles = element.evaluate_handle(@query_all, selector)
-    handles.evaluate_handle('(res) => Array.from(res)')
   end
 end
