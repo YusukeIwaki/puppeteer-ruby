@@ -685,7 +685,7 @@ class Puppeteer::Page
     unless %w(alert confirm prompt beforeunload).include?(dialog_type)
       raise ArgumentError.new("Unknown javascript dialog type: #{dialog_type}")
     end
-    dialog = Puppeteer::Dialog.new(@client,
+    dialog = Puppeteer::CdpDialog.new(@client,
               type: dialog_type,
               message: event['message'],
               default_value: event['defaultPrompt'])

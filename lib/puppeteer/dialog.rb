@@ -1,34 +1,67 @@
+# rbs_inline: enabled
+
 class Puppeteer::Dialog
-  def initialize(client, type:, message:, default_value:)
-    @client = client
+  # @rbs type: String -- Dialog type
+  # @rbs message: String -- Dialog message
+  # @rbs default_value: String? -- Default prompt value, if any
+  # @rbs return: void -- No return value
+  def initialize(type:, message:, default_value: '')
     @type = type
     @message = message
     @default_value = default_value || ''
+    @handled = false
   end
 
-  attr_reader :type, :message, :default_value
+  attr_reader :type
+  attr_reader :message
+  attr_reader :default_value
 
-  # @param prompt_text - optional text that will be entered in the dialog
-  # prompt. Has no effect if the dialog's type is not `prompt`.
-  #
-  # @returns A promise that resolves when the dialog has been accepted.
+  # @rbs prompt_text: String? -- Text entered into the prompt
+  # @rbs return: void -- No return value
   def accept(prompt_text = nil)
     if @handled
       raise 'Cannot accept dialog which is already handled!'
     end
     @handled = true
-    @client.send_message('Page.handleJavaScriptDialog', {
-      accept: true,
-      promptText: prompt_text,
-    }.compact)
+    handle(accept: true, text: prompt_text)
   end
 
-  # @returns A promise which will resolve once the dialog has been dismissed
+  # @rbs return: void -- No return value
   def dismiss
     if @handled
-      raise 'Cannot accept dialog which is already handled!'
+      raise 'Cannot dismiss dialog which is already handled!'
     end
     @handled = true
-    @client.send_message('Page.handleJavaScriptDialog', accept: false)
+    handle(accept: false)
+  end
+
+  # @rbs accept: bool -- Whether to accept the dialog
+  # @rbs text: String? -- Text entered into the prompt
+  # @rbs return: void -- No return value
+  protected def handle(accept:, text: nil)
+    raise NotImplementedError
+  end
+end
+
+class Puppeteer::CdpDialog < Puppeteer::Dialog
+  # @rbs client: Puppeteer::CDPSession -- CDP session used to handle dialog
+  # @rbs type: String -- Dialog type
+  # @rbs message: String -- Dialog message
+  # @rbs default_value: String? -- Default prompt value, if any
+  # @rbs return: void -- No return value
+  def initialize(client, type:, message:, default_value:)
+    super(type: type, message: message, default_value: default_value)
+    @client = client
+  end
+
+  # @rbs accept: bool -- Whether to accept the dialog
+  # @rbs text: String? -- Text entered into the prompt
+  # @rbs return: void -- No return value
+  protected def handle(accept:, text: nil)
+    @client.send_message('Page.handleJavaScriptDialog', {
+      accept: accept,
+      promptText: text,
+    }.compact)
+    nil
   end
 end
