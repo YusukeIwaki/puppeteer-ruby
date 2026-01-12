@@ -12,9 +12,9 @@ class Puppeteer::Dialog
     @handled = false
   end
 
-  attr_reader :type
-  attr_reader :message
-  attr_reader :default_value
+  attr_reader :type #: String
+  attr_reader :message #: String
+  attr_reader :default_value #: String
 
   # @rbs prompt_text: String? -- Text entered into the prompt
   # @rbs return: void -- No return value
