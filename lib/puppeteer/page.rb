@@ -229,7 +229,13 @@ class Puppeteer::Page
         listeners = @request_intercepted_listener_map[listener]
         wrapped = listeners&.shift
         return unless wrapped
-        @request_intercepted_listener_map.delete(listener) if listeners.empty?
+        if listeners.empty?
+          if @request_intercepted_listener_map.respond_to?(:delete)
+            @request_intercepted_listener_map.delete(listener)
+          else
+            @request_intercepted_listener_map[listener] = nil
+          end
+        end
         super(event_name, wrapped)
       else
         super(event_name, listener)
@@ -961,12 +967,11 @@ class Puppeteer::Page
   def wait_for_network_idle(idle_time: 500, timeout: nil, concurrency: 0)
     option_timeout = timeout || @timeout_settings.timeout
 
-    inflight = @inflight_requests.size
     promise = Async::Promise.new
     idle_timer = nil
 
     schedule_idle = lambda do
-      return if inflight > concurrency
+      return if @inflight_requests.size > concurrency
 
       idle_timer&.stop
       idle_timer = Async do
@@ -976,16 +981,13 @@ class Puppeteer::Page
     end
 
     request_listener = on('request') do
-      inflight += 1
       idle_timer&.stop
       idle_timer = nil
     end
     request_finished_listener = on('requestfinished') do
-      inflight -= 1
       schedule_idle.call
     end
     request_failed_listener = on('requestfailed') do
-      inflight -= 1
       schedule_idle.call
     end
 
