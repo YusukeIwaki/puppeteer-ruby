@@ -16,6 +16,7 @@ class Puppeteer::Frame
     @has_started_loading = false
 
     @loader_id = ''
+    @url = 'about:blank'
     @lifecycle_events = Set.new
     @child_frames = Set.new
     if parent_frame

@@ -362,7 +362,6 @@ class Puppeteer::FrameManager
   private def ensure_isolated_world(session, name)
     key = "#{session.id}:#{name}"
     return if @isolated_worlds.include?(key)
-    @isolated_worlds << key
 
     session.send_message('Page.addScriptToEvaluateOnNewDocument',
       source: "//# sourceURL=#{Puppeteer::ExecutionContext::EVALUATION_SCRIPT_URL}",
@@ -371,13 +370,18 @@ class Puppeteer::FrameManager
     create_isolated_worlds_promises = frames.
       select { |frame| frame._client == session }.
       map do |frame|
-        session.async_send_message('Page.createIsolatedWorld',
-          frameId: frame.id,
-          grantUniveralAccess: true,
-          worldName: name,
-        )
+        Async do
+          session.send_message('Page.createIsolatedWorld',
+            frameId: frame.id,
+            grantUniveralAccess: true,
+            worldName: name,
+          )
+        rescue => err
+          debug_puts(err)
+        end
       end
     Puppeteer::AsyncUtils.await_promise_all(*create_isolated_worlds_promises)
+    @isolated_worlds << key
   end
 
   # @param frame_id [String]

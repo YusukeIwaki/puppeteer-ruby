@@ -79,7 +79,6 @@ class Puppeteer::Page
       emit_event(PageEmittedEvents::Request, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::Response) do |event|
-      @inflight_requests.delete(event.request)
       emit_event(PageEmittedEvents::Response, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::RequestFailed) do |event|
@@ -187,7 +186,11 @@ class Puppeteer::Page
 
     if event_name.to_s == 'request'
       wrapped = ->(req) { req.enqueue_intercept_action(-> { block.call(req) }) }
-      @request_intercepted_listener_map[block] = wrapped
+      if (listeners = @request_intercepted_listener_map[block])
+        listeners << wrapped
+      else
+        @request_intercepted_listener_map[block] = [wrapped]
+      end
       super('request', &wrapped)
     else
       super(event_name.to_s, &block)
@@ -204,7 +207,11 @@ class Puppeteer::Page
 
     if event_name.to_s == 'request'
       wrapped = ->(req) { req.enqueue_intercept_action(-> { block.call(req) }) }
-      @request_intercepted_listener_map[block] = wrapped
+      if (listeners = @request_intercepted_listener_map[block])
+        listeners << wrapped
+      else
+        @request_intercepted_listener_map[block] = [wrapped]
+      end
       super('request', &wrapped)
     else
       super(event_name.to_s, &block)
@@ -219,9 +226,10 @@ class Puppeteer::Page
     if listener && PageEmittedEvents.values.include?(event_name_or_id.to_s)
       event_name = event_name_or_id.to_s
       if event_name == 'request'
-        wrapped = @request_intercepted_listener_map[listener]
+        listeners = @request_intercepted_listener_map[listener]
+        wrapped = listeners&.shift
         return unless wrapped
-        @request_intercepted_listener_map.delete(listener)
+        @request_intercepted_listener_map.delete(listener) if listeners.empty?
         super(event_name, wrapped)
       else
         super(event_name, listener)
@@ -594,11 +602,9 @@ class Puppeteer::Page
 
     remove_script = '(name) => { delete window[name]; }'
     @frame_manager.frames.each do |frame|
-      begin
-        frame.evaluate(remove_script, name)
-      rescue StandardError
-        nil
-      end
+      frame.evaluate(remove_script, name)
+    rescue StandardError
+      nil
     end
     nil
   end
@@ -716,7 +722,10 @@ class Puppeteer::Page
   end
 
   private def add_console_message(type, args, stack_trace)
-    text_tokens = args.map { |arg| arg.remote_object.value }
+    text_tokens = args.map do |arg|
+      value = arg.remote_object.value
+      value.nil? ? arg.to_s : value
+    end
 
     stack_trace_locations =
       if stack_trace && stack_trace['callFrames']
@@ -952,11 +961,12 @@ class Puppeteer::Page
   def wait_for_network_idle(idle_time: 500, timeout: nil, concurrency: 0)
     option_timeout = timeout || @timeout_settings.timeout
 
+    inflight = @inflight_requests.size
     promise = Async::Promise.new
     idle_timer = nil
 
     schedule_idle = lambda do
-      return if @inflight_requests.size > concurrency
+      return if inflight > concurrency
 
       idle_timer&.stop
       idle_timer = Async do
@@ -966,12 +976,18 @@ class Puppeteer::Page
     end
 
     request_listener = on('request') do
+      inflight += 1
       idle_timer&.stop
       idle_timer = nil
     end
-    response_listener = on('response') { schedule_idle.call }
-    request_finished_listener = on('requestfinished') { schedule_idle.call }
-    request_failed_listener = on('requestfailed') { schedule_idle.call }
+    request_finished_listener = on('requestfinished') do
+      inflight -= 1
+      schedule_idle.call
+    end
+    request_failed_listener = on('requestfailed') do
+      inflight -= 1
+      schedule_idle.call
+    end
 
     schedule_idle.call
 
@@ -987,7 +1003,6 @@ class Puppeteer::Page
       raise Puppeteer::TimeoutError.new("waiting for network idle failed: timeout #{option_timeout}ms exceeded")
     ensure
       off(request_listener)
-      off(response_listener)
       off(request_finished_listener)
       off(request_failed_listener)
       idle_timer&.stop

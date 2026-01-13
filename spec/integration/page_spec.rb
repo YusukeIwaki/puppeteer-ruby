@@ -583,7 +583,9 @@ RSpec.describe Puppeteer::Page do
       frame.remove();
     }
     JAVASCRIPT
-    popup_target = page.browser_context.targets.last
+    popup_target = page.browser_context.wait_for_target(
+      predicate: ->(target) { target.type == 'page' && target != page.target },
+    )
     popup_page = popup_target.page
     expect(popup_page).not_to eq(page)
   end

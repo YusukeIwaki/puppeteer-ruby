@@ -17,7 +17,15 @@ class Puppeteer::ConsoleMessage
     @log_type = log_type
     @text = text
     @args = args
-    @stack_trace_locations = stack_trace_locations
+    @stack_trace_locations =
+      case stack_trace_locations
+      when nil
+        []
+      when Array
+        stack_trace_locations
+      else
+        [stack_trace_locations]
+      end
   end
 
   attr_reader :log_type, :text, :args

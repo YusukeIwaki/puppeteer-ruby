@@ -59,6 +59,23 @@ class Puppeteer::Target
 
   attr_reader :target_id, :target_info, :initialized_promise, :is_closed_promise
 
+  def ==(other)
+    other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)
+    return true if equal?(other)
+    return false unless other.is_a?(Puppeteer::Target)
+    return false if target_id.nil? || other.target_id.nil?
+
+    target_id == other.target_id
+  end
+
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    target_id ? target_id.hash : super
+  end
+
   def closed_callback
     @is_closed_promise.resolve(true) unless @is_closed_promise.resolved?
   end
