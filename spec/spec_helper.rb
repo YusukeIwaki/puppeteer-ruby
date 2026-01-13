@@ -201,9 +201,11 @@ RSpec.configure do |config|
 
   config.around(:each, type: :integration) do |example|
     if timeout_sec > 0
-      Timeout.timeout(timeout_sec) { example.run }
+      Timeout.timeout(timeout_sec) { Sync { example.run } }
     else
-      example.run
+      Sync do
+        example.run
+      end
     end
   end
 
@@ -221,7 +223,7 @@ RSpec.configure do |config|
   module AsyncSpecHelpers
     def async_promise(&block)
       promise = Async::Promise.new
-      Thread.new do
+      Async do
         Async::Promise.fulfill(promise, &Puppeteer::AsyncUtils.future_with_logging(&block))
       end
       promise

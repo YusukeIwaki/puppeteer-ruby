@@ -976,11 +976,14 @@ class Puppeteer::Page
       idle_timer&.stop
       idle_timer = Async do
         Puppeteer::AsyncUtils.sleep_seconds(idle_time / 1000.0)
-        promise.resolve(nil) unless promise.resolved?
+        unless promise.resolved? || @inflight_requests.size > concurrency
+          promise.resolve(nil)
+        end
       end
     end
 
-    request_listener = on('request') do
+    # Use raw listener to avoid request interception queue delaying idle tracking.
+    request_listener = add_event_listener('request') do
       idle_timer&.stop
       idle_timer = nil
     end
