@@ -149,7 +149,7 @@
 * ~~addListener~~
 * ~~emit~~
 * ~~listenerCount~~
-* off
+* ~~off~~
 * ~~on~~
 * ~~once~~
 * ~~removeAllListeners~~
@@ -173,11 +173,9 @@
 * addStyleTag => `#add_style_tag`
 * childFrames => `#child_frames`
 * click
-* client
 * content
 * evaluate
 * evaluateHandle => `#evaluate_handle`
-* frameElement => `#frame_element`
 * focus
 * goto
 * hover
@@ -296,7 +294,6 @@
 * bringToFront => `#bring_to_front`
 * browser
 * browserContext => `#browser_context`
-* client
 * click
 * close
 * content
@@ -315,7 +312,6 @@
 * evaluateHandle => `#evaluate_handle`
 * evaluateOnNewDocument => `#evaluate_on_new_document`
 * exposeFunction => `#expose_function`
-* removeExposedFunction => `#remove_exposed_function`
 * focus
 * frames
 * ~~getDefaultTimeout~~
