@@ -160,6 +160,35 @@ test/assets/                 # Test fixtures (HTML, JS, CSS)
 └── ...
 ```
 
+### Test File Comparison Workflow
+
+To verify test alignment between TypeScript and Ruby:
+
+1. **Fetch TypeScript test structure:**
+   ```
+   https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/src/page.spec.ts
+   ```
+
+2. **Compare describe/it block titles** between files, checking:
+   - Order matches
+   - Names match (accounting for Ruby naming conventions)
+   - No missing tests
+
+3. **Handle differences:**
+   - **TypeScript-only tests**: Add to Ruby spec with `skip('Not implemented')` or implement
+   - **Ruby-only tests**: Move to `*_ext_spec.rb` file
+
+### Key Test File Pairs
+
+| TypeScript | Ruby | Ruby Extension |
+|------------|------|----------------|
+| `test/src/page.spec.ts` | `spec/integration/page_spec.rb` | `page_ext_spec.rb` |
+| `test/src/frame.spec.ts` | `spec/integration/frame_spec.rb` | `frame_ext_spec.rb` |
+| `test/src/keyboard.spec.ts` | `spec/integration/keyboard_spec.rb` | `keyboard_ext_spec.rb` |
+| `test/src/click.spec.ts` | `spec/integration/click_spec.rb` | - |
+
+Note: Some tests (e.g., `BrowserContext#override_permissions`) may be split into separate files like `browser_context_permissions_spec.rb` if they represent distinct features.
+
 ### Porting Principles
 
 1. **Preserve test order** - Keep `it` blocks in the exact same order as upstream
