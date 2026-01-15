@@ -7,6 +7,7 @@ require 'async/http/endpoint'
 require 'protocol/http/response'
 require 'socket'
 require 'timeout'
+require 'time'
 require 'uri'
 require 'openssl'
 
@@ -243,6 +244,7 @@ module TestServer
       }
       if sanitized.start_with?('cached/')
         headers['cache-control'] = 'public, max-age=31536000'
+        headers['last-modified'] = File.mtime(file_path).utc.httpdate
       end
 
       # Add CSP header if set for this path

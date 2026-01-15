@@ -324,7 +324,7 @@
 * isJavaScriptEnabled => `#javascript_enabled?`
 * mainFrame => `#main_frame`
 * metrics
-* ~~off~~
+* off
 * on
 * once
 * pdf
@@ -359,7 +359,7 @@
 * waitForFrame => `#wait_for_frame`
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
-* ~~waitForNetworkIdle~~
+* waitForNetworkIdle => `#wait_for_network_idle`
 * waitForRequest => `#wait_for_request`
 * waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`

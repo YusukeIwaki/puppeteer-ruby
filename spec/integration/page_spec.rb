@@ -1,25 +1,24 @@
 require 'spec_helper'
+require 'thread'
 
 RSpec.describe Puppeteer::Page do
   include_context 'with test state'
-  describe 'goto', sinatra: true do
-    before {
-      sinatra.get('/hello') do
-        <<~HTML
-        <html>
-          <head>
-            <title>Hello World</title>
-          </head>
-          <body>My Sinatra</body>
-        </html>
-        HTML
-      end
-    }
 
-    it "can browser html page" do
-      page.goto("#{server_prefix}/hello")
-      expect(page.title).to include("Hello World")
-      expect(page.evaluate('() => document.body.innerText')).to eq("My Sinatra")
+  describe 'Page.newPage' do
+    it 'should open pages in a new window' do
+      skip('Not implemented')
+    end
+
+    it 'should open pages in a new window at the specified position' do
+      skip('Not implemented')
+    end
+
+    it 'should open pages in a new window in maximized state' do
+      skip('Not implemented')
+    end
+
+    it 'should create a background page' do
+      skip('Not implemented')
     end
   end
 
@@ -38,6 +37,16 @@ RSpec.describe Puppeteer::Page do
       expect(browser.pages).to include(new_page)
       new_page.close
       expect(browser.pages).not_to include(new_page)
+    end
+
+    it 'should close child iframes', sinatra: true do
+      context = page.browser_context
+
+      new_page = context.new_page
+      new_page.goto("#{server_prefix}/frames/one-frame.html")
+      expect(new_page.frames.length).to eq(2)
+      new_page.close
+      expect(context.pages).not_to include(new_page)
     end
 
     it 'should run beforeunload if asked for', sinatra: true do
@@ -112,23 +121,55 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'removing and adding event handlers' do
-    it 'should correctly fire event handlers as they are added and then removed', pending: 'Page#off is not implemented', sinatra: true do
-      handler = double('ResponseHandler')
-      allow(handler).to receive(:on_response)
+    it 'should correctly fire event handlers as they are added and then removed', sinatra: true do
+      calls = 0
+      on_response = lambda do |response|
+        next if response.url.include?('favicon.ico')
 
-      page.on('response') { handler.on_response }
+        calls += 1
+      end
+
+      page.on('response', &on_response)
       page.goto(server_empty_page)
-      expect(handler).to have_received(:on_response).once
+      expect(calls).to eq(1)
 
-      page.off('response') { handler.on_response }
+      page.off('response', on_response)
       page.goto(server_empty_page)
       # Still one because we removed the handler.
-      expect(handler).to have_received(:on_response).once
+      expect(calls).to eq(1)
 
-      page.on('response') { handler.on_response }
+      page.on('response', &on_response)
       page.goto(server_empty_page)
       # Two now because we added the handler back.
-      expect(handler).to have_received(:on_response).twice
+      expect(calls).to eq(2)
+    end
+
+    it 'should correctly added and removed request events', sinatra: true do
+      calls = 0
+      on_request = lambda do |request|
+        next if request.url.include?('favicon.ico')
+
+        calls += 1
+      end
+
+      page.on('request', &on_request)
+      page.on('request', &on_request)
+      page.goto(server_empty_page)
+      expect(calls).to eq(2)
+
+      page.off('request', on_request)
+      page.goto(server_empty_page)
+      # Still one because we removed the handler.
+      expect(calls).to eq(3)
+
+      page.off('request', on_request)
+      page.goto(server_empty_page)
+      expect(calls).to eq(3)
+
+      page.on('request', &on_request)
+      page.goto(server_empty_page)
+      # Two now because we added the handler back.
+      expect(calls).to eq(4)
     end
   end
 
@@ -165,7 +206,7 @@ RSpec.describe Puppeteer::Page do
       expect(popup.evaluate("() => !!window.opener")).to eq(false)
     end
 
-    it 'should work with clicking target=_blank', sinatra: true do
+    it 'should work with clicking target=_blank and without rel=opener', sinatra: true do
       page.goto(server_empty_page)
       page.content = '<a target=_blank href="/one-style.html">yo</a>'
 
@@ -222,97 +263,6 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  describe 'BrowserContext#override_permissions', browser_context: :incognito, sinatra: true do
-    def get_permission_for(page, name)
-      page.evaluate(
-        "(name) => navigator.permissions.query({ name }).then((result) => result.state)",
-        name)
-    end
-
-    before {
-      page.goto(server_empty_page)
-    }
-
-    it 'should be prompt by default' do
-      expect(get_permission_for(page, "geolocation")).to eq("prompt")
-    end
-
-    it 'should deny permission when not listed' do
-      page.browser_context.override_permissions(server_empty_page, [])
-      expect(get_permission_for(page, "geolocation")).to eq("denied")
-    end
-
-    it 'should fail when bad permission is given' do
-      expect { page.browser_context.override_permissions(server_empty_page, ['foo']) }.
-        to raise_error(/Unknown permission: foo/)
-    end
-
-    it 'should grant permission when listed' do
-      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
-      expect(get_permission_for(page, "geolocation")).to eq("granted")
-    end
-
-    it 'should reset permissions' do
-      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
-
-      expect {
-        page.browser_context.clear_permission_overrides
-      }.to change { get_permission_for(page, "geolocation") }.from("granted").to("prompt")
-    end
-
-    it 'should trigger permission onchange' do
-      js = <<~JAVASCRIPT
-      () => {
-        globalThis.events = [];
-        return navigator.permissions
-          .query({ name: 'geolocation' })
-          .then(function (result) {
-            globalThis.events.push(result.state);
-            result.onchange = function () {
-              globalThis.events.push(result.state);
-            };
-          });
-      }
-      JAVASCRIPT
-      page.evaluate(js)
-      expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt))
-      page.browser_context.override_permissions(server_empty_page, [])
-      expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied))
-      page.browser_context.override_permissions(server_empty_page, ['geolocation'])
-      expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied granted))
-      page.browser_context.clear_permission_overrides
-      expect(page.evaluate("() => globalThis.events")).to eq(%w(prompt denied granted prompt))
-    end
-
-    it 'should isolate permissions between browser contexs' do
-      other_context = page.browser.create_incognito_browser_context
-      other_page = other_context.new_page
-      other_page.goto(server_empty_page)
-
-      expect(get_permission_for(page, 'geolocation')).to eq("prompt")
-      expect(get_permission_for(other_page, 'geolocation')).to eq("prompt")
-
-      page.browser_context.override_permissions(server_empty_page, [])
-      other_context.override_permissions(server_empty_page, ['geolocation'])
-
-      expect(get_permission_for(page, 'geolocation')).to eq("denied")
-      expect(get_permission_for(other_page, 'geolocation')).to eq("granted")
-
-      page.browser_context.clear_permission_overrides
-
-      expect(get_permission_for(page, 'geolocation')).to eq("prompt")
-      expect(get_permission_for(other_page, 'geolocation')).to eq("granted")
-
-      other_context.close
-    end
-
-    it 'should grant persistent-storage' do
-      expect(get_permission_for(page, 'persistent-storage')).to eq('prompt')
-      page.browser_context.override_permissions(server_empty_page, ['persistent-storage'])
-      expect(get_permission_for(page, "persistent-storage")).to eq("granted")
-    end
-  end
-
   describe '#geolocation=' do
     it 'should work', browser_context: :incognito, sinatra: true do
       page.browser_context.override_permissions(server_empty_page, ['geolocation'])
@@ -359,220 +309,184 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describe('ExecutionContext.queryObjects', function () {
-  #   itFailsFirefox('should work', async () => {
-  #     const { page } = getTestState();
+  describe 'Page.Events.Console' do
+    it 'should work' do
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.evaluate("() => console.log('hello', 5, { foo: 'bar' })") },
+      ).first
+      expect(message.text).to eq('hello 5 JSHandle@object')
+      expect(message.log_type).to eq('log')
+      expect(message.args.length).to eq(3)
+      expect(message.location.url).to be_a(String)
+      expect(message.location.line_number).to be_a(Integer)
 
-  #     // Instantiate an object
-  #     await page.evaluate(() => (globalThis.set = new Set(['hello', 'world'])));
-  #     const prototypeHandle = await page.evaluateHandle(() => Set.prototype);
-  #     const objectsHandle = await page.queryObjects(prototypeHandle);
-  #     const count = await page.evaluate(
-  #       (objects: JSHandle[]) => objects.length,
-  #       objectsHandle
-  #     );
-  #     expect(count).toBe(1);
-  #     const values = await page.evaluate(
-  #       (objects) => Array.from(objects[0].values()),
-  #       objectsHandle
-  #     );
-  #     expect(values).toEqual(['hello', 'world']);
-  #   });
-  #   itFailsFirefox('should work for non-blank page', async () => {
-  #     const { page, server } = getTestState();
-
-  #     // Instantiate an object
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.evaluate(() => (globalThis.set = new Set(['hello', 'world'])));
-  #     const prototypeHandle = await page.evaluateHandle(() => Set.prototype);
-  #     const objectsHandle = await page.queryObjects(prototypeHandle);
-  #     const count = await page.evaluate(
-  #       (objects: JSHandle[]) => objects.length,
-  #       objectsHandle
-  #     );
-  #     expect(count).toBe(1);
-  #   });
-  #   it('should fail for disposed handles', async () => {
-  #     const { page } = getTestState();
-
-  #     const prototypeHandle = await page.evaluateHandle(
-  #       () => HTMLBodyElement.prototype
-  #     );
-  #     await prototypeHandle.dispose();
-  #     let error = null;
-  #     await page
-  #       .queryObjects(prototypeHandle)
-  #       .catch((error_) => (error = error_));
-  #     expect(error.message).toBe('Prototype JSHandle is disposed!');
-  #   });
-  #   it('should fail primitive values as prototypes', async () => {
-  #     const { page } = getTestState();
-
-  #     const prototypeHandle = await page.evaluateHandle(() => 42);
-  #     let error = null;
-  #     await page
-  #       .queryObjects(prototypeHandle)
-  #       .catch((error_) => (error = error_));
-  #     expect(error.message).toBe(
-  #       'Prototype JSHandle must not be referencing primitive value'
-  #     );
-  #   });
-  # });
-
-  # describeFailsFirefox('Page.Events.Console', function () {
-  #   it('should work', async () => {
-  #     const { page } = getTestState();
-
-  #     let message = null;
-  #     page.once('console', (m) => (message = m));
-  #     await Promise.all([
-  #       page.evaluate(() => console.log('hello', 5, { foo: 'bar' })),
-  #       waitEvent(page, 'console'),
-  #     ]);
-  #     expect(message.text()).toEqual('hello 5 JSHandle@object');
-  #     expect(message.type()).toEqual('log');
-  #     expect(message.args()).toHaveLength(3);
-  #     expect(message.location()).toEqual({
-  #       url: expect.any(String),
-  #       lineNumber: expect.any(Number),
-  #       columnNumber: expect.any(Number),
-  #     });
-
-  #     expect(await message.args()[0].jsonValue()).toEqual('hello');
-  #     expect(await message.args()[1].jsonValue()).toEqual(5);
-  #     expect(await message.args()[2].jsonValue()).toEqual({ foo: 'bar' });
-  #   });
-  it 'should work for different console API calls' do
-    messages = []
-    page.on('console') do |m|
-      messages << m
+      expect(message.args[0].json_value).to eq('hello')
+      expect(message.args[1].json_value).to eq(5)
+      expect(message.args[2].json_value).to eq({ 'foo' => 'bar' })
     end
-    # All console events will be reported before `page.evaluate` is finished.
-    page.evaluate(<<~JAVASCRIPT)
-    () => {
-      // A pair of time/timeEnd generates only one Console API call.
-      console.time('calling console.time');
-      console.timeEnd('calling console.time');
-      console.trace('calling console.trace');
-      console.dir('calling console.dir');
-      console.warn('calling console.warn');
-      console.error('calling console.error');
-      console.log(Promise.resolve('should not wait until resolved!'));
-    }
-    JAVASCRIPT
-    expect(messages.map(&:log_type)).to eq(%w[timeEnd trace dir warning error log])
-    #     expect(messages[0].text()).toContain('calling console.time');
-    #     expect(messages.slice(1).map((msg) => msg.text())).toEqual([
-    #       'calling console.trace',
-    #       'calling console.dir',
-    #       'calling console.warn',
-    #       'calling console.error',
-    #       'JSHandle@promise',
-    #     ]);
-    #   });
+
+    it 'should work on script call right after navigation' do
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise do
+          page.goto("data:text/html,<!DOCTYPE html><script>console.log('SOME_LOG_MESSAGE');</script>")
+        end,
+      ).first
+      expect(message.text).to eq('SOME_LOG_MESSAGE')
+    end
+
+    it 'should work for different console API calls with logging functions' do
+      messages = []
+      page.on('console') do |m|
+        messages << m
+      end
+      # All console events will be reported before `page.evaluate` is finished.
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        console.trace('calling console.trace');
+        console.dir('calling console.dir');
+        console.warn('calling console.warn');
+        console.error('calling console.error');
+        console.log(Promise.resolve('should not wait until resolved!'));
+      }
+      JAVASCRIPT
+      expect(messages.map(&:log_type)).to eq(%w[trace dir warning error log])
+      expect(messages.map(&:text)).to eq([
+        'calling console.trace',
+        'calling console.dir',
+        'calling console.warn',
+        'calling console.error',
+        'JSHandle@promise',
+      ])
+    end
+
+    it 'should work for different console API calls with timing functions' do
+      messages = []
+      page.on('console') do |m|
+        messages << m
+      end
+      # All console events will be reported before `page.evaluate` is finished.
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        // A pair of time/timeEnd generates only one Console API call.
+        console.time('calling console.time');
+        console.timeEnd('calling console.time');
+      }
+      JAVASCRIPT
+      expect(messages.map(&:log_type)).to eq(%w[timeEnd])
+      expect(messages.first.text).to include('calling console.time')
+    end
+
+    it 'should work for different console API calls with group functions' do
+      messages = []
+      page.on('console') do |m|
+        messages << m
+      end
+      # All console events will be reported before `page.evaluate` is finished.
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        console.group('calling console.group');
+        console.groupEnd();
+      }
+      JAVASCRIPT
+      expect(messages.map(&:log_type)).to eq(%w[startGroup endGroup])
+      expect(messages.first.text).to include('calling console.group')
+    end
+
+    it 'should not fail for window object' do
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.evaluate('() => console.error(window)') },
+      ).first
+      expect(['JSHandle@object', 'JSHandle@window']).to include(message.text)
+    end
+
+    it 'should return remote objects' do
+      log_promise = Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } }
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        globalThis.test = 1;
+        console.log(1, 2, 3, globalThis);
+      }
+      JAVASCRIPT
+      log = log_promise.wait
+
+      expect(['1 2 3 JSHandle@object', '1 2 3 JSHandle@window']).to include(log.text)
+      expect(log.args.length).to eq(4)
+      property = log.args[3].property('test')
+      expect(property.json_value).to eq(1)
+    end
+
+    it 'should trigger correct Log' do
+      page.goto("#{server_prefix}/empty.html")
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise do
+          page.evaluate('async (url) => fetch(url).catch(() => {})', "#{server_cross_process_prefix}/empty.html")
+        end,
+      ).first
+      expect(message.text).to include('Access-Control-Allow-Origin')
+      expect(message.log_type).to eq('error')
+    end
+
+    it 'should have location when fetch fails' do
+      page.goto(server_empty_page)
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.set_content("<script>fetch('http://wat');</script>") },
+      ).first
+      expect(message.text).to include('ERR_NAME_NOT_RESOLVED')
+      expect(message.log_type).to eq('error')
+      expect(message.location.url).to eq('http://wat/')
+      expect(message.location.line_number).to satisfy { |line| line.nil? || line < 0 }
+    end
+
+    it 'should have location and stack trace for console API calls', sinatra: true do
+      page.goto(server_empty_page)
+
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.goto("#{server_prefix}/consoletrace.html") },
+      ).first
+      expect(message.text).to eq('yellow')
+      expect(message.log_type).to eq('trace')
+      expect(message.location.url).to eq("#{server_prefix}/consoletrace.html")
+      expect(message.location.line_number).to eq(8)
+      expect(message.location.column_number).to eq(16)
+      expect(message.stack_trace.map { |frame| frame.url }).to eq([
+        "#{server_prefix}/consoletrace.html",
+        "#{server_prefix}/consoletrace.html",
+        "#{server_prefix}/consoletrace.html",
+      ])
+      expect(message.stack_trace.map { |frame| frame.line_number }).to eq([8, 11, 13])
+      expect(message.stack_trace.map { |frame| frame.column_number }).to eq([16, 8, 6])
+    end
+
+    # @see https://github.com/puppeteer/puppeteer/issues/3865
+    it 'should not throw when there are console messages in detached iframes' do
+      page.goto(server_empty_page)
+      page.evaluate(<<~JAVASCRIPT)
+      async () => {
+        const win = window.open(
+          window.location.href,
+          'Title',
+          'toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=780,height=200,top=0,left=0'
+        );
+        await new Promise((x) => (win.onload = x));
+        win.document.body.innerHTML = `<iframe src='/consolelog.html'></iframe>`;
+        const frame = win.document.querySelector('iframe');
+        await new Promise((x) => (frame.onload = x));
+        frame.remove();
+      }
+      JAVASCRIPT
+      popup_target = page.browser_context.wait_for_target(
+        predicate: ->(target) { target.type == 'page' && target != page.target },
+      )
+      popup_page = popup_target.page
+      expect(popup_page).not_to eq(page)
+    end
   end
-  #   it('should not fail for window object', async () => {
-  #     const { page } = getTestState();
-
-  #     let message = null;
-  #     page.once('console', (msg) => (message = msg));
-  #     await Promise.all([
-  #       page.evaluate(() => console.error(window)),
-  #       waitEvent(page, 'console'),
-  #     ]);
-  #     expect(message.text()).toBe('JSHandle@object');
-  #   });
-  #   it('should trigger correct Log', async () => {
-  #     const { page, server, isChrome } = getTestState();
-
-  #     await page.goto('about:blank');
-  #     const [message] = await Promise.all([
-  #       waitEvent(page, 'console'),
-  #       page.evaluate(
-  #         async (url: string) => fetch(url).catch(() => {}),
-  #         server.EMPTY_PAGE
-  #       ),
-  #     ]);
-  #     expect(message.text()).toContain('Access-Control-Allow-Origin');
-  #     if (isChrome) expect(message.type()).toEqual('error');
-  #     else expect(message.type()).toEqual('warn');
-  #   });
-  #   it('should have location when fetch fails', async () => {
-  #     const { page, server } = getTestState();
-
-  #     // The point of this test is to make sure that we report console messages from
-  #     // Log domain: https://vanilla.aslushnikov.com/?Log.entryAdded
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [message] = await Promise.all([
-  #       waitEvent(page, 'console'),
-  #       page.setContent(`<script>fetch('http://wat');</script>`),
-  #     ]);
-  #     expect(message.text()).toContain(`ERR_NAME_NOT_RESOLVED`);
-  #     expect(message.type()).toEqual('error');
-  #     expect(message.location()).toEqual({
-  #       url: 'http://wat/',
-  #       lineNumber: undefined,
-  #     });
-  #   });
-  it 'should have location and stack trace for console API calls', sinatra: true do
-    page.goto(server_empty_page)
-
-    message = await_promises(
-      Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
-      async_promise { page.goto("#{server_prefix}/consolelog.html") },
-    ).first
-    expect(message.log_type).to eq('log')
-    #   expect(message.location()).toEqual({
-    #     url: server.PREFIX + '/consolelog.html',
-    #     lineNumber: 8,
-    #     columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
-    #   });
-    #   expect(message.stackTrace()).toEqual([
-    #     {
-    #       url: server.PREFIX + '/consolelog.html',
-    #       lineNumber: 8,
-    #       columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
-    #     },
-    #     {
-    #       url: server.PREFIX + '/consolelog.html',
-    #       lineNumber: 11,
-    #       columnNumber: 8,
-    #     },
-    #     {
-    #       url: server.PREFIX + '/consolelog.html',
-    #       lineNumber: 13,
-    #       columnNumber: 6,
-    #     },
-    #   ]);
-  end
-  #   // @see https://github.com/puppeteer/puppeteer/issues/3865
-  #   it('should not throw when there are console messages in detached iframes', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.EMPTY_PAGE);
-  #     await page.evaluate(async () => {
-  #       // 1. Create a popup that Puppeteer is not connected to.
-  #       const win = window.open(
-  #         window.location.href,
-  #         'Title',
-  #         'toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=780,height=200,top=0,left=0'
-  #       );
-  #       await new Promise((x) => (win.onload = x));
-  #       // 2. In this popup, create an iframe that console.logs a message.
-  #       win.document.body.innerHTML = `<iframe src='/consolelog.html'></iframe>`;
-  #       const frame = win.document.querySelector('iframe');
-  #       await new Promise((x) => (frame.onload = x));
-  #       // 3. After that, remove the iframe.
-  #       frame.remove();
-  #     });
-  #     const popupTarget = page
-  #       .browserContext()
-  #       .targets()
-  #       .find((target) => target !== page.target());
-  #     // 4. Connect to the popup and make sure it doesn't throw.
-  #     await popupTarget.page();
-  #   });
-  # });
 
   describe 'Page.Events.DOMContentLoaded' do
     it 'should fire when expected' do
@@ -656,24 +570,19 @@ RSpec.describe Puppeteer::Page do
       expect(request.url).to eq("#{server_prefix}/digits/2.png")
     end
 
-    it 'should work even if nested' do
+    it 'should work with async predicate' do
       page.goto(server_empty_page)
-      promises = [
-        page.async_wait_for_request(url: "#{server_prefix}/digits/2.png"),
-        page.async_wait_for_request(url: "#{server_prefix}/digits/3.png"),
-      ]
-      page.evaluate(<<~JAVASCRIPT)
-      () => {
-        fetch('/digits/1.png');
-        fetch('/digits/2.png');
-        fetch('/digits/3.png');
-      }
-      JAVASCRIPT
-      requests = await_promises(*promises)
-      expect(requests.map(&:url)).to contain_exactly(
-        "#{server_prefix}/digits/2.png",
-        "#{server_prefix}/digits/3.png",
-      )
+      predicate = ->(req) { Async { req.url == "#{server_prefix}/digits/2.png" } }
+      request = page.wait_for_request(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(request.url).to eq("#{server_prefix}/digits/2.png")
     end
 
     it 'should respect timeout' do
@@ -702,77 +611,227 @@ RSpec.describe Puppeteer::Page do
       end
       expect(request.url).to eq("#{server_prefix}/digits/2.png")
     end
+
+    it 'should be cancellable' do
+      skip('AbortSignal is not supported')
+    end
   end
 
-  # describe('Page.waitForResponse', function () {
-  #   it('should work', async () => {
-  #     const { page, server } = getTestState();
+  describe 'Page.waitForResponse', sinatra: true do
+    it 'should work' do
+      page.goto(server_empty_page)
+      response = page.wait_for_response(url: "#{server_prefix}/digits/2.png") do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [response] = await Promise.all([
-  #       page.waitForResponse(server.PREFIX + '/digits/2.png'),
-  #       page.evaluate(() => {
-  #         fetch('/digits/1.png');
-  #         fetch('/digits/2.png');
-  #         fetch('/digits/3.png');
-  #       }),
-  #     ]);
-  #     expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  #   it('should respect timeout', async () => {
-  #     const { page, puppeteer } = getTestState();
+    it 'should respect timeout' do
+      page.goto(server_empty_page)
+      expect { page.wait_for_response(predicate: ->(_) { false }, timeout: 1) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
 
-  #     let error = null;
-  #     await page
-  #       .waitForResponse(() => false, { timeout: 1 })
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-  #   });
-  #   it('should respect default timeout', async () => {
-  #     const { page, puppeteer } = getTestState();
+    it 'should respect default timeout' do
+      page.goto(server_empty_page)
+      page.default_timeout = 1
+      expect { page.wait_for_response(predicate: ->(_) { false }) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
 
-  #     let error = null;
-  #     page.setDefaultTimeout(1);
-  #     await page
-  #       .waitForResponse(() => false)
-  #       .catch((error_) => (error = error_));
-  #     expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
-  #   });
-  #   it('should work with predicate', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with predicate' do
+      page.goto(server_empty_page)
+      predicate = ->(response) { response.url == "#{server_prefix}/digits/2.png" }
+      response = page.wait_for_response(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [response] = await Promise.all([
-  #       page.waitForResponse(
-  #         (response) => response.url() === server.PREFIX + '/digits/2.png'
-  #       ),
-  #       page.evaluate(() => {
-  #         fetch('/digits/1.png');
-  #         fetch('/digits/2.png');
-  #         fetch('/digits/3.png');
-  #       }),
-  #     ]);
-  #     expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  #   it('should work with no timeout', async () => {
-  #     const { page, server } = getTestState();
+    it 'should work with async predicate' do
+      page.goto(server_empty_page)
+      predicate = ->(response) { Async { response.url == "#{server_prefix}/digits/2.png" } }
+      response = page.wait_for_response(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
 
-  #     await page.goto(server.EMPTY_PAGE);
-  #     const [response] = await Promise.all([
-  #       page.waitForResponse(server.PREFIX + '/digits/2.png', { timeout: 0 }),
-  #       page.evaluate(() =>
-  #         setTimeout(() => {
-  #           fetch('/digits/1.png');
-  #           fetch('/digits/2.png');
-  #           fetch('/digits/3.png');
-  #         }, 50)
-  #       ),
-  #     ]);
-  #     expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
-  #   });
-  # });
+    it 'should work with no timeout' do
+      page.goto(server_empty_page)
+      response = page.wait_for_response(url: "#{server_prefix}/digits/2.png", timeout: 0) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => setTimeout(() => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }, 50)
+        JAVASCRIPT
+      end
+      expect(response.url).to eq("#{server_prefix}/digits/2.png")
+    end
+
+    it 'should be cancellable' do
+      skip('AbortSignal is not supported')
+    end
+  end
+
+  describe 'Page.waitForNetworkIdle', sinatra: true do
+    it 'should work' do
+      page.goto(server_empty_page)
+      result = nil
+      wait_promise = async_promise do
+        result = page.wait_for_network_idle
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      evaluate_promise = async_promise do
+        page.evaluate(<<~JAVASCRIPT)
+        async () => {
+          await Promise.all([fetch('/digits/1.png'), fetch('/digits/2.png')]);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          await fetch('/digits/3.png');
+          await new Promise(resolve => setTimeout(resolve, 200));
+          await fetch('/digits/4.png');
+        }
+        JAVASCRIPT
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      t1, t2 = await_promises(wait_promise, evaluate_promise)
+      expect(result).to be_nil
+      expect(t1).to be > t2
+      expect(t1 - t2).to be >= 0.4
+    end
+
+    it 'should respect timeout' do
+      expect { page.wait_for_network_idle(timeout: 1) }.
+        to raise_error(Puppeteer::TimeoutError)
+    end
+
+    it 'should respect idleTime' do
+      page.goto(server_empty_page)
+      wait_promise = async_promise do
+        page.wait_for_network_idle(idle_time: 10)
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      evaluate_promise = async_promise do
+        page.evaluate(<<~JAVASCRIPT)
+        async () => {
+          await Promise.all([fetch('/digits/1.png'), fetch('/digits/2.png')]);
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
+        JAVASCRIPT
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      t1, t2 = await_promises(wait_promise, evaluate_promise)
+      expect(t2).to be > t1
+    end
+
+    it 'should work with no timeout' do
+      page.goto(server_empty_page)
+      wait_promise = async_promise do
+        page.wait_for_network_idle(timeout: 0)
+      end
+      evaluate_promise = async_promise do
+        page.evaluate(<<~JAVASCRIPT)
+        () => setTimeout(() => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }, 50)
+        JAVASCRIPT
+      end
+      result = await_promises(wait_promise, evaluate_promise).first
+      expect(result).to be_nil
+    end
+
+    it 'should work with aborted requests' do
+      page.goto("#{server_prefix}/abort-request.html")
+      element = page.query_selector('#abort')
+      element.click
+      expect { page.wait_for_network_idle }.not_to raise_error
+    end
+
+    it 'should work with delayed response' do
+      page.goto(server_empty_page)
+      response_started = Queue.new
+      response_continue = Queue.new
+      server.set_route('/fetch-request-b.js') do |_request, writer|
+        response_started << true
+        response_continue.pop
+        writer.finish
+      end
+
+      t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      wait_promise = async_promise do
+        page.wait_for_network_idle(idle_time: 100)
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      response_promise = async_promise do
+        response_started.pop
+        sleep 0.3
+        response_continue << true
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      end
+      fetch_promise = async_promise do
+        page.evaluate('async () => { await fetch("/fetch-request-b.js"); }')
+      end
+
+      t1, t2 = await_promises(wait_promise, response_promise, fetch_promise).first(2)
+      expect(t1).to be > t2
+      expect(t1 - t0).to be > 0.4
+      expect(t1 - t2).to be >= 0.1
+    end
+
+    it 'should be cancelable' do
+      skip('AbortSignal is not supported')
+    end
+  end
+
+  describe 'Page.waitForFrame', sinatra: true do
+    include Utils::AttachFrame
+
+    it 'should work' do
+      page.goto(server_empty_page)
+      waited_frame = page.wait_for_frame(predicate: ->(frame) { frame.url.end_with?('/title.html') }) do
+        attach_frame(page, 'frame2', "#{server_prefix}/title.html")
+      end
+      expect(waited_frame.parent_frame).to eq(page.main_frame)
+    end
+
+    it 'should work with a URL predicate' do
+      page.goto(server_empty_page)
+      waited_frame = page.wait_for_frame(url: "#{server_prefix}/title.html") do
+        attach_frame(page, 'frame2', "#{server_prefix}/title.html")
+      end
+      expect(waited_frame.parent_frame).to eq(page.main_frame)
+    end
+
+    it 'should be cancellable' do
+      skip('AbortSignal is not supported')
+    end
+  end
 
   describe 'Page#expose_function' do
+    include Utils::AttachFrame
+    include Utils::DetachFrame
     it 'should work' do
       page.expose_function('compute', ->(a, b) { a * b })
       result = page.evaluate('async function() { return await globalThis.compute(9, 4) }')
@@ -833,6 +892,12 @@ RSpec.describe Puppeteer::Page do
       skip "Ruby don't have async function"
     end
 
+    it 'should await returned if called from function' do
+      page.expose_function('compute', ->(a, b) { a * b })
+      result = page.evaluate('async () => { const result = await globalThis.compute(3, 5); return result; }')
+      expect(result).to eq(15)
+    end
+
     it 'should work on frames', sinatra: true do
       page.expose_function('compute', ->(a, b) { a * b })
 
@@ -841,10 +906,59 @@ RSpec.describe Puppeteer::Page do
       expect(result).to eq(15)
     end
 
+    it 'should work with loading frames' do
+      page.request_interception = true
+
+      iframe_request_promise = Async::Promise.new
+      on_request = lambda do |request|
+        if request.url.end_with?('/frames/frame.html')
+          iframe_request_promise.resolve(request)
+        else
+          request.continue
+        end
+      end
+      page.on('request', &on_request)
+
+      error = nil
+      navigation_promise = async_promise do
+        begin
+          page.goto("#{server_prefix}/frames/one-frame.html", wait_until: 'networkidle0')
+        rescue StandardError => err
+          error = err
+        end
+      end
+
+      request = iframe_request_promise.wait
+      expose_promise = async_promise do
+        page.expose_function('compute', ->(a, b) { a * b })
+      end
+      request.continue
+
+      await_promises(navigation_promise, expose_promise)
+
+      expect(error).to be_nil
+      frame = page.frames[1]
+      result = frame.evaluate('async () => { return await globalThis.compute(3, 5) }')
+      expect(result).to eq(15)
+    ensure
+      page.off('request', on_request) if on_request
+      page.request_interception = false
+    end
+
     it 'should work on frames before navigation', sinatra: true do
       page.goto("#{server_prefix}/frames/nested-frames.html")
       page.expose_function('compute', ->(a, b) { a * b })
       result = page.frames[1].evaluate('async () => { return await globalThis.compute(3, 5) }')
+      expect(result).to eq(15)
+    end
+
+    it 'should not throw when frames detach' do
+      page.goto(server_empty_page)
+      attach_frame(page, 'frame1', server_empty_page)
+      page.expose_function('compute', ->(a, b) { a * b })
+      detach_frame(page, 'frame1')
+
+      result = page.evaluate('async () => { return await globalThis.compute(3, 5) }')
       expect(result).to eq(15)
     end
 
@@ -855,6 +969,33 @@ RSpec.describe Puppeteer::Page do
 
       result = page.evaluate('async () => { return await globalThis.complexObject({x:5}, {x:2}) }')
       expect(result).to eq({ 'x' => 7 })
+    end
+
+    it 'should fallback to default export when passed a module object' do
+      skip('Not implemented')
+    end
+
+    it 'should be called once' do
+      page.goto("#{server_prefix}/frames/nested-frames.html")
+      calls = 0
+      page.expose_function('call', -> { calls += 1 })
+
+      frame = page.frames[1]
+      frame.evaluate('async () => { return await globalThis.call() }')
+      expect(calls).to eq(1)
+    end
+  end
+
+  describe 'Page#remove_exposed_function' do
+    it 'should work' do
+      page.expose_function('compute', ->(a, b) { a * b })
+      result = page.evaluate('async function() { return await globalThis.compute(9, 4) }')
+      expect(result).to eq(36)
+      page.remove_exposed_function('compute')
+
+      expect {
+        page.evaluate('async function() { return await globalThis.compute(9, 4) }')
+      }.to raise_error(Puppeteer::Error)
     end
   end
 
@@ -867,6 +1008,15 @@ RSpec.describe Puppeteer::Page do
         page.goto("#{server_prefix}/error.html")
         expect(error_promise.wait.message).to include("Fancy error!")
       end
+    end
+
+    it 'should fire for all value types' do
+      error_promise = Async::Promise.new.tap do |promise|
+        page.once('pageerror') { |err| promise.resolve(err) }
+      end
+      page.goto("#{server_prefix}/error-primitive.html")
+      error = error_promise.wait
+      expect(error).to be_nil
     end
   end
 
@@ -885,6 +1035,18 @@ RSpec.describe Puppeteer::Page do
       page.goto("#{server_prefix}/_empty.html")
       request = async_wait_for_request.wait
       expect(request.env['HTTP_USER_AGENT']).to eq('foobar')
+    end
+
+    it 'should work with options parameter' do
+      skip('Not implemented')
+    end
+
+    it 'should work with platform option' do
+      skip('Not implemented')
+    end
+
+    it 'should work with platform option without userAgent' do
+      skip('Not implemented')
     end
 
     it 'should work for subframes' do
@@ -941,6 +1103,25 @@ RSpec.describe Puppeteer::Page do
       expect(ua_data['model']).to eq('Mockbook')
       expect(ua_data['platform']).to eq('MockOS')
       expect(ua_data['platformVersion']).to eq('3.1')
+    end
+
+    it 'should restore original' do
+      original_user_agent = page.evaluate('() => navigator.userAgent')
+
+      page.user_agent = 'foobar'
+      overridden_request = await_promises(
+        async_promise { server.wait_for_request('/empty.html') },
+        async_promise { page.goto(server_empty_page) },
+      ).first
+      expect(overridden_request.headers['user-agent']).to eq('foobar')
+
+      page.user_agent = ''
+      restored_request = await_promises(
+        async_promise { server.wait_for_request('/empty.html') },
+        async_promise { page.goto(server_empty_page) },
+      ).first
+      expect(restored_request.headers['user-agent']).to eq(original_user_agent)
+      expect(page.evaluate('() => navigator.userAgent')).to eq(original_user_agent)
     end
   end
 
@@ -1026,6 +1207,12 @@ RSpec.describe Puppeteer::Page do
     it 'should work with newline' do
       page.content = "<div>\n</div>"
       expect(page.eval_on_selector("div", "(div) => div.textContent")).to eq("\n")
+    end
+
+    it 'should work with comments outside HTML tag' do
+      comment = '<!-- Comment -->'
+      page.content = "#{comment}<div>hello</div>"
+      expect(page.content).to eq("#{comment}<html><head></head><body><div>hello</div></body></html>")
     end
   end
 
@@ -1244,6 +1431,76 @@ RSpec.describe Puppeteer::Page do
       page.goto('data:text/html, <script>var something = "forbidden"</script>')
       expect(page.evaluate("something")).to eq("forbidden")
     end
+
+    it 'setInterval should pause' do
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        globalThis.intervalCounter = 0;
+        setInterval(() => {
+          globalThis.intervalCounter += 1;
+        }, 0);
+      }
+      JAVASCRIPT
+
+      page.javascript_enabled = false
+      interval_counter = page.evaluate('() => globalThis.intervalCounter')
+      sleep 0.1
+      expect(page.evaluate('() => globalThis.intervalCounter')).to eq(interval_counter)
+
+      page.javascript_enabled = true
+      page.evaluate('() => new Promise((resolve) => setTimeout(resolve, 100))')
+      expect(page.evaluate('() => globalThis.intervalCounter')).to be > interval_counter
+    end
+
+    it 'setTimeout should stop' do
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        const task = () => {
+          globalThis.timeoutCounter = (globalThis.timeoutCounter || 0) + 1;
+          setTimeout(task, 0);
+        };
+        task();
+      }
+      JAVASCRIPT
+
+      page.javascript_enabled = false
+      timeout_counter = page.evaluate('() => globalThis.timeoutCounter')
+      sleep 0.1
+      expect(page.evaluate('() => globalThis.timeoutCounter')).to eq(timeout_counter)
+
+      page.javascript_enabled = true
+      page.evaluate('() => new Promise((resolve) => setTimeout(resolve, 100))')
+      expect(page.evaluate('() => globalThis.timeoutCounter')).to eq(timeout_counter)
+    end
+
+    it 'then should not pause' do
+      page.javascript_enabled = false
+      result = page.evaluate(<<~JAVASCRIPT)
+      () => {
+        return Promise.resolve().then(() => {
+          return 42;
+        });
+      }
+      JAVASCRIPT
+      expect(result).to eq(42)
+    end
+  end
+
+  describe 'Page.reload', sinatra: true do
+    it 'should enable or disable the cache based on reload params' do
+      page.goto("#{server_prefix}/cached/one-style.html")
+      cached_request = await_promises(
+        async_promise { server.wait_for_request('/cached/one-style.html') },
+        async_promise { page.reload },
+      ).first
+      expect(cached_request.headers['if-modified-since']).not_to be_nil
+
+      non_cached_request = await_promises(
+        async_promise { server.wait_for_request('/cached/one-style.html') },
+        async_promise { page.reload(ignore_cache: true) },
+      ).first
+      expect(non_cached_request.headers['if-modified-since']).to be_nil
+    end
   end
 
   describe '#cache_enabled', browser_context: :incognito, sinatra: true do
@@ -1332,14 +1589,6 @@ RSpec.describe Puppeteer::Page do
       end
     end
 
-    it 'can print to PDF without file' do
-      sinatra.get("/") { "<h1>It Works!</h1>" }
-      page.goto("#{server_prefix}/")
-
-      data = page.pdf
-      expect(data.size).to be > 0
-    end
-
     it 'can print to PDF and stream the result' do
       sinatra.get("/") { "<h1>It Works!</h1>" }
       page.goto("#{server_prefix}/")
@@ -1366,178 +1615,115 @@ RSpec.describe Puppeteer::Page do
     end
   end
 
-  # describe('Page.select', function () {
-  #   it('should select single option', async () => {
-  #     const { page, server } = getTestState();
+  describe '#select', sinatra: true do
+    it 'should select single option' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue'])
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.select('select', 'blue');
-  #     expect(await page.evaluate(() => globalThis.result.onInput)).toEqual([
-  #       'blue',
-  #     ]);
-  #     expect(await page.evaluate(() => globalThis.result.onChange)).toEqual([
-  #       'blue',
-  #     ]);
-  #   });
-  #   it('should select only first option', async () => {
-  #     const { page, server } = getTestState();
+    it 'should select only first option' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue', 'green', 'red')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue'])
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.select('select', 'blue', 'green', 'red');
-  #     expect(await page.evaluate(() => globalThis.result.onInput)).toEqual([
-  #       'blue',
-  #     ]);
-  #     expect(await page.evaluate(() => globalThis.result.onChange)).toEqual([
-  #       'blue',
-  #     ]);
-  #   });
-  #   it('should not throw when select causes navigation', async () => {
-  #     const { page, server } = getTestState();
+    it 'should not throw when select causes navigation' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.eval_on_selector('select', <<~JAVASCRIPT)
+      (select) =>
+        select.addEventListener('input', () => {
+          window.location = '/empty.html';
+        })
+      JAVASCRIPT
+      page.wait_for_navigation do
+        page.select('select', 'blue')
+      end
+      expect(page.url).to include('empty.html')
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.$eval('select', (select) =>
-  #       select.addEventListener(
-  #         'input',
-  #         () => ((window as any).location = '/empty.html')
-  #       )
-  #     );
-  #     await Promise.all([
-  #       page.select('select', 'blue'),
-  #       page.waitForNavigation(),
-  #     ]);
-  #     expect(page.url()).toContain('empty.html');
-  #   });
-  #   it('should select multiple options', async () => {
-  #     const { page, server } = getTestState();
+    it 'should select multiple options' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => globalThis.makeMultiple()')
+      page.select('select', 'blue', 'green', 'red')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue', 'green', 'red'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue', 'green', 'red'])
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.evaluate(() => globalThis.makeMultiple());
-  #     await page.select('select', 'blue', 'green', 'red');
-  #     expect(await page.evaluate(() => globalThis.result.onInput)).toEqual([
-  #       'blue',
-  #       'green',
-  #       'red',
-  #     ]);
-  #     expect(await page.evaluate(() => globalThis.result.onChange)).toEqual([
-  #       'blue',
-  #       'green',
-  #       'red',
-  #     ]);
-  #   });
-  #   it('should respect event bubbling', async () => {
-  #     const { page, server } = getTestState();
+    it 'should respect event bubbling' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue')
+      expect(page.evaluate('() => globalThis.result.onBubblingInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onBubblingChange')).to eq(['blue'])
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.select('select', 'blue');
-  #     expect(
-  #       await page.evaluate(() => globalThis.result.onBubblingInput)
-  #     ).toEqual(['blue']);
-  #     expect(
-  #       await page.evaluate(() => globalThis.result.onBubblingChange)
-  #     ).toEqual(['blue']);
-  #   });
-  #   it('should throw when element is not a <select>', async () => {
-  #     const { page, server } = getTestState();
+    it 'should throw when element is not a <select>' do
+      page.goto("#{server_prefix}/input/select.html")
+      expect { page.select('body', '') }.to raise_error(/Element is not a <select> element\./)
+    end
 
-  #     let error = null;
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.select('body', '').catch((error_) => (error = error_));
-  #     expect(error.message).toContain('Element is not a <select> element.');
-  #   });
-  #   it('should return [] on no matched values', async () => {
-  #     const { page, server } = getTestState();
+    it 'should return [] on no matched values' do
+      page.goto("#{server_prefix}/input/select.html")
+      result = page.select('select', '42', 'abc')
+      expect(result).to eq([])
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     const result = await page.select('select', '42', 'abc');
-  #     expect(result).toEqual([]);
-  #   });
-  #   it('should return an array of matched values', async () => {
-  #     const { page, server } = getTestState();
+    it 'should return an array of matched values' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => globalThis.makeMultiple()')
+      result = page.select('select', 'blue', 'black', 'magenta')
+      expect(result).to match_array(%w[blue black magenta])
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.evaluate(() => globalThis.makeMultiple());
-  #     const result = await page.select('select', 'blue', 'black', 'magenta');
-  #     expect(
-  #       result.reduce(
-  #         (accumulator, current) =>
-  #           ['blue', 'black', 'magenta'].includes(current) && accumulator,
-  #         true
-  #       )
-  #     ).toEqual(true);
-  #   });
-  #   it('should return an array of one element when multiple is not set', async () => {
-  #     const { page, server } = getTestState();
+    it 'should return an array of one element when multiple is not set' do
+      page.goto("#{server_prefix}/input/select.html")
+      result = page.select('select', '42', 'blue', 'black', 'magenta')
+      expect(result.length).to eq(1)
+    end
 
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     const result = await page.select(
-  #       'select',
-  #       '42',
-  #       'blue',
-  #       'black',
-  #       'magenta'
-  #     );
-  #     expect(result.length).toEqual(1);
-  #   });
-  it 'should return [] on no values', sinatra: true do
-    page.goto("#{server_prefix}/input/select.html")
-    result = page.select('select')
-    expect(result).to eq([])
+    it 'should return [] on no values' do
+      page.goto("#{server_prefix}/input/select.html")
+      result = page.select('select')
+      expect(result).to eq([])
+    end
+
+    it 'should deselect all options when passed no values for a multiple select' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => globalThis.makeMultiple()')
+      page.select('select', 'blue', 'black', 'magenta')
+      page.select('select')
+      all_unselected = page.eval_on_selector('select', <<~JAVASCRIPT)
+      (select) => Array.from(select.options).every((option) => !option.selected)
+      JAVASCRIPT
+      expect(all_unselected).to eq(true)
+    end
+
+    it 'should deselect all options when passed no values for a select without multiple' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue', 'black', 'magenta')
+      page.select('select')
+      first_selected = page.eval_on_selector('select', <<~JAVASCRIPT)
+      (select) => Array.from(select.options).filter((option) => option.selected)[0].value
+      JAVASCRIPT
+      expect(first_selected).to eq('')
+    end
+
+    it 'should throw if passed in non-strings' do
+      page.content = '<select><option value="12"></option></select>'
+      expect { page.select('select', 12) }.to raise_error(/Values must be strings/)
+    end
+
+    # @see https://github.com/puppeteer/puppeteer/issues/3327
+    it 'should work when re-defining top-level Event class' do
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => { window.Event = undefined; }')
+      page.select('select', 'blue')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue'])
+    end
   end
-  #   it('should deselect all options when passed no values for a multiple select', async () => {
-  #     const { page, server } = getTestState();
-
-  #     await page.goto(server.PREFIX + '/input/select.html');
-  #     await page.evaluate(() => globalThis.makeMultiple());
-  #     await page.select('select', 'blue', 'black', 'magenta');
-  #     await page.select('select');
-  #     expect(
-  #       await page.$eval('select', (select: HTMLSelectElement) =>
-  #         Array.from(select.options).every(
-  #           (option: HTMLOptionElement) => !option.selected
-  #         )
-  #       )
-  #     ).toEqual(true);
-  #   });
-  it 'should deselect all options when passed no values for a select without multiple', sinatra: true do
-    page.goto("#{server_prefix}/input/select.html")
-    page.select('select', 'blue', 'black', 'magenta')
-    page.select('select')
-    first_selected = page.eval_on_selector('select', <<~JAVASCRIPT)
-    (select) => Array.from(select.options).filter((option) => option.selected)[0].value
-    JAVASCRIPT
-    expect(first_selected).to eq('')
-  end
-  #   it('should throw if passed in non-strings', async () => {
-  #     const { page } = getTestState();
-
-  #     await page.setContent('<select><option value="12"/></select>');
-  #     let error = null;
-  #     try {
-  #       // @ts-expect-error purposefully passing bad input
-  #       await page.select('select', 12);
-  #     } catch (error_) {
-  #       error = error_;
-  #     }
-  #     expect(error.message).toContain('Values must be strings');
-  #   });
-  #   // @see https://github.com/puppeteer/puppeteer/issues/3327
-  #   itFailsFirefox(
-  #     'should work when re-defining top-level Event class',
-  #     async () => {
-  #       const { page, server } = getTestState();
-
-  #       await page.goto(server.PREFIX + '/input/select.html');
-  #       await page.evaluate(() => (window.Event = null));
-  #       await page.select('select', 'blue');
-  #       expect(await page.evaluate(() => globalThis.result.onInput)).toEqual([
-  #         'blue',
-  #       ]);
-  #       expect(await page.evaluate(() => globalThis.result.onChange)).toEqual([
-  #         'blue',
-  #       ]);
-  #     }
-  #   );
-  # });
 
   describe 'Page.Events.Close' do
     it 'should work with window.close' do
@@ -1575,6 +1761,37 @@ RSpec.describe Puppeteer::Page do
     it 'should return the correct browser context instance' do
       expect(page.browser_context).to be_a(Puppeteer::BrowserContext)
       expect(page.browser_context.pages.last).to eq(page)
+    end
+  end
+
+  describe '#client' do
+    it 'should return the client instance' do
+      expect(page.client).to be_a(Puppeteer::CDPSession)
+    end
+  end
+
+  describe '#bring_to_front' do
+    it 'should work' do
+      context = page.browser_context
+      page1 = context.new_page
+      page2 = context.new_page
+
+      page1.bring_to_front
+      expect(page1.evaluate('() => document.visibilityState')).to eq('visible')
+      expect(page2.evaluate('() => document.visibilityState')).to eq('hidden')
+
+      page2.bring_to_front
+      expect(page1.evaluate('() => document.visibilityState')).to eq('hidden')
+      expect(page2.evaluate('() => document.visibilityState')).to eq('visible')
+
+      page1.close
+      page2.close
+    end
+  end
+
+  describe 'Page.resize' do
+    it 'should resize the browser window to fit page content' do
+      skip('Not implemented')
     end
   end
 end

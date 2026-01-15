@@ -2,27 +2,6 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::Frame do
   include_context 'with test state'
-  describe '#execution_context' do
-    include Utils::AttachFrame
-
-    it 'should work', sinatra: true do
-      page.goto(server_empty_page)
-      attach_frame(page, 'frame1', server_empty_page)
-      expect(page.frames.size).to eq(2)
-
-      frames = page.frames
-      contexts = frames.map(&:execution_context)
-      expect(contexts).to all(be_truthy)
-      expect(contexts.first).not_to eq(contexts.last)
-
-      contexts.each_with_index do |context, i|
-        context.evaluate("() => (globalThis.a = #{i + 1})")
-      end
-      values = contexts.map { |context| context.evaluate('() => globalThis.a') }
-      expect(values).to eq([1, 2])
-    end
-  end
-
   describe '#evaluate_handle' do
     it 'should work', sinatra: true do
       page.goto(server_empty_page)
@@ -43,6 +22,14 @@ RSpec.describe Puppeteer::Frame do
       expect {
         frame1.evaluate('() => 7 * 8')
       }.to raise_error(/Execution Context is not available in detached frame|Cannot find context/)
+    end
+
+    it 'allows readonly array to be an argument', sinatra: true do
+      page.goto(server_empty_page)
+      main_frame = page.main_frame
+
+      readonly_array = ['a', 'b', 'c'].freeze
+      main_frame.evaluate('(arr) => arr', readonly_array)
     end
   end
 
@@ -177,6 +164,14 @@ RSpec.describe Puppeteer::Frame do
       expect(navigated_frames.size).to eq(1)
     end
 
+    it 'should click elements in a frameset' do
+      page.goto("#{server_prefix}/frames/frameset.html")
+      frame = page.wait_for_frame(predicate: ->(frame) { frame.url.end_with?('/frames/frame.html') })
+      div = frame.wait_for_selector('div')
+      expect(div).to be_truthy
+      div.click
+    end
+
     it 'should report frame from-inside shadow DOM' do
       page.goto("#{server_prefix}/shadow.html")
       js = <<~JAVASCRIPT
@@ -190,23 +185,6 @@ RSpec.describe Puppeteer::Frame do
       page.evaluate(js, server_empty_page)
       expect(page.frames.size).to eq(2)
       expect(page.frames.last.url).to eq(server_empty_page)
-    end
-
-
-    it 'should report frame.name()' do
-      page.goto(server_empty_page)
-      attach_frame(page, 'theFrameId', '/')
-      js = <<~JAVASCRIPT
-      function (url) {
-        const frame = document.createElement('iframe');
-        frame.name = 'theFrameName';
-        frame.src = url;
-        document.body.appendChild(frame);
-        return new Promise((x) => (frame.onload = x));
-      }
-      JAVASCRIPT
-      page.evaluate(js, server_empty_page)
-      expect(page.frames.map(&:name)).to eq(['', 'theFrameId', 'theFrameName'])
     end
 
     it 'should report frame.parent()' do
@@ -248,6 +226,65 @@ RSpec.describe Puppeteer::Frame do
       page.goto("#{server_prefix}/frames/lazy-frame.html")
 
       expect(page.frames.map { |frame| frame.has_started_loading? }).to eq([true, true, false])
+    end
+  end
+
+  describe '#client' do
+    it 'should return the client instance' do
+      expect(page.main_frame.client).to be_a(Puppeteer::CDPSession)
+    end
+  end
+
+  describe '#frame_element' do
+    include Utils::AttachFrame
+
+    it 'should work' do
+      attach_frame(page, 'theFrameId', server_empty_page)
+      page.evaluate(<<~JAVASCRIPT, server_empty_page)
+      (url) => {
+        const frame = document.createElement('iframe');
+        frame.name = 'theFrameName';
+        frame.src = url;
+        document.body.appendChild(frame);
+        return new Promise((x) => (frame.onload = x));
+      }
+      JAVASCRIPT
+      frame0 = page.frames[0].frame_element
+      frame1 = page.frames[1].frame_element
+      frame2 = page.frames[2].frame_element
+      expect(frame0).to be_nil
+      expect(frame1).not_to be_nil
+      expect(frame2).not_to be_nil
+
+      name1 = frame1.evaluate('(frame) => frame.id')
+      expect(name1).to eq('theFrameId')
+      name2 = frame2.evaluate('(frame) => frame.name')
+      expect(name2).to eq('theFrameName')
+    end
+
+    it 'should handle shadow roots' do
+      page.set_content(<<~HTML)
+        <div id="shadow-host"></div>
+        <script>
+          const host = document.getElementById('shadow-host');
+          const shadowRoot = host.attachShadow({mode: 'closed'});
+          const frame = document.createElement('iframe');
+          frame.srcdoc = '<p>Inside frame</p>';
+          shadowRoot.appendChild(frame);
+        </script>
+      HTML
+      frame = page.frames[1]
+      frame_element = frame.frame_element
+      tag_name = frame_element.evaluate('(el) => el.tagName.toLocaleLowerCase()')
+      expect(tag_name).to eq('iframe')
+    end
+
+    it 'should return ElementHandle in the correct world' do
+      attach_frame(page, 'theFrameId', server_empty_page)
+      page.evaluate('() => { globalThis.isMainWorld = true; }')
+      expect(page.frames.size).to eq(2)
+      frame_element = page.frames[1].frame_element
+      expect(frame_element.evaluate('() => globalThis.isMainWorld')).to eq(true)
     end
   end
 end

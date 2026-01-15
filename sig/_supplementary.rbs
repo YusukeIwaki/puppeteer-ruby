@@ -22,11 +22,13 @@ module Puppeteer::EventCallbackable
     def initialize: () -> void
     def add: () { (*untyped, **untyped) -> untyped } -> String
     def delete: (String id) -> untyped
+    def delete_by_handler: (Proc handler) -> untyped
     def each: () { (Proc) -> untyped } -> void
   end
 
   def add_event_listener: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
   def on: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
+  def off: (untyped event_name_or_id, ?Proc listener) ?{ (*untyped, **untyped) -> untyped } -> void
   def remove_event_listener: (*String id_args) -> void
   def observe_first: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
   def once: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String

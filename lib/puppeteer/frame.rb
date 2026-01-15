@@ -16,6 +16,7 @@ class Puppeteer::Frame
     @has_started_loading = false
 
     @loader_id = ''
+    @url = 'about:blank'
     @lifecycle_events = Set.new
     @child_frames = Set.new
     if parent_frame
@@ -56,6 +57,7 @@ class Puppeteer::Frame
   end
 
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world
+  attr_reader :client
 
   # @rbs other: Object -- Other object to compare
   # @rbs return: bool -- Equality result
@@ -201,6 +203,15 @@ class Puppeteer::Frame
   # @rbs return: Puppeteer::Frame? -- Parent frame
   def parent_frame
     @parent_frame
+  end
+
+  # @rbs return: Puppeteer::ElementHandle? -- Frame element handle
+  def frame_element
+    parent = parent_frame
+    return nil unless parent
+
+    response = parent.client.send_message('DOM.getFrameOwner', frameId: @id)
+    parent.main_world.adopt_backend_node(response['backendNodeId'])
   end
 
   protected def _child_frames
