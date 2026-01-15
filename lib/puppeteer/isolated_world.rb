@@ -188,12 +188,18 @@ class Puppeteer::IsolaatedWorld
   def content
     evaluate(<<-JAVASCRIPT)
     () => {
-      let retVal = '';
-      if (document.doctype)
-        retVal = new XMLSerializer().serializeToString(document.doctype);
-      if (document.documentElement)
-        retVal += document.documentElement.outerHTML;
-      return retVal;
+      let content = '';
+      for (const node of document.childNodes) {
+        switch (node) {
+          case document.documentElement:
+            content += document.documentElement.outerHTML;
+            break;
+          default:
+            content += new XMLSerializer().serializeToString(node);
+            break;
+        }
+      }
+      return content;
     }
     JAVASCRIPT
   end
