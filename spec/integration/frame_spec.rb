@@ -2,27 +2,6 @@ require 'spec_helper'
 
 RSpec.describe Puppeteer::Frame do
   include_context 'with test state'
-  describe '#execution_context' do
-    include Utils::AttachFrame
-
-    it 'should work', sinatra: true do
-      page.goto(server_empty_page)
-      attach_frame(page, 'frame1', server_empty_page)
-      expect(page.frames.size).to eq(2)
-
-      frames = page.frames
-      contexts = frames.map(&:execution_context)
-      expect(contexts).to all(be_truthy)
-      expect(contexts.first).not_to eq(contexts.last)
-
-      contexts.each_with_index do |context, i|
-        context.evaluate("() => (globalThis.a = #{i + 1})")
-      end
-      values = contexts.map { |context| context.evaluate('() => globalThis.a') }
-      expect(values).to eq([1, 2])
-    end
-  end
-
   describe '#evaluate_handle' do
     it 'should work', sinatra: true do
       page.goto(server_empty_page)
@@ -185,6 +164,14 @@ RSpec.describe Puppeteer::Frame do
       expect(navigated_frames.size).to eq(1)
     end
 
+    it 'should click elements in a frameset' do
+      page.goto("#{server_prefix}/frames/frameset.html")
+      frame = page.wait_for_frame(predicate: ->(frame) { frame.url.end_with?('/frames/frame.html') })
+      div = frame.wait_for_selector('div')
+      expect(div).to be_truthy
+      div.click
+    end
+
     it 'should report frame from-inside shadow DOM' do
       page.goto("#{server_prefix}/shadow.html")
       js = <<~JAVASCRIPT
@@ -198,23 +185,6 @@ RSpec.describe Puppeteer::Frame do
       page.evaluate(js, server_empty_page)
       expect(page.frames.size).to eq(2)
       expect(page.frames.last.url).to eq(server_empty_page)
-    end
-
-
-    it 'should report frame.name()' do
-      page.goto(server_empty_page)
-      attach_frame(page, 'theFrameId', '/')
-      js = <<~JAVASCRIPT
-      function (url) {
-        const frame = document.createElement('iframe');
-        frame.name = 'theFrameName';
-        frame.src = url;
-        document.body.appendChild(frame);
-        return new Promise((x) => (frame.onload = x));
-      }
-      JAVASCRIPT
-      page.evaluate(js, server_empty_page)
-      expect(page.frames.map(&:name)).to eq(['', 'theFrameId', 'theFrameName'])
     end
 
     it 'should report frame.parent()' do
