@@ -40,7 +40,13 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should close child iframes', sinatra: true do
-      skip('Not implemented')
+      context = page.browser_context
+
+      new_page = context.new_page
+      new_page.goto("#{server_prefix}/frames/one-frame.html")
+      expect(new_page.frames.length).to eq(2)
+      new_page.close
+      expect(context.pages).not_to include(new_page)
     end
 
     it 'should run beforeunload if asked for', sinatra: true do
@@ -305,11 +311,29 @@ RSpec.describe Puppeteer::Page do
 
   describe 'Page.Events.Console' do
     it 'should work' do
-      skip('Not implemented')
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.evaluate("() => console.log('hello', 5, { foo: 'bar' })") },
+      ).first
+      expect(message.text).to eq('hello 5 JSHandle@object')
+      expect(message.log_type).to eq('log')
+      expect(message.args.length).to eq(3)
+      expect(message.location.url).to be_a(String)
+      expect(message.location.line_number).to be_a(Integer)
+
+      expect(message.args[0].json_value).to eq('hello')
+      expect(message.args[1].json_value).to eq(5)
+      expect(message.args[2].json_value).to eq({ 'foo' => 'bar' })
     end
 
     it 'should work on script call right after navigation' do
-      skip('Not implemented')
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise do
+          page.goto("data:text/html,<!DOCTYPE html><script>console.log('SOME_LOG_MESSAGE');</script>")
+        end,
+      ).first
+      expect(message.text).to eq('SOME_LOG_MESSAGE')
     end
 
     it 'should work for different console API calls with logging functions' do
@@ -328,6 +352,13 @@ RSpec.describe Puppeteer::Page do
       }
       JAVASCRIPT
       expect(messages.map(&:log_type)).to eq(%w[trace dir warning error log])
+      expect(messages.map(&:text)).to eq([
+        'calling console.trace',
+        'calling console.dir',
+        'calling console.warn',
+        'calling console.error',
+        'JSHandle@promise',
+      ])
     end
 
     it 'should work for different console API calls with timing functions' do
@@ -348,7 +379,19 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should work for different console API calls with group functions' do
-      skip('Not implemented')
+      messages = []
+      page.on('console') do |m|
+        messages << m
+      end
+      # All console events will be reported before `page.evaluate` is finished.
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        console.group('calling console.group');
+        console.groupEnd();
+      }
+      JAVASCRIPT
+      expect(messages.map(&:log_type)).to eq(%w[startGroup endGroup])
+      expect(messages.first.text).to include('calling console.group')
     end
 
     it 'should not fail for window object' do
@@ -360,7 +403,19 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should return remote objects' do
-      skip('Not implemented')
+      log_promise = Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } }
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        globalThis.test = 1;
+        console.log(1, 2, 3, globalThis);
+      }
+      JAVASCRIPT
+      log = log_promise.wait
+
+      expect(['1 2 3 JSHandle@object', '1 2 3 JSHandle@window']).to include(log.text)
+      expect(log.args.length).to eq(4)
+      property = log.args[3].property('test')
+      expect(property.json_value).to eq(1)
     end
 
     it 'should trigger correct Log' do
@@ -392,9 +447,20 @@ RSpec.describe Puppeteer::Page do
 
       message = await_promises(
         Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
-        async_promise { page.goto("#{server_prefix}/consolelog.html") },
+        async_promise { page.goto("#{server_prefix}/consoletrace.html") },
       ).first
-      expect(message.log_type).to eq('log')
+      expect(message.text).to eq('yellow')
+      expect(message.log_type).to eq('trace')
+      expect(message.location.url).to eq("#{server_prefix}/consoletrace.html")
+      expect(message.location.line_number).to eq(8)
+      expect(message.location.column_number).to eq(16)
+      expect(message.stack_trace.map { |frame| frame.url }).to eq([
+        "#{server_prefix}/consoletrace.html",
+        "#{server_prefix}/consoletrace.html",
+        "#{server_prefix}/consoletrace.html",
+      ])
+      expect(message.stack_trace.map { |frame| frame.line_number }).to eq([8, 11, 13])
+      expect(message.stack_trace.map { |frame| frame.column_number }).to eq([16, 8, 6])
     end
 
     # @see https://github.com/puppeteer/puppeteer/issues/3865
@@ -505,7 +571,18 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should work with async predicate' do
-      skip('Not implemented')
+      page.goto(server_empty_page)
+      predicate = ->(req) { Async { req.url == "#{server_prefix}/digits/2.png" } }
+      request = page.wait_for_request(predicate: predicate) do
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }
+        JAVASCRIPT
+      end
+      expect(request.url).to eq("#{server_prefix}/digits/2.png")
     end
 
     it 'should respect timeout' do
@@ -753,6 +830,8 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page#expose_function' do
+    include Utils::AttachFrame
+    include Utils::DetachFrame
     it 'should work' do
       page.expose_function('compute', ->(a, b) { a * b })
       result = page.evaluate('async function() { return await globalThis.compute(9, 4) }')
@@ -814,7 +893,9 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should await returned if called from function' do
-      skip('Not implemented')
+      page.expose_function('compute', ->(a, b) { a * b })
+      result = page.evaluate('async () => { const result = await globalThis.compute(3, 5); return result; }')
+      expect(result).to eq(15)
     end
 
     it 'should work on frames', sinatra: true do
@@ -826,7 +907,42 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should work with loading frames' do
-      skip('Not implemented')
+      page.request_interception = true
+
+      iframe_request_promise = Async::Promise.new
+      on_request = lambda do |request|
+        if request.url.end_with?('/frames/frame.html')
+          iframe_request_promise.resolve(request)
+        else
+          request.continue
+        end
+      end
+      page.on('request', &on_request)
+
+      error = nil
+      navigation_promise = async_promise do
+        begin
+          page.goto("#{server_prefix}/frames/one-frame.html", wait_until: 'networkidle0')
+        rescue StandardError => err
+          error = err
+        end
+      end
+
+      request = iframe_request_promise.wait
+      expose_promise = async_promise do
+        page.expose_function('compute', ->(a, b) { a * b })
+      end
+      request.continue
+
+      await_promises(navigation_promise, expose_promise)
+
+      expect(error).to be_nil
+      frame = page.frames[1]
+      result = frame.evaluate('async () => { return await globalThis.compute(3, 5) }')
+      expect(result).to eq(15)
+    ensure
+      page.off('request', on_request) if on_request
+      page.request_interception = false
     end
 
     it 'should work on frames before navigation', sinatra: true do
@@ -837,7 +953,13 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should not throw when frames detach' do
-      skip('Not implemented')
+      page.goto(server_empty_page)
+      attach_frame(page, 'frame1', server_empty_page)
+      page.expose_function('compute', ->(a, b) { a * b })
+      detach_frame(page, 'frame1')
+
+      result = page.evaluate('async () => { return await globalThis.compute(3, 5) }')
+      expect(result).to eq(15)
     end
 
     it 'should work with complex objects' do
@@ -854,7 +976,13 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should be called once' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/frames/nested-frames.html")
+      calls = 0
+      page.expose_function('call', -> { calls += 1 })
+
+      frame = page.frames[1]
+      frame.evaluate('async () => { return await globalThis.call() }')
+      expect(calls).to eq(1)
     end
   end
 
@@ -883,7 +1011,12 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should fire for all value types' do
-      skip('Not implemented')
+      error_promise = Async::Promise.new.tap do |promise|
+        page.once('pageerror') { |err| promise.resolve(err) }
+      end
+      page.goto("#{server_prefix}/error-primitive.html")
+      error = error_promise.wait
+      expect(error).to be_nil
     end
   end
 
@@ -973,7 +1106,22 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should restore original' do
-      skip('Not implemented')
+      original_user_agent = page.evaluate('() => navigator.userAgent')
+
+      page.user_agent = 'foobar'
+      overridden_request = await_promises(
+        async_promise { server.wait_for_request('/empty.html') },
+        async_promise { page.goto(server_empty_page) },
+      ).first
+      expect(overridden_request.headers['user-agent']).to eq('foobar')
+
+      page.user_agent = ''
+      restored_request = await_promises(
+        async_promise { server.wait_for_request('/empty.html') },
+        async_promise { page.goto(server_empty_page) },
+      ).first
+      expect(restored_request.headers['user-agent']).to eq(original_user_agent)
+      expect(page.evaluate('() => navigator.userAgent')).to eq(original_user_agent)
     end
   end
 
@@ -1285,15 +1433,56 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'setInterval should pause' do
-      skip('Not implemented')
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        globalThis.intervalCounter = 0;
+        setInterval(() => {
+          globalThis.intervalCounter += 1;
+        }, 0);
+      }
+      JAVASCRIPT
+
+      page.javascript_enabled = false
+      interval_counter = page.evaluate('() => globalThis.intervalCounter')
+      sleep 0.1
+      expect(page.evaluate('() => globalThis.intervalCounter')).to eq(interval_counter)
+
+      page.javascript_enabled = true
+      page.evaluate('() => new Promise((resolve) => setTimeout(resolve, 100))')
+      expect(page.evaluate('() => globalThis.intervalCounter')).to be > interval_counter
     end
 
     it 'setTimeout should stop' do
-      skip('Not implemented')
+      page.evaluate(<<~JAVASCRIPT)
+      () => {
+        const task = () => {
+          globalThis.timeoutCounter = (globalThis.timeoutCounter || 0) + 1;
+          setTimeout(task, 0);
+        };
+        task();
+      }
+      JAVASCRIPT
+
+      page.javascript_enabled = false
+      timeout_counter = page.evaluate('() => globalThis.timeoutCounter')
+      sleep 0.1
+      expect(page.evaluate('() => globalThis.timeoutCounter')).to eq(timeout_counter)
+
+      page.javascript_enabled = true
+      page.evaluate('() => new Promise((resolve) => setTimeout(resolve, 100))')
+      expect(page.evaluate('() => globalThis.timeoutCounter')).to eq(timeout_counter)
     end
 
     it 'then should not pause' do
-      skip('Not implemented')
+      page.javascript_enabled = false
+      result = page.evaluate(<<~JAVASCRIPT)
+      () => {
+        return Promise.resolve().then(() => {
+          return 42;
+        });
+      }
+      JAVASCRIPT
+      expect(result).to eq(42)
     end
   end
 
@@ -1428,39 +1617,70 @@ RSpec.describe Puppeteer::Page do
 
   describe '#select', sinatra: true do
     it 'should select single option' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue'])
     end
 
     it 'should select only first option' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue', 'green', 'red')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue'])
     end
 
     it 'should not throw when select causes navigation' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.eval_on_selector('select', <<~JAVASCRIPT)
+      (select) =>
+        select.addEventListener('input', () => {
+          window.location = '/empty.html';
+        })
+      JAVASCRIPT
+      page.wait_for_navigation do
+        page.select('select', 'blue')
+      end
+      expect(page.url).to include('empty.html')
     end
 
     it 'should select multiple options' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => globalThis.makeMultiple()')
+      page.select('select', 'blue', 'green', 'red')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue', 'green', 'red'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue', 'green', 'red'])
     end
 
     it 'should respect event bubbling' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.select('select', 'blue')
+      expect(page.evaluate('() => globalThis.result.onBubblingInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onBubblingChange')).to eq(['blue'])
     end
 
     it 'should throw when element is not a <select>' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      expect { page.select('body', '') }.to raise_error(/Element is not a <select> element\./)
     end
 
     it 'should return [] on no matched values' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      result = page.select('select', '42', 'abc')
+      expect(result).to eq([])
     end
 
     it 'should return an array of matched values' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => globalThis.makeMultiple()')
+      result = page.select('select', 'blue', 'black', 'magenta')
+      expect(result).to match_array(%w[blue black magenta])
     end
 
     it 'should return an array of one element when multiple is not set' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      result = page.select('select', '42', 'blue', 'black', 'magenta')
+      expect(result.length).to eq(1)
     end
 
     it 'should return [] on no values' do
@@ -1470,7 +1690,14 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should deselect all options when passed no values for a multiple select' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => globalThis.makeMultiple()')
+      page.select('select', 'blue', 'black', 'magenta')
+      page.select('select')
+      all_unselected = page.eval_on_selector('select', <<~JAVASCRIPT)
+      (select) => Array.from(select.options).every((option) => !option.selected)
+      JAVASCRIPT
+      expect(all_unselected).to eq(true)
     end
 
     it 'should deselect all options when passed no values for a select without multiple' do
@@ -1484,12 +1711,17 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should throw if passed in non-strings' do
-      skip('Not implemented')
+      page.content = '<select><option value="12"></option></select>'
+      expect { page.select('select', 12) }.to raise_error(/Values must be strings/)
     end
 
     # @see https://github.com/puppeteer/puppeteer/issues/3327
     it 'should work when re-defining top-level Event class' do
-      skip('Not implemented')
+      page.goto("#{server_prefix}/input/select.html")
+      page.evaluate('() => { window.Event = undefined; }')
+      page.select('select', 'blue')
+      expect(page.evaluate('() => globalThis.result.onInput')).to eq(['blue'])
+      expect(page.evaluate('() => globalThis.result.onChange')).to eq(['blue'])
     end
   end
 

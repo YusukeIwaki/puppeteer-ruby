@@ -645,6 +645,15 @@ class Puppeteer::Page
   class PageError < Puppeteer::Error ; end
 
   private def handle_exception(exception_details)
+    exception = exception_details['exception']
+    if exception
+      is_error_object = exception['type'] == 'object' && exception['subtype'] == 'error'
+      if !is_error_object && !exception.key?('objectId')
+        emit_event(PageEmittedEvents::PageError, Puppeteer::RemoteObject.new(exception).value)
+        return
+      end
+    end
+
     message = Puppeteer::ExceptionDetails.new(exception_details).message
     err = PageError.new(message)
     #   err.stack = ''; // Don't report clientside error with a node stack attached
