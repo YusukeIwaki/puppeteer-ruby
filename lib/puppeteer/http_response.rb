@@ -90,7 +90,7 @@ class Puppeteer::HTTPResponse
 
   def buffer
     @body_loaded_promise.wait
-    response = @client.send_message('Network.getResponseBody', requestId: @request.internal.request_id)
+    response = @request.client.send_message('Network.getResponseBody', requestId: @request.internal.request_id)
     if response['base64Encoded']
       Base64.decode64(response['body'])
     else

@@ -69,8 +69,7 @@ class Puppeteer::Connection
   end
 
   private def sleep_before_handling_message(message)
-    # Puppeteer doesn't handle any Network monitoring responses.
-    # So we don't have to sleep.
+    # Keep network events ordered without extra delay.
     return if message['method']&.start_with?('Network.')
 
     # For some reasons, sleeping a bit reduces trivial errors...
@@ -85,9 +84,7 @@ class Puppeteer::Connection
     when nil
       false
     when /^Network\./
-      # Puppeteer doesn't handle any Network monitoring responses.
-      # So we don't care their handling order.
-      false
+      true
     when /^Page\.frame/
       # Page.frameAttached
       # Page.frameNavigated

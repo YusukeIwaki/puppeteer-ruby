@@ -15,6 +15,7 @@ class Puppeteer::CDPSession
     @target_type = target_type
     @session_id = session_id
     @ready_promise = Async::Promise.new
+    @target = nil
   end
 
   # @internal
@@ -23,6 +24,11 @@ class Puppeteer::CDPSession
   end
 
   attr_reader :connection
+  attr_reader :target
+
+  def set_target(target)
+    @target = target
+  end
 
   def mark_ready
     @ready_promise.resolve(true) unless @ready_promise.resolved?

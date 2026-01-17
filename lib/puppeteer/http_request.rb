@@ -14,6 +14,10 @@ class Puppeteer::HTTPRequest
       @request.instance_variable_get(:@request_id)
     end
 
+    def client=(client)
+      @request.instance_variable_set(:@client, client)
+    end
+
     def interception_id
       @request.instance_variable_get(:@interception_id)
     end
@@ -90,7 +94,10 @@ class Puppeteer::HTTPRequest
     @interception_id = interception_id
     @allow_interception = allow_interception
     @url = event['request']['url']
-    @resource_type = event['type'].downcase
+    url_fragment = event.dig('request', 'urlFragment')
+    @url += url_fragment if url_fragment
+    resource_type = event['type'] || event['resourceType'] || 'other'
+    @resource_type = resource_type.downcase
     @method = event['request']['method']
     @post_data = event['request']['postData']
     @frame = frame
@@ -102,16 +109,24 @@ class Puppeteer::HTTPRequest
     @initiator = event['initiator']
 
     @headers = {}
-    event['request']['headers'].each do |key, value|
-      @headers[key.downcase] = value
-    end
+    update_headers(event.dig('request', 'headers') || {})
     @from_memory_cache = false
 
     @internal = InternalAccessor.new(self)
   end
 
   attr_reader :internal
-  attr_reader :url, :resource_type, :method, :post_data, :headers, :response, :frame, :initiator
+  attr_reader :client, :url, :resource_type, :method, :post_data, :response, :frame, :initiator
+
+  def update_headers(headers)
+    headers.each do |key, value|
+      @headers[key.downcase] = value
+    end
+  end
+
+  def headers
+    @headers.dup
+  end
 
   def inspect
     values = %i[request_id method url].map do |sym|
@@ -200,7 +215,7 @@ class Puppeteer::HTTPRequest
     @intercept_handlers = []
     case intercept_resolution_state.action
     when 'abort'
-      abort_impl(**@abort_error_reason)
+      abort_impl(@abort_error_reason)
     when 'respond'
       raise "Response is missing for the interception" if @response_for_request.nil?
       respond_impl(**@response_for_request)
@@ -227,12 +242,15 @@ class Puppeteer::HTTPRequest
     return nil unless headers
 
     headers.flat_map do |key, value|
-      if value.is_a?(Enumerable)
-        value.map do |v|
-          { name: key, value: v.to_s }
+      next [] if value.nil?
+
+      name = key.to_s
+      if value.is_a?(Array)
+        value.compact.map do |v|
+          { name: name, value: v.to_s }
         end
       else
-        { name: key, value: value.to_s }
+        { name: name, value: value.to_s }
       end
     end
   end
@@ -271,8 +289,8 @@ class Puppeteer::HTTPRequest
     overrides = {
       url: url,
       method: method,
-      postData: post_data,
-      headers: headers_to_array(headers),
+      post_data: post_data,
+      headers: headers,
     }.compact
 
     if priority.nil?
@@ -298,14 +316,24 @@ class Puppeteer::HTTPRequest
     @interception_handled = true
 
     begin
+      raise Puppeteer::Error.new('HTTPRequest is missing interception id needed for Fetch.continueRequest') if @interception_id.nil?
+
+      post_data = overrides[:post_data]
+      overrides = overrides.merge(
+        postData: post_data ? Base64.strict_encode64(post_data.b) : nil,
+        headers: headers_to_array(overrides[:headers]),
+      ).compact
+      overrides.delete(:post_data)
+
       @client.send_message('Fetch.continueRequest',
         requestId: @interception_id,
         **overrides,
       )
     rescue => err
+      @interception_handled = false unless target_closed_error?(err)
       # In certain cases, protocol will return error if the request was already canceled
       # or the page was closed. We should tolerate these errors.
-      debug_puts(err)
+      handle_interception_error(err)
     end
   end
 
@@ -340,7 +368,7 @@ class Puppeteer::HTTPRequest
       headers: headers,
       content_type: content_type,
       body: body,
-    }
+    }.compact
 
     if @intercept_resolution_state.priority_unspecified? || priority > @intercept_resolution_state.priority
       @intercept_resolution_state = InterceptResolutionState.respond(priority: priority)
@@ -358,10 +386,18 @@ class Puppeteer::HTTPRequest
   private def respond_impl(status: nil, headers: nil, content_type: nil, body: nil)
     @interception_handled = true
 
+    parsed_body = if body
+      binary = body.to_s.b
+      {
+        content_length: binary.bytesize,
+        base64: Base64.strict_encode64(binary),
+      }
+    end
+
     mock_response_headers = {}
     headers&.each do |key, value|
-      mock_response_headers[key.downcase] =
-        if value.is_a?(Enumerable)
+      mock_response_headers[key.to_s.downcase] =
+        if value.is_a?(Array)
           value.map(&:to_s)
         else
           value.to_s
@@ -370,26 +406,29 @@ class Puppeteer::HTTPRequest
     if content_type
       mock_response_headers['content-type'] = content_type
     end
-    if body
-      mock_response_headers['content-length'] = body.length
+    if parsed_body && !mock_response_headers.key?('content-length')
+      mock_response_headers['content-length'] = parsed_body[:content_length].to_s
     end
 
     mock_response = {
       responseCode: status || 200,
       responsePhrase: STATUS_TEXTS[(status || 200).to_s],
       responseHeaders: headers_to_array(mock_response_headers),
-      body: if_present(body) { |mock_body| Base64.strict_encode64(mock_body) },
+      body: parsed_body && parsed_body[:base64],
     }.compact
 
     begin
+      raise Puppeteer::Error.new('HTTPRequest is missing interception id needed for Fetch.fulfillRequest') if @interception_id.nil?
+
       @client.send_message('Fetch.fulfillRequest',
         requestId: @interception_id,
         **mock_response,
       )
     rescue => err
+      @interception_handled = false unless target_closed_error?(err)
       # In certain cases, protocol will return error if the request was already canceled
       # or the page was closed. We should tolerate these errors.
-      debug_puts(err)
+      handle_interception_error(err)
     end
   end
 
@@ -429,15 +468,31 @@ class Puppeteer::HTTPRequest
     @interception_handled = true
 
     begin
+      raise Puppeteer::Error.new('HTTPRequest is missing interception id needed for Fetch.failRequest') if @interception_id.nil?
+
       @client.send_message('Fetch.failRequest',
         requestId: @interception_id,
-        errorReason: error_reason,
+        errorReason: error_reason || ERROR_REASONS.fetch('failed'),
       )
     rescue => err
+      @interception_handled = false unless target_closed_error?(err)
       # In certain cases, protocol will return error if the request was already canceled
       # or the page was closed. We should tolerate these errors.
-      debug_puts(err)
+      handle_interception_error(err)
     end
+  end
+
+  private def target_closed_error?(error)
+    message = error.message.to_s
+    message.match?(/Target closed|Session closed|Connection closed/i)
+  end
+
+  private def handle_interception_error(error)
+    message = error.message.to_s
+    if message.match?(/Invalid header|Unsafe header|Expected "header"|invalid argument/i)
+      raise error
+    end
+    debug_puts(error)
   end
 
   ERROR_REASONS = {

@@ -439,7 +439,16 @@ module TestServer
       @method = route_request.method
       @headers = route_request.headers
       @path = route_request.path
-      @post_body = body
+      # Match Puppeteer testserver: treat request body as UTF-8 text.
+      @post_body = normalize_post_body(body)
+    end
+
+    private def normalize_post_body(body)
+      return nil unless body
+
+      utf8_body = body.dup
+      utf8_body.force_encoding(Encoding::UTF_8)
+      utf8_body.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
     end
   end
 

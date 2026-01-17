@@ -358,4 +358,7 @@ RSpec.configure do |config|
 end
 
 require_relative './golden_matcher'
+RSpec.configure do |config|
+  config.include GoldenMatcher
+end
 require_relative './utils'
