@@ -34,6 +34,7 @@ module CDPSessionEmittedEvents ; end
 
 {
   Disconnected: EventsDefinitionUtils.symbol('CDPSession.Disconnected'),
+  Ready: EventsDefinitionUtils.symbol('CDPSession.Ready'),
 }.define_const_into(CDPSessionEmittedEvents)
 
 # All the events a Browser may emit.
@@ -158,6 +159,9 @@ module PageEmittedEvents ; end
   #
   # The object is readonly. See Page#setRequestInterception for intercepting and mutating requests.
   Request: 'request',
+
+  # Emitted when a request is served from cache.
+  RequestServedFromCache: 'requestservedfromcache',
 
   # Emitted when a request fails, for example by timing out.
   #

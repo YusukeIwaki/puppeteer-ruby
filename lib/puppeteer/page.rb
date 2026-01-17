@@ -53,11 +53,14 @@ class Puppeteer::Page
     @screenshot_task_queue = ScreenshotTaskQueue.new
     @inflight_requests = Set.new
     @request_intercepted_listener_map = ObjectSpace::WeakMap.new
+    @attached_sessions = Set.new
 
     @workers = {}
     @user_drag_interception_enabled = false
 
-    @target.target_manager.add_target_interceptor(@client, method(:handle_attached_to_target))
+    @attached_session_listener_id = @client.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
+      handle_attached_to_session(session)
+    end
     @target_gone_listener_id = @target.target_manager.add_event_listener(
       TargetManagerEmittedEvents::TargetGone,
       &method(:handle_detached_from_target)
@@ -80,6 +83,9 @@ class Puppeteer::Page
     end
     network_manager.on_event(NetworkManagerEmittedEvents::Response) do |event|
       emit_event(PageEmittedEvents::Response, event)
+    end
+    network_manager.on_event(NetworkManagerEmittedEvents::RequestServedFromCache) do |event|
+      emit_event(PageEmittedEvents::RequestServedFromCache, event)
     end
     network_manager.on_event(NetworkManagerEmittedEvents::RequestFailed) do |event|
       @inflight_requests.delete(event)
@@ -124,7 +130,7 @@ class Puppeteer::Page
     end
     Async do
       @target.is_closed_promise.wait
-      @target.target_manager.remove_target_interceptor(@client, method(:handle_attached_to_target))
+      @client.remove_event_listener(@attached_session_listener_id)
       @target.target_manager.remove_event_listener(@target_gone_listener_id)
 
       emit_event(PageEmittedEvents::Close)
@@ -141,24 +147,49 @@ class Puppeteer::Page
     emit_event(PageEmittedEvents::WorkerDestroyed, worker)
   end
 
-  private def handle_attached_to_target(target, _)
-    @frame_manager.handle_attached_to_target(target)
-    if target.raw_type == 'worker'
-      #   const session = createdTarget._session();
-      #   assert(session);
-      #   const worker = new WebWorker(
-      #     session,
-      #     createdTarget.url(),
-      #     this.#addConsoleMessage.bind(this),
-      #     this.#handleException.bind(this)
-      #   );
-      #   this.#workers.set(session.id(), worker);
-      #   this.emit(PageEmittedEvents.WorkerCreated, worker);
+  private def handle_attached_to_session(session)
+    return if @attached_sessions.include?(session)
+    @attached_sessions << session
+    session.on(CDPSessionEmittedEvents::Ready) do |child_session|
+      handle_attached_to_session(child_session)
     end
 
-    if target.session
-      @target.target_manager.add_target_interceptor(target.session, method(:handle_attached_to_target))
+    target = session.target
+    return unless target
+    handle_attached_to_target(target)
+  end
+
+  private def handle_attached_to_target(target)
+    @frame_manager.handle_attached_to_target(target)
+    session = target.session
+    if session && target.raw_type != 'worker'
+      @frame_manager.network_manager.add_client(session)
     end
+    if target.raw_type == 'worker'
+      return unless session
+
+      console_api_called = lambda do |world, event|
+        values = event['args'].map do |arg|
+          remote_object = Puppeteer::RemoteObject.new(arg)
+          Puppeteer::JSHandle.create(context: world.execution_context, remote_object: remote_object)
+        end
+        add_console_message(event['type'], values, event['stackTrace'])
+      end
+      exception_thrown = method(:handle_exception)
+
+      worker = Puppeteer::CdpWebWorker.new(
+        session,
+        target.url,
+        target.target_id,
+        target.raw_type,
+        console_api_called,
+        exception_thrown,
+        network_manager: @frame_manager.network_manager,
+      )
+      @workers[session.id] = worker
+      emit_event(PageEmittedEvents::WorkerCreated, worker)
+    end
+
   end
 
   # @rbs return: Array[untyped] -- Initialization results
@@ -1457,6 +1488,8 @@ class Puppeteer::Page
         Puppeteer::AsyncUtils.sleep_seconds(0.004)
       end
     end
+  rescue Puppeteer::Connection::ProtocolError => err
+    raise unless err.message.match?(/Target closed/i)
   end
 
   # @rbs return: bool -- Whether the page is closed

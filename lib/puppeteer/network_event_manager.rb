@@ -44,6 +44,7 @@ class Puppeteer::NetworkEventManager
     # handle redirects, we have to make them Arrays to represent the chain of
     # events.
     @response_received_extra_info_map = {}
+    @request_will_be_sent_extra_info_map = {}
     @queued_redirect_info_map = {}
     @queued_event_group_map = {}
   end
@@ -51,9 +52,14 @@ class Puppeteer::NetworkEventManager
   def forget(network_request_id)
     @request_will_be_sent_map.delete(network_request_id)
     @request_paused_map.delete(network_request_id)
+    @request_will_be_sent_extra_info_map.delete(network_request_id)
     @queued_event_group_map.delete(network_request_id)
     @queued_redirect_info_map.delete(network_request_id)
     @response_received_extra_info_map.delete(network_request_id)
+  end
+
+  def request_extra_info(network_request_id)
+    @request_will_be_sent_extra_info_map[network_request_id] ||= []
   end
 
   def response_extra_info(network_request_id)
@@ -107,6 +113,7 @@ class Puppeteer::NetworkEventManager
   def get_request(network_request_id)
     @http_requests_map[network_request_id]
   end
+
 
   def forget_request(network_request_id)
     @http_requests_map.delete(network_request_id)

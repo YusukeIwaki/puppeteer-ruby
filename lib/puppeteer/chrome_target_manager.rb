@@ -220,6 +220,7 @@ class Puppeteer::ChromeTargetManager
 
     target = @attached_targets_by_target_id[target_info.target_id] || @target_factory.call(target_info, session)
     setup_attachment_listeners(session)
+    session.target = target
 
     @attached_targets_by_target_id[target_info.target_id] ||= target
     @attached_targets_by_session_id[session.id] = target
@@ -245,6 +246,7 @@ class Puppeteer::ChromeTargetManager
       end
     end
     finish_initialization_if_ready
+    parent_session.emit_event(CDPSessionEmittedEvents::Ready, session)
 
     Async do
       Puppeteer::AsyncUtils.await(session.async_send_message('Target.setAutoAttach', {

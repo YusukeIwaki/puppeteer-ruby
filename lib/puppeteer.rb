@@ -66,6 +66,7 @@ require 'puppeteer/touch_handle'
 require 'puppeteer/touch_screen'
 require 'puppeteer/version'
 require 'puppeteer/wait_task'
+require 'puppeteer/web_worker'
 require 'puppeteer/web_socket_transport'
 
 # subclasses

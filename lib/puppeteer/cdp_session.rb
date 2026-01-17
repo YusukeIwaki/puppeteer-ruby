@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class Puppeteer::CDPSession
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
@@ -5,9 +7,10 @@ class Puppeteer::CDPSession
 
   class Error < Puppeteer::Error; end
 
-  # @param {!Connection} connection
-  # @param {string} targetType
-  # @param {string} sessionId
+  # @rbs connection: Puppeteer::Connection -- CDP connection
+  # @rbs target_type: String -- Target type
+  # @rbs session_id: String -- CDP session id
+  # @rbs return: void -- No return value
   def initialize(connection, target_type, session_id)
     @callbacks = {}
     @callbacks_mutex = Mutex.new
@@ -15,33 +18,37 @@ class Puppeteer::CDPSession
     @target_type = target_type
     @session_id = session_id
     @ready_promise = Async::Promise.new
+    @target = nil
   end
 
-  # @internal
+  # @rbs return: String -- CDP session id
   def id
     @session_id
   end
 
-  attr_reader :connection
+  attr_reader :connection #: Puppeteer::Connection?
+  attr_accessor :target #: Puppeteer::Target?
 
+  # @rbs return: void -- Resolve session readiness
   def mark_ready
     @ready_promise.resolve(true) unless @ready_promise.resolved?
   end
 
+  # @rbs return: bool -- True when session is ready
   def wait_for_ready
     @ready_promise.wait
   end
 
-  # @param method [String]
-  # @param params [Hash]
-  # @returns [Hash]
+  # @rbs method: String -- CDP method name
+  # @rbs params: Hash[String, untyped] -- CDP parameters
+  # @rbs return: Hash[String, untyped] -- CDP response
   def send_message(method, params = {})
     async_send_message(method, params).wait
   end
 
-  # @param method [String]
-  # @param params [Hash]
-  # @returns [Future<Hash>]
+  # @rbs method: String -- CDP method name
+  # @rbs params: Hash[String, untyped] -- CDP parameters
+  # @rbs return: Async::Promise[Hash[String, untyped]] -- Async CDP response
   def async_send_message(method, params = {})
     if !@connection
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
@@ -59,7 +66,8 @@ class Puppeteer::CDPSession
     promise
   end
 
-  # @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
+  # @rbs message: Hash[String, untyped] -- Raw CDP message
+  # @rbs return: void -- No return value
   def handle_message(message)
     if message['id']
       if callback = @callbacks_mutex.synchronize { @callbacks.delete(message['id']) }
@@ -84,6 +92,7 @@ class Puppeteer::CDPSession
     end
   end
 
+  # @rbs return: void -- Detach the session
   def detach
     if !@connection
       raise Error.new("Session already detarched. Most likely the #{@target_type} has been closed.")
@@ -91,6 +100,7 @@ class Puppeteer::CDPSession
     @connection.send_message('Target.detachFromTarget',  sessionId: @session_id)
   end
 
+  # @rbs return: void -- Close the session and reject pending callbacks
   def handle_closed
     callbacks = @callbacks_mutex.synchronize do
       @callbacks.values.tap { @callbacks.clear }
@@ -106,12 +116,16 @@ class Puppeteer::CDPSession
     emit_event(CDPSessionEmittedEvents::Disconnected)
   end
 
-  # @param event_name [String]
+  # @rbs event_name: String -- CDP event name
+  # @rbs &block: ^(untyped) -> void -- Event handler
+  # @rbs return: String -- Listener id
   def on(event_name, &block)
     add_event_listener(event_name, &block)
   end
 
-  # @param event_name [String]
+  # @rbs event_name: String -- CDP event name
+  # @rbs &block: ^(untyped) -> void -- Event handler
+  # @rbs return: String -- Listener id
   def once(event_name, &block)
     observe_first(event_name, &block)
   end

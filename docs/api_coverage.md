@@ -411,8 +411,8 @@
 * start
 * stop
 
-## ~~WebWorker~~
+## WebWorker
 
-* ~~evaluate~~
-* ~~evaluateHandle~~
-* ~~url~~
+* evaluate
+* evaluateHandle => `#evaluate_handle`
+* url

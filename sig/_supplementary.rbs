@@ -263,7 +263,7 @@ class Puppeteer::Connection
 
   def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay) -> void
   def closed?: () -> bool
-  def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection
+  def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
   def session: (String session_id) -> Puppeteer::CDPSession?
   def url: () -> String
   def send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
@@ -284,28 +284,6 @@ class Puppeteer::Connection
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void
   def handle_close: () -> void
-end
-
-class Puppeteer::CDPSession
-  include Puppeteer::DebugPrint
-  include Puppeteer::EventCallbackable
-
-  def initialize: (Puppeteer::Connection connection, String target_type, String session_id) -> void
-  def id: () -> String
-  attr_reader connection: Puppeteer::Connection
-  def mark_ready: () -> void
-  def wait_for_ready: () -> untyped
-  def send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
-  def async_send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
-  def handle_message: (Hash[Symbol | String, untyped] message) -> void
-  def detach: () -> void
-  def handle_closed: () -> void
-  def on: (String event_name) { (*untyped, **untyped) -> untyped } -> String
-  def once: (String event_name) { (*untyped, **untyped) -> untyped } -> String
-
-  private
-
-  def callback_with_message: (untyped callback, Hash[Symbol | String, untyped] message) -> void
 end
 
 class Puppeteer::BrowserRunner
@@ -336,6 +314,7 @@ class Puppeteer::HTTPRequest
   class InternalAccessor
     def initialize: (Puppeteer::HTTPRequest request) -> void
     def request_id: () -> untyped
+    def client=: (Puppeteer::CDPSession client) -> void
     def interception_id: () -> untyped
     def response=: (untyped response) -> void
     def redirect_chain: () -> Array[Puppeteer::HTTPRequest]
@@ -368,6 +347,7 @@ class Puppeteer::HTTPRequest
 
   def initialize: (untyped client, untyped frame, untyped interception_id, untyped allow_interception, Hash[Symbol | String, untyped] event, Array[Puppeteer::HTTPRequest] redirect_chain) -> void
   def inspect: () -> String
+  def update_headers: (Hash[Symbol | String, untyped] headers) -> void
   def continue_request_overrides: () -> Hash[Symbol, untyped]
   def response_for_request: () -> untyped
   def abort_error_reason: () -> untyped
@@ -400,4 +380,6 @@ class Puppeteer::HTTPRequest
   def continue_impl: (Hash[Symbol, untyped] overrides) -> void
   def respond_impl: (?status: Integer?, ?headers: Hash[String, String]?, ?content_type: String?, ?body: String?) -> void
   def abort_impl: (String error_reason) -> void
+  def target_closed_error?: (StandardError error) -> bool
+  def handle_interception_error: (StandardError error) -> void
 end

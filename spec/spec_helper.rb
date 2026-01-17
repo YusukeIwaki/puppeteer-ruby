@@ -1,6 +1,5 @@
 require 'bundler/setup'
 require 'puppeteer'
-require 'rollbar'
 require 'time'
 require 'timeout'
 require 'rack/utils'
@@ -120,14 +119,6 @@ class TestServerSinatraAdapter
       writer.write(body.to_s) if body
       writer.finish
     end
-  end
-end
-
-Rollbar.configure do |config|
-  if ENV['ROLLBAR_ACCESS_TOKEN']
-    config.access_token = ENV['ROLLBAR_ACCESS_TOKEN']
-  else
-    config.enabled = false
   end
 end
 
@@ -358,4 +349,7 @@ RSpec.configure do |config|
 end
 
 require_relative './golden_matcher'
+RSpec.configure do |config|
+  config.include GoldenMatcher
+end
 require_relative './utils'

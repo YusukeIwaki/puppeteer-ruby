@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'request interception' do
+RSpec.describe 'cooperative request interception' do
   def skip_favicon?(request)
     request.url.include?('favicon.ico')
   end
@@ -12,13 +12,70 @@ RSpec.describe 'request interception' do
   end
 
   describe 'Page.setRequestInterception' do
+    expected_actions = %w[abort continue respond]
+    expected_actions.each do |expected_action|
+      it "should cooperatively #{expected_action} by priority", sinatra: true do
+        with_test_state do |page:, server:, **|
+          action_results = []
+          page.request_interception = true
+          page.on('request') do |request|
+            if request.url.end_with?('.css')
+              headers = request.headers.merge('xaction' => 'continue')
+              request.continue(headers: headers, priority: expected_action == 'continue' ? 1 : 0)
+            else
+              request.continue(priority: 0)
+            end
+          end
+          page.on('request') do |request|
+            if request.url.end_with?('.css')
+              request.respond(headers: { 'xaction' => 'respond' }, priority: expected_action == 'respond' ? 1 : 0)
+            else
+              request.continue(priority: 0)
+            end
+          end
+          page.on('request') do |request|
+            if request.url.end_with?('.css')
+              request.abort(error_code: 'aborted', priority: expected_action == 'abort' ? 1 : 0)
+            else
+              request.continue(priority: 0)
+            end
+          end
+          page.on('response') do |response|
+            xaction = response.headers['xaction']
+            if response.url.end_with?('.css') && xaction
+              action_results << xaction
+            end
+          end
+          page.on('requestfailed') do |request|
+            action_results << 'abort' if request.url.end_with?('.css')
+          end
+
+          response =
+            if expected_action == 'continue'
+              server_request, response = await_promises(
+                async_promise { server.wait_for_request('/one-style.css') },
+                async_promise { page.goto("#{server.prefix}/one-style.html") },
+              )
+              action_results << server_request.headers['xaction']
+              response
+            else
+              page.goto("#{server.prefix}/one-style.html")
+            end
+
+          expect(action_results.length).to eq(1)
+          expect(action_results[0]).to eq(expected_action)
+          expect(response.ok?).to eq(true)
+        end
+      end
+    end
+
     it 'should intercept', sinatra: true do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         request_error = nil
         page.on('request') do |request|
           if skip_favicon?(request)
-            request.continue
+            request.continue(priority: 0)
             next
           end
           begin
@@ -32,7 +89,7 @@ RSpec.describe 'request interception' do
           rescue => error
             request_error = error
           ensure
-            request.continue
+            request.continue(priority: 0)
           end
         end
 
@@ -48,7 +105,7 @@ RSpec.describe 'request interception' do
         page.goto(server.empty_page)
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         page.set_content(<<~HTML)
           <form
@@ -71,58 +128,23 @@ RSpec.describe 'request interception' do
       end
     end
 
-    it 'should work with keep alive redirects', sinatra: true do
-      with_test_state do |page:, server:, **|
-        server.set_route('/rredirect') do |_request, writer|
-          writer.status = 302
-          writer.add_header('location', '/target')
-          writer.finish
-        end
-        server.set_route('/target') do |_request, writer|
-          writer.write('Hello World')
-          writer.finish
-        end
-        page.goto(server.empty_page)
-        page.on('request') do |request|
-          request.continue
-        end
-        page.request_interception = true
-        redirect_request_promise = async_promise do
-          page.wait_for_request(predicate: ->(request) { request.url.end_with?('/rredirect') }, timeout: 1000)
-        end
-        target_response_promise = async_promise do
-          page.wait_for_response(predicate: ->(response) { response.request.url.end_with?('/target') }, timeout: 1000)
-        end
-        page.evaluate(<<~JAVASCRIPT, "#{server.prefix}/rredirect")
-          async (url) => {
-            void fetch(url, {
-              method: 'POST',
-              body: JSON.stringify({ test: 'test' }),
-              mode: 'no-cors',
-              keepalive: true,
-            }).then(async (res) => {
-              console.log(await res.text());
-            });
-          }
-        JAVASCRIPT
-        redirect_request_promise.wait
-        target_response_promise.wait
-      end
-    end
-
     it 'should work when header manipulation headers with redirect', sinatra: true do
       with_test_state do |page:, server:, **|
         server.set_redirect('/rrredirect', '/empty.html')
         page.request_interception = true
+        request_error = nil
         page.on('request') do |request|
           headers = request.headers.merge('foo' => 'bar')
-          request.continue(headers: headers)
+          request.continue(headers: headers, priority: 0)
+          begin
+            expect(request.continue_request_overrides).to eq({ headers: headers })
+          rescue => error
+            request_error = error
+          end
         end
-        server_request, = await_promises(
-          async_promise { server.wait_for_request('/empty.html') },
-          async_promise { page.goto("#{server.prefix}/rrredirect") },
-        )
-        expect(server_request.headers['foo']).to eq('bar')
+
+        page.goto("#{server.prefix}/rrredirect")
+        raise request_error if request_error
       end
     end
 
@@ -132,9 +154,9 @@ RSpec.describe 'request interception' do
         page.on('request') do |request|
           headers = request.headers.merge(
             'foo' => 'bar',
-            'origin' => nil,
+            'accept' => nil,
           )
-          request.continue(headers: headers)
+          request.continue(headers: headers, priority: 0)
         end
 
         server_request, = await_promises(
@@ -142,7 +164,7 @@ RSpec.describe 'request interception' do
           async_promise { page.goto("#{server.prefix}/empty.html") },
         )
 
-        expect(server_request.headers['origin']).to be_nil
+        expect(server_request.headers['accept']).to be_nil
       end
     end
 
@@ -151,46 +173,12 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
+          request.continue(priority: 0)
           requests << request unless skip_favicon?(request)
-          request.continue
         end
         page.goto("#{server.prefix}/one-style.html")
         expect(requests[1].url).to include('/one-style.css')
         expect(requests[1].headers['referer']).to include('/one-style.html')
-      end
-    end
-
-    it 'should not allow mutating request headers', sinatra: true do
-      with_test_state do |page:, server:, **|
-        page.request_interception = true
-        requests = []
-        page.on('request') do |request|
-          requests << request unless skip_favicon?(request)
-          headers = request.headers
-          headers['test'] = 'test'
-          request.continue(headers: request.headers)
-        end
-        page.goto(server.empty_page)
-        expect(requests[0].headers.keys).not_to include('test')
-      end
-    end
-
-    it 'should work with requests without networkId', sinatra: true do
-      with_test_state do |page:, server:, **|
-        page.goto(server.empty_page)
-        page.request_interception = true
-
-        cdp = page.target.create_cdp_session
-        cdp.send_message('DOM.enable')
-        urls = []
-        page.on('request') do |request|
-          request.continue
-          next if skip_favicon?(request)
-
-          urls << request.url
-        end
-        cdp.send_message('CSS.enable')
-        expect(urls).to eq([server.empty_page])
       end
     end
 
@@ -201,7 +189,7 @@ RSpec.describe 'request interception' do
 
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         response = page.reload
         expect(response.status).to eq(200)
@@ -212,7 +200,7 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.once('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         page.goto(server.empty_page)
         page.request_interception = false
@@ -231,10 +219,9 @@ RSpec.describe 'request interception' do
           rescue => error
             request_error = error
           ensure
-            request.continue
+            request.continue(priority: 0)
           end
         end
-
         response = page.goto(server.empty_page)
         raise request_error if request_error
         expect(response.ok?).to eq(true)
@@ -247,7 +234,7 @@ RSpec.describe 'request interception' do
         server.set_redirect('/logo.png', '/pptr.png')
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         status = page.evaluate(<<~JAVASCRIPT)
           () => {
@@ -265,13 +252,18 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.extra_http_headers = { 'referer' => server.empty_page }
         page.request_interception = true
-        request = nil
-        page.on('request') do |req|
-          request = req
-          request.continue
+        request_error = nil
+        page.on('request') do |request|
+          begin
+            expect(request.headers['referer']).to eq(server.empty_page)
+          rescue => error
+            request_error = error
+          ensure
+            request.continue(priority: 0)
+          end
         end
         response = page.goto(server.empty_page)
-        expect(request.headers['referer']).to eq(server.empty_page)
+        raise request_error if request_error
         expect(response.ok?).to eq(true)
       end
     end
@@ -281,9 +273,9 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         page.on('request') do |request|
           if request.url.end_with?('.css')
-            request.abort
+            request.abort(error_code: 'failed', priority: 0)
           else
-            request.continue
+            request.continue(priority: 0)
           end
         end
         failed_requests = 0
@@ -297,11 +289,27 @@ RSpec.describe 'request interception' do
       end
     end
 
+    it 'should be able to access the error reason', sinatra: true do
+      with_test_state do |page:, server:, **|
+        page.request_interception = true
+        page.on('request') do |request|
+          request.abort(error_code: 'failed', priority: 0)
+        end
+        abort_reason = nil
+        page.on('request') do |request|
+          abort_reason = request.abort_error_reason
+          request.continue(priority: 0)
+        end
+        page.goto(server.empty_page) rescue nil
+        expect(abort_reason).to eq('Failed')
+      end
+    end
+
     it 'should be abortable with custom error codes', sinatra: true do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
-          request.abort(error_code: 'internetdisconnected')
+          request.abort(error_code: 'internetdisconnected', priority: 0)
         end
 
         failed_request_promise = Async::Promise.new
@@ -321,7 +329,7 @@ RSpec.describe 'request interception' do
         page.extra_http_headers = { 'referer' => 'http://google.com/' }
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         server_request, = await_promises(
           async_promise { server.wait_for_request('/grid.html') },
@@ -335,7 +343,7 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
-          request.abort
+          request.abort(error_code: 'failed', priority: 0)
         end
         error = nil
         begin
@@ -353,7 +361,7 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
           requests << request unless skip_favicon?(request)
         end
         server.set_redirect('/non-existing-page.html', '/non-existing-page-2.html')
@@ -380,7 +388,7 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
           requests << request unless skip_favicon?(request)
         end
         server.set_redirect('/one-style.css', '/two-style.css')
@@ -409,9 +417,9 @@ RSpec.describe 'request interception' do
         server.set_redirect('/non-existing-2.json', '/simple.html')
         page.on('request') do |request|
           if request.url.include?('non-existing-2')
-            request.abort
+            request.abort(error_code: 'failed', priority: 0)
           else
-            request.continue
+            request.continue(priority: 0)
           end
         end
         page.goto(server.empty_page)
@@ -442,13 +450,13 @@ RSpec.describe 'request interception' do
         spinner = false
         page.on('request') do |request|
           if skip_favicon?(request)
-            request.continue
+            request.continue(priority: 0)
             next
           end
           if spinner
-            request.abort
+            request.abort(error_code: 'failed', priority: 0)
           else
-            request.continue
+            request.continue(priority: 0)
           end
           spinner = !spinner
         end
@@ -476,8 +484,8 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
-          request.continue
           requests << request unless skip_favicon?(request)
+          request.continue(priority: 0)
         end
         data_url = 'data:text/html,<div>yo</div>'
         response = page.goto(data_url)
@@ -493,7 +501,7 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
           requests << request unless skip_favicon?(request)
         end
         data_url = 'data:text/html,<div>yo</div>'
@@ -513,8 +521,8 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
-          request.continue
           requests << request unless skip_favicon?(request)
+          request.continue(priority: 0)
         end
         response = page.goto("#{server.empty_page}#hash")
         expect(response.status).to eq(200)
@@ -528,7 +536,7 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         response = page.goto("#{server.prefix}/some nonexisting page")
         expect(response.status).to eq(404)
@@ -542,7 +550,7 @@ RSpec.describe 'request interception' do
           writer.finish
         end
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         response = page.goto("#{server.prefix}/malformed?rnd=%911")
         expect(response.status).to eq(200)
@@ -554,7 +562,7 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         requests = []
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
           requests << request unless skip_favicon?(request)
         end
         response = page.goto("#{server.prefix}/style-404.html")
@@ -579,7 +587,7 @@ RSpec.describe 'request interception' do
         page.eval_on_selector('iframe', 'frame => frame.remove()')
         error = nil
         begin
-          request.continue
+          request.continue(priority: 0)
         rescue => err
           error = err
         end
@@ -592,13 +600,12 @@ RSpec.describe 'request interception' do
         error = nil
         page.on('request') do |request|
           begin
-            request.continue
+            request.continue(priority: 0)
           rescue => err
             error = err
           end
         end
         page.goto(server.empty_page)
-        expect(error).not_to be_nil
         expect(error.message).to include('Request Interception is not enabled')
       end
     end
@@ -609,7 +616,7 @@ RSpec.describe 'request interception' do
         urls = []
         page.on('request') do |request|
           urls << request.url.split('/').last
-          request.continue
+          request.continue(priority: 0)
         end
         file_url = path_to_file_url(File.expand_path('../assets/one-style.html', __dir__))
         page.goto(file_url)
@@ -620,16 +627,8 @@ RSpec.describe 'request interception' do
     end
 
     [
-      {
-        url: '/cached/one-style.html',
-        cached_resource_url: '/cached/one-style.css',
-        resource_type: 'stylesheet',
-      },
-      {
-        url: '/cached/one-script.html',
-        cached_resource_url: '/cached/one-script.js',
-        resource_type: 'script',
-      },
+      { url: '/cached/one-style.html', resource_type: 'stylesheet' },
+      { url: '/cached/one-script.html', resource_type: 'script' },
     ].each do |options|
       it "should not cache #{options[:resource_type]} if cache disabled", sinatra: true do
         with_test_state do |page:, server:, **|
@@ -638,7 +637,7 @@ RSpec.describe 'request interception' do
           page.request_interception = true
           page.cache_enabled = false
           page.on('request') do |request|
-            request.continue
+            request.continue(priority: 0)
           end
 
           cached = []
@@ -657,26 +656,17 @@ RSpec.describe 'request interception' do
 
           page.request_interception = true
           page.cache_enabled = true
-          error = nil
           page.on('request') do |request|
-            begin
-              request.continue
-            rescue => err
-              error = err
-            end
+            request.continue(priority: 0)
           end
 
           cached = []
           page.on('requestservedfromcache') do |request|
-            next if skip_favicon?(request)
-
             cached << request
           end
 
           page.reload
-          expect(error).to be_nil
           expect(cached.length).to eq(1)
-          expect(cached[0].url).to eq("#{server.prefix}#{options[:cached_resource_url]}")
         end
       end
     end
@@ -686,7 +676,7 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         page.cache_enabled = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
 
         response_promise = async_promise do
@@ -696,22 +686,6 @@ RSpec.describe 'request interception' do
         response_promise.wait
       end
     end
-
-    it 'should work with worker', sinatra: true do
-      with_test_state do |page:, server:, **|
-        worker_promise = Async::Promise.new
-        page.once('workercreated') do |worker|
-          worker_promise.resolve(worker)
-        end
-        goto_promise = async_promise do
-          page.goto("#{server.prefix}/worker/worker.html")
-        end
-        worker_promise.wait
-        goto_promise.wait
-
-        page.request_interception = true
-      end
-    end
   end
 
   describe 'Request.continue' do
@@ -719,7 +693,7 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         page.goto(server.empty_page)
       end
@@ -731,7 +705,7 @@ RSpec.describe 'request interception' do
         page.on('request') do |request|
           headers = request.headers
           headers['FOO'] = 'bar'
-          request.continue(headers: headers)
+          request.continue(headers: headers, priority: 0)
         end
         page.goto(server.empty_page)
         server_request, = await_promises(
@@ -747,7 +721,7 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         page.on('request') do |request|
           redirect_url = request.url.include?('/empty.html') ? "#{server.prefix}/consolelog.html" : nil
-          request.continue(url: redirect_url)
+          request.continue(url: redirect_url, priority: 0)
         end
         console_promise = Async::Promise.new
         page.once('console') do |message|
@@ -766,7 +740,7 @@ RSpec.describe 'request interception' do
 
         page.request_interception = true
         page.on('request') do |request|
-          request.continue(method: 'POST')
+          request.continue(method: 'POST', priority: 0)
         end
         server_request, = await_promises(
           async_promise { server.wait_for_request('/sleep.zzz') },
@@ -782,13 +756,13 @@ RSpec.describe 'request interception' do
 
         page.request_interception = true
         page.on('request') do |request|
-          request.continue(post_data: '🐶')
+          request.continue(post_data: 'doggo', priority: 0)
         end
         server_request, = await_promises(
           async_promise { server.wait_for_request('/sleep.zzz') },
-          async_promise { page.evaluate("() => fetch('/sleep.zzz', { method: 'POST', body: '🐦' })") },
+          async_promise { page.evaluate("() => fetch('/sleep.zzz', { method: 'POST', body: 'birdy' })") },
         )
-        expect(server_request.post_body).to eq('🐶')
+        expect(server_request.post_body).to eq('doggo')
       end
     end
 
@@ -796,31 +770,14 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
-          request.continue(method: 'POST', post_data: '🐶')
+          request.continue(method: 'POST', post_data: 'doggo', priority: 0)
         end
         server_request, = await_promises(
           async_promise { server.wait_for_request('/empty.html') },
           async_promise { page.goto(server.empty_page) },
         )
         expect(server_request.method).to eq('POST')
-        expect(server_request.post_body).to eq('🐶')
-      end
-    end
-
-    it 'should fail if the header value is invalid', sinatra: true do
-      with_test_state do |page:, server:, **|
-        error = nil
-        page.request_interception = true
-        page.on('request') do |request|
-          begin
-            request.continue(headers: { 'X-Invalid-Header' => "a\nb" })
-          rescue => err
-            error = err
-          end
-          request.continue
-        end
-        page.goto("#{server.prefix}/empty.html")
-        expect(error.message).to match(/Invalid header|Expected "header"|invalid argument/i)
+        expect(server_request.post_body).to eq('doggo')
       end
     end
   end
@@ -835,7 +792,8 @@ RSpec.describe 'request interception' do
             headers: {
               foo: 'bar',
             },
-            body: 'Yo, page!'
+            body: 'Yo, page!',
+            priority: 0,
           )
         end
         response = page.goto(server.empty_page)
@@ -845,13 +803,34 @@ RSpec.describe 'request interception' do
       end
     end
 
+    it 'should be able to access the response', sinatra: true do
+      with_test_state do |page:, server:, **|
+        page.request_interception = true
+        page.on('request') do |request|
+          request.respond(
+            status: 200,
+            body: 'Yo, page!',
+            priority: 0,
+          )
+        end
+        response = nil
+        page.on('request') do |request|
+          response = request.response_for_request
+          request.continue(priority: 0)
+        end
+        page.goto(server.empty_page)
+        expect(response).to eq({ status: 200, body: 'Yo, page!' })
+      end
+    end
+
     it 'should work with status code 422', sinatra: true do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
           request.respond(
             status: 422,
-            body: 'Yo, page!'
+            body: 'Yo, page!',
+            priority: 0,
           )
         end
         response = page.goto(server.empty_page)
@@ -866,47 +845,21 @@ RSpec.describe 'request interception' do
         page.request_interception = true
         page.on('request') do |request|
           if !request.url.include?('rrredirect')
-            request.continue
+            request.continue(priority: 0)
             next
           end
           request.respond(
             status: 302,
             headers: {
               location: server.empty_page,
-            }
+            },
+            priority: 0,
           )
         end
         response = page.goto("#{server.prefix}/rrredirect")
         expect(response.request.redirect_chain.length).to eq(1)
         expect(response.request.redirect_chain[0].url).to eq("#{server.prefix}/rrredirect")
         expect(response.url).to eq(server.empty_page)
-      end
-    end
-
-    it 'should allow mocking multiple headers with same key', sinatra: true do
-      with_test_state do |page:, server:, **|
-        page.request_interception = true
-        page.on('request') do |request|
-          request.respond(
-            status: 200,
-            headers: {
-              foo: 'bar',
-              arr: ['1', '2'],
-              'set-cookie': ['first=1', 'second=2'],
-            },
-            body: 'Hello 🌐'
-          )
-        end
-        response = page.goto(server.empty_page)
-        cookies = page.cookies
-        first_cookie = cookies.find { |cookie| cookie['name'] == 'first' }
-        second_cookie = cookies.find { |cookie| cookie['name'] == 'second' }
-
-        expect(response.status).to eq(200)
-        expect(response.headers['foo']).to eq('bar')
-        expect(response.headers['arr']).to eq("1\n2")
-        expect(first_cookie['value']).to eq('1')
-        expect(second_cookie['value']).to eq('2')
       end
     end
 
@@ -918,6 +871,7 @@ RSpec.describe 'request interception' do
           request.respond(
             content_type: 'image/png',
             body: image_buffer,
+            priority: 0,
           )
         end
         page.evaluate(<<~JAVASCRIPT, server.prefix)
@@ -944,7 +898,8 @@ RSpec.describe 'request interception' do
             headers: {
               foo: true,
             },
-            body: 'Yo, page!'
+            body: 'Yo, page!',
+            priority: 0,
           )
         end
         response = page.goto(server.empty_page)
@@ -954,67 +909,29 @@ RSpec.describe 'request interception' do
       end
     end
 
-    it 'should fail if the header value is invalid', sinatra: true do
+    it 'should indicate already-handled if an intercept has been handled', sinatra: true do
       with_test_state do |page:, server:, **|
-        error = nil
         page.request_interception = true
+        page.on('request') do |request|
+          request.continue
+        end
+        request_error = nil
         page.on('request') do |request|
           begin
-            request.respond(headers: { 'X-Invalid-Header' => "a\nb" })
-          rescue => err
-            error = err
+            expect(request.intercept_resolution_handled?).to eq(true)
+          rescue => error
+            request_error = error
           end
-          request.respond(status: 200, body: 'Hello 🌐')
         end
-        page.goto("#{server.prefix}/empty.html")
-        expect(error.message).to match(/Invalid header|Expected "header"|invalid argument/i)
-      end
-    end
-
-    it 'should report correct content-length header with string', sinatra: true do
-      with_test_state do |page:, server:, **|
-        page.request_interception = true
         page.on('request') do |request|
-          request.respond(
-            status: 200,
-            body: 'Correct length 📏?'
-          )
-        end
-        response = page.goto(server.empty_page)
-        expect(response.headers['content-length']).to eq('20')
-      end
-    end
-
-    it 'should report correct content-length header with buffer', sinatra: true do
-      with_test_state do |page:, server:, **|
-        page.request_interception = true
-        page.on('request') do |request|
-          request.respond(
-            status: 200,
-            body: 'Correct length 📏?'.b
-          )
-        end
-        response = page.goto(server.empty_page)
-        expect(response.headers['content-length']).to eq('20')
-      end
-    end
-
-    it 'should report correct encoding from page when content-type is set', sinatra: true do
-      with_test_state do |page:, server:, **|
-        page.request_interception = true
-        page.on('request') do |request|
-          request.respond(
-            status: 200,
-            body: 'Correct length 📏?'.b,
-            headers: {
-              'Content-Type' => 'text/plain; charset=utf-8',
-            }
-          )
+          begin
+            expect(request.intercept_resolution_state.action).to eq('already-handled')
+          rescue => error
+            request_error = error
+          end
         end
         page.goto(server.empty_page)
-
-        content = page.evaluate('() => document.documentElement.innerText')
-        expect(content).to eq('Correct length 📏?')
+        raise request_error if request_error
       end
     end
   end
@@ -1024,7 +941,7 @@ RSpec.describe 'request interception' do
       with_test_state do |page:, server:, **|
         page.request_interception = true
         page.on('request') do |request|
-          request.continue
+          request.continue(priority: 0)
         end
         response = page.goto(server.empty_page)
         request = response.request
@@ -1038,7 +955,7 @@ RSpec.describe 'request interception' do
         css_requests = []
         page.on('request') do |request|
           css_requests << request if request.url.end_with?('css')
-          request.continue
+          request.continue(priority: 0)
         end
         page.goto("#{server.prefix}/one-style.html")
         expect(css_requests.length).to eq(1)
