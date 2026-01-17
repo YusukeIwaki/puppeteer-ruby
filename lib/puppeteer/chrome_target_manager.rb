@@ -220,7 +220,7 @@ class Puppeteer::ChromeTargetManager
 
     target = @attached_targets_by_target_id[target_info.target_id] || @target_factory.call(target_info, session)
     setup_attachment_listeners(session)
-    session.set_target(target)
+    session.target = target
 
     @attached_targets_by_target_id[target_info.target_id] ||= target
     @attached_targets_by_session_id[session.id] = target

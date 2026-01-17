@@ -263,7 +263,7 @@ class Puppeteer::Connection
 
   def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay) -> void
   def closed?: () -> bool
-  def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection
+  def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
   def session: (String session_id) -> Puppeteer::CDPSession?
   def url: () -> String
   def send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
@@ -284,29 +284,6 @@ class Puppeteer::Connection
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void
   def handle_close: () -> void
-end
-
-class Puppeteer::CDPSession
-  include Puppeteer::DebugPrint
-  include Puppeteer::EventCallbackable
-
-  def initialize: (Puppeteer::Connection connection, String target_type, String session_id) -> void
-  def id: () -> String
-  attr_reader connection: Puppeteer::Connection
-  def set_target: (Puppeteer::Target target) -> void
-  def mark_ready: () -> void
-  def wait_for_ready: () -> untyped
-  def send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
-  def async_send_message: (String method, ?Hash[Symbol | String, untyped] params) -> untyped
-  def handle_message: (Hash[Symbol | String, untyped] message) -> void
-  def detach: () -> void
-  def handle_closed: () -> void
-  def on: (String event_name) { (*untyped, **untyped) -> untyped } -> String
-  def once: (String event_name) { (*untyped, **untyped) -> untyped } -> String
-
-  private
-
-  def callback_with_message: (untyped callback, Hash[Symbol | String, untyped] message) -> void
 end
 
 class Puppeteer::BrowserRunner

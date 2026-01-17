@@ -1,0 +1,8 @@
+module Async
+  class Promise[T]
+    def wait: () -> T
+    def resolved?: () -> bool
+    def resolve: (T value) -> void
+    def reject: (untyped error) -> void
+  end
+end
