@@ -319,9 +319,14 @@ class Puppeteer::NetworkManager
 
   private def handle_request_will_be_sent(event, client)
     network_request_id = event['requestId']
+    event_url = event.dig('request', 'url')
+    if event_url
+      url_fragment = event.dig('request', 'urlFragment')
+      event_url += url_fragment if url_fragment
+    end
     existing_request = @network_event_manager.get_request(network_request_id)
     if existing_request &&
-       existing_request.url == event.dig('request', 'url') &&
+       existing_request.url == event_url &&
        existing_request.method == event.dig('request', 'method')
       if_present(@network_event_manager.request_extra_info(network_request_id).shift) do |extra_info|
         existing_request.update_headers(extra_info['headers'])

@@ -406,7 +406,7 @@ class Puppeteer::HTTPRequest
     if content_type
       mock_response_headers['content-type'] = content_type
     end
-    if parsed_body && !mock_response_headers.key?('content-length')
+    if parsed_body && parsed_body[:content_length] > 0 && !mock_response_headers.key?('content-length')
       mock_response_headers['content-length'] = parsed_body[:content_length].to_s
     end
 

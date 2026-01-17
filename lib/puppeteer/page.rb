@@ -190,9 +190,6 @@ class Puppeteer::Page
       emit_event(PageEmittedEvents::WorkerCreated, worker)
     end
 
-    if session
-      @target.target_manager.add_target_interceptor(session, method(:handle_attached_to_target))
-    end
   end
 
   # @rbs return: Array[untyped] -- Initialization results
