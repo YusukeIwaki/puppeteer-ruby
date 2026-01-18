@@ -1338,9 +1338,12 @@ class Puppeteer::Page
     }.compact
     screenshot_options = ScreenshotOptions.new(options)
 
+    guard = browser_context.start_screenshot
     @screenshot_task_queue.post_task do
       screenshot_task(screenshot_options.type, screenshot_options)
     end
+  ensure
+    guard&.release
   end
 
   private def screenshot_task(format, screenshot_options)
@@ -1472,24 +1475,29 @@ class Puppeteer::Page
   # @rbs run_before_unload: bool -- Whether to run beforeunload handlers
   # @rbs return: void -- No return value
   def close(run_before_unload: false)
-    unless @client.connection
-      raise 'Protocol error: Connection closed. Most likely the page has been closed.'
-    end
-
-    if run_before_unload
-      @client.send_message('Page.close')
-    else
-      @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
-      @target.is_closed_promise.wait
-
-      # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
-      25.times do
-        break if @closed
-        Puppeteer::AsyncUtils.sleep_seconds(0.004)
+    guard = browser_context.wait_for_screenshot_operations
+    begin
+      unless @client.connection
+        raise 'Protocol error: Connection closed. Most likely the page has been closed.'
       end
+
+      if run_before_unload
+        @client.send_message('Page.close')
+      else
+        @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
+        @target.is_closed_promise.wait
+
+        # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
+        25.times do
+          break if @closed
+          Puppeteer::AsyncUtils.sleep_seconds(0.004)
+        end
+      end
+    rescue Puppeteer::Connection::ProtocolError => err
+      raise unless err.message.match?(/Target closed/i)
+    ensure
+      guard&.release
     end
-  rescue Puppeteer::Connection::ProtocolError => err
-    raise unless err.message.match?(/Target closed/i)
   end
 
   # @rbs return: bool -- Whether the page is closed
