@@ -44,10 +44,14 @@
 * browser
 * clearPermissionOverrides => `#clear_permission_overrides`
 * close
+* cookies
+* deleteCookie => `#delete_cookie`
+* deleteMatchingCookies => `#delete_matching_cookies`
 * isIncognito => `#incognito?`
 * newPage => `#new_page`
 * overridePermissions => `#override_permissions`
 * pages
+* setCookie => `#set_cookie`
 * targets
 * waitForTarget => `#wait_for_target`
 
