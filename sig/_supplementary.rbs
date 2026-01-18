@@ -108,6 +108,7 @@ class Puppeteer::BrowserContext
   include Puppeteer::EventCallbackable
 
   class ScreenshotGuard
+    def initialize: (untyped semaphore, ?on_release: (^() -> void)?) -> void
     def release: () -> void
     def close: () -> void
   end
@@ -132,6 +133,12 @@ class Puppeteer::BrowserContext
   def set_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
   def delete_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
   def delete_matching_cookies: (*Hash[Symbol | String, untyped] filters) -> void
+
+  private
+  def normalize_cookie_hash: (Hash[Symbol | String, untyped] cookie) -> Hash[String, untyped]
+  def hash_value: (Hash[untyped, untyped]? hash, *(String | Symbol) keys) -> untyped
+  def convert_partition_key_for_cdp: (untyped partition_key) -> Hash[Symbol, untyped]?
+  def convert_partition_key_from_cdp: (untyped partition_key) -> (Hash[String, untyped] | String | nil)
 end
 
 class Puppeteer::Frame
