@@ -12,18 +12,18 @@ jobs:
       with:
         ruby-version: 3.2
         bundler-cache: true
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        path: puppeteer
-        repository: puppeteer/puppeteer
     - uses: actions/setup-node@v3
       with:
-        node-version: 16
+        node-version: 22
     - name: Check puppeteer.api.json is updated
       run: |
+        set -euo pipefail
+        rm -rf puppeteer
+        tag="puppeteer-core-v$(cat development/DOCS_VERSION)"
+        curl -L -o /tmp/puppeteer-core.tgz "https://github.com/puppeteer/puppeteer/archive/refs/tags/${tag}.tar.gz"
+        tar -xzf /tmp/puppeteer-core.tgz
+        mv "puppeteer-${tag}" puppeteer
         cd puppeteer
-        git checkout puppeteer-core-v$(cat ../development/DOCS_VERSION)
         ruby - <<'RUBY'
         require 'json'
         path = File.join('packages', 'puppeteer', 'api-extractor.json')
