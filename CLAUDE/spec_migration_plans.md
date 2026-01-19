@@ -2,6 +2,46 @@
 
 This report compares test files between [puppeteer/puppeteer](https://github.com/puppeteer/puppeteer/tree/main/test/src) (Node.js) and [puppeteer-ruby](https://github.com/YusukeIwaki/puppeteer-ruby/tree/main/spec/integration).
 
+---
+
+## Migration Rules
+
+### 1. Faithful Porting Principle
+Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
+- `describe` blocks in Node.js should correspond to `describe` or `context` blocks in Ruby
+- `it` blocks should have equivalent test cases with the same test name (converted to snake_case)
+- Test logic and assertions should match the original implementation
+- If a test cannot be ported exactly (e.g., due to language differences), document the reason
+
+### 2. File Naming Convention
+- **`xxx_spec.rb`**: Contains tests ported from Node.js Puppeteer
+  - These files should only contain faithful ports of upstream tests
+  - The structure should mirror the Node.js test file as closely as possible
+
+- **`xxx_ext_spec.rb`**: Contains Ruby-only tests (extensions)
+  - Tests that exist only in Ruby (not in Node.js) MUST be placed here
+  - Ruby-specific features, additional validations, or regression tests go here
+  - Examples: Ruby block-style APIs, Ruby-specific error handling
+
+### 3. Comparison Granularity
+- Compare at the `it` (test case) level, not just file level
+- Each `it` block should be tracked as a separate item
+- Document any tests that appear to have independent implementations rather than faithful ports
+
+### 4. Handling Differences
+- **Language differences**: Some Node.js patterns don't translate directly to Ruby
+  - `async/await` → Ruby's synchronous style or Async gem
+  - `AbortSignal` → Not supported in Ruby (document as N/A)
+  - `Symbol.dispose` → Ruby's block-based resource management
+- **Feature gaps**: Document features that don't exist in puppeteer-ruby yet
+
+### 5. Progress Tracking
+- Update this document whenever migration work is done
+- Mark tests as `[PORTED]`, `[MISSING IN RUBY]`, or `[RUBY ONLY]`
+- Use the Phase-based tracking checklist to monitor overall progress
+
+---
+
 **Legend:**
 - `[MISSING IN RUBY]` - Test exists in Node.js but not ported to RSpec
 - `[RUBY ONLY]` - Test exists only in Ruby (should be moved to `xxx_ext_spec.rb`)
