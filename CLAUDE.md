@@ -1,5 +1,13 @@
 # Puppeteer-Ruby Development Guide
 
+> **IMPORTANT: Spec Migration Tracking**
+>
+> Test porting from Node.js Puppeteer to Ruby RSpec is tracked in **[CLAUDE/spec_migration_plans.md](./CLAUDE/spec_migration_plans.md)**.
+>
+> - Before porting tests: Check the migration plan for priorities and status
+> - After porting tests: Update the migration plan to reflect progress
+> - This file must be kept up-to-date with all spec migration work
+
 This document provides essential guidance for AI agents working on the puppeteer-ruby codebase.
 
 ## Project Overview
@@ -227,3 +235,4 @@ For in-depth information on specific topics, see the [CLAUDE/](./CLAUDE/) direct
 - [concurrency.md](./CLAUDE/concurrency.md) - Concurrency patterns
 - [porting_puppeteer.md](./CLAUDE/porting_puppeteer.md) - Guide for porting from TypeScript
 - [rbs_type_checking.md](./CLAUDE/rbs_type_checking.md) - RBS type annotations and Steep type checking
+- [spec_migration_plans.md](./CLAUDE/spec_migration_plans.md) - Test migration tracking and progress
