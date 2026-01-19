@@ -24,19 +24,11 @@ jobs:
         tar -xzf /tmp/puppeteer-core.tgz
         mv "puppeteer-${tag}" puppeteer
         cd puppeteer
-        ruby - <<'RUBY'
-        require 'json'
-        path = File.join('packages', 'puppeteer', 'api-extractor.json')
-        json = JSON.parse(File.read(path))
-        json['docModel'] = {
-          'enabled' => true,
-          'apiJsonFilePath' => '<projectFolder>/../../docs/<unscopedPackageName>.api.json',
-        }
-        File.write(path, JSON.pretty_generate(json) + "\n")
-        RUBY
-        npm install && npm run build
-        cd ../
-        cp puppeteer/docs/puppeteer.api.json development/puppeteer.api.json
+        PUPPETEER_SKIP_DOWNLOAD=1 npm install --ignore-scripts
+        cd packages/puppeteer-core
+        npm run build:docs
+        cd ../../../
+        cp puppeteer/docs/puppeteer-core.api.json development/puppeteer.api.json
         rm -rf puppeteer
         git diff --exit-code
     - name: Check api_coverage doc is updated
