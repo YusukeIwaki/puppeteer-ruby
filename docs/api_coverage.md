@@ -1,21 +1,14 @@
 # API coverages
-- Puppeteer version: v20.0.0
+- Puppeteer version: v24.35.0
 - puppeteer-ruby version: 0.45.6
 
 ## Puppeteer
 
-* clearCustomQueryHandlers => `#clear_custom_query_handlers`
 * connect
-* customQueryHandlerNames => `#custom_query_handler_names`
 * defaultArgs => `#default_args`
-* devices
-* ~~errors~~
 * executablePath => `#executable_path`
 * launch
-* networkConditions => `#network_conditions`
 * ~~puppeteer~~
-* registerCustomQueryHandler => `#register_custom_query_handler`
-* unregisterCustomQueryHandler => `#unregister_custom_query_handler`
 
 ## ~~Accessibility~~
 
@@ -23,17 +16,28 @@
 
 ## Browser
 
+* ~~addScreen~~
 * browserContexts => `#browser_contexts`
 * close
-* createIncognitoBrowserContext => `#create_incognito_browser_context`
+* ~~cookies~~
+* ~~createBrowserContext~~
 * defaultBrowserContext => `#default_browser_context`
+* ~~deleteCookie~~
+* ~~deleteMatchingCookies~~
 * disconnect
+* ~~getWindowBounds~~
+* ~~installExtension~~
 * isConnected => `#connected?`
 * newPage => `#new_page`
 * pages
 * process
+* ~~removeScreen~~
+* ~~screens~~
+* ~~setCookie~~
+* ~~setWindowBounds~~
 * target
 * targets
+* ~~uninstallExtension~~
 * userAgent => `#user_agent`
 * version
 * waitForTarget => `#wait_for_target`
@@ -44,12 +48,21 @@
 * browser
 * clearPermissionOverrides => `#clear_permission_overrides`
 * close
-* isIncognito => `#incognito?`
+* cookies
+* deleteCookie => `#delete_cookie`
+* deleteMatchingCookies => `#delete_matching_cookies`
 * newPage => `#new_page`
 * overridePermissions => `#override_permissions`
 * pages
+* setCookie => `#set_cookie`
 * targets
 * waitForTarget => `#wait_for_target`
+
+## ~~BrowserLauncher~~
+
+* ~~defaultArgs~~
+* ~~executablePath~~
+* ~~launch~~
 
 ## CDPSession
 
@@ -66,6 +79,9 @@
 * send
 * session
 * url
+
+## ~~ConnectionClosedError~~
+
 
 ## ConsoleMessage
 
@@ -87,17 +103,11 @@
 * start
 * stop
 
-## ~~CustomError~~
-
-
 ## ~~DeviceRequestPrompt~~
 
 * ~~cancel~~
 * ~~select~~
 * ~~waitForDevice~~
-
-## ~~DeviceRequestPromptDevice~~
-
 
 ## Dialog
 
@@ -113,8 +123,9 @@
 * $$ => `#query_selector_all`
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
-* $x => `#Sx`
-* asElement => `#as_element`
+* ~~asLocator~~
+* ~~autofill~~
+* ~~backendNodeId~~
 * boundingBox => `#bounding_box`
 * boxModel => `#box_model`
 * click
@@ -142,18 +153,21 @@
 * type => `#type_text`
 * uploadFile => `#upload_file`
 * waitForSelector => `#wait_for_selector`
-* waitForXPath => `#wait_for_xpath`
 
 ## ~~EventEmitter~~
 
-* ~~addListener~~
 * ~~emit~~
 * ~~listenerCount~~
 * ~~off~~
 * ~~on~~
 * ~~once~~
 * ~~removeAllListeners~~
-* ~~removeListener~~
+
+## ~~ExtensionTransport~~
+
+* ~~close~~
+* ~~connectTab~~
+* ~~send~~
 
 ## FileChooser
 
@@ -167,9 +181,7 @@
 * $$ => `#query_selector_all`
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
-* $x => `#Sx`
 * addScriptTag => `#add_script_tag`
-* addStyleTag => `#add_style_tag`
 * addStyleTag => `#add_style_tag`
 * childFrames => `#child_frames`
 * click
@@ -177,10 +189,11 @@
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * focus
+* frameElement => `#frame_element`
 * goto
 * hover
 * isDetached => `#detached?`
-* isOOPFrame => `#oop_frame?`
+* ~~locator~~
 * name
 * page
 * parentFrame => `#parent_frame`
@@ -190,12 +203,9 @@
 * title
 * type => `#type_text`
 * url
-* ~~waitForDevicePrompt~~
 * waitForFunction => `#wait_for_function`
 * waitForNavigation => `#wait_for_navigation`
 * waitForSelector => `#wait_for_selector`
-* waitForTimeout => `#wait_for_timeout`
-* waitForXPath => `#wait_for_xpath`
 
 ## HTTPRequest
 
@@ -205,8 +215,10 @@
 * continueRequestOverrides => `#continue_request_overrides`
 * enqueueInterceptAction => `#enqueue_intercept_action`
 * failure
+* ~~fetchPostData~~
 * finalizeInterceptions => `#finalize_interceptions`
 * frame
+* ~~hasPostData~~
 * headers
 * initiator
 * interceptResolutionState => `#intercept_resolution_state`
@@ -224,6 +236,7 @@
 ## HTTPResponse
 
 * buffer
+* ~~content~~
 * frame
 * ~~fromCache~~
 * ~~fromServiceWorker~~
@@ -252,8 +265,6 @@
 * evaluateHandle => `#evaluate_handle`
 * getProperties => `#properties`
 * getProperty => `#[]`
-* getProperty => `#[]`
-* getProperty => `#[]`
 * jsonValue => `#json_value`
 * remoteObject => `#remote_object`
 * toString => `#to_s`
@@ -266,6 +277,24 @@
 * type => `#type_text`
 * up
 
+## ~~Locator~~
+
+* ~~click~~
+* ~~clone~~
+* ~~fill~~
+* ~~filter~~
+* ~~hover~~
+* ~~map~~
+* ~~race~~
+* ~~scroll~~
+* ~~setEnsureElementIsInTheViewport~~
+* ~~setTimeout~~
+* ~~setVisibility~~
+* ~~setWaitForEnabled~~
+* ~~setWaitForStableBoundingBox~~
+* ~~wait~~
+* ~~waitHandle~~
+
 ## Mouse
 
 * click
@@ -276,6 +305,7 @@
 * dragOver => `#drag_over`
 * drop
 * move
+* reset
 * up
 * wheel
 
@@ -285,10 +315,7 @@
 * $$ => `#query_selector_all`
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
-* $x => `#Sx`
 * addScriptTag => `#add_script_tag`
-* addStyleTag => `#add_style_tag`
-* addStyleTag => `#add_style_tag`
 * addStyleTag => `#add_style_tag`
 * authenticate
 * bringToFront => `#bring_to_front`
@@ -298,10 +325,12 @@
 * close
 * content
 * cookies
+* ~~createCDPSession~~
 * createPDFStream => `#create_pdf_stream`
 * deleteCookie => `#delete_cookie`
 * emulate
 * emulateCPUThrottling => `#emulate_cpu_throttling`
+* ~~emulateFocusedPage~~
 * emulateIdleState => `#emulate_idle_state`
 * emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
@@ -314,6 +343,7 @@
 * exposeFunction => `#expose_function`
 * focus
 * frames
+* ~~getDefaultNavigationTimeout~~
 * ~~getDefaultTimeout~~
 * goBack => `#go_back`
 * goForward => `#go_forward`
@@ -322,19 +352,22 @@
 * isClosed => `#closed?`
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
+* ~~isServiceWorkerBypassed~~
+* ~~locator~~
 * mainFrame => `#main_frame`
 * metrics
-* off
-* on
-* once
+* ~~openDevTools~~
 * pdf
 * queryObjects => `#query_objects`
 * reload
-* screenshot
-* screenshot
+* removeExposedFunction => `#remove_exposed_function`
+* removeScriptToEvaluateOnNewDocument => `#remove_script_to_evaluate_on_new_document`
+* ~~resize~~
+* ~~screencast~~
 * screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
+* ~~setBypassServiceWorker~~
 * setCacheEnabled => `#cache_enabled=`
 * setContent => `#content=`
 * setCookie => `#set_cookie`
@@ -363,18 +396,15 @@
 * waitForRequest => `#wait_for_request`
 * waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`
-* waitForTimeout => `#wait_for_timeout`
-* waitForXPath => `#wait_for_xpath`
+* ~~windowId~~
 * workers
-
-## ~~ProductLauncher~~
-
-* ~~defaultArgs~~
-* ~~executablePath~~
-* ~~launch~~
 
 ## ~~ProtocolError~~
 
+
+## ~~ScreenRecorder~~
+
+* ~~stop~~
 
 ## ~~SecurityDetails~~
 
@@ -387,6 +417,7 @@
 
 ## Target
 
+* ~~asPage~~
 * browser
 * browserContext => `#browser_context`
 * createCDPSession => `#create_cdp_session`
@@ -397,6 +428,9 @@
 * ~~worker~~
 
 ## TimeoutError
+
+
+## TouchError
 
 
 ## Touchscreen
@@ -411,8 +445,12 @@
 * start
 * stop
 
+## ~~UnsupportedOperation~~
+
+
 ## WebWorker
 
+* close
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * url

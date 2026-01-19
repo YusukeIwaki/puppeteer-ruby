@@ -107,13 +107,21 @@ end
 class Puppeteer::BrowserContext
   include Puppeteer::EventCallbackable
 
+  class ScreenshotGuard
+    def initialize: (untyped semaphore, ?on_release: (^() -> void)?) -> void
+    def release: () -> void
+    def close: () -> void
+  end
+
   def initialize: (Puppeteer::Connection connection, Puppeteer::Browser browser, String? context_id) -> void
   def ==: (untyped other) -> bool
   def on: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
   def once: (untyped event_name) { (*untyped, **untyped) -> untyped } -> String
   def targets: () -> Array[Puppeteer::Target]
+  def start_screenshot: () -> Puppeteer::BrowserContext::ScreenshotGuard
+  def wait_for_screenshot_operations: () -> Puppeteer::BrowserContext::ScreenshotGuard?
   def wait_for_target: (predicate: Proc, ?timeout: Numeric?) -> Puppeteer::Target
-  def pages: () -> Array[Puppeteer::Page]
+  def pages: (?include_all: bool) -> Array[Puppeteer::Page]
   def incognito?: () -> bool
   def closed?: () -> bool
   def override_permissions: (String origin, Array[String] permissions) -> void
@@ -121,6 +129,16 @@ class Puppeteer::BrowserContext
   def new_page: () -> Puppeteer::Page
   def browser: () -> Puppeteer::Browser
   def close: () -> void
+  def cookies: () -> Array[Hash[String, untyped]]
+  def set_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
+  def delete_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
+  def delete_matching_cookies: (*Hash[Symbol | String, untyped] filters) -> void
+
+  private
+  def normalize_cookie_hash: (Hash[Symbol | String, untyped] cookie) -> Hash[String, untyped]
+  def hash_value: (Hash[untyped, untyped]? hash, *(String | Symbol) keys) -> untyped
+  def convert_partition_key_for_cdp: (untyped partition_key) -> Hash[Symbol, untyped]?
+  def convert_partition_key_from_cdp: (untyped partition_key) -> (Hash[String, untyped] | String | nil)
 end
 
 class Puppeteer::Frame

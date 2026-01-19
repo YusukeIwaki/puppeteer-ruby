@@ -63,7 +63,7 @@ class ApiDocJsonParser
   private def method_docs_for(member)
     member.members.filter_map do |m|
       MethodDoc.new(m.name) if m.method? || m.property?
-    end
+    end.uniq(&:name)
   end
 end
 
