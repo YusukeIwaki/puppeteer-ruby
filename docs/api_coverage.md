@@ -131,12 +131,10 @@
 * click
 * clickablePoint => `#clickable_point`
 * contentFrame => `#content_frame`
-* contentFrame => `#content_frame`
 * drag
 * dragAndDrop => `#drag_and_drop`
 * dragEnter => `#drag_enter`
 * dragOver => `#drag_over`
-* drop
 * drop
 * focus
 * hover
@@ -144,7 +142,6 @@
 * isIntersectingViewport => `#intersecting_viewport?`
 * isVisible => `#visible?`
 * press
-* screenshot
 * screenshot
 * ~~scrollIntoView~~
 * select
@@ -186,7 +183,6 @@
 * $eval => `#eval_on_selector`
 * addScriptTag => `#add_script_tag`
 * addStyleTag => `#add_style_tag`
-* addStyleTag => `#add_style_tag`
 * childFrames => `#child_frames`
 * click
 * content
@@ -197,7 +193,6 @@
 * goto
 * hover
 * isDetached => `#detached?`
-* ~~locator~~
 * ~~locator~~
 * name
 * page
@@ -270,7 +265,6 @@
 * evaluateHandle => `#evaluate_handle`
 * getProperties => `#properties`
 * getProperty => `#[]`
-* getProperty => `#[]`
 * jsonValue => `#json_value`
 * remoteObject => `#remote_object`
 * toString => `#to_s`
@@ -323,7 +317,6 @@
 * $eval => `#eval_on_selector`
 * addScriptTag => `#add_script_tag`
 * addStyleTag => `#add_style_tag`
-* addStyleTag => `#add_style_tag`
 * authenticate
 * bringToFront => `#bring_to_front`
 * browser
@@ -361,7 +354,6 @@
 * isJavaScriptEnabled => `#javascript_enabled?`
 * ~~isServiceWorkerBypassed~~
 * ~~locator~~
-* ~~locator~~
 * mainFrame => `#main_frame`
 * metrics
 * ~~openDevTools~~
@@ -372,7 +364,6 @@
 * removeScriptToEvaluateOnNewDocument => `#remove_script_to_evaluate_on_new_document`
 * ~~resize~~
 * ~~screencast~~
-* screenshot
 * screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
@@ -388,7 +379,6 @@
 * setJavaScriptEnabled => `#javascript_enabled=`
 * setOfflineMode => `#offline_mode=`
 * setRequestInterception => `#request_interception=`
-* setUserAgent => `#user_agent=`
 * setUserAgent => `#user_agent=`
 * setViewport => `#viewport=`
 * tap
