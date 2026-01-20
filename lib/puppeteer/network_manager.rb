@@ -642,8 +642,12 @@ class Puppeteer::NetworkManager
     extra_info = nil
     if request && !request.internal.from_memory_cache? && event['hasExtraInfo']
       extra_info = @network_event_manager.response_extra_info(network_request_id).shift
-      emit_response_event(event, extra_info, network_request_id: network_request_id)
-      return
+
+      unless extra_info
+        # Wait until we get the corresponding ExtraInfo event.
+        @network_event_manager.enqueue_event_group(network_request_id, QueuedEventGroup.new(response_received_event: event))
+        return
+      end
     end
     emit_response_event(event, extra_info, network_request_id: network_request_id)
   end
@@ -659,11 +663,18 @@ class Puppeteer::NetworkManager
       return
     end
 
-    if_present(@network_event_manager.get_request(network_request_id)) do |request|
-      if request.response
-        request.response.internal.update_extra_info(event)
-        return
+    # We may have skipped response and loading events because we didn't have
+    # this ExtraInfo event yet. If so, emit those events now.
+    if_present(@network_event_manager.get_queued_event_group(network_request_id)) do |queued_events|
+      @network_event_manager.forget_queued_event_group(network_request_id)
+      emit_response_event(queued_events.response_received_event, event, network_request_id: network_request_id)
+      if_present(queued_events.loading_finished_event) do |loading_finished_event|
+        emit_loading_finished(loading_finished_event, network_request_id: network_request_id, client: client)
       end
+      if_present(queued_events.loading_failed_event) do |loading_failed_event|
+        emit_loading_failed(loading_failed_event, network_request_id: network_request_id, client: client)
+      end
+      return
     end
 
     # Wait until we get another event that can use this ExtraInfo event.
@@ -691,10 +702,7 @@ class Puppeteer::NetworkManager
     # corresponding ExtraInfo event, then wait to emit this event too.
     queued_events = @network_event_manager.get_queued_event_group(network_request_id)
     if queued_events
-      @network_event_manager.forget_queued_event_group(network_request_id)
-      emit_response_event(queued_events.response_received_event, nil, network_request_id: network_request_id)
-      emit_loading_finished(event, network_request_id: network_request_id, client: client)
-      return
+      queued_events.loading_finished_event = event
     else
       emit_loading_finished(event, network_request_id: network_request_id, client: client)
     end
@@ -724,10 +732,7 @@ class Puppeteer::NetworkManager
     # corresponding ExtraInfo event, then wait to emit this event too.
     queued_events = @network_event_manager.get_queued_event_group(network_request_id)
     if queued_events
-      @network_event_manager.forget_queued_event_group(network_request_id)
-      emit_response_event(queued_events.response_received_event, nil, network_request_id: network_request_id)
-      emit_loading_failed(event, network_request_id: network_request_id, client: client)
-      return
+      queued_events.loading_failed_event = event
     else
       emit_loading_failed(event, network_request_id: network_request_id, client: client)
     end

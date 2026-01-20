@@ -457,7 +457,7 @@ RSpec.describe 'network' do
       with_test_state do |page:, server:, **|
         server.set_route('/cool') do |_req, writer|
           writer.status = 200
-          writer.add_header('status-text', 'cool!')
+          writer.status_text = 'cool!'
           writer.finish
         end
         response = page.goto("#{server.prefix}/cool")
@@ -469,7 +469,7 @@ RSpec.describe 'network' do
       with_test_state do |page:, server:, **|
         server.set_route('/nostatus') do |_req, writer|
           writer.status = 200
-          writer.add_header('status-text', '')
+          writer.status_text = ''
           writer.finish
         end
         response = page.goto("#{server.prefix}/nostatus")

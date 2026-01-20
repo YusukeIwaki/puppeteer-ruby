@@ -125,32 +125,14 @@ class Puppeteer::IsolaatedWorld
   # @param {!Array<*>} args
   # @return {!Promise<!Puppeteer.JSHandle>}
   def evaluate_handle(page_function, *args)
-    evaluate_with_retry(:evaluate_handle, page_function, *args)
+    execution_context.evaluate_handle(page_function, *args)
   end
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<*>}
   def evaluate(page_function, *args)
-    evaluate_with_retry(:evaluate, page_function, *args)
-  end
-
-  private def evaluate_with_retry(method_name, page_function, *args)
-    execution_context.public_send(method_name, page_function, *args)
-  rescue => err
-    raise unless context_destroyed_error?(err)
-
-    delete_context(@context)
-    execution_context.public_send(method_name, page_function, *args)
-  end
-
-  private def context_destroyed_error?(err)
-    return false unless err.is_a?(Puppeteer::Connection::ProtocolError)
-
-    message = err.message
-    message.include?('Cannot find context with specified id') ||
-      message.include?('Execution context was destroyed') ||
-      message.include?('Inspected target navigated or closed')
+    execution_context.evaluate(page_function, *args)
   end
 
   # `$()` in JavaScript.

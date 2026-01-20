@@ -21,10 +21,6 @@ class Puppeteer::HTTPResponse
     def body_loaded_promise
       @response.instance_variable_get(:@body_loaded_promise)
     end
-
-    def update_extra_info(extra_info)
-      @response.send(:apply_extra_info, extra_info)
-    end
   end
 
   class RemoteAddress
@@ -44,7 +40,6 @@ class Puppeteer::HTTPResponse
     @request = request
 
     @body_loaded_promise = Async::Promise.new
-    @extra_info_applied = !extra_info.nil?
     @remote_address = RemoteAddress.new(
       ip: response_payload['remoteIPAddress'],
       port: response_payload['remotePort'],
@@ -61,8 +56,6 @@ class Puppeteer::HTTPResponse
     headers.each do |key, value|
       @headers[key.downcase] = value
     end
-    header_status_text = @headers['status-text']
-    @status_text = header_status_text if header_status_text
     @security_details = if_present(response_payload['securityDetails']) do |security_payload|
       SecurityDetails.new(security_payload)
     end
@@ -92,22 +85,6 @@ class Puppeteer::HTTPResponse
     end
 
     nil
-  end
-
-  private def apply_extra_info(extra_info)
-    return if extra_info.nil? || @extra_info_applied
-
-    @extra_info_applied = true
-    @status = extra_info['statusCode'] || @status
-    extra_headers = extra_info['headers'] || {}
-    extra_headers.each do |key, value|
-      @headers[key.downcase] = value
-    end
-    if (status_text = parse_status_text_from_extra_info(extra_info))
-      @status_text = status_text
-    end
-    header_status_text = @headers['status-text']
-    @status_text = header_status_text if header_status_text
   end
 
   # @return [Boolean]

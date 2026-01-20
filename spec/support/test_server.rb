@@ -17,6 +17,19 @@ require 'openssl'
 module TestServer
   SSL_CERT_PATH = File.expand_path('ssl/cert.pem', __dir__)
   SSL_KEY_PATH = File.expand_path('ssl/key.pem', __dir__)
+  STATUS_TEXT_HEADER = 'x-test-server-status-text'
+
+  module HTTP1StatusTextPatch
+    def write_response(version, status, headers, reason = nil)
+      if headers && reason.nil?
+        status_text = headers.delete(TestServer::STATUS_TEXT_HEADER)
+        reason = status_text unless status_text.nil?
+      end
+      super(version, status, headers, reason)
+    end
+  end
+
+  Async::HTTP::Protocol::HTTP1::Connection.prepend(HTTP1StatusTextPatch)
 
   def self.ssl_context
     @ssl_context ||= begin
@@ -243,6 +256,9 @@ module TestServer
         ext = File.extname(path)
         content_type = ext.empty? ? 'text/html; charset=utf-8' : mime_type_for(path)
         headers['content-type'] = content_type
+      end
+      unless writer.status_text.nil?
+        headers[STATUS_TEXT_HEADER] = writer.status_text
       end
       if gzip_enabled?(route_request.path)
         body = Zlib.gzip(body)
@@ -571,11 +587,12 @@ module TestServer
 
   class ResponseWriter
     attr_reader :body
-    attr_accessor :status
+    attr_accessor :status, :status_text
 
     def initialize
       @body = +''
       @status = 200
+      @status_text = nil
       @headers = {}
       @finished = false
       @mutex = Mutex.new
