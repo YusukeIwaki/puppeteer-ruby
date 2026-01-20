@@ -231,7 +231,7 @@ RSpec.describe 'network' do
     end
 
     it 'Response.fromServiceWorker' do
-      with_test_state(incognito: false) do |page:, server:, **|
+      with_test_state do |page:, server:, **|
         responses = {}
         page.on('response') do |response|
           next if favicon_request?(response)
@@ -376,7 +376,7 @@ RSpec.describe 'network' do
         response_text_promise = async_promise { page_response.text }
         response_body.write('wor')
         response_body.write('ld!')
-        response_body.close
+        response_body.close_write
 
         expect(response_text_promise.wait).to eq('hello world!')
         fetch_promise.wait
@@ -877,7 +877,7 @@ RSpec.describe 'network' do
 
   describe 'Page.setBypassServiceWorker' do
     it 'bypass for network' do
-      with_test_state(incognito: false) do |page:, server:, **|
+      with_test_state do |page:, server:, **|
         responses = {}
         page.on('response') do |response|
           next if favicon_request?(response)
