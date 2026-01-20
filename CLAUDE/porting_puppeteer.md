@@ -452,21 +452,24 @@ for (const char of 'World!') {
 
 ## Step 5: Update API Coverage
 
-Edit `docs/api_coverage.md`:
+**Important:** `docs/api_coverage.md` is auto-generated. Do not edit it manually.
 
-```markdown
-## Frame
+To update the API coverage documentation:
 
-* $ => `#query_selector`
-* $$ => `#query_selector_all`
-* click                       # <- Add if newly implemented
-...
+```bash
+bundle exec ruby development/generate_api_coverage.rb
 ```
 
-Change:
-- `~~methodName~~` (strikethrough) = Not implemented
-- `methodName` = Implemented
+This script reads `development/puppeteer.api.json` and compares it with the Ruby implementation to generate the coverage report.
+
+### How the Coverage Report Works
+
+The script marks methods as:
+- `~~methodName~~` (strikethrough) = Not implemented in Ruby
+- `methodName` = Implemented with same name
 - `methodName => \`#ruby_method\`` = Implemented with different name
+
+The CI workflow "Check / documents updated" verifies this file is up-to-date. If it fails, run the command above and commit the changes.
 
 ## Code Style Guidelines
 
