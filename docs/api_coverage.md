@@ -218,7 +218,7 @@
 * fetchPostData => `#fetch_post_data`
 * finalizeInterceptions => `#finalize_interceptions`
 * frame
-* hasPostData => `#has_post_data?`
+* ~~hasPostData~~
 * headers
 * initiator
 * interceptResolutionState => `#intercept_resolution_state`
@@ -238,18 +238,18 @@
 * buffer
 * ~~content~~
 * frame
-* fromCache => `#from_cache?`
-* fromServiceWorker => `#from_service_worker?`
+* ~~fromCache~~
+* ~~fromServiceWorker~~
 * headers
 * json
-* ok => `#ok?`
+* ~~ok~~
 * remoteAddress => `#remote_address`
 * request
 * securityDetails => `#security_details`
 * status
 * statusText => `#status_text`
 * text
-* timing => `#timing`
+* timing
 * url
 
 ## JSCoverage
@@ -367,7 +367,7 @@
 * screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
-* setBypassServiceWorker => `#service_worker_bypassed=`
+* ~~setBypassServiceWorker~~
 * setCacheEnabled => `#cache_enabled=`
 * setContent => `#content=`
 * setCookie => `#set_cookie`
