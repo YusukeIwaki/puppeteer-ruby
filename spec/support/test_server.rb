@@ -22,10 +22,28 @@ module TestServer
   module HTTP1StatusTextPatch
     def write_response(version, status, headers, reason = nil)
       if headers && reason.nil?
-        status_text = headers.delete(TestServer::STATUS_TEXT_HEADER)
+        status_text, headers = extract_status_text(headers)
         reason = status_text unless status_text.nil?
       end
       super(version, status, headers, reason)
+    end
+
+    private def extract_status_text(headers)
+      if headers.is_a?(Hash) || headers.is_a?(::Protocol::HTTP::Headers)
+        return [headers.delete(TestServer::STATUS_TEXT_HEADER), headers]
+      end
+
+      status_text = nil
+      filtered = []
+      headers.each do |key, value|
+        if key.to_s.downcase == TestServer::STATUS_TEXT_HEADER
+          status_text ||= value
+        else
+          filtered << [key, value]
+        end
+      end
+
+      [status_text, filtered]
     end
   end
 
