@@ -1,3 +1,6 @@
+# rbs_inline: enabled
+
+require 'base64'
 require 'json'
 
 class Puppeteer::HTTPResponse
@@ -56,13 +59,14 @@ class Puppeteer::HTTPResponse
     @security_details = if_present(response_payload['securityDetails']) do |security_payload|
       SecurityDetails.new(security_payload)
     end
+    @timing = response_payload['timing']
 
     @internal = InternalAccessor.new(self)
   end
 
   attr_reader :internal
 
-  attr_reader :remote_address, :url, :status, :status_text, :headers, :security_details, :request
+  attr_reader :remote_address, :url, :status, :status_text, :headers, :security_details, :request, :timing
 
   def inspect
     values = %i[remote_address url status status_text headers security_details request].map do |sym|
@@ -88,6 +92,7 @@ class Puppeteer::HTTPResponse
     @status == 0 || (@status >= 200 && @status <= 299)
   end
 
+  # @rbs return: String -- Response body as binary string
   def buffer
     @body_loaded_promise.wait
     response = @request.client.send_message('Network.getResponseBody', requestId: @request.internal.request_id)
@@ -96,26 +101,38 @@ class Puppeteer::HTTPResponse
     else
       response['body']
     end
+  rescue Puppeteer::Connection::ProtocolError => err
+    if err.message.include?('No resource with given identifier found')
+      raise Puppeteer::Error.new(
+        'Could not load response body for this request. This might happen if the request is a preflight request.',
+      )
+    end
+    raise
   end
 
   # @param text [String]
+  # @rbs return: String -- Response body as text
   def text
     buffer
   end
 
   # @param json [Hash]
+  # @rbs return: Hash[untyped, untyped] -- Parsed JSON
   def json
     JSON.parse(text)
   end
 
+  # @rbs return: bool -- Whether response was served from cache
   def from_cache?
     @from_disk_cache || @request.internal.from_memory_cache?
   end
 
+  # @rbs return: bool -- Whether response was served from service worker
   def from_service_worker?
     @from_service_worker
   end
 
+  # @rbs return: Puppeteer::Frame -- Frame associated with the request
   def frame
     @request.frame
   end

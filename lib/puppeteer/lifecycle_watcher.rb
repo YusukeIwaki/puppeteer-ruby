@@ -104,6 +104,9 @@ class Puppeteer::LifecycleWatcher
   # @param [Puppeteer::HTTPRequest] request
   def handle_request(request)
     return if request.frame != @frame || !request.navigation_request?
+    if @navigation_request && request.redirect_chain.empty?
+      return
+    end
     @navigation_request = request
     # Resolve previous navigation response in case there are multiple
     # navigation requests reported by the backend. This generally should not
@@ -166,7 +169,7 @@ class Puppeteer::LifecycleWatcher
         begin
           Puppeteer::AsyncUtils.async_timeout(@timeout, @termination_promise).wait
         rescue Async::TimeoutError
-          raise Puppeteer::TimeoutError.new("Navigation timeout of #{@timeout}ms exceeded")
+          raise Puppeteer::TimeoutError.new("Navigation timeout of #{@timeout} ms exceeded")
         end
       end
     else

@@ -147,13 +147,13 @@ end
 class Puppeteer::FrameManager
   include Puppeteer::EventCallbackable
 
-  def initialize: (Puppeteer::CDPSession client, Puppeteer::Page page, bool ignore_https_errors, untyped timeout_settings) -> void
+  def initialize: (Puppeteer::CDPSession client, Puppeteer::Page page, bool ignore_https_errors, untyped timeout_settings, ?network_enabled: bool) -> void
   attr_reader client: Puppeteer::CDPSession
   attr_reader timeout_settings: untyped
   attr_reader network_manager: untyped
 
-  def navigate_frame: (Puppeteer::Frame frame, String url, ?referer: String?, ?timeout: Numeric?, ?wait_until: (String | Array[String] | nil)) -> Puppeteer::HTTPResponse?
-  def wait_for_frame_navigation: (Puppeteer::Frame frame, ?timeout: Numeric?, ?wait_until: (String | Array[String] | nil)) -> Puppeteer::HTTPResponse?
+  def navigate_frame: (Puppeteer::Frame frame, String url, ?referer: String?, ?referrer_policy: String?, ?timeout: Numeric?, ?wait_until: (String | Array[String] | nil)) -> Puppeteer::HTTPResponse?
+  def wait_for_frame_navigation: (Puppeteer::Frame frame, ?timeout: Numeric?, ?wait_until: (String | Array[String] | nil), ?ignore_same_document_navigation: bool) -> Puppeteer::HTTPResponse?
   def handle_attached_to_target: (Puppeteer::Target target) -> void
   def handle_detached_from_target: (Puppeteer::Target target) -> void
   def handle_lifecycle_event: (Hash[String, untyped] event) -> void
@@ -181,22 +181,8 @@ class Puppeteer::FrameManager
   def reattach_frame: (Puppeteer::Frame frame, String frame_id, bool is_main_frame, Hash[String, untyped] frame_payload) -> void
   def ensure_isolated_world: (Puppeteer::CDPSession session, String name) -> void
   def remove_frame_recursively: (Puppeteer::Frame frame) -> void
+  def referrer_policy_to_protocol: (String? referrer_policy) -> String?
   def assert_no_legacy_navigation_options: (wait_until: (String | Array[String] | nil)) -> void
-end
-
-class Puppeteer::HTTPResponse
-  def initialize: (untyped client, untyped request, Hash[String, untyped] response_payload, Hash[String, untyped]? extra_info) -> void
-  def ok?: () -> bool
-  def buffer: () -> String
-  def text: () -> String
-  def json: () -> untyped
-  def from_cache?: () -> bool
-  def from_service_worker?: () -> bool
-  def frame: () -> Puppeteer::Frame?
-
-  private
-
-  def parse_status_text_from_extra_info: (Hash[String, untyped]? extra_info) -> String?
 end
 
 class Puppeteer::NetworkCondition
@@ -217,8 +203,8 @@ class Puppeteer::Target
     def initialize: (Hash[String, untyped] options) -> void
   end
 
-  def initialize: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, is_page_target_callback: Proc) -> void
-  def self.new: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, is_page_target_callback: Proc) -> Puppeteer::Target
+  def initialize: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, network_enabled: bool, is_page_target_callback: Proc) -> void
+  def self.new: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, network_enabled: bool, is_page_target_callback: Proc) -> Puppeteer::Target
 
   def closed_callback: () -> void
   def ignore_initialize_callback_promise: () -> void
@@ -323,81 +309,4 @@ class Puppeteer::BrowserRunner
     attr_reader stderr: untyped
     attr_reader spawnargs: Array[String]
   end
-end
-
-class Puppeteer::HTTPRequest
-  include Puppeteer::DebugPrint
-  include Puppeteer::IfPresent
-
-  class InternalAccessor
-    def initialize: (Puppeteer::HTTPRequest request) -> void
-    def request_id: () -> untyped
-    def client=: (Puppeteer::CDPSession client) -> void
-    def interception_id: () -> untyped
-    def response=: (untyped response) -> void
-    def redirect_chain: () -> Array[Puppeteer::HTTPRequest]
-    def failure_text=: (String? failure_text) -> void
-    def from_memory_cache=: (bool from_memory_cache) -> void
-    def from_memory_cache?: () -> bool
-  end
-
-  class InterceptResolutionState
-    def self.abort: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
-    def self.respond: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
-    def self.continue: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
-    def self.disabled: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
-    def self.none: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
-    def self.already_handled: (?priority: Integer?) -> Puppeteer::HTTPRequest::InterceptResolutionState
-
-    def initialize: (action: String, priority: Integer?) -> void
-    def priority_unspecified?: () -> bool
-    attr_reader action: String
-    attr_reader priority: Integer?
-  end
-
-  class InterceptionNotEnabledError < Puppeteer::Error
-    def initialize: () -> void
-  end
-
-  class AlreadyHandledError < Puppeteer::Error
-    def initialize: () -> void
-  end
-
-  def initialize: (untyped client, untyped frame, untyped interception_id, untyped allow_interception, Hash[Symbol | String, untyped] event, Array[Puppeteer::HTTPRequest] redirect_chain) -> void
-  def inspect: () -> String
-  def update_headers: (Hash[Symbol | String, untyped] headers) -> void
-  def continue_request_overrides: () -> Hash[Symbol, untyped]
-  def response_for_request: () -> untyped
-  def abort_error_reason: () -> untyped
-  def intercept_resolution_state: () -> Puppeteer::HTTPRequest::InterceptResolutionState
-  def intercept_resolution_handled?: () -> bool
-  def enqueue_intercept_action: (Proc pending_handler) -> void
-  def finalize_interceptions: () -> void
-  def navigation_request?: () -> bool
-  def redirect_chain: () -> Array[Puppeteer::HTTPRequest]
-  def failure: () -> untyped
-  def continue: (?url: String?, ?method: String?, ?post_data: String?, ?headers: Hash[String, String]?, ?priority: Integer?) -> void
-  def respond: (?status: Integer?, ?headers: Hash[String, String]?, ?content_type: String?, ?body: String?, ?priority: Integer?) -> void
-  def abort: (?error_code: Symbol, ?priority: Integer?) -> void
-
-  attr_reader internal: Puppeteer::HTTPRequest::InternalAccessor
-  attr_reader url: String
-  attr_reader resource_type: String
-  attr_reader post_data: untyped
-  attr_reader headers: Hash[String, String]
-  attr_reader response: untyped
-  attr_reader frame: untyped
-  attr_reader initiator: untyped
-
-  private
-
-  def assert_interception_allowed: () -> void
-  def assert_interception_not_handled: () -> void
-  def can_be_intercepted?: () -> bool
-  def headers_to_array: (Hash[Symbol | String, untyped]? headers) -> Array[Hash[Symbol, String | Symbol]]?
-  def continue_impl: (Hash[Symbol, untyped] overrides) -> void
-  def respond_impl: (?status: Integer?, ?headers: Hash[String, String]?, ?content_type: String?, ?body: String?) -> void
-  def abort_impl: (String error_reason) -> void
-  def target_closed_error?: (StandardError error) -> bool
-  def handle_interception_error: (StandardError error) -> void
 end

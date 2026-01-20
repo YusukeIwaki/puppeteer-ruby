@@ -61,6 +61,7 @@ class Puppeteer::IsolaatedWorld
     @bound_functions = {}
     @ctx_bindings = Set.new
     @detached = false
+    @context = nil
 
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
@@ -76,6 +77,7 @@ class Puppeteer::IsolaatedWorld
   def context=(context)
     if context
       @ctx_bindings.clear
+      @context = context
       unless @context_promise.resolved?
         @context_promise.resolve(context)
       end
@@ -85,8 +87,16 @@ class Puppeteer::IsolaatedWorld
     end
   end
 
-  def delete_context(execution_context_id)
+  def delete_context(context_or_id)
     @document = nil
+    if context_or_id
+      if context_or_id.is_a?(Puppeteer::ExecutionContext)
+        return unless @context.equal?(context_or_id)
+      elsif @context && @context.respond_to?(:_context_id, true)
+        return unless @context.send(:_context_id).to_s == context_or_id.to_s
+      end
+    end
+    @context = nil
     @context_promise = Async::Promise.new
   end
 
@@ -106,7 +116,9 @@ class Puppeteer::IsolaatedWorld
     if @detached
       raise DetachedError.new("Execution Context is not available in detached frame \"#{@frame.url}\" (are you trying to evaluate?)")
     end
-    @context_promise.wait
+    return @context if @context
+
+    @context = @context_promise.wait
   end
 
   # @param {Function|string} pageFunction

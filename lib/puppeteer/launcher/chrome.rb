@@ -85,6 +85,7 @@ module Puppeteer::Launcher
             context_ids: [],
             ignore_https_errors: @browser_options.ignore_https_errors?,
             default_viewport: @browser_options.default_viewport,
+            network_enabled: @browser_options.network_enabled,
             process: runner.proc,
             close_callback: -> { runner.close },
             target_filter_callback: nil,

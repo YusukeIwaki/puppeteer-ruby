@@ -18,6 +18,7 @@ class Puppeteer::Target
   # @param {!function():!Promise<!Puppeteer.CDPSession>} sessionFactory
   # @param {boolean} ignoreHTTPSErrors
   # @param {?Puppeteer.Viewport} defaultViewport
+  # @param {boolean} networkEnabled
   def initialize(target_info:,
                  session:,
                  browser_context:,
@@ -25,6 +26,7 @@ class Puppeteer::Target
                  session_factory:,
                  ignore_https_errors:,
                  default_viewport:,
+                 network_enabled:,
                  is_page_target_callback:)
     @session = session
     @target_manager = target_manager
@@ -34,6 +36,7 @@ class Puppeteer::Target
     @session_factory = session_factory
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
+    @network_enabled = network_enabled
     @is_page_target_callback = is_page_target_callback
 
     #    /** @type {?Promise<!Puppeteer.Page>} */
@@ -125,7 +128,13 @@ class Puppeteer::Target
     if @is_page_target_callback.call(@target_info) && @page.nil?
       client = @session || @session_factory.call(true)
       client.wait_for_ready if client.respond_to?(:wait_for_ready)
-      @page = Puppeteer::Page.create(client, self, @ignore_https_errors, @default_viewport)
+      @page = Puppeteer::Page.create(
+        client,
+        self,
+        @ignore_https_errors,
+        @default_viewport,
+        network_enabled: @network_enabled,
+      )
     end
     @page
   end

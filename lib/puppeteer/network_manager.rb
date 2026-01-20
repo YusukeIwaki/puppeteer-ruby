@@ -82,10 +82,12 @@ class Puppeteer::NetworkManager
   # @param {!Puppeteer.CDPSession} client
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.FrameManager} frameManager
-  def initialize(client, ignore_https_errors, frame_manager)
+  # @param {boolean} network_enabled
+  def initialize(client, ignore_https_errors, frame_manager, network_enabled: true)
     @client = client
     @ignore_https_errors = ignore_https_errors
     @frame_manager = frame_manager
+    @network_enabled = network_enabled
     @network_event_manager = Puppeteer::NetworkEventManager.new
     @clients = Set.new
     @initialized = false
@@ -112,6 +114,7 @@ class Puppeteer::NetworkManager
   end
 
   def add_client(client)
+    return unless @network_enabled
     return if @clients.include?(client)
 
     @clients << client
@@ -211,7 +214,11 @@ class Puppeteer::NetworkManager
   # @param username [String|NilClass]
   # @param password [String|NilClass]
   def authenticate(username:, password:)
-    @credentials = Credentials.new(username: username, password: password)
+    if username.nil? && password.nil?
+      @credentials = nil
+    else
+      @credentials = Credentials.new(username: username, password: password)
+    end
     update_protocol_request_interception
   end
 
@@ -220,7 +227,22 @@ class Puppeteer::NetworkManager
     new_extra_http_headers = {}
     headers.each do |key, value|
       unless value.is_a?(String)
-        raise ArgumentError.new("Expected value of header \"#{key}\" to be String, but \"#{value}\" is found.")
+        type_description =
+          case value
+          when Numeric
+            'number'
+          when TrueClass, FalseClass
+            'boolean'
+          when NilClass
+            'null'
+          when Symbol
+            'symbol'
+          when Array, Hash
+            'object'
+          else
+            value.class.to_s
+          end
+        raise ArgumentError.new("Expected value of header \"#{key}\" to be String, but \"#{type_description}\" is found.")
       end
       new_extra_http_headers[key.downcase] = value
     end
@@ -680,10 +702,7 @@ class Puppeteer::NetworkManager
     # corresponding ExtraInfo event, then wait to emit this event too.
     queued_events = @network_event_manager.get_queued_event_group(network_request_id)
     if queued_events
-      @network_event_manager.forget_queued_event_group(network_request_id)
-      emit_response_event(queued_events.response_received_event, nil, network_request_id: network_request_id)
-      emit_loading_finished(event, network_request_id: network_request_id, client: client)
-      return
+      queued_events.loading_finished_event = event
     else
       emit_loading_finished(event, network_request_id: network_request_id, client: client)
     end
@@ -713,10 +732,7 @@ class Puppeteer::NetworkManager
     # corresponding ExtraInfo event, then wait to emit this event too.
     queued_events = @network_event_manager.get_queued_event_group(network_request_id)
     if queued_events
-      @network_event_manager.forget_queued_event_group(network_request_id)
-      emit_response_event(queued_events.response_received_event, nil, network_request_id: network_request_id)
-      emit_loading_failed(event, network_request_id: network_request_id, client: client)
-      return
+      queued_events.loading_failed_event = event
     else
       emit_loading_failed(event, network_request_id: network_request_id, client: client)
     end

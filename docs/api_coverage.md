@@ -215,7 +215,7 @@
 * continueRequestOverrides => `#continue_request_overrides`
 * enqueueInterceptAction => `#enqueue_intercept_action`
 * failure
-* ~~fetchPostData~~
+* fetchPostData => `#fetch_post_data`
 * finalizeInterceptions => `#finalize_interceptions`
 * frame
 * ~~hasPostData~~
@@ -249,7 +249,7 @@
 * status
 * statusText => `#status_text`
 * text
-* ~~timing~~
+* timing
 * url
 
 ## JSCoverage
@@ -352,7 +352,7 @@
 * isClosed => `#closed?`
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
-* ~~isServiceWorkerBypassed~~
+* isServiceWorkerBypassed => `#service_worker_bypassed?`
 * ~~locator~~
 * mainFrame => `#main_frame`
 * metrics

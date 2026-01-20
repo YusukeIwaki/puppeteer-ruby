@@ -10,10 +10,11 @@ class Puppeteer::FrameManager
   # @param {!Puppeteer.Page} page
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.TimeoutSettings} timeoutSettings
-  def initialize(client, page, ignore_https_errors, timeout_settings)
+  # @param {boolean} network_enabled
+  def initialize(client, page, ignore_https_errors, timeout_settings, network_enabled: true)
     @client = client
     @page = page
-    @network_manager = Puppeteer::NetworkManager.new(client, ignore_https_errors, self)
+    @network_manager = Puppeteer::NetworkManager.new(client, ignore_https_errors, self, network_enabled: network_enabled)
     @timeout_settings = timeout_settings
 
     # @type {!Map<string, !Frame>}
@@ -107,14 +108,17 @@ class Puppeteer::FrameManager
 
   # @param frame [Puppeteer::Frame]
   # @param url [String]
-  # @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
+  # @param {!{referer?: string, referrerPolicy?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
   # @return [Puppeteer::HTTPResponse]
-  def navigate_frame(frame, url, referer: nil, timeout: nil, wait_until: nil)
+  def navigate_frame(frame, url, referer: nil, referrer_policy: nil, timeout: nil, wait_until: nil)
     assert_no_legacy_navigation_options(wait_until: wait_until)
 
+    referrer_policy ||= @network_manager.extra_http_headers['referer-policy']
+    protocol_referrer_policy = referrer_policy_to_protocol(referrer_policy)
     navigate_params = {
       url: url,
-      referer: referer || @network_manager.extra_http_headers['referer'],
+      referrer: referer || @network_manager.extra_http_headers['referer'],
+      referrerPolicy: protocol_referrer_policy,
       frameId: frame.id,
     }.compact
     option_wait_until = wait_until || ['load']
@@ -129,7 +133,7 @@ class Puppeteer::FrameManager
           result = @client.send_message('Page.navigate', navigate_params)
           loader_id = result['loaderId']
           ensure_new_document_navigation = !!loader_id
-          if result['errorText']
+          if result['errorText'] && result['errorText'] != 'net::ERR_HTTP_RESPONSE_CODE_FAILURE'
             raise NavigationError.new("#{result['errorText']} at #{url}")
           end
         end.call
@@ -150,7 +154,7 @@ class Puppeteer::FrameManager
 
       watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
-      raise NavigationError.new(err)
+      raise err
     ensure
       watcher.dispose
     end
@@ -159,22 +163,29 @@ class Puppeteer::FrameManager
   # @param timeout [number|nil]
   # @param wait_until [string|nil] 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'
   # @return [Puppeteer::HTTPResponse]
-  def wait_for_frame_navigation(frame, timeout: nil, wait_until: nil)
+  def wait_for_frame_navigation(frame, timeout: nil, wait_until: nil, ignore_same_document_navigation: false)
     assert_no_legacy_navigation_options(wait_until: wait_until)
 
     option_wait_until = wait_until || ['load']
     option_timeout = timeout || @timeout_settings.navigation_timeout
     watcher = Puppeteer::LifecycleWatcher.new(self, frame, option_wait_until, option_timeout)
     begin
-      Puppeteer::AsyncUtils.await_promise_race(
-        watcher.timeout_or_termination_promise,
-        watcher.same_document_navigation_promise,
-        watcher.new_document_navigation_promise,
-      )
+      if ignore_same_document_navigation
+        Puppeteer::AsyncUtils.await_promise_race(
+          watcher.timeout_or_termination_promise,
+          watcher.new_document_navigation_promise,
+        )
+      else
+        Puppeteer::AsyncUtils.await_promise_race(
+          watcher.timeout_or_termination_promise,
+          watcher.same_document_navigation_promise,
+          watcher.new_document_navigation_promise,
+        )
+      end
 
       watcher.navigation_response
     rescue Puppeteer::TimeoutError => err
-      raise NavigationError.new(err)
+      raise err
     ensure
       watcher.dispose
     end
@@ -451,22 +462,20 @@ class Puppeteer::FrameManager
     context = @context_id_to_context[key]
     return unless context
     @context_id_to_context.delete(key)
-    if context.world
-      context.world.delete_context(execution_context_id)
-    end
+    context.world&.delete_context(context)
   end
 
   # @param session [Puppeteer::CDPSession]
   def handle_execution_contexts_cleared(session)
+    session_id = session.id
     @context_id_to_context.select! do |execution_context_id, context|
+      key_session_id, context_id = execution_context_id.split(':', 2)
       # Make sure to only clear execution contexts that belong
       # to the current session.
-      if context.client != session
+      if key_session_id != session_id
         true # keep
       else
-        if context.world
-          context.world.delete_context(execution_context_id)
-        end
+        context.world&.delete_context(context)
         false # remove
       end
     end
@@ -485,6 +494,12 @@ class Puppeteer::FrameManager
     frame.detach
     @frames.delete(frame.id)
     emit_event(FrameManagerEmittedEvents::FrameDetached, frame)
+  end
+
+  private def referrer_policy_to_protocol(referrer_policy)
+    return nil if referrer_policy.nil?
+
+    referrer_policy.to_s.gsub(/-([a-z])/) { Regexp.last_match(1).upcase }
   end
 
   private def assert_no_legacy_navigation_options(wait_until:)

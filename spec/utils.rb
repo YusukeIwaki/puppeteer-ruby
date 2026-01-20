@@ -52,3 +52,32 @@ module Utils::DumpFrames
     end
   end
 end
+
+module Utils::Favicon
+  def favicon_request?(request_or_response)
+    url = request_or_response.url
+    url.include?('favicon.ico')
+  end
+end
+
+module Utils::WaitEvent
+  def wait_for_event(emitter, event_name, timeout_ms: 5000, predicate: nil)
+    predicate ||= ->(_event) { true }
+    promise = Async::Promise.new
+    listener = nil
+    listener = lambda do |*args|
+      event = args.first
+      next unless predicate.call(event)
+
+      emitter.off(event_name, listener)
+      promise.resolve(event)
+    end
+    emitter.on(event_name, &listener)
+
+    begin
+      Puppeteer::AsyncUtils.async_timeout(timeout_ms, promise).wait
+    ensure
+      emitter.off(event_name, listener)
+    end
+  end
+end

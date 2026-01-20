@@ -77,18 +77,32 @@ class Puppeteer::Frame
 
   # @rbs url: String -- URL to navigate
   # @rbs referer: String? -- Referer header value
+  # @rbs referrer_policy: String? -- Referrer policy
   # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
   # @rbs wait_until: String? -- Lifecycle event to wait for
   # @rbs return: Puppeteer::HTTPResponse? -- Navigation response
-  def goto(url, referer: nil, timeout: nil, wait_until: nil)
-    @frame_manager.navigate_frame(self, url, referer: referer, timeout: timeout, wait_until: wait_until)
+  def goto(url, referer: nil, referrer_policy: nil, timeout: nil, wait_until: nil)
+    @frame_manager.navigate_frame(
+      self,
+      url,
+      referer: referer,
+      referrer_policy: referrer_policy,
+      timeout: timeout,
+      wait_until: wait_until,
+    )
   end
 
   # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
   # @rbs wait_until: String? -- Lifecycle event to wait for
+  # @rbs ignore_same_document_navigation: bool -- Ignore same-document navigation
   # @rbs return: Puppeteer::HTTPResponse? -- Navigation response
-  def wait_for_navigation(timeout: nil, wait_until: nil)
-    @frame_manager.wait_for_frame_navigation(self, timeout: timeout, wait_until: wait_until)
+  def wait_for_navigation(timeout: nil, wait_until: nil, ignore_same_document_navigation: false)
+    @frame_manager.wait_for_frame_navigation(
+      self,
+      timeout: timeout,
+      wait_until: wait_until,
+      ignore_same_document_navigation: ignore_same_document_navigation,
+    )
   end
 
   define_async_method :async_wait_for_navigation
