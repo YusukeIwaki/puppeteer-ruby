@@ -20,9 +20,10 @@ class Puppeteer::Page
   # @rbs target: Puppeteer::Target -- Target associated with the page
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport for new pages
+  # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: Puppeteer::Page -- Created page instance
-  def self.create(client, target, ignore_https_errors, default_viewport)
-    page = Puppeteer::Page.new(client, target, ignore_https_errors)
+  def self.create(client, target, ignore_https_errors, default_viewport, network_enabled: true)
+    page = Puppeteer::Page.new(client, target, ignore_https_errors, network_enabled: network_enabled)
     page.init
     if default_viewport
       page.viewport = default_viewport
@@ -33,8 +34,9 @@ class Puppeteer::Page
   # @rbs client: Puppeteer::CDPSession -- CDP session for the page
   # @rbs target: Puppeteer::Target -- Target associated with the page
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: void -- No return value
-  def initialize(client, target, ignore_https_errors)
+  def initialize(client, target, ignore_https_errors, network_enabled: true)
     @closed = false
     @client = client
     @target = target
@@ -43,7 +45,7 @@ class Puppeteer::Page
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
     # @accessibility = Accessibility.new(client)
-    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings)
+    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled)
     @emulation_manager = Puppeteer::EmulationManager.new(client)
     @tracing = Puppeteer::Tracing.new(client)
     @page_bindings = {}
@@ -57,6 +59,7 @@ class Puppeteer::Page
 
     @workers = {}
     @user_drag_interception_enabled = false
+    @service_worker_bypassed = false
 
     @attached_session_listener_id = @client.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
       handle_attached_to_session(session)
@@ -323,7 +326,7 @@ class Puppeteer::Page
     @client.send_message('Emulation.setGeolocationOverride', geolocation.to_h)
   end
 
-  attr_reader :javascript_enabled, :target, :client
+  attr_reader :javascript_enabled, :service_worker_bypassed, :target, :client
 
   # @rbs other: Object -- Other object to compare
   # @rbs return: bool -- Equality result
@@ -336,6 +339,7 @@ class Puppeteer::Page
     @target.target_id == other.target.target_id
   end
   alias_method :javascript_enabled?, :javascript_enabled
+  alias_method :service_worker_bypassed?, :service_worker_bypassed
 
   # @rbs return: Puppeteer::Browser -- Owning browser
   def browser
@@ -413,6 +417,13 @@ class Puppeteer::Page
   def drag_interception_enabled=(enabled)
     @user_drag_interception_enabled = enabled
     @client.send_message('Input.setInterceptDrags', enabled: enabled)
+  end
+
+  # @rbs bypass: bool -- Bypass service workers
+  # @rbs return: void -- No return value
+  def service_worker_bypassed=(bypass)
+    @service_worker_bypassed = bypass
+    @client.send_message('Network.setBypassServiceWorker', bypass: bypass)
   end
 
   # @rbs enabled: bool -- Enable offline mode
@@ -837,11 +848,19 @@ class Puppeteer::Page
 
   # @rbs url: String -- URL to navigate
   # @rbs referer: String? -- Referer header value
+  # @rbs referer: String? -- Referer header value
+  # @rbs referrer_policy: String? -- Referrer policy
   # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
   # @rbs wait_until: String | Array[String] | nil -- Lifecycle events to wait for
   # @rbs return: Puppeteer::HTTPResponse? -- Navigation response
-  def goto(url, referer: nil, timeout: nil, wait_until: nil)
-    main_frame.goto(url, referer: referer, timeout: timeout, wait_until: wait_until)
+  def goto(url, referer: nil, referrer_policy: nil, timeout: nil, wait_until: nil)
+    main_frame.goto(
+      url,
+      referer: referer,
+      referrer_policy: referrer_policy,
+      timeout: timeout,
+      wait_until: wait_until,
+    )
   end
 
   # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
@@ -852,7 +871,7 @@ class Puppeteer::Page
     params = {}
     params[:ignoreCache] = ignore_cache unless ignore_cache.nil?
 
-    wait_for_navigation(timeout: timeout, wait_until: wait_until) do
+    wait_for_navigation(timeout: timeout, wait_until: wait_until, ignore_same_document_navigation: true) do
       if params.empty?
         @client.send_message('Page.reload')
       else
@@ -863,9 +882,15 @@ class Puppeteer::Page
 
   # @rbs timeout: Numeric? -- Navigation timeout in milliseconds
   # @rbs wait_until: String | Array[String] | nil -- Lifecycle events to wait for
+  # @rbs ignore_same_document_navigation: bool -- Ignore same-document navigation
   # @rbs return: Puppeteer::HTTPResponse? -- Navigation response
-  def wait_for_navigation(timeout: nil, wait_until: nil)
-    main_frame.send(:wait_for_navigation, timeout: timeout, wait_until: wait_until)
+  def wait_for_navigation(timeout: nil, wait_until: nil, ignore_same_document_navigation: false)
+    main_frame.send(
+      :wait_for_navigation,
+      timeout: timeout,
+      wait_until: wait_until,
+      ignore_same_document_navigation: ignore_same_document_navigation,
+    )
   end
 
   # @!method async_wait_for_navigation(timeout: nil, wait_until: nil)
@@ -1108,10 +1133,12 @@ class Puppeteer::Page
     history = @client.send_message('Page.getNavigationHistory')
     entries = history['entries']
     index = history['currentIndex'] + delta
-    if_present(entries[index]) do |entry|
-      wait_for_navigation(timeout: timeout, wait_until: wait_until) do
-        @client.send_message('Page.navigateToHistoryEntry', entryId: entry['id'])
-      end
+    if index < 0 || index >= entries.length
+      raise Puppeteer::Error.new('History entry to navigate to not found.')
+    end
+    entry = entries[index]
+    wait_for_navigation(timeout: timeout, wait_until: wait_until) do
+      @client.send_message('Page.navigateToHistoryEntry', entryId: entry['id'])
     end
   end
 

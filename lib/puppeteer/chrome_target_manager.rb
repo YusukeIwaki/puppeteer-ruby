@@ -171,19 +171,21 @@ class Puppeteer::ChromeTargetManager
 
     silent_detach = -> {
       Async do
-        Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
-      rescue => err
-        Logger.new($stderr).warn(err)
-      end
+        begin
+          Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
+        rescue => err
+          Logger.new($stderr).warn(err)
+        end
 
-      # We don't use `session.detach()` because that dispatches all commands on
-      # the connection instead of the parent session.
-      Async do
-        Puppeteer::AsyncUtils.await(parent_session.async_send_message('Target.detachFromTarget', {
-          sessionId: session.id,
-        }))
-      rescue => err
-        Logger.new($stderr).warn(err)
+        # We don't use `session.detach()` because that dispatches all commands on
+        # the connection instead of the parent session.
+        begin
+          Puppeteer::AsyncUtils.await(parent_session.async_send_message('Target.detachFromTarget', {
+            sessionId: session.id,
+          }))
+        rescue => err
+          Logger.new($stderr).warn(err)
+        end
       end
     }
 

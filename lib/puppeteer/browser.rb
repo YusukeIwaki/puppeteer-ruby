@@ -13,6 +13,7 @@ class Puppeteer::Browser
   # @rbs context_ids: Array[String] -- Browser context IDs
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -23,6 +24,7 @@ class Puppeteer::Browser
                   context_ids:,
                   ignore_https_errors:,
                   default_viewport:,
+                  network_enabled: true,
                   process:,
                   close_callback:,
                   target_filter_callback:,
@@ -33,6 +35,7 @@ class Puppeteer::Browser
       context_ids: context_ids,
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
+      network_enabled: network_enabled,
       process: process,
       close_callback: close_callback,
       target_filter_callback: target_filter_callback,
@@ -47,6 +50,7 @@ class Puppeteer::Browser
   # @rbs context_ids: Array[String] -- Browser context IDs
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -57,6 +61,7 @@ class Puppeteer::Browser
                  context_ids:,
                  ignore_https_errors:,
                  default_viewport:,
+                 network_enabled: true,
                  process:,
                  close_callback:,
                  target_filter_callback:,
@@ -67,6 +72,7 @@ class Puppeteer::Browser
     end
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
+    @network_enabled = network_enabled
     @process = process
     @connection = connection
     @close_callback = close_callback
@@ -208,6 +214,7 @@ class Puppeteer::Browser
       session_factory: -> (auto_attach_emulated) { @connection.create_session(target_info, auto_attach_emulated: auto_attach_emulated) },
       ignore_https_errors: @ignore_https_errors,
       default_viewport: @default_viewport,
+      network_enabled: @network_enabled,
       is_page_target_callback: @is_page_target_callback,
     )
   end

@@ -215,10 +215,10 @@
 * continueRequestOverrides => `#continue_request_overrides`
 * enqueueInterceptAction => `#enqueue_intercept_action`
 * failure
-* ~~fetchPostData~~
+* fetchPostData => `#fetch_post_data`
 * finalizeInterceptions => `#finalize_interceptions`
 * frame
-* ~~hasPostData~~
+* hasPostData => `#has_post_data?`
 * headers
 * initiator
 * interceptResolutionState => `#intercept_resolution_state`
@@ -238,18 +238,18 @@
 * buffer
 * ~~content~~
 * frame
-* ~~fromCache~~
-* ~~fromServiceWorker~~
+* fromCache => `#from_cache?`
+* fromServiceWorker => `#from_service_worker?`
 * headers
 * json
-* ~~ok~~
+* ok => `#ok?`
 * remoteAddress => `#remote_address`
 * request
 * securityDetails => `#security_details`
 * status
 * statusText => `#status_text`
 * text
-* ~~timing~~
+* timing => `#timing`
 * url
 
 ## JSCoverage
@@ -352,7 +352,7 @@
 * isClosed => `#closed?`
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
-* ~~isServiceWorkerBypassed~~
+* isServiceWorkerBypassed => `#service_worker_bypassed?`
 * ~~locator~~
 * mainFrame => `#main_frame`
 * metrics
@@ -367,7 +367,7 @@
 * screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
-* ~~setBypassServiceWorker~~
+* setBypassServiceWorker => `#service_worker_bypassed=`
 * setCacheEnabled => `#cache_enabled=`
 * setContent => `#content=`
 * setCookie => `#set_cookie`

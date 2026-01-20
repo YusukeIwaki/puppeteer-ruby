@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class Puppeteer::HTTPRequest
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
@@ -100,6 +102,8 @@ class Puppeteer::HTTPRequest
     @resource_type = resource_type.downcase
     @method = event['request']['method']
     @post_data = event['request']['postData']
+    has_post_data = event.dig('request', 'hasPostData')
+    @has_post_data = has_post_data.nil? ? !@post_data.nil? : has_post_data
     @frame = frame
     @redirect_chain = redirect_chain
     @continue_request_overrides = {}
@@ -126,6 +130,20 @@ class Puppeteer::HTTPRequest
 
   def headers
     @headers.dup
+  end
+
+  # @rbs return: bool -- Whether request has post data
+  def has_post_data?
+    @has_post_data
+  end
+
+  # @rbs return: String? -- Post data string if available
+  def fetch_post_data
+    response = @client.send_message('Network.getRequestPostData', requestId: @request_id)
+    response['postData']
+  rescue => err
+    debug_puts(err)
+    nil
   end
 
   def inspect

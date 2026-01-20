@@ -6,6 +6,9 @@ require 'async/http/client'
 require 'async/http/endpoint'
 require 'protocol/http/response'
 require 'socket'
+require 'set'
+require 'base64'
+require 'zlib'
 require 'timeout'
 require 'time'
 require 'uri'
@@ -48,6 +51,10 @@ module TestServer
 
       @routes = {}
       @routes_mutex = Mutex.new
+      @gzip_paths = Set.new
+      @gzip_paths_mutex = Mutex.new
+      @auth_routes = {}
+      @auth_routes_mutex = Mutex.new
 
       @request_promises = {}
       @request_promises_mutex = Mutex.new
@@ -96,6 +103,8 @@ module TestServer
       @routes_mutex.synchronize { @routes.clear }
       @request_promises_mutex.synchronize { @request_promises.clear }
       @csp_headers_mutex&.synchronize { @csp_headers&.clear }
+      @gzip_paths_mutex.synchronize { @gzip_paths.clear }
+      @auth_routes_mutex.synchronize { @auth_routes.clear }
     end
 
     def set_route(path, &block)
@@ -109,6 +118,18 @@ module TestServer
         writer.status = 302
         writer.add_header('location', to)
         writer.finish
+      end
+    end
+
+    def enable_gzip(path)
+      @gzip_paths_mutex.synchronize do
+        @gzip_paths << path
+      end
+    end
+
+    def set_auth(path, username, password)
+      @auth_routes_mutex.synchronize do
+        @auth_routes[path] = { username: username, password: password }
       end
     end
 
@@ -180,6 +201,10 @@ module TestServer
 
       notify_request(path, RequestRecord.new(route_request, body))
 
+      if auth_required?(path) && !authorized?(route_request, auth_for(path))
+        return unauthorized_response
+      end
+
       if handler
         respond_with_handler(handler, route_request)
       else
@@ -196,14 +221,16 @@ module TestServer
       writer = ResponseWriter.new
 
       begin
-        handler.call(route_request, writer)
+        result = handler.call(route_request, writer)
+        return result if result.is_a?(::Protocol::HTTP::Response)
       rescue StandardError => error
         warn("[TestServer] Route handler error for #{route_request.path}: #{error.class}: #{error.message}")
         writer.status = 500
         writer.write('Internal Server Error')
         writer.finish
       ensure
-        writer.finish unless writer.finished?
+        # Leave unfinished responses open to support test cases that
+        # intentionally delay completion.
       end
 
       writer.wait_for_finish
@@ -216,6 +243,10 @@ module TestServer
         ext = File.extname(path)
         content_type = ext.empty? ? 'text/html; charset=utf-8' : mime_type_for(path)
         headers['content-type'] = content_type
+      end
+      if gzip_enabled?(route_request.path)
+        body = Zlib.gzip(body)
+        headers['content-encoding'] = 'gzip'
       end
 
       ::Protocol::HTTP::Response[status, headers.to_a, [body]]
@@ -243,8 +274,12 @@ module TestServer
         'content-type' => mime_type_for(file_path),
       }
       if sanitized.start_with?('cached/')
+        last_modified = File.mtime(file_path).utc.httpdate
         headers['cache-control'] = 'public, max-age=31536000'
-        headers['last-modified'] = File.mtime(file_path).utc.httpdate
+        headers['last-modified'] = last_modified
+        if header_value(request, 'if-modified-since')
+          return ::Protocol::HTTP::Response[304, headers.to_a, []]
+        end
       end
 
       # Add CSP header if set for this path
@@ -252,6 +287,10 @@ module TestServer
       headers['content-security-policy'] = csp if csp
 
       response_body = request.method == 'HEAD' ? '' : body
+      if gzip_enabled?(path) && !response_body.empty?
+        response_body = Zlib.gzip(response_body)
+        headers['content-encoding'] = 'gzip'
+      end
 
       ::Protocol::HTTP::Response[200, headers.to_a, [response_body]]
     end
@@ -316,10 +355,60 @@ module TestServer
       full_path[@assets_directory.length + 1..]
     end
 
+    private def gzip_enabled?(path)
+      @gzip_paths_mutex.synchronize { @gzip_paths.include?(path) }
+    end
+
+    private def auth_for(path)
+      @auth_routes_mutex.synchronize { @auth_routes[path] }
+    end
+
+    private def auth_required?(path)
+      @auth_routes_mutex.synchronize { @auth_routes.key?(path) }
+    end
+
+    private def authorized?(route_request, credentials)
+      return false unless credentials
+
+      header = route_request.headers['authorization']
+      return false unless header
+
+      scheme, encoded = header.split(' ', 2)
+      return false unless scheme&.downcase == 'basic'
+      return false unless encoded
+
+      decoded = Base64.decode64(encoded)
+      decoded == "#{credentials[:username]}:#{credentials[:password]}"
+    rescue ArgumentError
+      false
+    end
+
+    private def unauthorized_response
+      headers = [
+        ['content-type', 'text/plain; charset=utf-8'],
+        ['www-authenticate', 'Basic realm="Secure Area"'],
+      ]
+      ::Protocol::HTTP::Response[401, headers, ['Unauthorized']]
+    end
+
     private def strip_query(path)
       return '' if path.nil?
 
       path.split('?', 2).first
+    end
+
+    private def header_value(request, name)
+      target = name.downcase
+      request.headers.each do |field|
+        if field.respond_to?(:name) && field.respond_to?(:value)
+          key = field.name
+          value = field.value
+        else
+          key, value = field
+        end
+        return value if key.to_s.downcase == target
+      end
+      nil
     end
 
     private def mime_type_for(file_path)

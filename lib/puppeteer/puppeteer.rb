@@ -30,6 +30,7 @@ class Puppeteer::Puppeteer
   # @rbs debugging_port: Integer? -- Remote debugging port
   # @rbs headless: bool? -- Run browser in headless mode
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
+  # @rbs network_enabled: bool? -- Enable network domain
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs wait_for_initial_page: bool? -- Wait for initial page to load
@@ -53,6 +54,7 @@ class Puppeteer::Puppeteer
     debugging_port: nil,
     headless: nil,
     ignore_https_errors: nil,
+    network_enabled: true,
     default_viewport: NoViewport.new,
     slow_mo: nil,
     wait_for_initial_page: nil,
@@ -80,6 +82,7 @@ class Puppeteer::Puppeteer
       debugging_port: debugging_port,
       headless: headless,
       ignore_https_errors: ignore_https_errors,
+      network_enabled: network_enabled,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
       wait_for_initial_page: wait_for_initial_page,
@@ -126,6 +129,7 @@ class Puppeteer::Puppeteer
   # @rbs browser_url: String? -- Browser HTTP URL for WebSocket discovery
   # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
+  # @rbs network_enabled: bool? -- Enable network domain
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs block: Proc? -- Optional block receiving the browser
@@ -135,6 +139,7 @@ class Puppeteer::Puppeteer
     browser_url: nil,
     transport: nil,
     ignore_https_errors: nil,
+    network_enabled: true,
     default_viewport: nil,
     slow_mo: nil,
     &block
@@ -144,6 +149,7 @@ class Puppeteer::Puppeteer
       browser_url: browser_url,
       transport: transport,
       ignore_https_errors: ignore_https_errors,
+      network_enabled: network_enabled,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
     }.compact

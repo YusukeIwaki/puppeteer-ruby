@@ -90,8 +90,8 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 | launcher.spec.ts | launcher_spec.rb | [x] Ported |
 | locator.spec.ts | - | **[MISSING]** Locator API not ported |
 | mouse.spec.ts | mouse_spec.rb | [x] Ported |
-| navigation.spec.ts | (in page_spec.rb) | [PARTIAL] Some tests ported |
-| network.spec.ts | network_spec.rb | [PARTIAL] Minimal porting |
+| navigation.spec.ts | navigation_spec.rb | [x] Ported |
+| network.spec.ts | network_spec.rb | [x] Ported |
 | oopif.spec.ts | oopif_spec.rb | [x] Ported |
 | page.spec.ts | page_spec.rb | [x] Ported |
 | proxy.spec.ts | - | **[MISSING]** Not ported |
@@ -142,31 +142,12 @@ Node.js tests include:
 ### 3. Navigation Tests (`navigation.spec.ts`)
 **Priority: HIGH** - Core navigation functionality
 
-Missing tests:
-- `Page.goto` - many edge cases (redirects, 204 responses, timeouts)
-- `Page.waitForNavigation` - history API, subframes
-- `Page.goBack/goForward` - history navigation
-- `Frame.goto` - subframe navigation
-- `Frame.waitForNavigation`
-
-**Ruby status:** Some tests exist in page_spec.rb but navigation.spec.ts has many more edge cases.
+**Ruby status:** Ported to `spec/integration/navigation_spec.rb`.
 
 ### 4. Network Tests (`network.spec.ts`)
 **Priority: HIGH** - Network inspection is core functionality
 
-Missing tests:
-- `Page.Events.Request` - fire for navigation, iframes, fetches
-- `Request.frame` - get frame for request
-- `Request.headers` / `Response.headers`
-- `Response.fromCache` / `Response.fromServiceWorker`
-- `Response.text` / `Response.json` / `Response.buffer`
-- `Response.timing` - timing information
-- `Request.isNavigationRequest`
-- `Page.setExtraHTTPHeaders`
-- `Page.authenticate` - HTTP authentication
-- `Response.remoteAddress`
-
-**Ruby status:** network_spec.rb is minimal. Many network tests need porting.
+**Ruby status:** Ported to `spec/integration/network_spec.rb`.
 
 ### 5. Target API (`target.spec.ts`)
 **Priority: MEDIUM** - Target management
@@ -210,8 +191,8 @@ Node.js tests:
 
 ### Phase 1: Core Functionality Gaps (High Priority)
 - [ ] Port `accessibility.spec.ts` tests → Create `accessibility_spec.rb`
-- [ ] Port missing `navigation.spec.ts` tests → Add to `page_spec.rb` or create `navigation_spec.rb`
-- [ ] Port missing `network.spec.ts` tests → Expand `network_spec.rb`
+- [x] Port missing `navigation.spec.ts` tests → Create `navigation_spec.rb`
+- [x] Port missing `network.spec.ts` tests → Expand `network_spec.rb`
 - [ ] Port missing `target.spec.ts` tests → Add to `browser_spec.rb`
 
 ### Phase 2: New APIs (High Priority)
@@ -1078,12 +1059,10 @@ Most OOPIF tests are ported including:
 
 ### Spec Files Status Summary
 
-**Fully Ported (27):**
-aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, mouse, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, worker
+**Fully Ported (33):**
+aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, worker
 
-**Partially Ported (4):**
-- navigation.spec.ts → Some in page_spec.rb
-- network.spec.ts → Minimal coverage
+**Partially Ported (2):**
 - target.spec.ts → Some in browser_spec.rb, launcher_spec.rb
 - waittask.spec.ts → Many Frame.waitForFunction tests missing
 
@@ -1102,9 +1081,7 @@ acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixt
 #### High Priority (Core functionality gaps)
 1. **Accessibility API** - Add `Page#accessibility` and port accessibility.spec.ts
 2. **Locator API** - Implement Locator class and port locator.spec.ts
-3. **network.spec.ts** - Ruby has minimal network tests; many tests need porting
-4. **navigation.spec.ts** - Many edge cases missing
-5. **waittask.spec.ts** - Many `Frame.waitForFunction` tests missing
+3. **waittask.spec.ts** - Many `Frame.waitForFunction` tests missing
 
 #### Medium Priority
 1. **download.spec.ts** - File download handling

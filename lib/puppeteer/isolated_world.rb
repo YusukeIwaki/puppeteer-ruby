@@ -61,6 +61,7 @@ class Puppeteer::IsolaatedWorld
     @bound_functions = {}
     @ctx_bindings = Set.new
     @detached = false
+    @context = nil
 
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
@@ -76,6 +77,7 @@ class Puppeteer::IsolaatedWorld
   def context=(context)
     if context
       @ctx_bindings.clear
+      @context = context
       unless @context_promise.resolved?
         @context_promise.resolve(context)
       end
@@ -85,8 +87,16 @@ class Puppeteer::IsolaatedWorld
     end
   end
 
-  def delete_context(execution_context_id)
+  def delete_context(context_or_id)
     @document = nil
+    if context_or_id
+      if context_or_id.is_a?(Puppeteer::ExecutionContext)
+        return unless @context.equal?(context_or_id)
+      elsif @context && @context.respond_to?(:_context_id, true)
+        return unless @context.send(:_context_id).to_s == context_or_id.to_s
+      end
+    end
+    @context = nil
     @context_promise = Async::Promise.new
   end
 
@@ -106,21 +116,41 @@ class Puppeteer::IsolaatedWorld
     if @detached
       raise DetachedError.new("Execution Context is not available in detached frame \"#{@frame.url}\" (are you trying to evaluate?)")
     end
-    @context_promise.wait
+    return @context if @context
+
+    @context = @context_promise.wait
   end
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<!Puppeteer.JSHandle>}
   def evaluate_handle(page_function, *args)
-    execution_context.evaluate_handle(page_function, *args)
+    evaluate_with_retry(:evaluate_handle, page_function, *args)
   end
 
   # @param {Function|string} pageFunction
   # @param {!Array<*>} args
   # @return {!Promise<*>}
   def evaluate(page_function, *args)
-    execution_context.evaluate(page_function, *args)
+    evaluate_with_retry(:evaluate, page_function, *args)
+  end
+
+  private def evaluate_with_retry(method_name, page_function, *args)
+    execution_context.public_send(method_name, page_function, *args)
+  rescue => err
+    raise unless context_destroyed_error?(err)
+
+    delete_context(@context)
+    execution_context.public_send(method_name, page_function, *args)
+  end
+
+  private def context_destroyed_error?(err)
+    return false unless err.is_a?(Puppeteer::Connection::ProtocolError)
+
+    message = err.message
+    message.include?('Cannot find context with specified id') ||
+      message.include?('Execution context was destroyed') ||
+      message.include?('Inspected target navigated or closed')
   end
 
   # `$()` in JavaScript.

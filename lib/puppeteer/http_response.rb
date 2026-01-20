@@ -1,3 +1,6 @@
+# rbs_inline: enabled
+
+require 'base64'
 require 'json'
 
 class Puppeteer::HTTPResponse
@@ -18,6 +21,10 @@ class Puppeteer::HTTPResponse
     def body_loaded_promise
       @response.instance_variable_get(:@body_loaded_promise)
     end
+
+    def update_extra_info(extra_info)
+      @response.send(:apply_extra_info, extra_info)
+    end
   end
 
   class RemoteAddress
@@ -37,6 +44,7 @@ class Puppeteer::HTTPResponse
     @request = request
 
     @body_loaded_promise = Async::Promise.new
+    @extra_info_applied = !extra_info.nil?
     @remote_address = RemoteAddress.new(
       ip: response_payload['remoteIPAddress'],
       port: response_payload['remotePort'],
@@ -53,16 +61,19 @@ class Puppeteer::HTTPResponse
     headers.each do |key, value|
       @headers[key.downcase] = value
     end
+    header_status_text = @headers['status-text']
+    @status_text = header_status_text if header_status_text
     @security_details = if_present(response_payload['securityDetails']) do |security_payload|
       SecurityDetails.new(security_payload)
     end
+    @timing = response_payload['timing']
 
     @internal = InternalAccessor.new(self)
   end
 
   attr_reader :internal
 
-  attr_reader :remote_address, :url, :status, :status_text, :headers, :security_details, :request
+  attr_reader :remote_address, :url, :status, :status_text, :headers, :security_details, :request, :timing
 
   def inspect
     values = %i[remote_address url status status_text headers security_details request].map do |sym|
@@ -83,11 +94,28 @@ class Puppeteer::HTTPResponse
     nil
   end
 
+  private def apply_extra_info(extra_info)
+    return if extra_info.nil? || @extra_info_applied
+
+    @extra_info_applied = true
+    @status = extra_info['statusCode'] || @status
+    extra_headers = extra_info['headers'] || {}
+    extra_headers.each do |key, value|
+      @headers[key.downcase] = value
+    end
+    if (status_text = parse_status_text_from_extra_info(extra_info))
+      @status_text = status_text
+    end
+    header_status_text = @headers['status-text']
+    @status_text = header_status_text if header_status_text
+  end
+
   # @return [Boolean]
   def ok?
     @status == 0 || (@status >= 200 && @status <= 299)
   end
 
+  # @rbs return: String -- Response body as binary string
   def buffer
     @body_loaded_promise.wait
     response = @request.client.send_message('Network.getResponseBody', requestId: @request.internal.request_id)
@@ -96,26 +124,38 @@ class Puppeteer::HTTPResponse
     else
       response['body']
     end
+  rescue Puppeteer::Connection::ProtocolError => err
+    if err.message.include?('No resource with given identifier found')
+      raise Puppeteer::Error.new(
+        'Could not load response body for this request. This might happen if the request is a preflight request.',
+      )
+    end
+    raise
   end
 
   # @param text [String]
+  # @rbs return: String -- Response body as text
   def text
     buffer
   end
 
   # @param json [Hash]
+  # @rbs return: Hash -- Parsed JSON
   def json
     JSON.parse(text)
   end
 
+  # @rbs return: bool -- Whether response was served from cache
   def from_cache?
     @from_disk_cache || @request.internal.from_memory_cache?
   end
 
+  # @rbs return: bool -- Whether response was served from service worker
   def from_service_worker?
     @from_service_worker
   end
 
+  # @rbs return: Puppeteer::Frame -- Frame associated with the request
   def frame
     @request.frame
   end
