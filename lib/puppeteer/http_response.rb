@@ -140,7 +140,7 @@ class Puppeteer::HTTPResponse
   end
 
   # @param json [Hash]
-  # @rbs return: Hash -- Parsed JSON
+  # @rbs return: Hash[untyped, untyped] -- Parsed JSON
   def json
     JSON.parse(text)
   end
