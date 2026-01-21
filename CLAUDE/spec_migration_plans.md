@@ -101,7 +101,7 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 | requestinterception-experimental.spec.ts | request_interception_experimental_spec.rb | [x] Ported |
 | screenshot.spec.ts | screenshot_spec.rb | [x] Ported |
 | stacktrace.spec.ts | - | Low priority (debugging feature) |
-| target.spec.ts | (in browser_spec.rb, launcher_spec.rb) | [PARTIAL] Some tests ported |
+| target.spec.ts | target_spec.rb | [PARTIAL] AbortSignal not supported |
 | touchscreen.spec.ts | touchscreen_spec.rb | [x] Ported |
 | tracing.spec.ts | tracing_spec.rb | [x] Ported |
 | waittask.spec.ts | wait_task_spec.rb | [x] Ported |
@@ -153,14 +153,9 @@ Node.js tests include:
 **Priority: MEDIUM** - Target management
 
 Missing tests:
-- `Browser.targets` - return all targets
-- `Browser.pages` - return all pages
-- `Target` events (created, destroyed, changed)
-- Service worker targets
-- Shared worker targets
 - `Browser.waitForTarget` with abort
 
-**Ruby status:** Some tests in browser_spec.rb and launcher_spec.rb, but target.spec.ts has more comprehensive coverage.
+**Ruby status:** Ported to `spec/integration/target_spec.rb`, with AbortSignal test skipped.
 
 ---
 
@@ -193,7 +188,7 @@ Node.js tests:
 - [ ] Port `accessibility.spec.ts` tests → Create `accessibility_spec.rb`
 - [x] Port missing `navigation.spec.ts` tests → Create `navigation_spec.rb`
 - [x] Port missing `network.spec.ts` tests → Expand `network_spec.rb`
-- [ ] Port missing `target.spec.ts` tests → Add to `browser_spec.rb`
+- [x] Port missing `target.spec.ts` tests → Create `target_spec.rb` (AbortSignal pending)
 
 ### Phase 2: New APIs (High Priority)
 - [ ] Implement Locator API and port `locator.spec.ts` tests
@@ -997,7 +992,7 @@ Most OOPIF tests are ported including:
 | Category | Count |
 |----------|-------|
 | Node.js spec files | 47 |
-| Ruby spec files | 41 |
+| Ruby spec files | 42 |
 | Fully ported spec files | 35 |
 | Partially ported spec files | 1 |
 | Missing spec files (important) | 4 |
@@ -1009,7 +1004,7 @@ Most OOPIF tests are ported including:
 aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, download, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, waittask, worker
 
 **Partially Ported (1):**
-- target.spec.ts → Some in browser_spec.rb, launcher_spec.rb
+- target.spec.ts → target_spec.rb (AbortSignal unsupported)
 
 **Missing - High Priority (4):**
 1. **accessibility.spec.ts** - Accessibility API not implemented
@@ -1028,7 +1023,7 @@ acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixt
 
 #### Medium Priority
 1. **proxy.spec.ts** - Proxy configuration support
-2. **target.spec.ts** - Complete target management tests
+2. **target.spec.ts** - AbortSignal support for waitForTarget
 3. **oopif.spec.ts** - Several advanced OOPIF tests missing
 
 #### Low Priority (Feature-specific)

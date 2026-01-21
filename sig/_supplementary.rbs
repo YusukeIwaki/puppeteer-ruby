@@ -214,6 +214,7 @@ class Puppeteer::Target
   def create_cdp_session: () -> Puppeteer::CDPSession
   def target_manager: () -> untyped
   def page: () -> Puppeteer::Page?
+  def worker: () -> Puppeteer::CdpWebWorker?
   def url: () -> String
   def type: () -> String
   def raw_type: () -> String

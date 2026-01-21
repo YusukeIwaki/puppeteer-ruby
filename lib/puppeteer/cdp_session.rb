@@ -10,13 +10,15 @@ class Puppeteer::CDPSession
   # @rbs connection: Puppeteer::Connection -- CDP connection
   # @rbs target_type: String -- Target type
   # @rbs session_id: String -- CDP session id
+  # @rbs parent_session: Puppeteer::CDPSession? -- Parent CDP session
   # @rbs return: void -- No return value
-  def initialize(connection, target_type, session_id)
+  def initialize(connection, target_type, session_id, parent_session: nil)
     @callbacks = {}
     @callbacks_mutex = Mutex.new
     @connection = connection
     @target_type = target_type
     @session_id = session_id
+    @parent_session = parent_session
     @ready_promise = Async::Promise.new
     @target = nil
   end
@@ -27,6 +29,7 @@ class Puppeteer::CDPSession
   end
 
   attr_reader :connection #: Puppeteer::Connection?
+  attr_reader :parent_session #: Puppeteer::CDPSession?
   attr_accessor :target #: Puppeteer::Target?
 
   # @rbs return: void -- Resolve session readiness

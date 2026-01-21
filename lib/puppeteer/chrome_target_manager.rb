@@ -8,6 +8,7 @@ class Puppeteer::ChromeTargetManager
     @attached_targets_by_session_id = {}
     @ignored_targets = Set.new
     @target_ids_for_init = Set.new
+    @service_worker_detach_promises = {}
 
     @connection = connection
     @target_filter_callback = target_filter_callback
@@ -74,6 +75,14 @@ class Puppeteer::ChromeTargetManager
 
   def available_targets
     @attached_targets_by_target_id
+  end
+
+  def wait_for_service_worker_detach(target_id)
+    promise = @service_worker_detach_promises[target_id]
+    return unless promise
+    promise.wait
+  ensure
+    @service_worker_detach_promises.delete(target_id)
   end
 
   def add_target_interceptor(client, interceptor)
@@ -169,7 +178,7 @@ class Puppeteer::ChromeTargetManager
       raise SessionNotCreatedError.new("Session #{session_id} was not created.")
     end
 
-    silent_detach = -> {
+    silent_detach = ->(detached_promise = nil) {
       Async do
         begin
           Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
@@ -185,6 +194,10 @@ class Puppeteer::ChromeTargetManager
           }))
         rescue => err
           Logger.new($stderr).warn(err)
+        ensure
+          if detached_promise && !detached_promise.resolved?
+            detached_promise.resolve(true)
+          end
         end
       end
     }
@@ -200,12 +213,13 @@ class Puppeteer::ChromeTargetManager
     # CDP.
     if target_info.type == 'service_worker' && @connection.auto_attached?(target_info.target_id)
       finish_initialization_if_ready(target_info.target_id)
-      silent_detach.call
-      if parent_session.is_a?(Puppeteer::CDPSession)
-        target = @target_factory.call(target_info, parent_session)
-        @attached_targets_by_target_id[target_info.target_id] = target
-        emit_event(TargetManagerEmittedEvents::TargetAvailable, target)
-      end
+      @service_worker_detach_promises[target_info.target_id] ||= Async::Promise.new
+      silent_detach.call(@service_worker_detach_promises[target_info.target_id])
+      return if @attached_targets_by_target_id.has_key?(target_info.target_id)
+
+      target = @target_factory.call(target_info, nil)
+      @attached_targets_by_target_id[target_info.target_id] = target
+      emit_event(TargetManagerEmittedEvents::TargetAvailable, target)
 
       return
     end
