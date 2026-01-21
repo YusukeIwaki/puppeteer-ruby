@@ -46,6 +46,25 @@ end
 class Puppeteer::TimeoutError < Puppeteer::Error
 end
 
+class Puppeteer::AbortError < Puppeteer::Error
+end
+
+class Puppeteer::AbortSignal
+  def initialize: () -> void
+  def aborted?: () -> bool
+  def reason: () -> (Puppeteer::Error | nil)
+  def throw_if_aborted: () -> void
+  def add_event_listener: (String event_name) { (untyped) -> untyped } -> Integer?
+  def remove_event_listener: (Integer listener_id) -> void
+  def abort: (?Puppeteer::Error reason) -> void
+end
+
+class Puppeteer::AbortController
+  def initialize: () -> void
+  def abort: (?Puppeteer::Error reason) -> void
+  attr_reader signal: Puppeteer::AbortSignal
+end
+
 class Puppeteer::JSHandle
   def async_dispose_symbol: () -> untyped
 end
@@ -133,6 +152,7 @@ class Puppeteer::BrowserContext
   def set_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
   def delete_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
   def delete_matching_cookies: (*Hash[Symbol | String, untyped] filters) -> void
+  def set_download_behavior: (Hash[Symbol | String, untyped] download_behavior) -> void
 
   private
   def normalize_cookie_hash: (Hash[Symbol | String, untyped] cookie) -> Hash[String, untyped]
@@ -265,7 +285,7 @@ class Puppeteer::Connection
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
-  def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay) -> void
+  def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
   def closed?: () -> bool
   def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
   def session: (String session_id) -> Puppeteer::CDPSession?
@@ -295,7 +315,7 @@ class Puppeteer::BrowserRunner
   def start: (?executable_path: String?, ?ignore_default_args: Array[String]?, ?handle_SIGINT: bool?, ?handle_SIGTERM: bool?, ?handle_SIGHUP: bool?, ?timeout: Integer?, ?dumpio: bool?, ?env: Hash[String, String]?, ?pipe: bool?) -> void
   def close: () -> void
   def kill: () -> void
-  def setup_connection: (use_pipe: bool, timeout: Integer?, slow_mo: Integer?, preferred_revision: String?) -> Puppeteer::Connection
+  def setup_connection: (use_pipe: bool, timeout: Integer?, slow_mo: Integer?, preferred_revision: String?, ?protocol_timeout: Numeric?) -> Puppeteer::Connection
 
   private
 

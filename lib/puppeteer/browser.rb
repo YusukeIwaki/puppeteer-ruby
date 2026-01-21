@@ -172,7 +172,7 @@ class Puppeteer::Browser
 
   # @rbs proxy_server: String? -- Proxy server for new context
   # @rbs proxy_bypass_list: Array[String]? -- Proxy bypass list
-  # @rbs download_behavior: Hash? -- Download behavior options
+  # @rbs download_behavior: Hash[Symbol | String, untyped]? -- Download behavior options
   # @rbs return: Puppeteer::BrowserContext -- New browser context
   def create_browser_context(proxy_server: nil, proxy_bypass_list: nil, download_behavior: nil)
     params = {

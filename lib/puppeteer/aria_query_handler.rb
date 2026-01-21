@@ -48,7 +48,7 @@ class Puppeteer::AriaQueryHandler
     end
   end
 
-  def wait_for(element_or_frame, selector, visible: nil, hidden: nil, timeout: nil)
+  def wait_for(element_or_frame, selector, visible: nil, hidden: nil, timeout: nil, polling: nil, signal: nil)
     case element_or_frame
     when Puppeteer::Frame
       frame = element_or_frame
@@ -80,6 +80,8 @@ class Puppeteer::AriaQueryHandler
       visible: visible,
       hidden: hidden,
       timeout: timeout,
+      polling: polling,
+      signal: signal,
       binding_function: binding_function,
     )
 
