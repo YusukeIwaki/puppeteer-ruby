@@ -109,6 +109,10 @@ class Puppeteer::IsolaatedWorld
     @task_manager.terminate_all(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
   end
 
+  def detached?
+    @detached
+  end
+
   class DetachedError < Puppeteer::Error; end
 
   # @return {!Promise<!Puppeteer.ExecutionContext>}
@@ -500,18 +504,16 @@ class Puppeteer::IsolaatedWorld
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  private def wait_for_selector_in_page(query_one, root, selector, visible: nil, hidden: nil, timeout: nil, binding_function: nil)
+  private def wait_for_selector_in_page(query_one, root, selector, visible: nil, hidden: nil, timeout: nil, polling: nil, binding_function: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
-    option_timeout = timeout || @timeout_settings.timeout
+    option_timeout = timeout.nil? ? @timeout_settings.timeout : timeout
     option_root = root
 
-    polling =
-      if option_wait_for_visible || option_wait_for_hidden
-        'raf'
-      else
-        'mutation'
-      end
+    option_polling = polling || 'mutation'
+    if option_wait_for_visible || option_wait_for_hidden
+      option_polling = 'raf'
+    end
     title = "selector #{selector}#{option_wait_for_hidden ? 'to be hidden' : ''}"
 
     selector_predicate = make_predicate_string(
@@ -519,7 +521,8 @@ class Puppeteer::IsolaatedWorld
       predicate_query_handler: query_one,
       async: true,
       predicate_body: <<~JAVASCRIPT,
-        const node = await predicateQueryHandler(root, selector)
+        const resolvedRoot = root || document;
+        const node = await predicateQueryHandler(resolvedRoot, selector)
         return checkWaitForOptions(node, waitForVisible, waitForHidden);
       JAVASCRIPT
     )
@@ -528,10 +531,10 @@ class Puppeteer::IsolaatedWorld
       dom_world: self,
       predicate_body: selector_predicate,
       title: title,
-      polling: polling,
+      polling: option_polling,
       timeout: option_timeout,
-      args: [selector, option_wait_for_visible, option_wait_for_hidden],
       root: option_root,
+      args: [option_root, selector, option_wait_for_visible, option_wait_for_hidden],
       binding_function: binding_function,
     )
     wait_task.await_promise
@@ -544,7 +547,7 @@ class Puppeteer::IsolaatedWorld
   # @return [Puppeteer::JSHandle]
   def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
     option_polling = polling || 'raf'
-    option_timeout = timeout || @timeout_settings.timeout
+    option_timeout = timeout.nil? ? @timeout_settings.timeout : timeout
 
     Puppeteer::WaitTask.new(
       dom_world: self,

@@ -44,6 +44,65 @@ class Puppeteer::QueryHandlerManager
     )
   end
 
+  private def p_query_handler
+    @p_query_handler ||= Puppeteer::CustomQueryHandler.new(
+      query_one: <<~JAVASCRIPT,
+      (element, selector) => {
+        const parts = selector.split('>>>').map((part) => part.trim()).filter(Boolean);
+        let roots = [element];
+        if (parts.length === 0) return null;
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          const next = [];
+          for (const root of roots) {
+            const scope = root;
+            const elements = scope.querySelectorAll(part);
+            for (const node of elements) {
+              if (i === parts.length - 1) {
+                next.push(node);
+              } else if (node.shadowRoot) {
+                next.push(node.shadowRoot);
+              }
+            }
+          }
+          if (i === parts.length - 1) {
+            return next[0] || null;
+          }
+          roots = next;
+        }
+        return null;
+      }
+      JAVASCRIPT
+      query_all: <<~JAVASCRIPT,
+      (element, selector) => {
+        const parts = selector.split('>>>').map((part) => part.trim()).filter(Boolean);
+        let roots = [element];
+        if (parts.length === 0) return [];
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          const next = [];
+          for (const root of roots) {
+            const scope = root;
+            const elements = scope.querySelectorAll(part);
+            for (const node of elements) {
+              if (i === parts.length - 1) {
+                next.push(node);
+              } else if (node.shadowRoot) {
+                next.push(node.shadowRoot);
+              }
+            }
+          }
+          if (i === parts.length - 1) {
+            return next;
+          }
+          roots = next;
+        }
+        return [];
+      }
+      JAVASCRIPT
+    )
+  end
+
   private def xpath_handler
     @xpath_handler ||= Puppeteer::CustomQueryHandler.new(
       query_one: <<~JAVASCRIPT,
@@ -229,9 +288,10 @@ class Puppeteer::QueryHandlerManager
   end
 
   class Result
-    def initialize(query_handler:, selector:)
+    def initialize(query_handler:, selector:, polling:)
       @query_handler = query_handler
       @selector = selector
+      @polling = polling
     end
 
     def query_one(element_handle)
@@ -239,7 +299,14 @@ class Puppeteer::QueryHandlerManager
     end
 
     def wait_for(element_or_frame, visible:, hidden:, timeout:)
-      @query_handler.wait_for(element_or_frame, @selector, visible: visible, hidden: hidden, timeout: timeout)
+      @query_handler.wait_for(
+        element_or_frame,
+        @selector,
+        visible: visible,
+        hidden: hidden,
+        timeout: timeout,
+        polling: @polling,
+      )
     end
 
     def query_all(element_handle)
@@ -252,26 +319,29 @@ class Puppeteer::QueryHandlerManager
   end
 
   def detect_query_handler(selector)
-    unless /^[a-zA-Z]+\// =~ selector
-      return Result.new(
-        query_handler: default_handler,
-        selector: selector,
-      )
-    end
+    query_handler = nil
+    updated_selector = selector
+    polling = selector.include?(':') ? 'raf' : 'mutation'
 
-    chunk = selector.split("/")
-    name = chunk.shift
-    updated_selector = chunk.join("/")
-
-    query_handler = query_handlers[name.to_sym]
-
-    unless query_handler
-      raise ArgumentError.new("Query set to use \"#{name}\", but no query handler of that name was found")
+    if (match = selector.match(/^([a-zA-Z][\w-]*)([=\/])(.*)$/))
+      name = match[1]
+      updated_selector = match[3]
+      query_handler = query_handlers[name.to_sym]
+      unless query_handler
+        raise ArgumentError.new("Query set to use \"#{name}\", but no query handler of that name was found")
+      end
+      polling = name == 'aria' ? 'raf' : 'mutation'
+    elsif selector.include?('>>>')
+      query_handler = p_query_handler
+      polling = 'raf'
+    else
+      query_handler = default_handler
     end
 
     Result.new(
       query_handler: query_handler,
       selector: updated_selector,
+      polling: polling,
     )
   end
 end

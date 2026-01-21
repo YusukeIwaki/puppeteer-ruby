@@ -39,6 +39,8 @@ class Puppeteer::WebSocketTransport
         @connect_promise.resolve(true) unless @connect_promise.resolved?
         receive_loop(connection)
       end
+    rescue Async::Stop
+      # Task was stopped; ignore.
     rescue => err
       @connect_promise.reject(err) unless @connect_promise.resolved?
       close
@@ -66,9 +68,17 @@ class Puppeteer::WebSocketTransport
     return if @closed
 
     @closed = true
-    @connection&.close
+    begin
+      @connection&.close
+    rescue Async::Stop
+      # Connection already closing; ignore.
+    end
     @on_close&.call(nil, nil)
-    @task&.stop
+    begin
+      @task&.stop
+    rescue Async::Stop
+      # Task was already stopping; ignore.
+    end
   rescue IOError, Errno::ECONNRESET, Errno::EPIPE
     @on_close&.call(nil, nil)
   end
@@ -95,6 +105,8 @@ class Puppeteer::WebSocketTransport
 
       @on_message&.call(message.to_str)
     end
+  rescue Async::Stop
+    # Task stopped; no-op.
   rescue IOError, Errno::ECONNRESET, Errno::EPIPE
     # Connection closed; no-op.
   ensure

@@ -156,13 +156,18 @@ class Puppeteer::BrowserRunner
   end
 
 
-  # @param {!({usePipe?: boolean, timeout: number, slowMo: number, preferredRevision: string})} options
+  # @param {!({usePipe?: boolean, timeout: number, slowMo: number, preferredRevision: string, protocolTimeout: number?})} options
   # @return {!Promise<!Connection>}
-  def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:)
+  def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:, protocol_timeout: nil)
     if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
       transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
-      @connection = Puppeteer::Connection.new(browser_ws_endpoint, transport, slow_mo)
+      @connection = Puppeteer::Connection.new(
+        browser_ws_endpoint,
+        transport,
+        slow_mo,
+        protocol_timeout: protocol_timeout,
+      )
     else
       raise NotImplementedError.new('PipeTransport is not yet implemented')
     end

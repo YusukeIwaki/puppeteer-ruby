@@ -32,6 +32,7 @@ module Puppeteer::Launcher
       @default_viewport = options.key?(:default_viewport) ? options[:default_viewport] : Puppeteer::Viewport.new(width: 800, height: 600)
       @slow_mo = options[:slow_mo] || 0
       @network_enabled = options.fetch(:network_enabled, true)
+      @protocol_timeout = options[:protocol_timeout]
 
       # only for Puppeteer.connect
       @target_filter = options[:target_filter]
@@ -45,7 +46,7 @@ module Puppeteer::Launcher
       end
     end
 
-    attr_reader :default_viewport, :slow_mo, :target_filter, :is_page_target, :network_enabled
+    attr_reader :default_viewport, :slow_mo, :target_filter, :is_page_target, :network_enabled, :protocol_timeout
 
     def ignore_https_errors?
       @ignore_https_errors

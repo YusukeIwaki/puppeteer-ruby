@@ -36,12 +36,13 @@ class Puppeteer::Connection
     attr_reader :method
   end
 
-  def initialize(url, transport, delay = 0)
+  def initialize(url, transport, delay = 0, protocol_timeout: nil)
     @url = url
     @last_id = 0
     @callbacks = {}
     @callbacks_mutex = Mutex.new
     @delay = delay
+    @protocol_timeout = protocol_timeout
 
     @transport = transport
     @transport.on_message do |data|
@@ -62,6 +63,8 @@ class Puppeteer::Connection
     @closed = false
     @manually_attached = Set.new
   end
+
+  attr_reader :protocol_timeout
 
   # used only in Browser#connected?
   def closed?
@@ -126,7 +129,15 @@ class Puppeteer::Connection
   # @param {string} method
   # @param {!Object=} params
   def send_message(method, params = {})
-    async_send_message(method, params).wait
+    if @protocol_timeout && @protocol_timeout > 0
+      begin
+        Puppeteer::AsyncUtils.async_timeout(@protocol_timeout, async_send_message(method, params)).wait
+      rescue Async::TimeoutError
+        raise ProtocolError.new(method: method, error_message: "Timeout #{@protocol_timeout}ms exceeded")
+      end
+    else
+      async_send_message(method, params).wait
+    end
   end
 
   def async_send_message(method, params = {})

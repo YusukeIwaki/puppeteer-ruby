@@ -65,7 +65,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
   # @rbs return: Puppeteer::ElementHandle? -- Matched element handle
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
+    query_handler_manager.detect_query_handler(selector).wait_for(
+      self,
+      visible: visible,
+      hidden: hidden,
+      timeout: timeout,
+    )
   end
 
   define_async_method :async_wait_for_selector

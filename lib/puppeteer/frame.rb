@@ -320,7 +320,12 @@ class Puppeteer::Frame
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
   def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     query_handler_manager = Puppeteer::QueryHandlerManager.instance
-    query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
+    query_handler_manager.detect_query_handler(selector).wait_for(
+      self,
+      visible: visible,
+      hidden: hidden,
+      timeout: timeout,
+    )
   end
 
   define_async_method :async_wait_for_selector
