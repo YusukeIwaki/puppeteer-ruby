@@ -178,7 +178,7 @@ class Puppeteer::ChromeTargetManager
       raise SessionNotCreatedError.new("Session #{session_id} was not created.")
     end
 
-    silent_detach = ->(detached_promise: nil) {
+    silent_detach = ->(detached_promise = nil) {
       Async do
         begin
           Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
@@ -214,7 +214,7 @@ class Puppeteer::ChromeTargetManager
     if target_info.type == 'service_worker' && @connection.auto_attached?(target_info.target_id)
       finish_initialization_if_ready(target_info.target_id)
       @service_worker_detach_promises[target_info.target_id] ||= Async::Promise.new
-      silent_detach.call(detached_promise: @service_worker_detach_promises[target_info.target_id])
+      silent_detach.call(@service_worker_detach_promises[target_info.target_id])
       return if @attached_targets_by_target_id.has_key?(target_info.target_id)
 
       target = @target_factory.call(target_info, nil)
