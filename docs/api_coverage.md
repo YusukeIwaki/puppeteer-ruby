@@ -425,7 +425,7 @@
 * page
 * type
 * url
-* ~~worker~~
+* worker
 
 ## TimeoutError
 

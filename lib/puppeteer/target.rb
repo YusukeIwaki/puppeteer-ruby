@@ -38,6 +38,7 @@ class Puppeteer::Target
     @default_viewport = default_viewport
     @network_enabled = network_enabled
     @is_page_target_callback = is_page_target_callback
+    @worker = nil
 
     #    /** @type {?Promise<!Puppeteer.Page>} */
     #    this._pagePromise = null;
@@ -117,7 +118,9 @@ class Puppeteer::Target
   end
 
   def create_cdp_session
-    @session_factory.call(false)
+    session = @session_factory.call(false)
+    session.target = self if session.respond_to?(:target=)
+    session
   end
 
   def target_manager
@@ -139,29 +142,42 @@ class Puppeteer::Target
     @page
   end
 
-  #  /**
-  #   * @return {!Promise<?Worker>}
-  #   */
-  #  async worker() {
-  #    if (this._targetInfo.type !== 'service_worker' && this._targetInfo.type !== 'shared_worker')
-  #      return null;
-  #    if (!this._workerPromise) {
-  #      // TODO(einbinder): Make workers send their console logs.
-  #      this._workerPromise = this._sessionFactory()
-  #          .then(client => new Worker(client, this._targetInfo.url, () => {} /* consoleAPICalled */, () => {} /* exceptionThrown */));
-  #    }
-  #    return this._workerPromise;
-  #  }
+  # @return [Puppeteer::CdpWebWorker|nil]
+  def worker
+    return nil unless ['service_worker', 'shared_worker'].include?(@target_info.type)
+    return @worker if @worker
+
+    if @target_info.type == 'service_worker'
+      @target_manager&.wait_for_service_worker_detach(@target_id)
+    end
+
+    client =
+      if @target_info.type == 'service_worker'
+        @session_factory.call(false)
+      else
+        @session || @session_factory.call(false)
+      end
+    client.target = self if client.respond_to?(:target=)
+    client.wait_for_ready if client.respond_to?(:wait_for_ready)
+    @worker = Puppeteer::CdpWebWorker.new(
+      client,
+      @target_info.url,
+      @target_id,
+      @target_info.type,
+      nil,
+      nil,
+    )
+  end
 
   # @return {string}
   def url
     @target_info.url
   end
 
-  # @return {"page"|"background_page"|"service_worker"|"shared_worker"|"other"|"browser"}
+  # @return {"page"|"background_page"|"service_worker"|"shared_worker"|"webview"|"tab"|"other"|"browser"}
   def type
     type = @target_info.type
-    if ['page', 'background_page', 'service_worker', 'shared_worker', 'browser'].include?(type)
+    if ['page', 'background_page', 'service_worker', 'shared_worker', 'webview', 'tab', 'browser'].include?(type)
       type
     else
       'other'

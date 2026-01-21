@@ -40,6 +40,7 @@ class Puppeteer::Page
     @closed = false
     @client = client
     @target = target
+    @tab_id = nil
     @keyboard = Puppeteer::Keyboard.new(client)
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
@@ -327,6 +328,14 @@ class Puppeteer::Page
   end
 
   attr_reader :javascript_enabled, :service_worker_bypassed, :target, :client
+
+  # @rbs return: String -- Tab target id
+  def _tab_id
+    return @tab_id if @tab_id
+
+    parent_session = @client.respond_to?(:parent_session) ? @client.parent_session : nil
+    @tab_id = parent_session&.target&.target_id || @target.target_id
+  end
 
   # @rbs other: Object -- Other object to compare
   # @rbs return: bool -- Equality result

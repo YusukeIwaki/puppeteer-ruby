@@ -255,13 +255,19 @@ class Puppeteer::Connection
     case message['method']
     when 'Target.attachedToTarget'
       session_id = message['params']['sessionId']
-      session = Puppeteer::CDPSession.new(self, message['params']['targetInfo']['type'], session_id)
+      parent_session =
+        if message['sessionId']
+          @sessions_mutex.synchronize { @sessions[message['sessionId']] }
+        end
+      session = Puppeteer::CDPSession.new(
+        self,
+        message['params']['targetInfo']['type'],
+        session_id,
+        parent_session: parent_session,
+      )
       @sessions_mutex.synchronize { @sessions[session_id] = session }
       emit_event('sessionattached', session)
-      if message['sessionId']
-        parent_session = @sessions_mutex.synchronize { @sessions[message['sessionId']] }
-        parent_session&.emit_event('sessionattached', session)
-      end
+      parent_session&.emit_event('sessionattached', session)
     when 'Target.detachedFromTarget'
       session_id = message['params']['sessionId']
       session = @sessions_mutex.synchronize { @sessions[session_id] }
