@@ -15,7 +15,7 @@ class Puppeteer::WaitTask
         raise ArgumentError.new("Unknown polling option: #{polling}")
       end
     elsif polling.is_a?(Numeric)
-      unless polling.positive?
+      if polling < 0
         raise ArgumentError.new("Cannot poll with non-positive interval: #{polling}")
       end
     else
@@ -36,6 +36,7 @@ class Puppeteer::WaitTask
       @dom_world.send(:_bound_functions)[binding_function.name] = binding_function
     end
     @promise = Async::Promise.new
+    @poller_handle = nil
     @generic_error = Puppeteer::Error.new('Waiting failed')
 
     # Since page navigation requires us to re-install the pageScript, we should track
@@ -68,11 +69,13 @@ class Puppeteer::WaitTask
     @promise.wait
   end
 
-  def terminate(error)
+  def terminate(error = nil)
     return if @terminated
 
     @terminated = true
-    @promise.reject(error) unless @promise.resolved?
+    if error && !@promise.resolved?
+      @promise.reject(error)
+    end
     cleanup
   end
 
@@ -83,6 +86,7 @@ class Puppeteer::WaitTask
     error = nil
 
     return if @terminated || run_count != @run_count
+    reset_poller
     begin
       context = @dom_world.execution_context
       if @binding_function
@@ -90,55 +94,32 @@ class Puppeteer::WaitTask
       end
       return if @terminated || run_count != @run_count
 
-      success = context.evaluate_handle(
+      @poller_handle = context.evaluate_handle(
         WAIT_FOR_PREDICATE_PAGE_FUNCTION,
         @root,
         @predicate_body,
         @polling,
         *@args,
       )
+      success = @poller_handle.evaluate_handle('poller => poller.result()')
     rescue => err
       error = err
     end
 
-    if @terminated || run_count != @run_count
-      if success
-        success.dispose
-      end
-      return
-    end
-
-    # Ignore timeouts in pageScript - we track timeouts ourselves.
-    # If the frame's execution context has already changed, `frame.evaluate` will
-    # throw an error - ignore this predicate run altogether.
-    if !error && (@dom_world.evaluate("s => !s", success) rescue true)
-      success.dispose
-      return
-    end
-
-    # When the page is navigated, the promise is rejected.
-    # We will try again in the new execution context.
-    if error && error.message.include?('Execution context was destroyed')
-      return
-    end
-
-    # We could have tried to evaluate in a context which was already
-    # destroyed.
-    if error && error.message.include?('Cannot find context with specified id')
-      return
-    end
+    return if @terminated || run_count != @run_count
 
     if error
       bad_error = get_bad_error(error)
       if bad_error
         @generic_error.cause = bad_error
-        @promise.reject(@generic_error)
-        cleanup
+        terminate(@generic_error)
+      else
+        reset_poller
       end
       return
     end
 
-    @promise.resolve(success)
+    @promise.resolve(success) unless @promise.resolved?
     cleanup
   end
 
@@ -150,7 +131,27 @@ class Puppeteer::WaitTask
       # Ignore errors during timeout task cleanup.
     end
     @signal&.remove_event_listener(@signal_listener_id) if @signal_listener_id
+    reset_poller
     @dom_world.task_manager.delete(self)
+  end
+
+  private def reset_poller
+    poller = @poller_handle
+    @poller_handle = nil
+    return unless poller
+
+    return if @dom_world.respond_to?(:detached?) && @dom_world.detached?
+
+    begin
+      poller.evaluate('poller => poller.stop()')
+    rescue StandardError
+      # Ignore errors during poller cleanup.
+    end
+    begin
+      poller.dispose
+    rescue StandardError
+      # Ignore errors during poller cleanup.
+    end
   end
 
   private def build_predicate_body(predicate_body)
@@ -183,62 +184,188 @@ class Puppeteer::WaitTask
   define_async_method :async_rerun
 
   WAIT_FOR_PREDICATE_PAGE_FUNCTION = <<~JAVASCRIPT
-  async function _(root, predicateBody, polling, ...args) {
+  function _(root, predicateBody, polling, ...args) {
       const predicate = new Function('...args', predicateBody);
       const observedRoot = root || document;
       if (polling === 'mutation' && typeof MutationObserver === 'undefined') {
           polling = 'raf';
       }
-      if (polling === 'raf')
-          return await pollRaf();
-      if (polling === 'mutation')
-          return await pollMutation();
-      if (typeof polling === 'number')
-          return await pollInterval(polling);
-      /**
-       * @return {!Promise<*>}
-       */
-      async function pollMutation() {
-          const success = await predicate(...args);
-          if (success) return Promise.resolve(success);
-          let fulfill;
-          const result = new Promise((x) => (fulfill = x));
-          const observer = new MutationObserver(async () => {
-              const success = await predicate(...args);
-              if (success) {
-                  observer.disconnect();
-                  fulfill(success);
+
+      function createDeferred() {
+          let resolve;
+          let reject;
+          let finished = false;
+          const promise = new Promise((res, rej) => {
+              resolve = res;
+              reject = rej;
+          });
+          return {
+              promise,
+              resolve: (value) => {
+                  if (finished) return;
+                  finished = true;
+                  resolve(value);
+              },
+              reject: (error) => {
+                  if (finished) return;
+                  finished = true;
+                  reject(error);
+              },
+              finished: () => finished,
+          };
+      }
+
+      class MutationPoller {
+          constructor(fn, root) {
+              this.fn = fn;
+              this.root = root;
+              this.observer = null;
+              this.deferred = null;
+          }
+          async start() {
+              this.deferred = createDeferred();
+              const result = await this.fn();
+              if (result) {
+                  this.deferred.resolve(result);
+                  return;
               }
-          });
-          observer.observe(observedRoot, {
-              childList: true,
-              subtree: true,
-              attributes: true,
-          });
-          return result;
-      }
-      async function pollRaf() {
-          let fulfill;
-          const result = new Promise((x) => (fulfill = x));
-          await onRaf();
-          return result;
-          async function onRaf() {
-              const success = await predicate(...args);
-              if (success) fulfill(success);
-              else requestAnimationFrame(onRaf);
+              this.observer = new MutationObserver(async () => {
+                  const result = await this.fn();
+                  if (!result) {
+                      return;
+                  }
+                  this.deferred.resolve(result);
+                  await this.stop();
+              });
+              this.observer.observe(this.root, {
+                  childList: true,
+                  subtree: true,
+                  attributes: true,
+              });
+          }
+          async stop() {
+              if (!this.deferred) {
+                  return;
+              }
+              if (!this.deferred.finished()) {
+                  this.deferred.reject(new Error('Polling stopped'));
+              }
+              if (this.observer) {
+                  this.observer.disconnect();
+                  this.observer = null;
+              }
+          }
+          result() {
+              if (!this.deferred) {
+                  return Promise.reject(new Error('Polling never started'));
+              }
+              return this.deferred.promise;
           }
       }
-      async function pollInterval(pollInterval) {
-          let fulfill;
-          const result = new Promise((x) => (fulfill = x));
-          await onTimeout();
-          return result;
-          async function onTimeout() {
-              const success = await predicate(...args);
-              if (success) fulfill(success);
-              else setTimeout(onTimeout, pollInterval);
+
+      class RAFPoller {
+          constructor(fn) {
+              this.fn = fn;
+              this.deferred = null;
+              this.rafId = null;
+          }
+          async start() {
+              this.deferred = createDeferred();
+              const result = await this.fn();
+              if (result) {
+                  this.deferred.resolve(result);
+                  return;
+              }
+              const poll = async () => {
+                  if (!this.deferred || this.deferred.finished()) {
+                      return;
+                  }
+                  const result = await this.fn();
+                  if (result) {
+                      this.deferred.resolve(result);
+                      await this.stop();
+                  } else {
+                      this.rafId = requestAnimationFrame(poll);
+                  }
+              };
+              this.rafId = requestAnimationFrame(poll);
+          }
+          async stop() {
+              if (!this.deferred) {
+                  return;
+              }
+              if (!this.deferred.finished()) {
+                  this.deferred.reject(new Error('Polling stopped'));
+              }
+              if (this.rafId) {
+                  cancelAnimationFrame(this.rafId);
+                  this.rafId = null;
+              }
+          }
+          result() {
+              if (!this.deferred) {
+                  return Promise.reject(new Error('Polling never started'));
+              }
+              return this.deferred.promise;
           }
       }
+
+      class IntervalPoller {
+          constructor(fn, ms) {
+              this.fn = fn;
+              this.ms = ms;
+              this.interval = null;
+              this.deferred = null;
+          }
+          async start() {
+              this.deferred = createDeferred();
+              const result = await this.fn();
+              if (result) {
+                  this.deferred.resolve(result);
+                  return;
+              }
+              this.interval = setInterval(async () => {
+                  const result = await this.fn();
+                  if (!result) {
+                      return;
+                  }
+                  this.deferred.resolve(result);
+                  await this.stop();
+              }, this.ms);
+          }
+          async stop() {
+              if (!this.deferred) {
+                  return;
+              }
+              if (!this.deferred.finished()) {
+                  this.deferred.reject(new Error('Polling stopped'));
+              }
+              if (this.interval) {
+                  clearInterval(this.interval);
+                  this.interval = null;
+              }
+          }
+          result() {
+              if (!this.deferred) {
+                  return Promise.reject(new Error('Polling never started'));
+              }
+              return this.deferred.promise;
+          }
+      }
+
+      const runner = () => predicate(...args);
+      let poller;
+      if (polling === 'raf') {
+          poller = new RAFPoller(runner);
+      } else if (polling === 'mutation') {
+          poller = new MutationPoller(runner, observedRoot);
+      } else if (typeof polling === 'number') {
+          poller = new IntervalPoller(runner, polling);
+      } else {
+          throw new Error('Unknown polling option: ' + polling);
+      }
+      poller.start();
+      return poller;
   }
   JAVASCRIPT
 end

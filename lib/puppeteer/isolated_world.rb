@@ -109,6 +109,10 @@ class Puppeteer::IsolaatedWorld
     @task_manager.terminate_all(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
   end
 
+  def detached?
+    @detached
+  end
+
   class DetachedError < Puppeteer::Error; end
 
   # @return {!Promise<!Puppeteer.ExecutionContext>}
@@ -503,7 +507,7 @@ class Puppeteer::IsolaatedWorld
   private def wait_for_selector_in_page(query_one, root, selector, visible: nil, hidden: nil, timeout: nil, polling: nil, signal: nil, binding_function: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
-    option_timeout = timeout || @timeout_settings.timeout
+    option_timeout = timeout.nil? ? @timeout_settings.timeout : timeout
     option_root = root
 
     option_polling = polling || 'mutation'
@@ -544,7 +548,7 @@ class Puppeteer::IsolaatedWorld
   # @return [Puppeteer::JSHandle]
   def wait_for_function(page_function, args: [], polling: nil, timeout: nil, signal: nil)
     option_polling = polling || 'raf'
-    option_timeout = timeout || @timeout_settings.timeout
+    option_timeout = timeout.nil? ? @timeout_settings.timeout : timeout
 
     Puppeteer::WaitTask.new(
       dom_world: self,

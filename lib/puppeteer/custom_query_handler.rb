@@ -61,16 +61,6 @@ class Puppeteer::CustomQueryHandler
       end
     rescue => err
       raise err if err.is_a?(Puppeteer::AbortError)
-      raise err if err.is_a?(Puppeteer::Connection::ProtocolError)
-      raise err if err.is_a?(Puppeteer::CDPSession::Error)
-      if err.is_a?(Puppeteer::Error)
-        cause = err.cause
-        if cause.is_a?(Puppeteer::Connection::ProtocolError) || cause.is_a?(Puppeteer::CDPSession::Error)
-          raise cause
-        end
-        raise err if err.message.include?('Protocol error')
-        raise cause if cause&.message&.include?('Protocol error')
-      end
 
       wait_for_selector_error =
         if err.is_a?(Puppeteer::TimeoutError)

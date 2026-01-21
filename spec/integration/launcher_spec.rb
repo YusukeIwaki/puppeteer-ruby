@@ -33,7 +33,7 @@ RSpec.describe Puppeteer::Launcher do
         watchdog = page.async_wait_for_selector('div')
         remote.disconnect
 
-        expect { watchdog.wait }.to raise_error(/Protocol error/)
+        expect { watchdog.wait }.to raise_error(/Waiting for selector .* failed/)
       end
     end
   end
@@ -219,7 +219,7 @@ RSpec.describe Puppeteer::Launcher do
 
         page = browser.pages.first
         unless page.url == server_empty_page
-          await page.async_wait_for_navigation
+          page.async_wait_for_navigation.wait
         end
 
         expect(page.url).to eq(server_empty_page)
