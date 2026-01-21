@@ -142,7 +142,11 @@ module Puppeteer
 
       promise = Async::Promise.new
       job = lambda do
-        Async::Promise.fulfill(promise, &block)
+        begin
+          promise.resolve(block.call)
+        rescue => err
+          promise.reject(err)
+        end
       end
 
       begin

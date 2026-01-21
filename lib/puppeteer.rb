@@ -1,4 +1,5 @@
 require "async"
+require 'puppeteer/console_patch'
 
 module Puppeteer; end
 

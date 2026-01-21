@@ -5,7 +5,18 @@ class Puppeteer::Error < StandardError
   attr_writer :cause
 
   def cause
-    @cause || super
+    return nil if @cause.equal?(self)
+
+    stack = Thread.current[:puppeteer_cause_stack] ||= []
+    return nil if stack.include?(object_id)
+
+    stack << object_id
+    begin
+      @cause || super
+    ensure
+      stack.pop
+      Thread.current[:puppeteer_cause_stack] = nil if stack.empty?
+    end
   end
 end
 
