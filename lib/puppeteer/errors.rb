@@ -23,9 +23,3 @@ end
 class Puppeteer::TimeoutError < Puppeteer::Error; end
 
 class Puppeteer::TouchError < Puppeteer::Error; end
-
-class Puppeteer::AbortError < Puppeteer::Error
-  def initialize(message = 'aborted')
-    super(message)
-  end
-end
