@@ -161,6 +161,17 @@ class Puppeteer::BrowserContext
     end
   end
 
+  # @param download_behavior [Hash]
+  def set_download_behavior(download_behavior)
+    behavior = hash_value(download_behavior, 'policy')
+    download_path = hash_value(download_behavior, 'downloadPath', 'download_path')
+    @connection.send_message('Browser.setDownloadBehavior', {
+      behavior: behavior,
+      downloadPath: download_path,
+      browserContextId: @id,
+    }.compact)
+  end
+
   # @return [Future<Puppeteer::Page>]
   def new_page
     guard = wait_for_screenshot_operations

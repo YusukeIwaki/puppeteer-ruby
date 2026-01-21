@@ -317,10 +317,17 @@ class Puppeteer::Frame
   # @rbs visible: bool? -- Wait for element to be visible
   # @rbs hidden: bool? -- Wait for element to be hidden
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
-  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil, signal: nil)
     query_handler_manager = Puppeteer::QueryHandlerManager.instance
-    query_handler_manager.detect_query_handler(selector).wait_for(self, visible: visible, hidden: hidden, timeout: timeout)
+    query_handler_manager.detect_query_handler(selector).wait_for(
+      self,
+      visible: visible,
+      hidden: hidden,
+      timeout: timeout,
+      signal: signal,
+    )
   end
 
   define_async_method :async_wait_for_selector
@@ -335,8 +342,9 @@ class Puppeteer::Frame
   # @rbs visible: bool? -- Wait for element to be visible
   # @rbs hidden: bool? -- Wait for element to be hidden
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
-  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil, signal: nil)
     param_xpath =
       if xpath.start_with?('//')
         ".#{xpath}"
@@ -344,7 +352,7 @@ class Puppeteer::Frame
         xpath
       end
 
-    wait_for_selector("xpath/#{param_xpath}", visible: visible, hidden: hidden, timeout: timeout)
+    wait_for_selector("xpath/#{param_xpath}", visible: visible, hidden: hidden, timeout: timeout, signal: signal)
   end
 
   define_async_method :async_wait_for_xpath
@@ -353,9 +361,10 @@ class Puppeteer::Frame
   # @rbs args: Array[untyped] -- Arguments for evaluation
   # @rbs polling: String | Numeric | nil -- Polling strategy
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::JSHandle -- Handle to evaluation result
-  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
-    @main_world.wait_for_function(page_function, args: args, polling: polling, timeout: timeout)
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil, signal: nil)
+    @main_world.wait_for_function(page_function, args: args, polling: polling, timeout: timeout, signal: signal)
   end
 
   define_async_method :async_wait_for_function

@@ -33,6 +33,7 @@ class Puppeteer::Puppeteer
   # @rbs network_enabled: bool? -- Enable network domain
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
+  # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
   # @rbs wait_for_initial_page: bool? -- Wait for initial page to load
   # @rbs block: Proc? -- Optional block receiving the browser
   # @rbs return: Puppeteer::Browser -- Browser instance
@@ -57,6 +58,7 @@ class Puppeteer::Puppeteer
     network_enabled: true,
     default_viewport: NoViewport.new,
     slow_mo: nil,
+    protocol_timeout: nil,
     wait_for_initial_page: nil,
     &block
   )
@@ -85,6 +87,7 @@ class Puppeteer::Puppeteer
       network_enabled: network_enabled,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
+      protocol_timeout: protocol_timeout,
       wait_for_initial_page: wait_for_initial_page,
     }
     if default_viewport.is_a?(NoViewport)
@@ -132,6 +135,7 @@ class Puppeteer::Puppeteer
   # @rbs network_enabled: bool? -- Enable network domain
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
+  # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
   # @rbs block: Proc? -- Optional block receiving the browser
   # @rbs return: Puppeteer::Browser -- Browser instance
   def connect(
@@ -142,6 +146,7 @@ class Puppeteer::Puppeteer
     network_enabled: true,
     default_viewport: nil,
     slow_mo: nil,
+    protocol_timeout: nil,
     &block
   )
     options = {
@@ -152,6 +157,7 @@ class Puppeteer::Puppeteer
       network_enabled: network_enabled,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
+      protocol_timeout: protocol_timeout,
     }.compact
     if async_context?
       browser = Puppeteer::BrowserConnector.new(options).connect_to_browser

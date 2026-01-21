@@ -77,6 +77,7 @@ module Puppeteer::Launcher
             timeout: @launch_options.timeout,
             slow_mo: @browser_options.slow_mo,
             preferred_revision: @preferred_revision,
+            protocol_timeout: @browser_options.protocol_timeout,
           )
 
           Puppeteer::Browser.create(

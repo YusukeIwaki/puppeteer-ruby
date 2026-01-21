@@ -43,7 +43,19 @@ class Puppeteer::CDPSession
   # @rbs params: Hash[String, untyped] -- CDP parameters
   # @rbs return: Hash[String, untyped] -- CDP response
   def send_message(method, params = {})
-    async_send_message(method, params).wait
+    protocol_timeout = @connection&.protocol_timeout
+    if protocol_timeout && protocol_timeout > 0
+      begin
+        Puppeteer::AsyncUtils.async_timeout(protocol_timeout, async_send_message(method, params)).wait
+      rescue Async::TimeoutError
+        raise Puppeteer::Connection::ProtocolError.new(
+          method: method,
+          error_message: "Timeout #{protocol_timeout}ms exceeded",
+        )
+      end
+    else
+      async_send_message(method, params).wait
+    end
   end
 
   # @rbs method: String -- CDP method name

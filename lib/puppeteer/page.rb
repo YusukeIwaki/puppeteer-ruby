@@ -1605,9 +1605,10 @@ class Puppeteer::Page
   # @rbs visible: bool? -- Wait for element to be visible
   # @rbs hidden: bool? -- Wait for element to be hidden
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
-  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
-    main_frame.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout)
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil, signal: nil)
+    main_frame.wait_for_selector(selector, visible: visible, hidden: hidden, timeout: timeout, signal: signal)
   end
 
   define_async_method :async_wait_for_selector
@@ -1622,9 +1623,10 @@ class Puppeteer::Page
   # @rbs visible: bool? -- Wait for element to be visible
   # @rbs hidden: bool? -- Wait for element to be hidden
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil
-  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
-    main_frame.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout)
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil, signal: nil)
+    main_frame.wait_for_xpath(xpath, visible: visible, hidden: hidden, timeout: timeout, signal: signal)
   end
 
   define_async_method :async_wait_for_xpath
@@ -1633,9 +1635,10 @@ class Puppeteer::Page
   # @rbs args: Array[untyped] -- Arguments for evaluation
   # @rbs polling: String | Numeric | nil -- Polling strategy
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
+  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::JSHandle -- Handle to evaluation result
-  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
-    main_frame.wait_for_function(page_function, args: args, polling: polling, timeout: timeout)
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil, signal: nil)
+    main_frame.wait_for_function(page_function, args: args, polling: polling, timeout: timeout, signal: signal)
   end
 
   define_async_method :async_wait_for_function
