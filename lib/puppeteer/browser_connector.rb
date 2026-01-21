@@ -51,7 +51,12 @@ class Puppeteer::BrowserConnector
   # @return [Puppeteer::Connection]
   private def connect_with_browser_ws_endpoint(browser_ws_endpoint)
     transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
-    Puppeteer::Connection.new(browser_ws_endpoint, transport, @browser_options.slow_mo)
+    Puppeteer::Connection.new(
+      browser_ws_endpoint,
+      transport,
+      @browser_options.slow_mo,
+      protocol_timeout: @browser_options.protocol_timeout,
+    )
   end
 
   # @return [Puppeteer::Connection]
@@ -67,6 +72,11 @@ class Puppeteer::BrowserConnector
 
   # @return [Puppeteer::Connection]
   private def connect_with_transport(transport)
-    Puppeteer::Connection.new('', transport, @browser_options.slow_mo)
+    Puppeteer::Connection.new(
+      '',
+      transport,
+      @browser_options.slow_mo,
+      protocol_timeout: @browser_options.protocol_timeout,
+    )
   end
 end

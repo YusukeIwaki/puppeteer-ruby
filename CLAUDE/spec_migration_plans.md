@@ -74,7 +74,7 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 | defaultbrowsercontext.spec.ts | (in browser_context_spec.rb) | [x] Ported |
 | device-request-prompt.spec.ts | - | **[MISSING]** Not ported |
 | dialog.spec.ts | dialog_spec.rb | [x] Ported |
-| download.spec.ts | - | **[MISSING]** Not ported |
+| download.spec.ts | download_spec.rb | [x] Ported |
 | drag-and-drop.spec.ts | drag_and_drop_spec.rb | [x] Ported |
 | elementhandle.spec.ts | element_handle_spec.rb | [x] Ported |
 | emulation.spec.ts | emulation_spec.rb | [x] Ported |
@@ -104,7 +104,7 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 | target.spec.ts | (in browser_spec.rb, launcher_spec.rb) | [PARTIAL] Some tests ported |
 | touchscreen.spec.ts | touchscreen_spec.rb | [x] Ported |
 | tracing.spec.ts | tracing_spec.rb | [x] Ported |
-| waittask.spec.ts | wait_task_spec.rb | [PARTIAL] Many tests missing |
+| waittask.spec.ts | wait_task_spec.rb | [x] Ported |
 | webExtension.spec.ts | - | Low priority (Chrome extension feature) |
 | webgl.spec.ts | - | Low priority (WebGL-specific) |
 | worker.spec.ts | worker_spec.rb | [x] Ported |
@@ -173,7 +173,7 @@ Node.js tests:
 - `Browser.createBrowserContext > should download to configured location`
 - `Browser.createBrowserContext > should not download to location`
 
-**Ruby status:** Not implemented.
+**Ruby status:** Ported (see `spec/integration/download_spec.rb`).
 
 ### 7. Proxy Support (`proxy.spec.ts`)
 **Priority: MEDIUM** - Proxy configuration
@@ -199,9 +199,9 @@ Node.js tests:
 - [ ] Implement Locator API and port `locator.spec.ts` tests
 
 ### Phase 3: Medium Priority
-- [ ] Port `download.spec.ts` tests
+- [x] Port `download.spec.ts` tests
 - [ ] Port `proxy.spec.ts` tests
-- [ ] Port missing `waittask.spec.ts` tests (especially `Frame.waitForFunction`)
+- [x] Port missing `waittask.spec.ts` tests (especially `Frame.waitForFunction`)
 
 ### Phase 4: Clean Up
 - [ ] Move Ruby-only tests to `_ext_spec.rb` files
@@ -819,64 +819,10 @@ The Ruby spec has extensive request interception tests including:
 ## 19. waittask.spec.ts vs wait_task_spec.rb
 
 ### Ported Tests
-| Node.js Test | Ruby Test | Status |
-|--------------|-----------|--------|
-| Page.waitFor > should wait for selector | should wait for selector | [PORTED] |
-| Page.waitFor > should wait for an xpath | should wait for an xpath | [PORTED] |
-| Page.waitFor > should timeout | should timeout | [PORTED] |
-| Page.waitFor > should work with multiline body | should work with multiline body | [PORTED] |
-| Page.waitFor > should wait for predicate | should wait for predicate | [PORTED] |
-| Page.waitFor > should wait for predicate with arguments | should wait for predicate with arguments | [PORTED] |
-| Frame.waitForSelector > should immediately resolve promise if node exists | should immediately resolve promise if node exists | [PORTED] |
-| Frame.waitForSelector > should work with removed MutationObserver | should work with removed MutationObserver | [PORTED] |
-| Frame.waitForSelector > should resolve promise when node is added | should resolve promise when node is added | [PORTED] |
-| Frame.waitForSelector > should work when node is added through innerHTML | should work when node is added through innerHTML | [PORTED] |
-| Frame.waitForSelector > Page.waitForSelector is shortcut for main frame | Page.waitForSelector is shortcut for main frame | [PORTED] |
-| Frame.waitForSelector > should run in specified frame | should run in specified frame | [PORTED] |
-| Frame.waitForSelector > should throw when frame is detached | should throw when frame is detached | [PORTED] |
-| Frame.waitForSelector > should wait for visible | should wait for visible | [PORTED] |
-| Frame.waitForSelector > hidden should wait for display: none | hidden should wait for display: none | [PORTED] |
-| Frame.waitForSelector > hidden should wait for removal | hidden should wait for removal | [PORTED] |
-| Frame.waitForSelector > should return null if waiting to hide non-existing element | should return null if waiting to hide non-existing element | [PORTED] |
-| Frame.waitForSelector > should respect timeout | should respect timeout | [PORTED] |
-| Frame.waitForSelector > should return the element handle | should return the element handle | [PORTED] |
-
-### Missing in Ruby
-| Node.js Test | Notes |
-|--------------|-------|
-| Frame.waitForFunction > should accept a string | [MISSING IN RUBY] |
-| Frame.waitForFunction > should work when resolved right before execution context disposal | [MISSING IN RUBY] |
-| Frame.waitForFunction > should poll on interval | [MISSING IN RUBY] |
-| Frame.waitForFunction > should poll on mutation | [MISSING IN RUBY] |
-| Frame.waitForFunction > should poll on mutation async | [MISSING IN RUBY] |
-| Frame.waitForFunction > should poll on raf | [MISSING IN RUBY] |
-| Frame.waitForFunction > should poll on raf async | [MISSING IN RUBY] |
-| Frame.waitForFunction > should work with strict CSP policy | [MISSING IN RUBY] |
-| Frame.waitForFunction > should throw negative polling interval | [MISSING IN RUBY] |
-| Frame.waitForFunction > should return the success value as a JSHandle | [MISSING IN RUBY] |
-| Frame.waitForFunction > should return the window as a success value | [MISSING IN RUBY] |
-| Frame.waitForFunction > should accept ElementHandle arguments | [MISSING IN RUBY] |
-| Frame.waitForFunction > should respect timeout | [MISSING IN RUBY] |
-| Frame.waitForFunction > should respect default timeout | [MISSING IN RUBY] |
-| Frame.waitForFunction > should disable timeout when its set to 0 | [MISSING IN RUBY] |
-| Frame.waitForFunction > should survive cross-process navigation | [MISSING IN RUBY] |
-| Frame.waitForFunction > should survive navigations | [MISSING IN RUBY] |
-| Frame.waitForFunction > should be cancellable | [MISSING IN RUBY] |
-| Frame.waitForFunction > can start multiple tasks without node warnings | [MISSING IN RUBY] |
-| Frame.waitForSelector > should be cancellable | [MISSING IN RUBY] |
-| Frame.waitForSelector > should work when node is added in a shadow root | [MISSING IN RUBY] |
-| Frame.waitForSelector > should work for selector with a pseudo class | [MISSING IN RUBY] |
-| Frame.waitForSelector > should survive cross-process navigation | [MISSING IN RUBY] (commented out) |
-| Frame.waitForSelector > should wait for element to be visible (without DOM mutations) | [MISSING IN RUBY] |
-| Frame.waitForSelector > should wait for element to be visible (bounding box) | [MISSING IN RUBY] |
-| Frame.waitForSelector > should wait for element to be visible recursively | [MISSING IN RUBY] (commented out) |
-| Frame.waitForSelector > should wait for element to be hidden (visibility) | [MISSING IN RUBY] (commented out) |
-| Frame.waitForSelector > should wait for element to be hidden (bounding box) | [MISSING IN RUBY] |
-| Frame.waitForSelector > should have an error message specifically for awaiting an element to be hidden | [MISSING IN RUBY] (commented out) |
-| Frame.waitForSelector > should respond to node attribute mutation | [MISSING IN RUBY] (commented out) |
-| Frame.waitForSelector > should have correct stack trace for timeout | [MISSING IN RUBY] (commented out) |
-| Frame.waitForSelector > xpath > (all tests) | [MISSING IN RUBY] |
-| protocol timeout > should error if underlying protocol command times out with raf polling | [MISSING IN RUBY] |
+All tests from `waittask.spec.ts` have been ported to `spec/integration/wait_task_spec.rb`, including:
+- `Frame.waitForFunction` coverage (string input, polling modes, timeouts, navigation survival, cancellation)
+- `Frame.waitForSelector` coverage (shadow DOM, pseudo-classes, visibility/hidden variants, xpath)
+- protocol timeout behavior
 
 ---
 
@@ -1051,27 +997,25 @@ Most OOPIF tests are ported including:
 | Category | Count |
 |----------|-------|
 | Node.js spec files | 47 |
-| Ruby spec files | 40 |
-| Fully ported spec files | 27 |
-| Partially ported spec files | 4 |
-| Missing spec files (important) | 5 |
+| Ruby spec files | 41 |
+| Fully ported spec files | 35 |
+| Partially ported spec files | 1 |
+| Missing spec files (important) | 4 |
 | Low priority/N/A spec files | 11 |
 
 ### Spec Files Status Summary
 
-**Fully Ported (33):**
-aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, worker
+**Fully Ported (35):**
+aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, download, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, waittask, worker
 
-**Partially Ported (2):**
+**Partially Ported (1):**
 - target.spec.ts → Some in browser_spec.rb, launcher_spec.rb
-- waittask.spec.ts → Many Frame.waitForFunction tests missing
 
-**Missing - High Priority (5):**
+**Missing - High Priority (4):**
 1. **accessibility.spec.ts** - Accessibility API not implemented
 2. **locator.spec.ts** - Locator API not implemented
-3. **download.spec.ts** - Download handling not implemented
-4. **proxy.spec.ts** - Proxy support not implemented
-5. **autofill.spec.ts** - Autofill not implemented
+3. **proxy.spec.ts** - Proxy support not implemented
+4. **autofill.spec.ts** - Autofill not implemented
 
 **Low Priority/N/A (11):**
 acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixtures, headful, injected, stacktrace, webExtension, webgl
@@ -1081,13 +1025,11 @@ acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixt
 #### High Priority (Core functionality gaps)
 1. **Accessibility API** - Add `Page#accessibility` and port accessibility.spec.ts
 2. **Locator API** - Implement Locator class and port locator.spec.ts
-3. **waittask.spec.ts** - Many `Frame.waitForFunction` tests missing
 
 #### Medium Priority
-1. **download.spec.ts** - File download handling
-2. **proxy.spec.ts** - Proxy configuration support
-3. **target.spec.ts** - Complete target management tests
-4. **oopif.spec.ts** - Several advanced OOPIF tests missing
+1. **proxy.spec.ts** - Proxy configuration support
+2. **target.spec.ts** - Complete target management tests
+3. **oopif.spec.ts** - Several advanced OOPIF tests missing
 
 #### Low Priority (Feature-specific)
 1. AbortSignal/cancellation tests (Ruby doesn't support this pattern)

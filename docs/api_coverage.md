@@ -20,7 +20,7 @@
 * browserContexts => `#browser_contexts`
 * close
 * ~~cookies~~
-* ~~createBrowserContext~~
+* createBrowserContext => `#create_browser_context`
 * defaultBrowserContext => `#default_browser_context`
 * ~~deleteCookie~~
 * ~~deleteMatchingCookies~~

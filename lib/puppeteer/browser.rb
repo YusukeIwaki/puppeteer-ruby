@@ -170,6 +170,22 @@ class Puppeteer::Browser
     @contexts[browser_context_id] = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
   end
 
+  # @rbs proxy_server: String? -- Proxy server for new context
+  # @rbs proxy_bypass_list: Array[String]? -- Proxy bypass list
+  # @rbs download_behavior: Hash? -- Download behavior options
+  # @rbs return: Puppeteer::BrowserContext -- New browser context
+  def create_browser_context(proxy_server: nil, proxy_bypass_list: nil, download_behavior: nil)
+    params = {
+      proxyServer: proxy_server,
+      proxyBypassList: proxy_bypass_list&.join(','),
+    }.compact
+    result = @connection.send_message('Target.createBrowserContext', params)
+    browser_context_id = result['browserContextId']
+    context = Puppeteer::BrowserContext.new(@connection, self, browser_context_id)
+    context.set_download_behavior(download_behavior) if download_behavior
+    @contexts[browser_context_id] = context
+  end
+
   # @rbs return: Array[Puppeteer::BrowserContext] -- All browser contexts
   def browser_contexts
     [@default_context].concat(@contexts.values)
