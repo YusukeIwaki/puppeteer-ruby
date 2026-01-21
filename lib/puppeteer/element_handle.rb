@@ -63,15 +63,13 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @rbs visible: bool? -- Wait for element to be visible
   # @rbs hidden: bool? -- Wait for element to be hidden
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
-  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::ElementHandle? -- Matched element handle
-  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil, signal: nil)
+  def wait_for_selector(selector, visible: nil, hidden: nil, timeout: nil)
     query_handler_manager.detect_query_handler(selector).wait_for(
       self,
       visible: visible,
       hidden: hidden,
       timeout: timeout,
-      signal: signal,
     )
   end
 
@@ -126,9 +124,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @rbs visible: bool? -- Wait for element to be visible
   # @rbs hidden: bool? -- Wait for element to be hidden
   # @rbs timeout: Numeric? -- Maximum wait time in milliseconds
-  # @rbs signal: Puppeteer::AbortSignal? -- Abort signal
   # @rbs return: Puppeteer::ElementHandle? -- Matched element handle
-  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil, signal: nil)
+  def wait_for_xpath(xpath, visible: nil, hidden: nil, timeout: nil)
     param_xpath =
       if xpath.start_with?('//')
         ".#{xpath}"
@@ -136,7 +133,7 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
         xpath
       end
 
-    wait_for_selector("xpath/#{param_xpath}", visible: visible, hidden: hidden, timeout: timeout, signal: signal)
+    wait_for_selector("xpath/#{param_xpath}", visible: visible, hidden: hidden, timeout: timeout)
   end
 
   define_async_method :async_wait_for_xpath

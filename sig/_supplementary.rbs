@@ -49,22 +49,6 @@ end
 class Puppeteer::AbortError < Puppeteer::Error
 end
 
-class Puppeteer::AbortSignal
-  def initialize: () -> void
-  def aborted?: () -> bool
-  def reason: () -> (Puppeteer::Error | nil)
-  def throw_if_aborted: () -> void
-  def add_event_listener: (String event_name) { (untyped) -> untyped } -> Integer?
-  def remove_event_listener: (Integer listener_id) -> void
-  def abort: (?Puppeteer::Error reason) -> void
-end
-
-class Puppeteer::AbortController
-  def initialize: () -> void
-  def abort: (?Puppeteer::Error reason) -> void
-  attr_reader signal: Puppeteer::AbortSignal
-end
-
 class Puppeteer::JSHandle
   def async_dispose_symbol: () -> untyped
 end

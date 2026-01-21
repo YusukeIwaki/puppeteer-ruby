@@ -504,7 +504,7 @@ class Puppeteer::IsolaatedWorld
   # @param visible [Boolean] Wait for element visible (not 'display: none' nor 'visibility: hidden') on true. default to false.
   # @param hidden [Boolean] Wait for element invisible ('display: none' nor 'visibility: hidden') on true. default to false.
   # @param timeout [Integer]
-  private def wait_for_selector_in_page(query_one, root, selector, visible: nil, hidden: nil, timeout: nil, polling: nil, signal: nil, binding_function: nil)
+  private def wait_for_selector_in_page(query_one, root, selector, visible: nil, hidden: nil, timeout: nil, polling: nil, binding_function: nil)
     option_wait_for_visible = visible || false
     option_wait_for_hidden = hidden || false
     option_timeout = timeout.nil? ? @timeout_settings.timeout : timeout
@@ -536,7 +536,6 @@ class Puppeteer::IsolaatedWorld
       root: option_root,
       args: [option_root, selector, option_wait_for_visible, option_wait_for_hidden],
       binding_function: binding_function,
-      signal: signal,
     )
     wait_task.await_promise
   end
@@ -546,7 +545,7 @@ class Puppeteer::IsolaatedWorld
   # @param polling [Integer|String]
   # @param timeout [Integer]
   # @return [Puppeteer::JSHandle]
-  def wait_for_function(page_function, args: [], polling: nil, timeout: nil, signal: nil)
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
     option_polling = polling || 'raf'
     option_timeout = timeout.nil? ? @timeout_settings.timeout : timeout
 
@@ -557,7 +556,6 @@ class Puppeteer::IsolaatedWorld
       polling: option_polling,
       timeout: option_timeout,
       args: args,
-      signal: signal,
     ).await_promise
   end
 

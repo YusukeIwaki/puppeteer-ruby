@@ -8,7 +8,6 @@ require 'puppeteer/env'
 # Custom data types.
 require 'puppeteer/events'
 require 'puppeteer/errors'
-require 'puppeteer/abort_controller'
 require 'puppeteer/geolocation'
 require 'puppeteer/viewport'
 

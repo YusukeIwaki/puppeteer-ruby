@@ -23,7 +23,7 @@ class Puppeteer::CustomQueryHandler
     raise NotImplementedError.new("#{self.class}##{__method__} is not implemented.")
   end
 
-  def wait_for(element_or_frame, selector, visible: nil, hidden: nil, timeout: nil, polling: nil, signal: nil)
+  def wait_for(element_or_frame, selector, visible: nil, hidden: nil, timeout: nil, polling: nil)
     case element_or_frame
     when Puppeteer::Frame
       frame = element_or_frame
@@ -40,7 +40,6 @@ class Puppeteer::CustomQueryHandler
     end
 
     begin
-      signal&.throw_if_aborted if signal.respond_to?(:throw_if_aborted)
       result = frame.puppeteer_world.send(:wait_for_selector_in_page,
         @query_one,
         element,
@@ -49,9 +48,7 @@ class Puppeteer::CustomQueryHandler
         hidden: hidden,
         timeout: timeout,
         polling: polling,
-        signal: signal,
       )
-      signal&.throw_if_aborted if signal.respond_to?(:throw_if_aborted)
 
       if result.is_a?(Puppeteer::ElementHandle)
         result.frame.main_world.transfer_handle(result)
@@ -60,8 +57,6 @@ class Puppeteer::CustomQueryHandler
         nil
       end
     rescue => err
-      raise err if err.is_a?(Puppeteer::AbortError)
-
       wait_for_selector_error =
         if err.is_a?(Puppeteer::TimeoutError)
           Puppeteer::TimeoutError.new("Waiting for selector `#{selector}` failed")

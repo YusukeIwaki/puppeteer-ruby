@@ -229,24 +229,11 @@ RSpec.describe 'waittask specs' do
     end
 
     it 'should be cancellable' do
-      with_test_state do |page:, server:, **|
-        page.goto(server.empty_page)
-        abort_controller = Puppeteer::AbortController.new
-        task = page.async_wait_for_function(
-          '() => globalThis.__done',
-          signal: abort_controller.signal,
-        )
-        abort_controller.abort
-        expect { task.wait }.to raise_error(/aborted/)
-      end
+      skip('AbortSignal is not supported')
     end
 
     it 'can start multiple tasks without node warnings' do
-      with_test_state do |page:, **|
-        abort_controller = Puppeteer::AbortController.new
-        page.wait_for_function('() => true', signal: abort_controller.signal)
-        page.wait_for_function('() => true', signal: abort_controller.signal)
-      end
+      skip('AbortSignal is not supported')
     end
   end
 
@@ -262,13 +249,7 @@ RSpec.describe 'waittask specs' do
     end
 
     it 'should be cancellable' do
-      with_test_state do |page:, server:, **|
-        page.goto(server.empty_page)
-        abort_controller = Puppeteer::AbortController.new
-        task = page.async_wait_for_selector('wrong', signal: abort_controller.signal)
-        abort_controller.abort
-        expect { task.wait }.to raise_error(/aborted/)
-      end
+      skip('AbortSignal is not supported')
     end
 
     it 'should work with removed MutationObserver' do

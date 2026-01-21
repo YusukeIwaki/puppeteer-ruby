@@ -9,7 +9,7 @@ class Puppeteer::WaitTask
     end
   end
 
-  def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil, root: nil, signal: nil)
+  def initialize(dom_world:, predicate_body:, title:, polling:, timeout:, args: [], binding_function: nil, root: nil)
     if polling.is_a?(String)
       if polling != 'raf' && polling != 'mutation'
         raise ArgumentError.new("Unknown polling option: #{polling}")
@@ -29,7 +29,6 @@ class Puppeteer::WaitTask
     @predicate_body = build_predicate_body(predicate_body)
     @args = args
     @binding_function = binding_function
-    @signal = signal
     @run_count = 0
     @dom_world.task_manager.add(self)
     if binding_function
@@ -48,16 +47,6 @@ class Puppeteer::WaitTask
         # Avoid stopping the timeout task from inside terminate/cleanup.
         @timeout_task = nil
         terminate(timeout_error) unless @timeout_cleared
-      end
-    end
-
-    if @signal
-      if @signal.respond_to?(:aborted?) && @signal.aborted?
-        terminate(@signal.reason || Puppeteer::AbortError.new)
-        return
-      end
-      @signal_listener_id = @signal.add_event_listener('abort') do |reason|
-        terminate(reason || Puppeteer::AbortError.new)
       end
     end
 
@@ -130,7 +119,6 @@ class Puppeteer::WaitTask
     rescue StandardError
       # Ignore errors during timeout task cleanup.
     end
-    @signal&.remove_event_listener(@signal_listener_id) if @signal_listener_id
     reset_poller
     @dom_world.task_manager.delete(self)
   end
