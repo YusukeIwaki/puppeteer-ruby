@@ -1,6 +1,20 @@
 require "async"
 require 'puppeteer/console_patch'
 
+# Check for Ruby versions affected by https://bugs.ruby-lang.org/issues/20907
+# which causes hangs due to "Attempt to unlock a mutex which is not locked" errors.
+# Fixed in: Ruby 3.2.7+, 3.3.7+, 3.4+
+ruby_version = Gem::Version.new(RUBY_VERSION)
+if ruby_version >= Gem::Version.new('3.2.0') && ruby_version < Gem::Version.new('3.2.7')
+  raise "Ruby #{RUBY_VERSION} has a known issue that causes puppeteer-ruby to hang. " \
+        "Please upgrade to Ruby 3.2.7+ or 3.3.7+ or 3.4+. " \
+        "See: https://github.com/socketry/async/issues/424"
+elsif ruby_version >= Gem::Version.new('3.3.0') && ruby_version < Gem::Version.new('3.3.7')
+  raise "Ruby #{RUBY_VERSION} has a known issue that causes puppeteer-ruby to hang. " \
+        "Please upgrade to Ruby 3.3.7+ or 3.4+. " \
+        "See: https://github.com/socketry/async/issues/424"
+end
+
 module Puppeteer; end
 
 require 'puppeteer/env'
