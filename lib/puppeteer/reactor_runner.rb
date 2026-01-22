@@ -144,7 +144,7 @@ module Puppeteer
       job = lambda do
         begin
           promise.resolve(block.call)
-        rescue => err
+        rescue Exception => err
           promise.reject(err)
         end
       end

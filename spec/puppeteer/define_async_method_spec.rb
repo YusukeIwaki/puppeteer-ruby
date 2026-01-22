@@ -74,6 +74,18 @@ RSpec.describe Puppeteer::DefineAsyncMethod do
       expect(result).to eq('--> yy')
     end
 
+    it 're-raises block errors promptly' do
+      instance = DefineAsyncMethodExample.new
+      start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      expect do
+        instance.wait_for_example(1.0, "zz") do
+          raise 'boom'
+        end
+      end.to raise_error(RuntimeError, 'boom')
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+      expect(elapsed).to be < 0.5
+    end
+
     it 'doesnt modify method without prefix "wait_for_"' do
       instance = DefineAsyncMethodExample.new
 

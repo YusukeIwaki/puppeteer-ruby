@@ -138,14 +138,19 @@ module Puppeteer
       barrier = Async::Barrier.new
       results = Array.new(tasks.size)
 
-      tasks.each_with_index do |task, index|
-        barrier.async do
-          results[index] = await(task)
+      begin
+        tasks.each_with_index do |task, index|
+          barrier.async do
+            results[index] = await(task)
+          end
         end
-      end
 
-      barrier.wait
-      results
+        barrier.wait
+        results
+      rescue Exception
+        drain_barrier_tasks(barrier)
+        raise
+      end
     end
 
     private def first(*tasks)

@@ -222,7 +222,11 @@ end
 
 ### Version Updates
 
-Version is defined in `lib/puppeteer/version.rb`. GitHub Actions automatically publishes to RubyGems when a version tag is pushed.
+When updating the version, **both files must be updated**:
+- `lib/puppeteer/version.rb` - The canonical version constant
+- `docs/api_coverage.md` - The version displayed in documentation
+
+GitHub Actions automatically publishes to RubyGems when a version tag is pushed. Tag format is the version number without `v` prefix (e.g., `0.50.0.alpha3`, not `v0.50.0.alpha3`).
 
 ## Detailed Documentation
 
