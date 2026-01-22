@@ -11,6 +11,18 @@ RSpec.describe Puppeteer::AsyncUtils do
       expect(Time.now - start).to be >= 0.2
       expect(results).to eq([1, 2])
     end
+
+    it 'fails fast when a task raises' do
+      start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      expect do
+        described_class.await_promise_all(
+          -> { raise 'boom' },
+          -> { described_class.sleep_seconds(1.0) },
+        )
+      end.to raise_error(RuntimeError, 'boom')
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+      expect(elapsed).to be < 0.6
+    end
   end
 
   describe '.async_timeout' do
