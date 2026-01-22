@@ -17,28 +17,42 @@ module Puppeteer::DefineAsyncMethod
       if method_defined?(original_method_name) && original_method_name.start_with?('wait_for_')
         # def wait_for_xxx(xx, yy, &block)
         #
-        # -> AsyncUtils.await_promise_all(
-        #      -> { wait_for_xxx(xx, yy) },
-        #      -> { block.call },
-        #    ).first
+        # -> start wait_for_xxx in a child task
+        # -> run block (awaiting its result if needed)
+        # -> wait for wait_for_xxx task, cancel on block errors
         define_method(original_method_name) do |*args, **kwargs, &block|
           if block
-            async_method_call = Puppeteer::AsyncUtils.future_with_logging do
-              if kwargs.empty?
-                original_method.bind(self).call(*args)
-              else
-                original_method.bind(self).call(*args, **kwargs)
+            runner = lambda do
+              parent_task = Async::Task.current
+              wait_task = parent_task.async do
+                if kwargs.empty?
+                  original_method.bind(self).call(*args)
+                else
+                  original_method.bind(self).call(*args, **kwargs)
+                end
               end
+
+              begin
+                block_result = block.call
+                Puppeteer::AsyncUtils.await(block_result)
+              rescue Exception => err
+                begin
+                  wait_task.stop
+                  Puppeteer::AsyncUtils.async_timeout(1000, -> { wait_task.wait }).wait
+                rescue Exception
+                  # Swallow cancellation errors/timeouts; original error takes priority.
+                end
+                raise err
+              end
+
+              wait_task.wait
             end
 
-            async_block_call = Puppeteer::AsyncUtils.future_with_logging do
-              block.call
+            if Async::Task.current?
+              runner.call
+            else
+              Sync { runner.call }
             end
-
-            Puppeteer::AsyncUtils.await_promise_all(
-              async_method_call,
-              async_block_call,
-            ).first
           else
             if kwargs.empty? # for Ruby 2.6
               original_method.bind(self).call(*args)
