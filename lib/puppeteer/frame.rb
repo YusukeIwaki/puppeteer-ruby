@@ -51,6 +51,21 @@ class Puppeteer::Frame
     @frame_manager.page
   end
 
+  # @rbs return: Numeric -- Default timeout in milliseconds
+  def default_timeout
+    @frame_manager.timeout_settings.timeout
+  end
+
+  # @rbs selector_or_function: String -- Selector or JS function
+  # @rbs return: Puppeteer::Locator -- Locator for selector or function
+  def locator(selector_or_function)
+    if Puppeteer::Locator.function_string?(selector_or_function)
+      Puppeteer::FunctionLocator.create(self, selector_or_function)
+    else
+      Puppeteer::NodeLocator.create(self, selector_or_function)
+    end
+  end
+
   # @rbs return: bool -- Whether this is an OOPIF frame
   def oop_frame?
     @client != @frame_manager.client

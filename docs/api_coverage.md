@@ -123,7 +123,7 @@
 * $$ => `#query_selector_all`
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
-* ~~asLocator~~
+* asLocator => `#as_locator`
 * ~~autofill~~
 * ~~backendNodeId~~
 * boundingBox => `#bounding_box`
@@ -193,7 +193,7 @@
 * goto
 * hover
 * isDetached => `#detached?`
-* ~~locator~~
+* locator
 * name
 * page
 * parentFrame => `#parent_frame`
@@ -277,23 +277,23 @@
 * type => `#type_text`
 * up
 
-## ~~Locator~~
+## Locator
 
-* ~~click~~
-* ~~clone~~
-* ~~fill~~
-* ~~filter~~
-* ~~hover~~
-* ~~map~~
-* ~~race~~
-* ~~scroll~~
-* ~~setEnsureElementIsInTheViewport~~
-* ~~setTimeout~~
-* ~~setVisibility~~
-* ~~setWaitForEnabled~~
-* ~~setWaitForStableBoundingBox~~
-* ~~wait~~
-* ~~waitHandle~~
+* click
+* clone
+* fill
+* filter
+* hover
+* map
+* race
+* scroll
+* setEnsureElementIsInTheViewport => `#set_ensure_element_is_in_viewport`
+* setTimeout => `#set_timeout`
+* setVisibility => `#set_visibility`
+* setWaitForEnabled => `#set_wait_for_enabled`
+* setWaitForStableBoundingBox => `#set_wait_for_stable_bounding_box`
+* wait
+* waitHandle => `#wait_handle`
 
 ## Mouse
 
@@ -344,7 +344,7 @@
 * focus
 * frames
 * ~~getDefaultNavigationTimeout~~
-* ~~getDefaultTimeout~~
+* getDefaultTimeout => `#default_timeout`
 * goBack => `#go_back`
 * goForward => `#go_forward`
 * goto
@@ -353,7 +353,7 @@
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
 * isServiceWorkerBypassed => `#service_worker_bypassed?`
-* ~~locator~~
+* locator
 * mainFrame => `#main_frame`
 * metrics
 * ~~openDevTools~~

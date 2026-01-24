@@ -86,6 +86,7 @@ require 'puppeteer/web_socket_transport'
 
 # subclasses
 require 'puppeteer/element_handle'
+require 'puppeteer/locators'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 module Puppeteer

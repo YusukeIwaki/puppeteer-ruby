@@ -459,6 +459,21 @@ class Puppeteer::Page
     @timeout_settings.default_timeout = timeout
   end
 
+  # @rbs return: Numeric -- Default timeout in milliseconds
+  def default_timeout
+    @timeout_settings.timeout
+  end
+
+  # @rbs selector_or_function: String -- Selector or JS function
+  # @rbs return: Puppeteer::Locator -- Locator for selector or function
+  def locator(selector_or_function)
+    if Puppeteer::Locator.function_string?(selector_or_function)
+      Puppeteer::FunctionLocator.create(self, selector_or_function)
+    else
+      Puppeteer::NodeLocator.create(self, selector_or_function)
+    end
+  end
+
   # `$()` in JavaScript.
   # @rbs selector: String -- CSS selector
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil

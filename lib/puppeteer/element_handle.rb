@@ -152,6 +152,11 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     self
   end
 
+  # @rbs return: Puppeteer::Locator -- Locator for this element
+  def as_locator
+    Puppeteer::NodeLocator.create_from_handle(@frame, self)
+  end
+
   # @rbs return: bool -- Whether element is visible
   def visible?
     check_visibility(true)
