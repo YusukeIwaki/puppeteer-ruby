@@ -3,7 +3,7 @@
 class Puppeteer::PQueryHandler
   POLLING_DEFAULT_SECONDS = 0.1
 
-  CSS_QUERY_SELECTOR_JS = <<~JAVASCRIPT
+  CSS_QUERY_SELECTOR_JS = <<~'JAVASCRIPT'
     (element, selector) => {
       const results = [];
       const isQueryableNode = node => {
@@ -185,7 +185,7 @@ class Puppeteer::PQueryHandler
       raise ArgumentError.new("element_or_frame must be a Frame or ElementHandle. #{element_or_frame.inspect}")
     end
 
-    timeout_ms = timeout.nil? ? frame.timeout_settings.timeout : timeout
+    timeout_ms = timeout.nil? ? frame.default_timeout : timeout
     deadline = timeout_ms && timeout_ms > 0 ? monotonic_time + (timeout_ms / 1000.0) : nil
     polling_interval = polling_interval_seconds(polling, visible: visible, hidden: hidden)
 
