@@ -180,7 +180,7 @@ module Puppeteer
           Async::Task.current.sleep(0.01)
         end
       end
-    rescue Puppeteer::Error
+    rescue ::Puppeteer::Error
       # Runner closed while waiting; ignore.
     end
 
