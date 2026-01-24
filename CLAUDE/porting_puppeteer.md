@@ -197,6 +197,16 @@ Note: Some tests (e.g., `BrowserContext#override_permissions`) may be split into
 4. **Preserve asset files** - Keep `spec/assets/` identical to upstream `test/assets/`
 5. **Separate Ruby-specific tests** - Move Ruby-only features to `*_ext_spec.rb` files
 
+## Fidelity Notes
+
+- `JSHandle#json_value`: Node.js normalizes CDP errors like "Object reference chain is too long" and
+  "Object couldn't be returned by value" via `ExecutionContext#rewriteError` to `undefined`. The
+  Ruby port keeps the same behavior by rescuing in `JSHandle#json_value` and returning `nil`.
+- PSelectors/PQueryHandler: The Ruby PSelector path relies on `PQueryHandler` with the same
+  `IDENT_TOKEN_START` regex behavior as upstream. Keep the CSS query selector JS in a single-quoted
+  heredoc so the regex survives Ruby parsing. `wait_for` should use `Frame#default_timeout` to match
+  Node's timeout settings.
+
 ### Ruby-Specific Tests (`*_ext_spec.rb`)
 
 When porting tests, separate Ruby-only features into dedicated extension spec files:
