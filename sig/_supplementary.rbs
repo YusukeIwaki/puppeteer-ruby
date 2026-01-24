@@ -46,6 +46,9 @@ end
 class Puppeteer::TimeoutError < Puppeteer::Error
 end
 
+class Puppeteer::AbortSignal
+end
+
 class Puppeteer::JSHandle
   def async_dispose_symbol: () -> untyped
 end

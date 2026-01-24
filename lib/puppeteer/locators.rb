@@ -292,7 +292,7 @@ class Puppeteer::Locator
     raise NotImplementedError
   end
 
-  private def perform_action(name, signal:, conditions:)
+  private def perform_action(name, signal:, conditions:, &block)
     with_retry(name, signal: signal) do |options|
       handle = _wait(options)
       begin
@@ -300,7 +300,7 @@ class Puppeteer::Locator
           condition.call(handle, options)
         end
         emit_event(Puppeteer::LocatorEvent::Action)
-        yield(handle, options)
+        block.call(handle, options)
         nil
       rescue => err
         begin
@@ -313,7 +313,7 @@ class Puppeteer::Locator
     end
   end
 
-  private def with_retry(_name, signal:)
+  private def with_retry(_name, signal:, &block)
     timeout_controller = TimeoutController.new(@timeout)
     last_error = nil
 
@@ -322,7 +322,7 @@ class Puppeteer::Locator
 
       options = build_action_options(timeout_controller, signal: signal)
       begin
-        return yield(options)
+        return block.call(options)
       rescue => err
         last_error = err
         timeout_controller.check!(last_error)
