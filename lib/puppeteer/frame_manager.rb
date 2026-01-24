@@ -34,6 +34,8 @@ class Puppeteer::FrameManager
 
     # Keeps track of frames that are in the process of being attached in #onFrameAttached.
     @frames_pending_attachment = {}
+    @frame_tree_handled_promise = nil
+    @queued_lifecycle_events = []
 
     setup_listeners(@client)
   end
@@ -78,6 +80,7 @@ class Puppeteer::FrameManager
     @frames_pending_target_init[target_id] ||= Async::Promise.new
     client = cdp_session || @client
 
+    prepare_frame_tree_handling
     promises = [
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
@@ -85,6 +88,7 @@ class Puppeteer::FrameManager
     results = Puppeteer::AsyncUtils.await_promise_all(*promises)
     frame_tree = results[1]['frameTree']
     handle_frame_tree(client, frame_tree)
+    finish_frame_tree_handling
     Puppeteer::AsyncUtils.await_promise_all(
       client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
       client.async_send_message('Runtime.enable'),
@@ -93,10 +97,16 @@ class Puppeteer::FrameManager
     @network_manager.init unless cdp_session
   rescue => err
     # The target might have been closed before the initialization finished.
-    return if err.message.include?('Target closed') || err.message.include?('Session closed')
+    if err.message.include?('Target closed') || err.message.include?('Session closed')
+      finish_frame_tree_handling(process_queue: false)
+      return
+    end
 
     raise
   ensure
+    if @frame_tree_handled_promise && !@frame_tree_handled_promise.resolved?
+      finish_frame_tree_handling(process_queue: false)
+    end
     @frames_pending_target_init.delete(target_id)&.resolve(nil)
   end
 
@@ -214,6 +224,15 @@ class Puppeteer::FrameManager
 
   # @param event [Hash]
   def handle_lifecycle_event(event)
+    if @frame_tree_handled_promise && !@frame_tree_handled_promise.resolved?
+      @queued_lifecycle_events << event
+      return
+    end
+
+    handle_lifecycle_event_impl(event)
+  end
+
+  private def handle_lifecycle_event_impl(event)
     frame = @frames[event['frameId']]
     return if !frame
     frame.handle_lifecycle_event(event['loaderId'], event['name'])
@@ -249,6 +268,29 @@ class Puppeteer::FrameManager
     frame_tree['childFrames'].each do |child|
       handle_frame_tree(session, child)
     end
+  end
+
+  private def prepare_frame_tree_handling
+    if @frame_tree_handled_promise && !@frame_tree_handled_promise.resolved?
+      @frame_tree_handled_promise.resolve(nil)
+    end
+    @frame_tree_handled_promise = Async::Promise.new
+    @queued_lifecycle_events = []
+  end
+
+  private def finish_frame_tree_handling(process_queue: true)
+    return unless @frame_tree_handled_promise
+
+    @frame_tree_handled_promise.resolve(nil) unless @frame_tree_handled_promise.resolved?
+    flush_queued_lifecycle_events if process_queue
+  end
+
+  private def flush_queued_lifecycle_events
+    return if @queued_lifecycle_events.empty?
+
+    queued = @queued_lifecycle_events
+    @queued_lifecycle_events = []
+    queued.each { |event| handle_lifecycle_event_impl(event) }
   end
 
   # @return {!Puppeteer.Page}

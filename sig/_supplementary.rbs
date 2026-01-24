@@ -178,6 +178,10 @@ class Puppeteer::FrameManager
 
   def setup_listeners: (Puppeteer::CDPSession client) -> void
   def init: (String target_id, ?Puppeteer::CDPSession cdp_session) -> void
+  def handle_lifecycle_event_impl: (Hash[String, untyped] event) -> void
+  def prepare_frame_tree_handling: () -> void
+  def finish_frame_tree_handling: (?process_queue: bool) -> void
+  def flush_queued_lifecycle_events: () -> void
   def attach_child_frame: (Puppeteer::Frame parent_frame, String parent_frame_id, String frame_id, Puppeteer::CDPSession? session) -> void
   def reattach_frame: (Puppeteer::Frame frame, String frame_id, bool is_main_frame, Hash[String, untyped] frame_payload) -> void
   def ensure_isolated_world: (Puppeteer::CDPSession session, String name) -> void
