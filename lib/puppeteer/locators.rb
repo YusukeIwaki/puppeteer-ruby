@@ -149,18 +149,16 @@ class Puppeteer::Locator
     _clone
   end
 
-  # @rbs signal: untyped -- Abort signal (unsupported)
   # @rbs return: Puppeteer::JSHandle -- Handle for located value
-  def wait_handle(signal: nil)
-    with_retry('Locator.waitHandle', signal: signal) do |options|
+  def wait_handle
+    with_retry('Locator.waitHandle') do |options|
       _wait(options)
     end
   end
 
-  # @rbs signal: untyped -- Abort signal (unsupported)
   # @rbs return: untyped -- JSON-serializable value
-  def wait(signal: nil)
-    handle = wait_handle(signal: signal)
+  def wait
+    handle = wait_handle
     begin
       return nil if handle.is_a?(Puppeteer::ElementHandle)
 
@@ -205,10 +203,9 @@ class Puppeteer::Locator
   # @rbs click_count: Integer? -- Deprecated click count
   # @rbs count: Integer? -- Number of clicks
   # @rbs offset: Hash[Symbol, Numeric]? -- Click offset
-  # @rbs signal: untyped -- Abort signal (unsupported)
   # @rbs return: void -- No return value
-  def click(delay: nil, button: nil, click_count: nil, count: nil, offset: nil, signal: nil)
-    perform_action('Locator.click', signal: signal,
+  def click(delay: nil, button: nil, click_count: nil, count: nil, offset: nil)
+    perform_action('Locator.click',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
@@ -219,10 +216,9 @@ class Puppeteer::Locator
   end
 
   # @rbs value: String -- Value to fill
-  # @rbs signal: untyped -- Abort signal (unsupported)
   # @rbs return: void -- No return value
-  def fill(value, signal: nil)
-    perform_action('Locator.fill', signal: signal,
+  def fill(value)
+    perform_action('Locator.fill',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
@@ -232,10 +228,9 @@ class Puppeteer::Locator
     end
   end
 
-  # @rbs signal: untyped -- Abort signal (unsupported)
   # @rbs return: void -- No return value
-  def hover(signal: nil)
-    perform_action('Locator.hover', signal: signal,
+  def hover
+    perform_action('Locator.hover',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
@@ -246,10 +241,9 @@ class Puppeteer::Locator
 
   # @rbs scroll_top: Numeric? -- Scroll top position
   # @rbs scroll_left: Numeric? -- Scroll left position
-  # @rbs signal: untyped -- Abort signal (unsupported)
   # @rbs return: void -- No return value
-  def scroll(scroll_top: nil, scroll_left: nil, signal: nil)
-    perform_action('Locator.scroll', signal: signal,
+  def scroll(scroll_top: nil, scroll_left: nil)
+    perform_action('Locator.scroll',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
@@ -292,8 +286,8 @@ class Puppeteer::Locator
     raise NotImplementedError
   end
 
-  private def perform_action(name, signal:, conditions:, &block)
-    with_retry(name, signal: signal) do |options|
+  private def perform_action(name, conditions:, &block)
+    with_retry(name) do |options|
       handle = _wait(options)
       begin
         conditions.each do |condition|
@@ -313,14 +307,14 @@ class Puppeteer::Locator
     end
   end
 
-  private def with_retry(_name, signal:, &block)
+  private def with_retry(_name, &block)
     timeout_controller = TimeoutController.new(@timeout)
     last_error = nil
 
     loop do
       timeout_controller.check!(last_error)
 
-      options = build_action_options(timeout_controller, signal: signal)
+      options = build_action_options(timeout_controller)
       begin
         return block.call(options)
       rescue => err
@@ -332,9 +326,8 @@ class Puppeteer::Locator
     end
   end
 
-  private def build_action_options(timeout_controller, signal:)
+  private def build_action_options(timeout_controller)
     {
-      signal: signal,
       timeout: timeout_controller.remaining_timeout,
       timeout_controller: timeout_controller,
     }

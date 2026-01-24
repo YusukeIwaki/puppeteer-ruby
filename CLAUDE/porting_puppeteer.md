@@ -410,6 +410,26 @@ diff spec/assets/input/keyboard.html <(curl -s https://raw.githubusercontent.com
 
 ### Common Gotchas
 
+#### 0. AbortSignal Not Supported
+
+**Do NOT port `signal` parameters from upstream Puppeteer.**
+
+```typescript
+// TypeScript - has signal parameter
+async click(options?: {signal?: AbortSignal}): Promise<void> {
+  // ...
+}
+```
+
+```ruby
+# Ruby - do NOT include signal parameter
+def click(delay: nil, button: nil)
+  # ...
+end
+```
+
+Ruby's concurrency model doesn't align with JavaScript's AbortController/AbortSignal pattern. Use timeout parameters instead for cancellation.
+
 #### 1. Event Type Differences
 
 Upstream keyboard tests use `input` events, not `keypress`:
