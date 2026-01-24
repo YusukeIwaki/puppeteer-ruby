@@ -1,8 +1,9 @@
 [![Gem Version](https://badge.fury.io/rb/puppeteer-ruby.svg)](https://badge.fury.io/rb/puppeteer-ruby)
 
 > [!IMPORTANT]
-> The `main` branch is currently under **HEAVY DEVELOPMENT** for increased stability.
-> If you need the latest stable release, please refer to the [ref-2025 tag](https://github.com/YusukeIwaki/puppeteer-ruby/tree/ref-2025).
+> - This library now requires **Ruby 3.2 or later**.
+> - Firefox support has been moved to [puppeteer-bidi](https://github.com/YusukeIwaki/puppeteer-bidi).
+> - For older versions, please refer to the [ref-2025 tag](https://github.com/YusukeIwaki/puppeteer-ruby/tree/ref-2025).
 
 # Puppeteer in Ruby
 
