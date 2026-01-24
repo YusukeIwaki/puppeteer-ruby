@@ -70,6 +70,8 @@ require 'puppeteer/network_manager'
 require 'puppeteer/page'
 require 'puppeteer/protocol_stream_reader'
 require 'puppeteer/puppeteer'
+require 'puppeteer/p_selector_parser'
+require 'puppeteer/p_query_handler'
 require 'puppeteer/query_handler_manager'
 require 'puppeteer/remote_object'
 require 'puppeteer/target'
@@ -86,6 +88,7 @@ require 'puppeteer/web_socket_transport'
 
 # subclasses
 require 'puppeteer/element_handle'
+require 'puppeteer/locators'
 
 # ref: https://github.com/puppeteer/puppeteer/blob/master/lib/Puppeteer.js
 module Puppeteer

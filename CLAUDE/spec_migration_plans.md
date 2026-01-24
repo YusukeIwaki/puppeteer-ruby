@@ -88,7 +88,7 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 | jshandle.spec.ts | js_handle_spec.rb | [x] Ported |
 | keyboard.spec.ts | keyboard_spec.rb | [x] Ported |
 | launcher.spec.ts | launcher_spec.rb | [x] Ported |
-| locator.spec.ts | - | **[MISSING]** Locator API not ported |
+| locator.spec.ts | locator_spec.rb | [x] Ported |
 | mouse.spec.ts | mouse_spec.rb | [x] Ported |
 | navigation.spec.ts | navigation_spec.rb | [x] Ported |
 | network.spec.ts | network_spec.rb | [x] Ported |
@@ -137,7 +137,7 @@ Node.js tests include:
 - `Locator.prototype.map/filter/wait/clone`
 - `FunctionLocator`
 
-**Ruby status:** Not implemented. This is a significant new API addition.
+**Ruby status:** Implemented and ported to `spec/integration/locator_spec.rb`.
 
 ### 3. Navigation Tests (`navigation.spec.ts`)
 **Priority: HIGH** - Core navigation functionality
@@ -191,7 +191,7 @@ Node.js tests:
 - [x] Port missing `target.spec.ts` tests → Create `target_spec.rb` (AbortSignal pending)
 
 ### Phase 2: New APIs (High Priority)
-- [ ] Implement Locator API and port `locator.spec.ts` tests
+- [x] Implement Locator API and port `locator.spec.ts` tests
 
 ### Phase 3: Medium Priority
 - [x] Port `download.spec.ts` tests
@@ -1000,17 +1000,16 @@ Most OOPIF tests are ported including:
 
 ### Spec Files Status Summary
 
-**Fully Ported (35):**
-aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, download, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, waittask, worker
+**Fully Ported (36):**
+aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, download, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, locator, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, waittask, worker
 
 **Partially Ported (1):**
 - target.spec.ts → target_spec.rb (AbortSignal unsupported)
 
-**Missing - High Priority (4):**
+**Missing - High Priority (3):**
 1. **accessibility.spec.ts** - Accessibility API not implemented
-2. **locator.spec.ts** - Locator API not implemented
-3. **proxy.spec.ts** - Proxy support not implemented
-4. **autofill.spec.ts** - Autofill not implemented
+2. **proxy.spec.ts** - Proxy support not implemented
+3. **autofill.spec.ts** - Autofill not implemented
 
 **Low Priority/N/A (11):**
 acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixtures, headful, injected, stacktrace, webExtension, webgl
@@ -1019,7 +1018,6 @@ acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixt
 
 #### High Priority (Core functionality gaps)
 1. **Accessibility API** - Add `Page#accessibility` and port accessibility.spec.ts
-2. **Locator API** - Implement Locator class and port locator.spec.ts
 
 #### Medium Priority
 1. **proxy.spec.ts** - Proxy configuration support

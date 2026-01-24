@@ -155,6 +155,7 @@ See `CLAUDE/porting_puppeteer.md` for detailed examples.
   - RxJS Observable flows are replaced with manual EventEmitter listeners + `Async::Promise` (no `fromEmitterEvent`/`merge`/`timeout`), so compose waits explicitly (e.g., `wait_for_navigation`, `set_content`).
   - Use `AsyncUtils` (Barrier-based Promise.all/race + `async_timeout`) instead of RxJS `combineLatest`/`firstValueFrom`/`timeout`.
   - `WaitTask`/`TaskManager` mirror Puppeteer's polling waits; no AbortSignal, use Async tasks + cancellation.
+  - **AbortSignal is NOT supported**: Do NOT port `signal` parameters from upstream Puppeteer. Ruby's concurrency model doesn't align with JavaScript's AbortController pattern.
   - `ReactorRunner` runs a dedicated Async reactor thread and proxies sync calls into it (wrap/unwrap).
   - Use `Core::EventEmitter` + symbols instead of RxJS event streams; clean up listeners explicitly.
   - Disposable patterns: `Core::Disposable::DisposableStack`/`DisposableMixin` stand in for JS DisposableStack/AsyncDisposableStack.

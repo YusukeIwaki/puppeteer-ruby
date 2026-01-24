@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Touchscreen' do
   def all_events(page)
-    page.evaluate('() => allEvents')
+    page.evaluate('() => globalThis.waitForEvents')
   end
 
   describe 'Touchscreen#tap' do

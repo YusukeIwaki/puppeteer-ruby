@@ -124,11 +124,30 @@ class Puppeteer::JSHandle
       return Time.iso8601(iso_value) if iso_value
     end
 
-    value = evaluate('(object) => object')
-    if value.nil?
+    begin
+      result = @client.send_message('Runtime.callFunctionOn',
+        functionDeclaration: 'function() { return this; }',
+        objectId: @remote_object.object_id_value,
+        returnByValue: true,
+        awaitPromise: true,
+        userGesture: true,
+      )
+    rescue Puppeteer::Connection::ProtocolError => err
+      if err.message.include?('Object reference chain is too long') ||
+        err.message.include?("Object couldn't be returned by value")
+        return nil
+      end
+      raise
+    end
+    if result['exceptionDetails']
+      raise Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{result['exceptionDetails']}")
+    end
+
+    remote_object = Puppeteer::RemoteObject.new(result['result'])
+    if remote_object.type == 'undefined'
       raise Puppeteer::Error.new('Could not serialize referenced object')
     end
-    value
+    remote_object.value
   end
 
   def as_element
