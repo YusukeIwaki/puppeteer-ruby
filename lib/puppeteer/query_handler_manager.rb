@@ -45,62 +45,7 @@ class Puppeteer::QueryHandlerManager
   end
 
   private def p_query_handler
-    @p_query_handler ||= Puppeteer::CustomQueryHandler.new(
-      query_one: <<~JAVASCRIPT,
-      (element, selector) => {
-        const parts = selector.split('>>>').map((part) => part.trim()).filter(Boolean);
-        let roots = [element];
-        if (parts.length === 0) return null;
-        for (let i = 0; i < parts.length; i++) {
-          const part = parts[i];
-          const next = [];
-          for (const root of roots) {
-            const scope = root;
-            const elements = scope.querySelectorAll(part);
-            for (const node of elements) {
-              if (i === parts.length - 1) {
-                next.push(node);
-              } else if (node.shadowRoot) {
-                next.push(node.shadowRoot);
-              }
-            }
-          }
-          if (i === parts.length - 1) {
-            return next[0] || null;
-          }
-          roots = next;
-        }
-        return null;
-      }
-      JAVASCRIPT
-      query_all: <<~JAVASCRIPT,
-      (element, selector) => {
-        const parts = selector.split('>>>').map((part) => part.trim()).filter(Boolean);
-        let roots = [element];
-        if (parts.length === 0) return [];
-        for (let i = 0; i < parts.length; i++) {
-          const part = parts[i];
-          const next = [];
-          for (const root of roots) {
-            const scope = root;
-            const elements = scope.querySelectorAll(part);
-            for (const node of elements) {
-              if (i === parts.length - 1) {
-                next.push(node);
-              } else if (node.shadowRoot) {
-                next.push(node.shadowRoot);
-              }
-            }
-          }
-          if (i === parts.length - 1) {
-            return next;
-          }
-          roots = next;
-        }
-        return [];
-      }
-      JAVASCRIPT
-    )
+    @p_query_handler ||= Puppeteer::PQueryHandler.new(query_handler_manager: self)
   end
 
   private def xpath_handler
@@ -331,11 +276,20 @@ class Puppeteer::QueryHandlerManager
         raise ArgumentError.new("Query set to use \"#{name}\", but no query handler of that name was found")
       end
       polling = name == 'aria' ? 'raf' : 'mutation'
-    elsif selector.include?('>>>')
-      query_handler = p_query_handler
-      polling = 'raf'
     else
-      query_handler = default_handler
+      begin
+        _selectors, is_pure_css, has_pseudo_classes, has_aria =
+          Puppeteer::PSelectorParser.parse(selector)
+        if is_pure_css
+          polling = has_pseudo_classes ? 'raf' : 'mutation'
+          query_handler = default_handler
+        else
+          polling = has_aria ? 'raf' : 'mutation'
+          query_handler = p_query_handler
+        end
+      rescue StandardError
+        query_handler = default_handler
+      end
     end
 
     Result.new(

@@ -160,8 +160,6 @@ class Puppeteer::Locator
   def wait
     handle = wait_handle
     begin
-      return nil if handle.is_a?(Puppeteer::ElementHandle)
-
       handle.json_value
     ensure
       handle.dispose
@@ -180,8 +178,7 @@ class Puppeteer::Locator
   # @rbs return: Puppeteer::Locator -- Filtered locator
   def filter(predicate)
     Puppeteer::FilteredLocator.new(_clone, lambda { |handle, options|
-      result = handle.frame.wait_for_function(predicate, args: [handle], timeout: options[:timeout])
-      result.dispose
+      handle.frame.wait_for_function(predicate, args: [handle], timeout: @timeout)
       true
     })
   end
@@ -290,9 +287,7 @@ class Puppeteer::Locator
     with_retry(name) do |options|
       handle = _wait(options)
       begin
-        conditions.each do |condition|
-          condition.call(handle, options)
-        end
+        run_conditions(handle, options, conditions)
         emit_event(Puppeteer::LocatorEvent::Action)
         block.call(handle, options)
         nil
@@ -316,7 +311,13 @@ class Puppeteer::Locator
 
       options = build_action_options(timeout_controller)
       begin
+        remaining = options[:timeout]
+        if remaining && remaining > 0
+          return Puppeteer::AsyncUtils.async_timeout(remaining, -> { block.call(options) }).wait
+        end
         return block.call(options)
+      rescue Async::TimeoutError
+        timeout_controller.check!(last_error)
       rescue => err
         last_error = err
         timeout_controller.check!(last_error)
@@ -331,6 +332,15 @@ class Puppeteer::Locator
       timeout: timeout_controller.remaining_timeout,
       timeout_controller: timeout_controller,
     }
+  end
+
+  private def run_conditions(handle, options, conditions)
+    return if conditions.empty?
+
+    tasks = conditions.map do |condition|
+      proc { condition.call(handle, options) }
+    end
+    Puppeteer::AsyncUtils.await_promise_all(*tasks)
   end
 
   private def wait_for_enabled_if_needed(handle, options)
@@ -645,11 +655,7 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
   protected def _wait(options)
     handle = if @selector_or_handle.is_a?(String)
       selector = @selector_or_handle
-      if (p_selectors = parse_p_selector(selector))
-        wait_for_any_selector(p_selectors, options)
-      else
-        @page_or_frame.wait_for_selector(selector, visible: false, timeout: options[:timeout])
-      end
+      @page_or_frame.wait_for_selector(selector, visible: false, timeout: options[:timeout])
     else
       @selector_or_handle
     end
@@ -669,38 +675,6 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
         return if handle.visible?
       when 'hidden'
         return if handle.hidden?
-      end
-
-      options[:timeout_controller].check!
-      Puppeteer::AsyncUtils.sleep_seconds(RETRY_DELAY_SECONDS)
-    end
-  end
-
-  private def parse_p_selector(selector)
-    return nil unless selector.include?('::-p-')
-
-    parts = selector.split(',').map(&:strip)
-    selectors = parts.map do |part|
-      if (match = part.match(/^::\-p\-text\((.*)\)$/))
-        "text/#{match[1]}"
-      elsif (match = part.match(/^::\-p\-xpath\((.*)\)$/))
-        xpath = match[1]
-        if xpath.start_with?('/')
-          xpath = ".//#{xpath.sub(%r{^/+}, '')}"
-        end
-        "xpath/#{xpath}"
-      else
-        return nil
-      end
-    end
-    selectors
-  end
-
-  private def wait_for_any_selector(selectors, options)
-    loop do
-      selectors.each do |selector|
-        handle = @page_or_frame.query_selector(selector)
-        return handle if handle
       end
 
       options[:timeout_controller].check!
