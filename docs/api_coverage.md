@@ -285,9 +285,9 @@
 * filter
 * hover
 * map
-* race
+* ~~race~~
 * scroll
-* setEnsureElementIsInTheViewport => `#set_ensure_element_is_in_viewport`
+* setEnsureElementIsInTheViewport => `#set_ensure_element_is_in_the_viewport`
 * setTimeout => `#set_timeout`
 * setVisibility => `#set_visibility`
 * setWaitForEnabled => `#set_wait_for_enabled`

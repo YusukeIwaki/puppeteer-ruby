@@ -119,7 +119,7 @@ class Puppeteer::Locator
 
   # @rbs value: bool -- Whether to ensure element is in viewport
   # @rbs return: Puppeteer::Locator -- Updated locator
-  def set_ensure_element_is_in_viewport(value)
+  def set_ensure_element_is_in_the_viewport(value)
     locator = _clone
     locator.instance_variable_set(:@ensure_element_is_in_viewport, value)
     locator
@@ -568,9 +568,9 @@ class Puppeteer::DelegatedLocator < Puppeteer::Locator
     locator
   end
 
-  def set_ensure_element_is_in_viewport(value)
+  def set_ensure_element_is_in_the_viewport(value)
     locator = super
-    locator.instance_variable_set(:@delegate, @delegate.set_ensure_element_is_in_viewport(value))
+    locator.instance_variable_set(:@delegate, @delegate.set_ensure_element_is_in_the_viewport(value))
     locator
   end
 

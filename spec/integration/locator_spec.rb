@@ -29,7 +29,7 @@ RSpec.describe 'Locator' do
       will_click = false
       page
         .locator('button')
-        .set_ensure_element_is_in_viewport(false)
+        .set_ensure_element_is_in_the_viewport(false)
         .set_timeout(0)
         .set_visibility(nil)
         .set_wait_for_enabled(false)
