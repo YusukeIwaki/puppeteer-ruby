@@ -339,6 +339,21 @@ class Puppeteer::NetworkManager
     apply_to_clients { |client| apply_protocol_cache_disabled(client) }
   end
 
+  # Handle intercepted requests in a child task to avoid blocking the CDP receive loop.
+  private def dispatch_intercepted_request(event, fetch_request_id, client:)
+    if Async::Task.current?
+      Async do
+        begin
+          handle_request(event, fetch_request_id, client: client)
+        rescue => err
+          debug_puts(err)
+        end
+      end
+    else
+      handle_request(event, fetch_request_id, client: client)
+    end
+  end
+
   private def handle_request_will_be_sent(event, client)
     network_request_id = event['requestId']
     event_url = event.dig('request', 'url')
@@ -364,7 +379,7 @@ class Puppeteer::NetworkManager
       if_present(@network_event_manager.get_request_paused(network_request_id)) do |request_paused_event|
         fetch_request_id = request_paused_event['requestId']
         patch_request_event_headers(event, request_paused_event)
-        handle_request(event, fetch_request_id, client: client)
+        dispatch_intercepted_request(event, fetch_request_id, client: client)
         @network_event_manager.forget_request_paused(network_request_id)
       end
 

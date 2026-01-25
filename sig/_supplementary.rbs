@@ -178,6 +178,9 @@ class Puppeteer::FrameManager
 
   def setup_listeners: (Puppeteer::CDPSession client) -> void
   def init: (String target_id, ?Puppeteer::CDPSession cdp_session) -> void
+  def with_frame_tree_handled: () { () -> void } -> void
+  def prepare_frame_tree_handling: () -> void
+  def finish_frame_tree_handling: () -> void
   def attach_child_frame: (Puppeteer::Frame parent_frame, String parent_frame_id, String frame_id, Puppeteer::CDPSession? session) -> void
   def reattach_frame: (Puppeteer::Frame frame, String frame_id, bool is_main_frame, Hash[String, untyped] frame_payload) -> void
   def ensure_isolated_world: (Puppeteer::CDPSession session, String name) -> void
@@ -286,6 +289,9 @@ class Puppeteer::Connection
 
   def sleep_before_handling_message: (Hash[String, untyped] message) -> void
   def should_handle_synchronously?: (Hash[String, untyped] message) -> bool
+  def network_event_message?: (Hash[String, untyped] message) -> bool
+  def ensure_network_message_task: () -> void
+  def enqueue_network_message: (Hash[String, untyped] message) -> void
   def request_debug_printer: () -> untyped
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void

@@ -86,4 +86,67 @@ RSpec.describe Puppeteer::NetworkManager do
       end
     end
   end
+
+  describe 'request interception' do
+    it 'does not block when requestPaused arrives before requestWillBeSent' do
+      allow(frame_manager).to receive(:frame).and_return(nil)
+      allow(client).to receive(:send_message)
+      instance.request_interception = true
+
+      started = Async::Promise.new
+      gate = Async::Promise.new
+      finished = Async::Promise.new
+
+      instance.add_event_listener(NetworkManagerEmittedEvents::Request) do |request|
+        request.enqueue_intercept_action(lambda do
+          started.resolve(true) unless started.resolved?
+          gate.wait
+          request.continue
+          finished.resolve(true) unless finished.resolved?
+        end)
+      end
+
+      network_request_id = 'request-1'
+      fetch_request_id = 'fetch-1'
+      request_url = 'http://example.test/one.png'
+
+      request_paused_event = {
+        'requestId' => fetch_request_id,
+        'networkId' => network_request_id,
+        'request' => {
+          'url' => request_url,
+          'method' => 'GET',
+          'headers' => {},
+        },
+        'resourceType' => 'Image',
+      }
+
+      request_will_be_sent_event = {
+        'requestId' => network_request_id,
+        'loaderId' => network_request_id,
+        'request' => {
+          'url' => request_url,
+          'method' => 'GET',
+          'headers' => {},
+        },
+        'type' => 'Image',
+        'initiator' => {},
+      }
+
+      instance.instance_variable_get(:@network_event_manager)
+              .store_request_paused(network_request_id, request_paused_event)
+
+      Async do
+        Puppeteer::AsyncUtils.async_timeout(100, -> {
+          instance.send(:handle_request_will_be_sent, request_will_be_sent_event, client)
+        }).wait
+
+        Puppeteer::AsyncUtils.async_timeout(1000, started).wait
+        expect(finished.resolved?).to eq(false)
+
+        gate.resolve(true)
+        Puppeteer::AsyncUtils.async_timeout(1000, finished).wait
+      end.wait
+    end
+  end
 end

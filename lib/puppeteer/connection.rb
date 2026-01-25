@@ -1,4 +1,5 @@
 require 'json'
+require 'async/queue'
 
 class Puppeteer::Connection
   include Puppeteer::DebugPrint
@@ -44,11 +45,16 @@ class Puppeteer::Connection
     @delay = delay
     @protocol_timeout = protocol_timeout
 
+    @network_message_queue = Async::Queue.new
+    @network_message_task = nil
+
     @transport = transport
     @transport.on_message do |data|
       message = JSON.parse(data)
       sleep_before_handling_message(message)
-      if should_handle_synchronously?(message)
+      if network_event_message?(message)
+        enqueue_network_message(message)
+      elsif should_handle_synchronously?(message)
         handle_message(message)
       else
         async_handle_message(message)
@@ -87,7 +93,8 @@ class Puppeteer::Connection
     when nil
       false
     when /^Network\./
-      true
+      # Network events are queued for ordered async processing.
+      false
     when /^Page\.frame/
       # Page.frameAttached
       # Page.frameNavigated
@@ -109,6 +116,34 @@ class Puppeteer::Connection
       message.dig('params', 'targetInfo', 'type') == 'browser'
     else
       false
+    end
+  end
+
+  private def network_event_message?(message)
+    message['method']&.start_with?('Network.')
+  end
+
+  private def ensure_network_message_task
+    return if @network_message_task&.alive?
+    return unless Async::Task.current?
+
+    @network_message_task = Async do
+      while (queued = @network_message_queue.dequeue)
+        handle_message(queued)
+      end
+    end
+  end
+
+  private def enqueue_network_message(message)
+    if Async::Task.current?
+      ensure_network_message_task
+      begin
+        @network_message_queue.enqueue(message)
+      rescue Async::Queue::ClosedError
+        # Connection is closing; ignore late network events.
+      end
+    else
+      handle_message(message)
     end
   end
 
@@ -310,6 +345,12 @@ class Puppeteer::Connection
     @closed = true
     @transport.on_message
     @transport.on_close
+    @network_message_queue.close
+    begin
+      @network_message_task&.stop
+    rescue Async::Stop
+      # Task already stopping; ignore.
+    end
     callbacks = @callbacks_mutex.synchronize do
       @callbacks.values.tap { @callbacks.clear }
     end
