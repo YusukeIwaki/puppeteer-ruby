@@ -34,32 +34,49 @@ class Puppeteer::FrameManager
 
     # Keeps track of frames that are in the process of being attached in #onFrameAttached.
     @frames_pending_attachment = {}
+    @frame_tree_handled_promise = nil
+    @queued_frame_events = []
+    @frame_tree_mutex = Mutex.new
 
     setup_listeners(@client)
   end
 
   private def setup_listeners(client)
     client.on_event('Page.frameAttached') do |event|
-      handle_frame_attached(client, event['frameId'], event['parentFrameId'])
+      with_frame_tree_handled do
+        handle_frame_attached(client, event['frameId'], event['parentFrameId'])
+      end
     end
     client.on_event('Page.frameNavigated') do |event|
-      @frame_naviigated_received << event['frame']['id']
-      handle_frame_navigated(event['frame'])
+      with_frame_tree_handled do
+        @frame_naviigated_received << event['frame']['id']
+        handle_frame_navigated(event['frame'])
+      end
     end
     client.on_event('Page.navigatedWithinDocument') do |event|
-      handle_frame_navigated_within_document(event['frameId'], event['url'])
+      with_frame_tree_handled do
+        handle_frame_navigated_within_document(event['frameId'], event['url'])
+      end
     end
     client.on_event('Page.frameDetached') do |event|
-      handle_frame_detached(event['frameId'], event['reason'])
+      with_frame_tree_handled do
+        handle_frame_detached(event['frameId'], event['reason'])
+      end
     end
     client.on_event('Page.frameStartedLoading') do |event|
-      handle_frame_started_loading(event['frameId'])
+      with_frame_tree_handled do
+        handle_frame_started_loading(event['frameId'])
+      end
     end
     client.on_event('Page.frameStoppedLoading') do |event|
-      handle_frame_stopped_loading(event['frameId'])
+      with_frame_tree_handled do
+        handle_frame_stopped_loading(event['frameId'])
+      end
     end
     client.on_event('Runtime.executionContextCreated') do |event|
-      handle_execution_context_created(event['context'], client)
+      with_frame_tree_handled do
+        handle_execution_context_created(event['context'], client)
+      end
     end
     client.on_event('Runtime.executionContextDestroyed') do |event|
       handle_execution_context_destroyed(event['executionContextId'], client)
@@ -68,7 +85,9 @@ class Puppeteer::FrameManager
       handle_execution_contexts_cleared(client)
     end
     client.on_event('Page.lifecycleEvent') do |event|
-      handle_lifecycle_event(event)
+      with_frame_tree_handled do
+        handle_lifecycle_event(event)
+      end
     end
   end
 
@@ -78,6 +97,7 @@ class Puppeteer::FrameManager
     @frames_pending_target_init[target_id] ||= Async::Promise.new
     client = cdp_session || @client
 
+    prepare_frame_tree_handling
     promises = [
       client.async_send_message('Page.enable'),
       client.async_send_message('Page.getFrameTree'),
@@ -85,6 +105,7 @@ class Puppeteer::FrameManager
     results = Puppeteer::AsyncUtils.await_promise_all(*promises)
     frame_tree = results[1]['frameTree']
     handle_frame_tree(client, frame_tree)
+    finish_frame_tree_handling
     Puppeteer::AsyncUtils.await_promise_all(
       client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
       client.async_send_message('Runtime.enable'),
@@ -93,10 +114,14 @@ class Puppeteer::FrameManager
     @network_manager.init unless cdp_session
   rescue => err
     # The target might have been closed before the initialization finished.
-    return if err.message.include?('Target closed') || err.message.include?('Session closed')
+    if err.message.include?('Target closed') || err.message.include?('Session closed')
+      finish_frame_tree_handling
+      return
+    end
 
     raise
   ensure
+    finish_frame_tree_handling if @frame_tree_handled_promise && !@frame_tree_handled_promise.resolved?
     @frames_pending_target_init.delete(target_id)&.resolve(nil)
   end
 
@@ -218,6 +243,46 @@ class Puppeteer::FrameManager
     return if !frame
     frame.handle_lifecycle_event(event['loaderId'], event['name'])
     emit_event(FrameManagerEmittedEvents::LifecycleEvent, frame)
+  end
+
+  private def with_frame_tree_handled(&block)
+    promise = @frame_tree_handled_promise
+    if promise && !promise.resolved?
+      queued = false
+      @frame_tree_mutex.synchronize do
+        promise = @frame_tree_handled_promise
+        if promise && !promise.resolved?
+          @queued_frame_events << block
+          queued = true
+        end
+      end
+      return if queued
+    end
+    block.call
+  end
+
+  private def prepare_frame_tree_handling
+    queued = nil
+    @frame_tree_mutex.synchronize do
+      if @frame_tree_handled_promise && !@frame_tree_handled_promise.resolved?
+        @frame_tree_handled_promise.resolve(nil)
+        queued = @queued_frame_events
+      end
+      @queued_frame_events = []
+      @frame_tree_handled_promise = Async::Promise.new
+    end
+    queued&.each(&:call)
+  end
+
+  private def finish_frame_tree_handling
+    queued = nil
+    @frame_tree_mutex.synchronize do
+      return unless @frame_tree_handled_promise
+      @frame_tree_handled_promise.resolve(nil) unless @frame_tree_handled_promise.resolved?
+      queued = @queued_frame_events
+      @queued_frame_events = []
+    end
+    queued&.each(&:call)
   end
 
   # @param frame_id [String]
@@ -352,8 +417,11 @@ class Puppeteer::FrameManager
     if is_main_frame
       if frame
         # Update frame id to retain frame identity on cross-process navigation.
-        @frames.delete(frame.id)
-        frame.id = frame_id
+        if frame.id != frame_id
+          old_frame_id = frame.id
+          @frames.delete(old_frame_id)
+          frame.id = frame_id
+        end
       else
         # Initial main frame navigation.
         frame = Puppeteer::Frame.new(self, nil, frame_id, @client)
