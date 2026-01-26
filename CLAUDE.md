@@ -206,6 +206,21 @@ end
 
 ## Development Workflow
 
+### Handling Bug Reports
+
+When investigating a bug reported by a user (e.g., GitHub issue):
+
+1. **First, reproduce the issue** - Write a minimal reproduction script or RSpec test that demonstrates the bug
+2. **Verify the reproduction** - Run the test and confirm it fails as described in the report
+3. **Then investigate** - Only after reproduction is confirmed, analyze the root cause
+4. **Implement the fix** - Make the necessary code changes
+5. **Verify the fix** - Run the reproduction test again and confirm it now passes
+
+This workflow ensures:
+- The bug is real and reproducible
+- The fix actually addresses the reported issue
+- A regression test exists for the future
+
 ### Before Submitting Changes
 
 1. Run tests: `bundle exec rspec`
