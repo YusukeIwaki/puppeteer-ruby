@@ -5,6 +5,7 @@ require 'timeout'
 require 'rack/utils'
 
 require_relative 'support/test_server'
+require_relative 'support/ws_http2_test_server'
 
 class TestServerSinatraAdapter
   class SinatraRequest
@@ -187,6 +188,16 @@ RSpec.configure do |config|
     $shared_https_test_server&.stop
   end
 
+  config.before(:each, ws_http2: true) do
+    $ws_http2_test_server ||= TestServer::WebSocketHTTP2Server.new
+    $ws_http2_test_server.start
+  end
+
+  config.after(:each, ws_http2: true) do
+    $ws_http2_test_server&.stop
+    $ws_http2_test_server = nil
+  end
+
   # Every browser automation test case should spend less than 15sec.
   timeout_sec = (ENV['PUPPETEER_TIMEOUT_RSPEC'] || 15).to_i
 
@@ -282,6 +293,12 @@ RSpec.configure do |config|
     end
   end
   config.include helper_module, type: :integration
+
+  config.include Module.new {
+    def ws_http2_server
+      $ws_http2_test_server or raise 'WebSocket HTTP/2 test server not started'
+    end
+  }
 
   RSpec.shared_context('with test state') do
     around do |example|

@@ -17,7 +17,10 @@ class Puppeteer::WebSocketTransport
 
   def initialize(url)
     @url = url
-    @endpoint = Async::HTTP::Endpoint.parse(url)
+    # Force HTTP/1.1 for WebSocket connections.
+    # Some servers (e.g., Google Cloud Run) advertise HTTP/2 via ALPN but don't
+    # properly support WebSocket over HTTP/2 (RFC 8441), causing stream errors.
+    @endpoint = Async::HTTP::Endpoint.parse(url, alpn_protocols: ["http/1.1"])
     @connection = nil
     @task = nil
     @closed = false
