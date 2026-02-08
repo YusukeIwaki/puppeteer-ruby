@@ -1,5 +1,7 @@
 # rbs_inline: enabled
 
+require 'base64'
+
 class Puppeteer::HTTPRequest
   include Puppeteer::DebugPrint
   include Puppeteer::IfPresent
@@ -101,7 +103,7 @@ class Puppeteer::HTTPRequest
     resource_type = event['type'] || event['resourceType'] || 'other'
     @resource_type = resource_type.downcase
     @method = event['request']['method']
-    @post_data = event['request']['postData']
+    @post_data = parse_post_data(event)
     has_post_data = event.dig('request', 'hasPostData')
     @has_post_data = has_post_data.nil? ? !@post_data.nil? : has_post_data
     @frame = frame
@@ -157,6 +159,18 @@ class Puppeteer::HTTPRequest
   private def assert_interception_allowed
     unless @allow_interception
       raise InterceptionNotEnabledError.new
+    end
+  end
+
+  private def parse_post_data(event)
+    post_data_entries = event.dig('request', 'postDataEntries')
+    if post_data_entries && !post_data_entries.empty?
+      post_data_entries
+        .filter_map { |entry| entry['bytes'] ? Base64.decode64(entry['bytes']) : nil }
+        .join
+        .force_encoding('UTF-8')
+    else
+      event.dig('request', 'postData')
     end
   end
 

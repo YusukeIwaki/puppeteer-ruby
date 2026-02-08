@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v24.35.0
+- Puppeteer version: v24.37.0
 - puppeteer-ruby version: 0.50.0
 
 ## Puppeteer
@@ -34,6 +34,7 @@
 * ~~removeScreen~~
 * ~~screens~~
 * ~~setCookie~~
+* setPermission => `#set_permission`
 * ~~setWindowBounds~~
 * target
 * targets
@@ -55,6 +56,7 @@
 * overridePermissions => `#override_permissions`
 * pages
 * setCookie => `#set_cookie`
+* setPermission => `#set_permission`
 * targets
 * waitForTarget => `#wait_for_target`
 
@@ -321,6 +323,7 @@
 * bringToFront => `#bring_to_front`
 * browser
 * browserContext => `#browser_context`
+* captureHeapSnapshot => `#capture_heap_snapshot`
 * click
 * close
 * content

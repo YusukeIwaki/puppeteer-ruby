@@ -1,0 +1,171 @@
+# Generated from lib/puppeteer/browser.rb with RBS::Inline
+
+class Puppeteer::Browser
+  include Puppeteer::DebugPrint
+
+  include Puppeteer::EventCallbackable
+
+  include Puppeteer::IfPresent
+
+  # @rbs product: String? -- Browser product (chrome only)
+  # @rbs connection: Puppeteer::Connection -- CDP connection
+  # @rbs context_ids: Array[String] -- Browser context IDs
+  # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs network_enabled: bool -- Whether network events are enabled
+  # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
+  # @rbs close_callback: Proc -- Close callback
+  # @rbs target_filter_callback: Proc? -- Target filter callback
+  # @rbs is_page_target_callback: Proc? -- Page target predicate
+  # @rbs return: Puppeteer::Browser -- Browser instance
+  def self.create: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool) -> Puppeteer::Browser
+
+  # @rbs product: String? -- Browser product (chrome only)
+  # @rbs connection: Puppeteer::Connection -- CDP connection
+  # @rbs context_ids: Array[String] -- Browser context IDs
+  # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
+  # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
+  # @rbs network_enabled: bool -- Whether network events are enabled
+  # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
+  # @rbs close_callback: Proc -- Close callback
+  # @rbs target_filter_callback: Proc? -- Target filter callback
+  # @rbs is_page_target_callback: Proc? -- Page target predicate
+  # @rbs return: void -- No return value
+  def initialize: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool) -> void
+
+  private def default_target_filter_callback: (untyped target_info) -> untyped
+
+  private def default_is_page_target_callback: (untyped target_info) -> untyped
+
+  attr_reader is_page_target_callback: untyped
+
+  # @rbs event_name: (String | Symbol) -- Browser event name
+  # @rbs &block: ^(untyped) -> void -- Event handler
+  # @rbs return: String -- Listener ID
+  def on: (String | Symbol event_name) ?{ (?) -> untyped } -> String
+
+  # @rbs event_name: (String | Symbol) -- Browser event name
+  # @rbs &block: ^(untyped) -> void -- Event handler
+  # @rbs return: String -- Listener ID
+  def once: (String | Symbol event_name) ?{ (?) -> untyped } -> String
+
+  private def attach: () -> untyped
+
+  private def detach: () -> untyped
+
+  # @rbs return: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
+  def process: () -> Puppeteer::BrowserRunner::BrowserProcess?
+
+  private def target_manager: () -> untyped
+
+  # @rbs return: Puppeteer::BrowserContext -- New incognito browser context
+  def create_incognito_browser_context: () -> Puppeteer::BrowserContext
+
+  # @rbs proxy_server: String? -- Proxy server for new context
+  # @rbs proxy_bypass_list: Array[String]? -- Proxy bypass list
+  # @rbs download_behavior: Hash[Symbol | String, untyped]? -- Download behavior options
+  # @rbs return: Puppeteer::BrowserContext -- New browser context
+  def create_browser_context: (?proxy_server: String?, ?proxy_bypass_list: Array[String]?, ?download_behavior: Hash[Symbol | String, untyped]?) -> Puppeteer::BrowserContext
+
+  # @rbs return: Array[Puppeteer::BrowserContext] -- All browser contexts
+  def browser_contexts: () -> Array[Puppeteer::BrowserContext]
+
+  # @rbs return: Puppeteer::BrowserContext -- Default browser context
+  def default_browser_context: () -> Puppeteer::BrowserContext
+
+  # @rbs origin: String -- Origin URL, or '*' for all origins
+  # @rbs permissions: Array[Hash[Symbol | String, untyped]] -- Permission descriptors and states
+  # @rbs return: void -- No return value
+  def set_permission: (String origin, *untyped permissions) -> void
+
+  # @rbs context_id: String? -- Browser context ID
+  # @rbs return: void -- No return value
+  def dispose_context: (String? context_id) -> void
+
+  class MissingBrowserContextError < Puppeteer::Error
+  end
+
+  # @rbs target_info: Puppeteer::Target::TargetInfo -- Target info
+  # @rbs session: Puppeteer::CDPSession? -- Attached session
+  # @rbs return: Puppeteer::Target -- Created target
+  def create_target: (Puppeteer::Target::TargetInfo target_info, Puppeteer::CDPSession? session) -> Puppeteer::Target
+
+  private def handle_attached_to_target: (untyped target) -> untyped
+
+  private def handle_detached_from_target: (untyped target) -> untyped
+
+  private def handle_target_changed: (untyped target, untyped target_info) -> untyped
+
+  private def handle_target_discovered: (untyped target_info) -> untyped
+
+  # @rbs return: String -- WebSocket endpoint URL
+  def ws_endpoint: () -> String
+
+  # @rbs return: Puppeteer::Page -- New page in default context
+  def new_page: () -> Puppeteer::Page
+
+  class MissingTargetError < Puppeteer::Error
+  end
+
+  class CreatePageError < Puppeteer::Error
+  end
+
+  # @rbs context_id: String? -- Browser context ID
+  # @rbs return: Puppeteer::Page -- Created page
+  def create_page_in_context: (String? context_id) -> Puppeteer::Page
+
+  # All active targets inside the Browser. In case of multiple browser contexts, returns
+  # an array with all the targets in all browser contexts.
+  # @rbs return: Array[Puppeteer::Target] -- Active targets
+  def targets: () -> Array[Puppeteer::Target]
+
+  # The target associated with the browser.
+  # @rbs return: Puppeteer::Target -- Browser target
+  def target: () -> Puppeteer::Target
+
+  # used only in Target#opener
+  private def find_target_by_id: (untyped target_id) -> untyped
+
+  # @rbs predicate: Proc -- Predicate for target matching
+  # @rbs timeout: Numeric? -- Timeout in milliseconds
+  # @rbs return: Puppeteer::Target -- Matching target
+  def wait_for_target: (predicate: Proc, ?timeout: Numeric?) -> Puppeteer::Target
+
+  # @rbs return: Array[Puppeteer::Page] -- All pages across contexts
+  def pages: () -> Array[Puppeteer::Page]
+
+  # @rbs return: String -- Browser version string
+  def version: () -> String
+
+  # @rbs return: String -- Browser user agent string
+  def user_agent: () -> String
+
+  # @rbs return: void -- No return value
+  def close: () -> void
+
+  # @rbs return: void -- No return value
+  def disconnect: () -> void
+
+  # @rbs return: bool -- Whether the browser is connected
+  def connected?: () -> bool
+
+  class Version
+    # @rbs connection: Puppeteer::Connection -- CDP connection
+    # @rbs return: Puppeteer::Browser::Version -- Browser version info
+    def self.fetch: (Puppeteer::Connection connection) -> Puppeteer::Browser::Version
+
+    # @rbs hash: Hash[String, String] -- Version payload
+    # @rbs return: void -- No return value
+    def initialize: (Hash[String, String] hash) -> void
+
+    attr_reader protocol_version: untyped
+
+    attr_reader product: untyped
+
+    attr_reader revision: untyped
+
+    attr_reader user_agent: untyped
+
+    attr_reader js_version: untyped
+  end
+end

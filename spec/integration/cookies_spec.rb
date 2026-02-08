@@ -66,6 +66,42 @@ RSpec.describe 'cookies' do
       expect(cookies.first["sameSite"]).to eq("Lax")
     end
 
+    it 'should properly report "Default" sameSite cookie' do
+      page.goto(server_empty_page)
+      page.set_cookie(
+        name: 'a',
+        value: 'b',
+        sameSite: 'Default',
+      )
+      cookies = page.cookies
+      expect(cookies.size).to eq(1)
+      expect(cookies.first['name']).to eq('a')
+      expect(cookies.first['sameSite']).to satisfy { |value| ['Default', 'Lax', nil].include?(value) }
+    end
+
+    it 'should be able to delete "Default" sameSite cookie' do
+      page.goto(server_empty_page)
+      page.set_cookie(
+        name: 'a',
+        value: 'b',
+        sameSite: 'Default',
+      )
+      cookies = page.cookies
+      expect(cookies.find { |cookie| cookie['name'] == 'a' }).not_to be_nil
+      page.delete_cookie(*cookies)
+      expect(page.cookies.length).to eq(0)
+    end
+
+    it 'should report "Default" sameSite cookie when not specified' do
+      sinatra.get('/empty_samesite_default.html') do
+        response.headers['Set-Cookie'] = 'a=b'
+        ''
+      end
+      page.goto("#{server_prefix}/empty_samesite_default.html")
+      cookies = page.cookies
+      expect(cookies.size).to eq(1)
+    end
+
     it 'should get multiple cookies' do
       page.goto(server_empty_page)
       page.evaluate("() => { document.cookie = 'username=John Doe'; document.cookie = 'password=1234'; }")

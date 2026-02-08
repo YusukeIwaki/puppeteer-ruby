@@ -1,0 +1,216 @@
+# Generated from lib/puppeteer/http_request.rb with RBS::Inline
+
+class Puppeteer::HTTPRequest
+  include Puppeteer::DebugPrint
+
+  include Puppeteer::IfPresent
+
+  DEFAULT_INTERCEPT_RESOLUTION_PRIORITY: ::Integer
+
+  # defines some methods used only in NetworkManager, Response
+  class InternalAccessor
+    def initialize: (untyped request) -> untyped
+
+    def request_id: () -> untyped
+
+    def client=: (untyped client) -> untyped
+
+    def interception_id: () -> untyped
+
+    # @param response [Puppeteer::HTTPResponse]
+    def response=: (untyped response) -> untyped
+
+    def redirect_chain: () -> untyped
+
+    def failure_text=: (untyped failure_text) -> untyped
+
+    def from_memory_cache=: (untyped from_memory_cache) -> untyped
+
+    def from_memory_cache?: () -> untyped
+  end
+
+  class InterceptResolutionState
+    def self.abort: (?priority: untyped) -> untyped
+
+    def self.respond: (?priority: untyped) -> untyped
+
+    def self.continue: (?priority: untyped) -> untyped
+
+    def self.disabled: (?priority: untyped) -> untyped
+
+    def self.none: (?priority: untyped) -> untyped
+
+    def self.already_handled: (?priority: untyped) -> untyped
+
+    private def initialize: (action: untyped, priority: untyped) -> untyped
+
+    def priority_unspecified?: () -> untyped
+
+    attr_reader action: untyped
+
+    attr_reader priority: untyped
+  end
+
+  # @param client [Puppeteer::CDPSession]
+  # @param frame [Puppeteer::Frame]
+  # @param interception_id [string|nil]
+  # @param allow_interception [boolean]
+  # @param event [Hash]
+  # @param redirect_chain Array<Request>
+  def initialize: (untyped client, untyped frame, untyped interception_id, untyped allow_interception, untyped event, untyped redirect_chain) -> untyped
+
+  attr_reader internal: untyped
+
+  attr_reader client: untyped
+
+  attr_reader url: untyped
+
+  attr_reader resource_type: untyped
+
+  attr_reader method: untyped
+
+  attr_reader post_data: untyped
+
+  attr_reader response: untyped
+
+  attr_reader frame: untyped
+
+  attr_reader initiator: untyped
+
+  def update_headers: (untyped headers) -> untyped
+
+  def headers: () -> untyped
+
+  # @rbs return: bool -- Whether request has post data
+  def has_post_data?: () -> bool
+
+  # @rbs return: String? -- Post data string if available
+  def fetch_post_data: () -> String?
+
+  def inspect: () -> untyped
+
+  private def assert_interception_allowed: () -> untyped
+
+  private def parse_post_data: (untyped event) -> untyped
+
+  private def assert_interception_not_handled: () -> untyped
+
+  private def can_be_intercepted?: () -> untyped
+
+  # @returns the `ContinueRequestOverrides` that will be used
+  # if the interception is allowed to continue (ie, `abort()` and
+  # `respond()` aren't called).
+  def continue_request_overrides: () -> untyped
+
+  # @returns The `ResponseForRequest` that gets used if the
+  # interception is allowed to respond (ie, `abort()` is not called).
+  def response_for_request: () -> untyped
+
+  # @returns the most recent reason for aborting the request
+  def abort_error_reason: () -> untyped
+
+  # @returns An InterceptResolutionState object describing the current resolution
+  #  action and priority.
+  #
+  #  InterceptResolutionState contains:
+  #    action: InterceptResolutionAction
+  #    priority?: number
+  #
+  #  InterceptResolutionAction is one of: `abort`, `respond`, `continue`,
+  #  `disabled`, `none`, or `alreay-handled`
+  def intercept_resolution_state: () -> untyped
+
+  def intercept_resolution_handled?: () -> untyped
+
+  # Adds an async request handler to the processing queue.
+  # Deferred handlers are not guaranteed to execute in any particular order,
+  # but they are guarnateed to resolve before the request interception
+  # is finalized.
+  #
+  # @param pending_handler [Proc]
+  def enqueue_intercept_action: (untyped pending_handler) -> untyped
+
+  # Awaits pending interception handlers and then decides how to fulfill
+  # the request interception.
+  def finalize_interceptions: () -> untyped
+
+  def navigation_request?: () -> untyped
+
+  def redirect_chain: () -> untyped
+
+  def failure: () -> untyped
+
+  private def headers_to_array: (untyped headers) -> untyped
+
+  class InterceptionNotEnabledError < Puppeteer::Error
+    def initialize: () -> untyped
+  end
+
+  class AlreadyHandledError < Puppeteer::Error
+    def initialize: () -> untyped
+  end
+
+  # proceed request on request interception.
+  #
+  # Example:
+  #
+  #   page.on 'request' do |req|
+  #     # Override headers
+  #     headers = req.headers.merge(
+  #       foo: 'bar', # set "foo" header
+  #       origin: nil, # remove "origin" header
+  #     )
+  #     req.continue(headers: headers)
+  #   end
+  #
+  # @param error_code [String|Symbol]
+  def continue: (?url: untyped, ?method: untyped, ?post_data: untyped, ?headers: untyped, ?priority: untyped) -> untyped
+
+  private def continue_impl: (untyped overrides) -> untyped
+
+  # Mocking response.
+  #
+  # Example:
+  #
+  #   page.on 'request' do |req|
+  #     req.respond(
+  #       status: 404,
+  #       content_type: 'text/plain',
+  #       body: 'Not Found!'
+  #     )
+  #   end
+  #
+  # @param status [Integer]
+  # @param headers [Hash<String, String>]
+  # @param content_type [String]
+  # @param body [String]
+  def respond: (?status: untyped, ?headers: untyped, ?content_type: untyped, ?body: untyped, ?priority: untyped) -> untyped
+
+  private def respond_impl: (?status: untyped, ?headers: untyped, ?content_type: untyped, ?body: untyped) -> untyped
+
+  # abort request on request interception.
+  #
+  # Example:
+  #
+  #   page.on 'request' do |req|
+  #     if req.url.include?("porn")
+  #       req.abort
+  #     else
+  #       req.continue
+  #     end
+  #   end
+  #
+  # @param error_code [String|Symbol]
+  def abort: (?error_code: untyped, ?priority: untyped) -> untyped
+
+  private def abort_impl: (untyped error_reason) -> untyped
+
+  private def target_closed_error?: (untyped error) -> untyped
+
+  private def handle_interception_error: (untyped error) -> untyped
+
+  ERROR_REASONS: untyped
+
+  # List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
+  STATUS_TEXTS: untyped
+end

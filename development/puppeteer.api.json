@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.55.2",
+    "toolVersion": "7.56.0",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -2407,6 +2407,98 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#setPermission:member(1)",
+              "docComment": "/**\n * Sets the permission for a specific origin in the default {@link BrowserContext}.\n *\n * @remarks\n *\n * Shortcut for {@link BrowserContext.setPermission | browser.defaultBrowserContext().setPermission()}.\n *\n * @param origin - The origin to set the permission for.\n *\n * @param permission - The permission descriptor.\n *\n * @param state - The state of the permission.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setPermission(origin: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ...permissions: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        permission: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PermissionDescriptor",
+                  "canonicalReference": "puppeteer-core!PermissionDescriptor_2:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        state: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PermissionState",
+                  "canonicalReference": "puppeteer-core!PermissionState_2:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 10,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "origin",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "permissions",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 9
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "setPermission"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Browser#setWindowBounds:member(1)",
               "docComment": "/**\n * Sets the specified window {@link WindowBounds | bounds}.\n */\n",
               "excerptTokens": [
@@ -3233,7 +3325,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!BrowserContext#overridePermissions:member(1)",
-              "docComment": "/**\n * Grants this {@link BrowserContext | browser context} the given `permissions` within the given `origin`.\n *\n * @param origin - The origin to grant permissions to, e.g. \"https://example.com\".\n *\n * @param permissions - An array of permissions to grant. All permissions that are not listed here will be automatically denied.\n *\n * @example\n *\n * Overriding permissions in the {@link Browser.defaultBrowserContext | default browser context}:\n * ```ts\n * const context = browser.defaultBrowserContext();\n * await context.overridePermissions('https://html5demos.com', [\n *   'geolocation',\n * ]);\n * ```\n *\n */\n",
+              "docComment": "/**\n * Grants this {@link BrowserContext | browser context} the given `permissions` within the given `origin`.\n *\n * @deprecated\n *\n * in favor of {@link BrowserContext.setPermission}.\n *\n * @param origin - The origin to grant permissions to, e.g. \"https://example.com\".\n *\n * @param permissions - An array of permissions to grant. All permissions that are not listed here will be automatically denied.\n *\n * @example\n *\n * Overriding permissions in the {@link Browser.defaultBrowserContext | default browser context}:\n * ```ts\n * const context = browser.defaultBrowserContext();\n * await context.overridePermissions('https://html5demos.com', [\n *   'geolocation',\n * ]);\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3423,6 +3515,98 @@
               "isOptional": false,
               "isAbstract": true,
               "name": "setCookie"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!BrowserContext#setPermission:member(1)",
+              "docComment": "/**\n * Sets the permission for a specific origin.\n *\n * @param origin - The origin to set the permission for.\n *\n * @param permission - The permission descriptor.\n *\n * @param state - The state of the permission.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract setPermission(origin: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | '*'"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ...permissions: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        permission: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PermissionDescriptor",
+                  "canonicalReference": "puppeteer-core!PermissionDescriptor_2:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        state: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PermissionState",
+                  "canonicalReference": "puppeteer-core!PermissionState_2:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 10,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "origin",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "permissions",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 9
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "setPermission"
             },
             {
               "kind": "Method",
@@ -8785,7 +8969,7 @@
             },
             {
               "kind": "Content",
-              "text": "'Strict' | 'Lax' | 'None'"
+              "text": "'Strict' | 'Lax' | 'None' | 'Default'"
             },
             {
               "kind": "Content",
@@ -18615,6 +18799,51 @@
           }
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!HeapSnapshotOptions:interface",
+          "docComment": "/**\n * Options for {@link Page.captureHeapSnapshot}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface HeapSnapshotOptions "
+            }
+          ],
+          "fileUrlPath": "src/api/Page.ts",
+          "releaseTag": "Public",
+          "name": "HeapSnapshotOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!HeapSnapshotOptions#path:member",
+              "docComment": "/**\n * The file path to save the heap snapshot to.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Class",
           "canonicalReference": "puppeteer-core!HTTPRequest:class",
           "docComment": "/**\n * Represents an HTTP request sent by a page.\n *\n * @remarks\n *\n * Whenever the page sends a request, such as for a network resource, the following events are emitted by Puppeteer's `page`:\n *\n * - `request`: emitted when the request is issued by the page.\n *\n * - `requestfinished` - emitted when the response body is downloaded and the request is complete.\n *\n * If request fails at some point, then instead of `requestfinished` event the `requestfailed` event is emitted.\n *\n * All of these events provide an instance of `HTTPRequest` representing the request that occurred:\n * ```\n * page.on('request', request => ...)\n * ```\n *\n * NOTE: HTTP Error responses, such as 404 or 503, are still successful responses from HTTP standpoint, so request will complete with `requestfinished` event.\n *\n * If request gets a 'redirect' response, the request is successfully finished with the `requestfinished` event, and a new request is issued to a redirected url.\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `HTTPRequest` class.\n *\n * @public\n */\n",
@@ -20062,7 +20291,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!HTTPResponse#text:member(1)",
-              "docComment": "/**\n * Promise which resolves to a text (utf8) representation of response body.\n */\n",
+              "docComment": "/**\n * Promise which resolves to a text (utf8) representation of response body.\n *\n * @remarks\n *\n * This method will throw if the content is not utf-8 string\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -22736,6 +22965,34 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!LaunchOptions#signal:member",
+              "docComment": "/**\n * If provided, the browser will be closed when the signal is aborted.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "signal?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AbortSignal",
+                  "canonicalReference": "!AbortSignal:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "signal",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!LaunchOptions#timeout:member",
               "docComment": "/**\n * Maximum time in milliseconds to wait for the browser to start. Pass `0` to disable the timeout.\n *\n * @defaultValue `30_000` (30 seconds).\n */\n",
               "excerptTokens": [
@@ -23100,8 +23357,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ActionOptions",
-                  "canonicalReference": "puppeteer-core!ActionOptions:interface"
+                  "text": "LocatorFillOptions",
+                  "canonicalReference": "puppeteer-core!LocatorFillOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -24399,6 +24656,65 @@
             {
               "startIndex": 1,
               "endIndex": 5
+            }
+          ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!LocatorFillOptions:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface LocatorFillOptions extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ActionOptions",
+              "canonicalReference": "puppeteer-core!ActionOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/api/locators/locators.ts",
+          "releaseTag": "Public",
+          "name": "LocatorFillOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!LocatorFillOptions#typingThreshold:member",
+              "docComment": "/**\n * The number of characters to type before switching to a faster fill-out method.\n *\n * @defaultValue `100`\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "typingThreshold?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "typingThreshold",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 2
             }
           ]
         },
@@ -27647,6 +27963,60 @@
               "isOptional": false,
               "isAbstract": true,
               "name": "browserContext"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#captureHeapSnapshot:member(1)",
+              "docComment": "/**\n * Captures a snapshot of the JavaScript heap and writes it to a file.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract captureHeapSnapshot(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HeapSnapshotOptions",
+                  "canonicalReference": "puppeteer-core!HeapSnapshotOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "captureHeapSnapshot"
             },
             {
               "kind": "Method",
@@ -34640,7 +35010,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "puppeteer-core!Permission:type",
-          "docComment": "/**\n * @public\n */\n",
+          "docComment": "/**\n * @deprecated\n *\n * in favor of {@link PermissionDescriptor}.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -34658,6 +35028,185 @@
           "fileUrlPath": "src/api/Browser.ts",
           "releaseTag": "Public",
           "name": "Permission",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!PermissionDescriptor_2:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface PermissionDescriptor "
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "PermissionDescriptor_2",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PermissionDescriptor_2#allowWithoutSanitization:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "allowWithoutSanitization?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "allowWithoutSanitization",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PermissionDescriptor_2#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PermissionDescriptor_2#panTiltZoom:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "panTiltZoom?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "panTiltZoom",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PermissionDescriptor_2#sysex:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "sysex?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "sysex",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PermissionDescriptor_2#userVisibleOnly:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "userVisibleOnly?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "userVisibleOnly",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!PermissionState_2:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type PermissionState = "
+            },
+            {
+              "kind": "Content",
+              "text": "'granted' | 'denied' | 'prompt'"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "PermissionState_2",
           "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 2
@@ -37889,6 +38438,33 @@
           "members": [
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!SerializedAXNode#atomic:member",
+              "docComment": "/**\n * Whether the live region is {@link https://www.w3.org/TR/wai-aria/#aria-atomic | atomic}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "atomic?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "atomic",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!SerializedAXNode#autocomplete:member",
               "docComment": "",
               "excerptTokens": [
@@ -37909,6 +38485,33 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "autocomplete",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!SerializedAXNode#busy:member",
+              "docComment": "/**\n * Whether the node is {@link https://www.w3.org/TR/wai-aria/#aria-busy | busy}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "busy?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "busy",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -38002,6 +38605,33 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!SerializedAXNode#details:member",
+              "docComment": "/**\n * The {@link https://www.w3.org/TR/wai-aria/#aria-details | details} for the node.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "details?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "details",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!SerializedAXNode#disabled:member",
               "docComment": "",
               "excerptTokens": [
@@ -38068,6 +38698,33 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "elementHandle"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!SerializedAXNode#errormessage:member",
+              "docComment": "/**\n * The {@link https://www.w3.org/TR/wai-aria/#aria-errormessage | error message} for the node.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "errormessage?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "errormessage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
             },
             {
               "kind": "PropertySignature",
@@ -38226,6 +38883,33 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "level",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!SerializedAXNode#live:member",
+              "docComment": "/**\n * The {@link https://www.w3.org/TR/wai-aria/#aria-live | live} status of the node.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "live?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "live",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -38415,6 +39099,33 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "readonly",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!SerializedAXNode#relevant:member",
+              "docComment": "/**\n * The {@link https://www.w3.org/TR/wai-aria/#aria-relevant | relevant} changes for the live region.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "relevant?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "relevant",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

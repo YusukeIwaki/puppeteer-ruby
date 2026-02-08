@@ -134,12 +134,14 @@ class Puppeteer::BrowserContext
   def delete_cookie: (*Hash[Symbol | String, untyped] cookies) -> void
   def delete_matching_cookies: (*Hash[Symbol | String, untyped] filters) -> void
   def set_download_behavior: (Hash[Symbol | String, untyped] download_behavior) -> void
+  def set_permission: (String origin, *Hash[Symbol | String, untyped] permissions) -> void
 
   private
   def normalize_cookie_hash: (Hash[Symbol | String, untyped] cookie) -> Hash[String, untyped]
   def hash_value: (Hash[untyped, untyped]? hash, *(String | Symbol) keys) -> untyped
   def convert_partition_key_for_cdp: (untyped partition_key) -> Hash[Symbol, untyped]?
   def convert_partition_key_from_cdp: (untyped partition_key) -> (Hash[String, untyped] | String | nil)
+  def convert_same_site_for_cdp: (untyped same_site) -> String?
 end
 
 class Puppeteer::Frame

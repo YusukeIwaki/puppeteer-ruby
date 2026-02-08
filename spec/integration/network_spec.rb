@@ -736,7 +736,6 @@ RSpec.describe 'network' do
     it 'should error if authentication is required but not enabled' do
       with_test_state do |page:, server:, **|
         server.set_auth('/empty.html', 'user', 'pass')
-        response = nil
         begin
           response = page.goto(server.empty_page)
           expect(response.status).to eq(401)

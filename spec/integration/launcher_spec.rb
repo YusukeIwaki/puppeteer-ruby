@@ -319,6 +319,12 @@ RSpec.describe Puppeteer::Launcher do
         '--user-data-dir=foo',
       )
     end
+
+    it 'includes reading mode flags in disable-features' do
+      disable_features = Puppeteer.default_args.find { |arg| arg.start_with?('--disable-features=') }
+      expect(disable_features).to include('IPH_ReadingModePageActionLabel')
+      expect(disable_features).to include('ReadAnythingOmniboxChip')
+    end
   end
 
   describe '#product', puppeteer: :browser do

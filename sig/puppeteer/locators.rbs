@@ -1,0 +1,225 @@
+# Generated from lib/puppeteer/locators.rb with RBS::Inline
+
+module Puppeteer
+  module LocatorEvent
+    Action: ::String
+  end
+end
+
+class Puppeteer::Locator
+  include Puppeteer::EventCallbackable
+
+  RETRY_DELAY_SECONDS: ::Float
+
+  class TimeoutController
+    def initialize: (untyped timeout) -> untyped
+
+    attr_reader timeout: untyped
+
+    def remaining_timeout: () -> untyped
+
+    def exceeded?: () -> untyped
+
+    def check!: (?untyped cause) -> untyped
+  end
+
+  def initialize: () -> untyped
+
+  # @rbs locators: Array[Puppeteer::Locator] -- Locator candidates
+  # @rbs return: Puppeteer::Locator -- Locator that races candidates
+  def self.race: (Array[Puppeteer::Locator] locators) -> Puppeteer::Locator
+
+  # @rbs input: String -- Input string to check
+  # @rbs return: bool -- Whether string looks like a JS function
+  def self.function_string?: (String input) -> bool
+
+  # @rbs return: Numeric -- Timeout in milliseconds
+  def timeout: () -> Numeric
+
+  # @rbs timeout: Numeric -- Timeout in milliseconds
+  # @rbs return: Puppeteer::Locator -- Updated locator
+  def set_timeout: (Numeric timeout) -> Puppeteer::Locator
+
+  # @rbs visibility: String? -- 'visible', 'hidden', or nil
+  # @rbs return: Puppeteer::Locator -- Updated locator
+  def set_visibility: (String? visibility) -> Puppeteer::Locator
+
+  # @rbs value: bool -- Whether to wait for enabled state
+  # @rbs return: Puppeteer::Locator -- Updated locator
+  def set_wait_for_enabled: (bool value) -> Puppeteer::Locator
+
+  # @rbs value: bool -- Whether to ensure element is in viewport
+  # @rbs return: Puppeteer::Locator -- Updated locator
+  def set_ensure_element_is_in_the_viewport: (bool value) -> Puppeteer::Locator
+
+  # @rbs value: bool -- Whether to wait for stable bounding box
+  # @rbs return: Puppeteer::Locator -- Updated locator
+  def set_wait_for_stable_bounding_box: (bool value) -> Puppeteer::Locator
+
+  # @rbs locator: Puppeteer::Locator -- Locator to copy options from
+  # @rbs return: self -- Locator with copied options
+  def copy_options: (Puppeteer::Locator locator) -> self
+
+  # @rbs return: Puppeteer::Locator -- Cloned locator
+  def clone: (?freeze: untyped) -> Puppeteer::Locator
+
+  # @rbs return: Puppeteer::JSHandle -- Handle for located value
+  def wait_handle: () -> Puppeteer::JSHandle
+
+  # @rbs return: untyped -- JSON-serializable value
+  def wait: () -> untyped
+
+  # @rbs mapper: String -- JS mapper function
+  # @rbs return: Puppeteer::Locator -- Mapped locator
+  def map: (String mapper) -> Puppeteer::Locator
+
+  # @rbs predicate: String -- JS predicate function
+  # @rbs return: Puppeteer::Locator -- Filtered locator
+  def filter: (String predicate) -> Puppeteer::Locator
+
+  # @rbs predicate: Proc -- Handle predicate
+  # @rbs return: Puppeteer::Locator -- Filtered locator
+  def filter_handle: (Proc predicate) -> Puppeteer::Locator
+
+  # @rbs mapper: Proc -- Handle mapper
+  # @rbs return: Puppeteer::Locator -- Mapped locator
+  def map_handle: (Proc mapper) -> Puppeteer::Locator
+
+  # @rbs delay: Numeric? -- Delay between down and up (ms)
+  # @rbs button: String? -- Mouse button
+  # @rbs click_count: Integer? -- Deprecated click count
+  # @rbs count: Integer? -- Number of clicks
+  # @rbs offset: Hash[Symbol, Numeric]? -- Click offset
+  # @rbs return: void -- No return value
+  def click: (?delay: Numeric?, ?button: String?, ?click_count: Integer?, ?count: Integer?, ?offset: Hash[Symbol, Numeric]?) -> void
+
+  # @rbs value: String -- Value to fill
+  # @rbs typing_threshold: Integer -- Minimum length to switch to direct assignment
+  # @rbs return: void -- No return value
+  def fill: (String value, ?typing_threshold: Integer) -> void
+
+  # @rbs return: void -- No return value
+  def hover: () -> void
+
+  # @rbs scroll_top: Numeric? -- Scroll top position
+  # @rbs scroll_left: Numeric? -- Scroll left position
+  # @rbs return: void -- No return value
+  def scroll: (?scroll_top: Numeric?, ?scroll_left: Numeric?) -> void
+
+  # @rbs event_name: String -- Event name
+  # @rbs block: Proc -- Event handler
+  # @rbs return: Puppeteer::Locator -- Locator for chaining
+  def on: (String event_name) ?{ (?) -> untyped } -> Puppeteer::Locator
+
+  # @rbs event_name: String -- Event name
+  # @rbs block: Proc -- Event handler
+  # @rbs return: Puppeteer::Locator -- Locator for chaining
+  def once: (String event_name) ?{ (?) -> untyped } -> Puppeteer::Locator
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped _options) -> untyped
+
+  private def perform_action: (untyped name, conditions: untyped) ?{ (?) -> untyped } -> untyped
+
+  private def with_retry: (untyped _name) ?{ (?) -> untyped } -> untyped
+
+  private def build_action_options: (untyped timeout_controller) -> untyped
+
+  private def run_conditions: (untyped handle, untyped options, untyped conditions) -> untyped
+
+  private def wait_for_enabled_if_needed: (untyped handle, untyped options) -> untyped
+
+  private def wait_for_stable_bounding_box_if_needed: (untyped handle, untyped options) -> untyped
+
+  private def ensure_element_is_in_viewport_if_needed: (untyped handle, untyped options) -> untyped
+
+  private def fill_element: (untyped handle, untyped value, ?typing_threshold: untyped) -> untyped
+
+  private def fill_directly: (untyped handle, untyped value) -> untyped
+end
+
+class Puppeteer::FunctionLocator < Puppeteer::Locator
+  # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
+  # @rbs func: String -- JS function to evaluate
+  # @rbs return: Puppeteer::Locator -- Function locator
+  def self.create: (Puppeteer::Page | Puppeteer::Frame page_or_frame, String func) -> Puppeteer::Locator
+
+  def initialize: (untyped page_or_frame, untyped func) -> untyped
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped options) -> untyped
+
+  def self.default_timeout_for: (untyped page_or_frame) -> untyped
+end
+
+class Puppeteer::DelegatedLocator < Puppeteer::Locator
+  def initialize: (untyped delegate) -> untyped
+
+  def delegate: () -> untyped
+
+  def set_timeout: (untyped timeout) -> untyped
+
+  def set_visibility: (untyped visibility) -> untyped
+
+  def set_wait_for_enabled: (untyped value) -> untyped
+
+  def set_ensure_element_is_in_the_viewport: (untyped value) -> untyped
+
+  def set_wait_for_stable_bounding_box: (untyped value) -> untyped
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped _options) -> untyped
+end
+
+class Puppeteer::FilteredLocator < Puppeteer::DelegatedLocator
+  def initialize: (untyped base, untyped predicate) -> untyped
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped options) -> untyped
+end
+
+class Puppeteer::MappedLocator < Puppeteer::DelegatedLocator
+  def initialize: (untyped base, untyped mapper) -> untyped
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped options) -> untyped
+end
+
+class Puppeteer::NodeLocator < Puppeteer::Locator
+  # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
+  # @rbs selector: String -- Selector
+  # @rbs return: Puppeteer::Locator -- Node locator
+  def self.create: (Puppeteer::Page | Puppeteer::Frame page_or_frame, String selector) -> Puppeteer::Locator
+
+  # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
+  # @rbs handle: Puppeteer::ElementHandle -- Element handle
+  # @rbs return: Puppeteer::Locator -- Node locator
+  def self.create_from_handle: (Puppeteer::Page | Puppeteer::Frame page_or_frame, Puppeteer::ElementHandle handle) -> Puppeteer::Locator
+
+  def initialize: (untyped page_or_frame, untyped selector_or_handle) -> untyped
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped options) -> untyped
+
+  private def wait_for_visibility_if_needed: (untyped handle, untyped options) -> untyped
+
+  def self.default_timeout_for: (untyped page_or_frame) -> untyped
+end
+
+class Puppeteer::RaceLocator < Puppeteer::Locator
+  def self.create: (untyped locators) -> untyped
+
+  def initialize: (untyped locators) -> untyped
+
+  def _clone: () -> untyped
+
+  def _wait: (untyped options) -> untyped
+
+  def self.check_locator_array: (untyped locators) -> untyped
+end

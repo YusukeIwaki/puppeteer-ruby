@@ -113,7 +113,12 @@ class Puppeteer::HTTPResponse
   # @param text [String]
   # @rbs return: String -- Response body as text
   def text
-    buffer
+    content = buffer
+    content = content.dup.force_encoding('UTF-8')
+    unless content.valid_encoding?
+      raise Puppeteer::Error.new('Could not decode response body as UTF-8')
+    end
+    content
   end
 
   # @param json [Hash]

@@ -368,6 +368,19 @@ RSpec.describe 'Locator' do
         expect(result).to eq(true)
       end
     end
+
+    it 'should work with a custom typing threshold' do
+      with_test_state do |page:, **|
+        page.content = '<input />'
+        text = 'abc'
+        page.locator('input').fill(text, typing_threshold: 10)
+        expect(page.evaluate('() => document.querySelector("input")?.value')).to eq(text)
+
+        page.content = '<input />'
+        page.locator('input').fill(text, typing_threshold: 2)
+        expect(page.evaluate('() => document.querySelector("input")?.value')).to eq(text)
+      end
+    end
   end
 
   describe 'Locator.race' do

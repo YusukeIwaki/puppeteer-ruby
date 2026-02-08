@@ -193,7 +193,6 @@ class Puppeteer::Page
       @workers[session.id] = worker
       emit_event(PageEmittedEvents::WorkerCreated, worker)
     end
-
   end
 
   # @rbs return: Array[untyped] -- Initialization results
@@ -560,6 +559,15 @@ class Puppeteer::Page
     raise ArgumentError.new("Each coookie must have #{requires.join(" and ")} attribute.")
   end
 
+  private def convert_same_site_for_cdp(same_site)
+    case same_site
+    when 'Strict', 'Lax', 'None'
+      same_site
+    else
+      nil
+    end
+  end
+
   # @rbs cookies: Array[Hash[Symbol | String, untyped]] -- cookies parameter
   # @rbs return: void -- No return value
   def delete_cookie(*cookies)
@@ -582,8 +590,28 @@ class Puppeteer::Page
     starts_with_http = page_url.start_with?("http")
     items = cookies.map do |cookie|
       (starts_with_http ? { url: page_url } : {}).merge(cookie).tap do |item|
-        raise ArgumentError.new("Blank page can not have cookie \"#{item[:name]}\"") if item[:url] == "about:blank"
-        raise ArgumentError.new("Data URL page can not have cookie \"#{item[:name]}\"") if item[:url]&.start_with?("data:")
+        item_name = item[:name] || item['name']
+        item_url = item[:url] || item['url']
+        raise ArgumentError.new("Blank page can not have cookie \"#{item_name}\"") if item_url == "about:blank"
+        raise ArgumentError.new("Data URL page can not have cookie \"#{item_name}\"") if item_url&.start_with?("data:")
+
+        same_site =
+          if item.key?(:sameSite)
+            item[:sameSite]
+          elsif item.key?('sameSite')
+            item['sameSite']
+          elsif item.key?(:same_site)
+            item[:same_site]
+          else
+            item['same_site']
+          end
+
+        converted_same_site = convert_same_site_for_cdp(same_site)
+        item.delete(:sameSite)
+        item.delete('sameSite')
+        item.delete(:same_site)
+        item.delete('same_site')
+        item[:sameSite] = converted_same_site if converted_same_site
       end
     end
     delete_cookie(*items)
@@ -706,6 +734,29 @@ class Puppeteer::Page
   def metrics
     response = @client.send_message('Performance.getMetrics')
     Metrics.new(response['metrics'])
+  end
+
+  # @rbs path: String -- Output path for the heap snapshot
+  # @rbs return: void -- No return value
+  def capture_heap_snapshot(path:)
+    @client.send_message('HeapProfiler.enable')
+    @client.send_message('HeapProfiler.collectGarbage')
+
+    begin
+      File.open(path, 'w') do |file|
+        listener_id = @client.add_event_listener('HeapProfiler.addHeapSnapshotChunk') do |event|
+          file.write(event['chunk'])
+        end
+
+        begin
+          @client.send_message('HeapProfiler.takeHeapSnapshot', reportProgress: false)
+        ensure
+          @client.remove_event_listener(listener_id)
+        end
+      end
+    ensure
+      @client.send_message('HeapProfiler.disable')
+    end
   end
 
   class PageError < Puppeteer::Error ; end
