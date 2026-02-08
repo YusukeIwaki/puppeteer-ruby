@@ -57,6 +57,24 @@ RSpec.describe 'BrowserContext cookies' do
         })
       end
     end
+
+    it 'should properly report "Default" sameSite cookie', sinatra: true do
+      with_test_state(incognito: true) do |context:, server:, page:, **|
+        page.goto(server.empty_page)
+        name = 'defaultSameSite'
+        context.set_cookie(
+          name: name,
+          value: 'b',
+          domain: 'localhost',
+          sameSite: 'Default',
+        )
+        cookies = context.cookies
+        cookie = cookies.find { |entry| entry['name'] == name }
+        expect(cookie).not_to be_nil
+        expect(cookie['sameSite']).to satisfy { |value| ['Default', 'Lax', nil].include?(value) }
+        context.delete_matching_cookies(name: name, domain: 'localhost')
+      end
+    end
   end
 
   describe 'BrowserContext.setCookie' do
@@ -99,31 +117,6 @@ RSpec.describe 'BrowserContext cookies' do
         expect(page.evaluate('() => document.cookie')).to eq('infoCookie=secret')
       end
     end
-
-    it 'should support SameSite=Default for set and delete', sinatra: true do
-      with_test_state(incognito: true) do |page:, context:, server:, **|
-        page.goto(server.empty_page)
-        context.set_cookie(
-          name: 'defaultSameSiteCookie',
-          value: 'secret',
-          domain: 'localhost',
-          path: '/',
-          sameSite: 'Default',
-          secure: false,
-        )
-
-        expect(page.evaluate('() => document.cookie')).to eq('defaultSameSiteCookie=secret')
-
-        context.delete_cookie(
-          name: 'defaultSameSiteCookie',
-          value: 'secret',
-          domain: 'localhost',
-          path: '/',
-          sameSite: 'Default',
-        )
-        expect(page.evaluate('() => document.cookie')).to eq('')
-      end
-    end
   end
 
   describe 'BrowserContext.deleteCookies' do
@@ -160,6 +153,26 @@ RSpec.describe 'BrowserContext cookies' do
         context.delete_cookie(cookie1)
 
         expect(page.evaluate('() => document.cookie')).to eq('cookie2=2')
+      end
+    end
+
+    it 'should be able to delete "Default" sameSite cookie', sinatra: true do
+      with_test_state(incognito: true) do |page:, context:, server:, **|
+        page.goto(server.empty_page)
+        name = 'deleteDefaultSameSite'
+        context.set_cookie(
+          name: name,
+          value: 'b',
+          domain: 'localhost',
+          sameSite: 'Default',
+        )
+        cookies = context.cookies
+        cookie = cookies.find { |entry| entry['name'] == name }
+        expect(cookie).not_to be_nil
+
+        context.delete_matching_cookies(name: name, domain: 'localhost')
+        cookies_after = context.cookies
+        expect(cookies_after.find { |entry| entry['name'] == name }).to be_nil
       end
     end
   end

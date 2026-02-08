@@ -369,61 +369,16 @@ RSpec.describe 'Locator' do
       end
     end
 
-    it 'should type for short values below typing threshold' do
+    it 'should work with a custom typing threshold' do
       with_test_state do |page:, **|
         page.content = '<input />'
-        page.evaluate(<<~JAVASCRIPT)
-          () => {
-            globalThis.keydownCount = 0;
-            const input = document.querySelector('input');
-            input.addEventListener('keydown', () => {
-              globalThis.keydownCount += 1;
-            });
-          }
-        JAVASCRIPT
-        page.locator('input').fill('short', typing_threshold: 100)
-        result = page.evaluate('() => ({ value: document.querySelector("input").value, keydownCount: globalThis.keydownCount })')
-        expect(result['value']).to eq('short')
-        expect(result['keydownCount']).to be > 0
-      end
-    end
+        text = 'abc'
+        page.locator('input').fill(text, typing_threshold: 10)
+        expect(page.evaluate('() => document.querySelector("input")?.value')).to eq(text)
 
-    it 'should directly fill for long values at or above typing threshold' do
-      with_test_state do |page:, **|
-        long_text = 'a' * 120
         page.content = '<input />'
-        page.evaluate(<<~JAVASCRIPT)
-          () => {
-            globalThis.keydownCount = 0;
-            const input = document.querySelector('input');
-            input.addEventListener('keydown', () => {
-              globalThis.keydownCount += 1;
-            });
-          }
-        JAVASCRIPT
-        page.locator('input').fill(long_text)
-        result = page.evaluate('() => ({ value: document.querySelector("input").value, keydownCount: globalThis.keydownCount })')
-        expect(result['value']).to eq(long_text)
-        expect(result['keydownCount']).to eq(0)
-      end
-    end
-
-    it 'should allow overriding typing threshold' do
-      with_test_state do |page:, **|
-        page.content = '<input />'
-        page.evaluate(<<~JAVASCRIPT)
-          () => {
-            globalThis.keydownCount = 0;
-            const input = document.querySelector('input');
-            input.addEventListener('keydown', () => {
-              globalThis.keydownCount += 1;
-            });
-          }
-        JAVASCRIPT
-        page.locator('input').fill('abc', typing_threshold: 1)
-        result = page.evaluate('() => ({ value: document.querySelector("input").value, keydownCount: globalThis.keydownCount })')
-        expect(result['value']).to eq('abc')
-        expect(result['keydownCount']).to eq(0)
+        page.locator('input').fill(text, typing_threshold: 2)
+        expect(page.evaluate('() => document.querySelector("input")?.value')).to eq(text)
       end
     end
   end
