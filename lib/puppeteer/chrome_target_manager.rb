@@ -149,11 +149,11 @@ class Puppeteer::ChromeTargetManager
     target_info = @discovered_targets_by_target_id.delete(target_id)
     finish_initialization_if_ready(target_id)
 
-    if target_info.type == 'service_worker' && @attached_targets_by_target_id.has_key?(target_id)
+    if target_info&.type == 'service_worker'
       # Special case for service workers: report TargetGone event when
       # the worker is destroyed.
       target = @attached_targets_by_target_id.delete(target_id)
-      emit_event(TargetManagerEmittedEvents::TargetGone, target)
+      emit_event(TargetManagerEmittedEvents::TargetGone, target) if target
     end
   end
 
@@ -161,11 +161,11 @@ class Puppeteer::ChromeTargetManager
     target_info = Puppeteer::Target::TargetInfo.new(event['targetInfo'])
     @discovered_targets_by_target_id[target_info.target_id] = target_info
 
-    if @ignored_targets.include?(target_info.target_id) || !@attached_targets_by_target_id.has_key?(target_info.target_id) || !target_info.attached
+    if @ignored_targets.include?(target_info.target_id) || !target_info.attached
       return
     end
     original_target = @attached_targets_by_target_id[target_info.target_id]
-    emit_event(TargetManagerEmittedEvents::TargetChanged, original_target, target_info)
+    emit_event(TargetManagerEmittedEvents::TargetChanged, original_target, target_info) if original_target
   end
 
   class SessionNotCreatedError < Puppeteer::Error ; end

@@ -109,4 +109,36 @@ RSpec.describe 'BrowserContext#override_permissions' do
       expect(get_permission_for(page, 'persistent-storage')).to eq('granted')
     end
   end
+
+  it 'should set permission state with set_permission', sinatra: true do
+    with_incognito_page do |page:, server:, context:, **|
+      context.set_permission(
+        server.empty_page,
+        { permission: { name: 'geolocation' }, state: 'denied' },
+      )
+      expect(get_permission_for(page, 'geolocation')).to eq('denied')
+
+      context.set_permission(
+        server.empty_page,
+        { permission: { name: 'geolocation' }, state: 'granted' },
+      )
+      expect(get_permission_for(page, 'geolocation')).to eq('granted')
+
+      context.set_permission(
+        server.empty_page,
+        { permission: { name: 'geolocation' }, state: 'prompt' },
+      )
+      expect(get_permission_for(page, 'geolocation')).to eq('prompt')
+    end
+  end
+
+  it 'should apply set_permission to all origins with wildcard', sinatra: true do
+    with_incognito_page do |page:, context:, **|
+      context.set_permission(
+        '*',
+        { permission: { name: 'geolocation' }, state: 'denied' },
+      )
+      expect(get_permission_for(page, 'geolocation')).to eq('denied')
+    end
+  end
 end

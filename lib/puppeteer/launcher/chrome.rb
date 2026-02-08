@@ -131,7 +131,7 @@ module Puppeteer::Launcher
           '--disable-dev-shm-usage',
           '--disable-extensions',
           # AcceptCHFrame disabled because of crbug.com/1348106.
-          '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
+          '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints,IPH_ReadingModePageActionLabel,ReadAnythingOmniboxChip',
           '--disable-hang-monitor',
           '--disable-ipc-flooding-protection',
           '--disable-popup-blocking',

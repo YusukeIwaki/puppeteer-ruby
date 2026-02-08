@@ -196,6 +196,13 @@ class Puppeteer::Browser
     @default_context
   end
 
+  # @rbs origin: String -- Origin URL, or '*' for all origins
+  # @rbs permissions: Array[Hash[Symbol | String, untyped]] -- Permission descriptors and states
+  # @rbs return: void -- No return value
+  def set_permission(origin, *permissions)
+    @default_context.set_permission(origin, *permissions)
+  end
+
   # @rbs context_id: String? -- Browser context ID
   # @rbs return: void -- No return value
   def dispose_context(context_id)

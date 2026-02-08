@@ -331,6 +331,27 @@ RSpec.describe 'network' do
       end
     end
 
+    it 'should throw for non UTF-8 response body' do
+      with_test_state do |page:, server:, **|
+        server.set_route('/binary-response') do |_request, writer|
+          writer.add_header('Content-Type', 'application/octet-stream')
+          writer.write("\xFF\xFE\xFA".b)
+          writer.finish
+        end
+
+        response_promise = async_promise do
+          page.wait_for_response(predicate: ->(response) { response.url.end_with?('/binary-response') })
+        end
+        page.goto(server.empty_page)
+        page.evaluate("() => fetch('/binary-response')")
+        response = response_promise.wait
+
+        expect {
+          response.text
+        }.to raise_error(Puppeteer::Error, 'Could not decode response body as UTF-8')
+      end
+    end
+
     it 'should throw when requesting body of redirected response' do
       with_test_state do |page:, server:, **|
         server.set_redirect('/foo.html', '/empty.html')
@@ -736,7 +757,6 @@ RSpec.describe 'network' do
     it 'should error if authentication is required but not enabled' do
       with_test_state do |page:, server:, **|
         server.set_auth('/empty.html', 'user', 'pass')
-        response = nil
         begin
           response = page.goto(server.empty_page)
           expect(response.status).to eq(401)

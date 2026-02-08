@@ -186,6 +186,15 @@ RSpec.describe 'cookies' do
       )
     end
 
+    it 'should support SameSite=Default for set and delete' do
+      page.goto(server_empty_page)
+      page.set_cookie(name: 'defaultSameSiteCookie', value: 'secret', sameSite: 'Default')
+      expect(page.evaluate('() => document.cookie')).to eq('defaultSameSiteCookie=secret')
+
+      page.delete_cookie(name: 'defaultSameSiteCookie')
+      expect(page.evaluate('() => document.cookie')).to eq('')
+    end
+
     it 'should have |expires| set to |-1| for session cookies' do
       page.goto(server_empty_page)
       page.set_cookie(name: "password", value: "123456")

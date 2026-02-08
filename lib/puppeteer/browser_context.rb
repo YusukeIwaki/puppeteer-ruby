@@ -153,6 +153,44 @@ class Puppeteer::BrowserContext
     }.compact)
   end
 
+  # @param origin [String] Use '*' to apply to all origins.
+  # @param permissions [Array<Hash>] { permission: { name:, userVisibleOnly:, sysex:, panTiltZoom:, allowWithoutSanitization: }, state: 'granted'|'denied'|'prompt' }
+  def set_permission(origin, *permissions)
+    permissions.each do |permission|
+      descriptor = hash_value(permission, 'permission')
+      state = hash_value(permission, 'state')
+      unless descriptor.is_a?(Hash)
+        raise ArgumentError.new('Each permission entry must include a permission descriptor')
+      end
+      unless state
+        raise ArgumentError.new('Each permission entry must include state')
+      end
+
+      name = hash_value(descriptor, 'name')
+      unless name
+        raise ArgumentError.new('Permission descriptor must include name')
+      end
+
+      protocol_permission = { name: name.to_s }
+      {
+        userVisibleOnly: %w[userVisibleOnly user_visible_only],
+        sysex: %w[sysex],
+        panTiltZoom: %w[panTiltZoom pan_tilt_zoom],
+        allowWithoutSanitization: %w[allowWithoutSanitization allow_without_sanitization],
+      }.each do |protocol_key, keys|
+        value = hash_value(descriptor, *keys)
+        protocol_permission[protocol_key] = value unless value.nil?
+      end
+
+      @connection.send_message('Browser.setPermission', {
+        origin: origin == '*' ? nil : origin,
+        browserContextId: @id,
+        permission: protocol_permission,
+        setting: state.to_s,
+      }.compact)
+    end
+  end
+
   def clear_permission_overrides
     if @id
       @connection.send_message('Browser.resetPermissions', browserContextId: @id)
@@ -214,6 +252,9 @@ class Puppeteer::BrowserContext
       normalized = normalize_cookie_hash(cookie)
       partition_key = normalized.delete('partitionKey') || normalized.delete('partition_key')
       normalized['partitionKey'] = convert_partition_key_for_cdp(partition_key) if partition_key
+      same_site = normalized.delete('sameSite') || normalized.delete('same_site')
+      converted_same_site = convert_same_site_for_cdp(same_site)
+      normalized['sameSite'] = converted_same_site if converted_same_site
       normalized
     end
     @connection.send_message('Storage.setCookies', {
@@ -277,9 +318,7 @@ class Puppeteer::BrowserContext
   end
 
   private def normalize_cookie_hash(cookie)
-    cookie.each_with_object({}) do |(key, value), normalized|
-      normalized[key.to_s] = value
-    end
+    cookie.transform_keys(&:to_s)
   end
 
   private def hash_value(hash, *keys)
@@ -303,6 +342,15 @@ class Puppeteer::BrowserContext
       topLevelSite: source_origin,
       hasCrossSiteAncestor: has_cross_site_ancestor.nil? ? false : has_cross_site_ancestor,
     }
+  end
+
+  private def convert_same_site_for_cdp(same_site)
+    case same_site
+    when 'Strict', 'Lax', 'None'
+      same_site
+    else
+      nil
+    end
   end
 
   private def convert_partition_key_from_cdp(partition_key)

@@ -213,15 +213,16 @@ class Puppeteer::Locator
   end
 
   # @rbs value: String -- Value to fill
+  # @rbs typing_threshold: Integer -- Minimum length to switch to direct assignment
   # @rbs return: void -- No return value
-  def fill(value)
+  def fill(value, typing_threshold: 100)
     perform_action('Locator.fill',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
         method(:wait_for_enabled_if_needed),
       ]) do |handle, _options|
-      fill_element(handle, value)
+      fill_element(handle, value, typing_threshold: typing_threshold)
     end
   end
 
@@ -422,7 +423,7 @@ class Puppeteer::Locator
     end
   end
 
-  private def fill_element(handle, value)
+  private def fill_element(handle, value, typing_threshold: 100)
     input_type = handle.evaluate(<<~JAVASCRIPT)
       el => {
         if (el instanceof HTMLSelectElement) {
@@ -461,51 +462,69 @@ class Puppeteer::Locator
     when 'select'
       handle.select(value)
     when 'contenteditable', 'typeable-input'
-      text_to_type = handle.evaluate(<<~JAVASCRIPT, value)
-        (input, newValue) => {
-          const currentValue = input.isContentEditable
-            ? input.innerText
-            : input.value;
+      if value.length < typing_threshold
+        text_to_type = handle.evaluate(<<~JAVASCRIPT, value)
+          (input, newValue) => {
+            const currentValue = input.isContentEditable
+              ? input.innerText
+              : input.value;
 
-          if (
-            newValue.length <= currentValue.length ||
-            !newValue.startsWith(input.value)
-          ) {
+            if (
+              newValue.length <= currentValue.length ||
+              !newValue.startsWith(input.value)
+            ) {
+              if (input.isContentEditable) {
+                input.innerText = '';
+              } else {
+                input.value = '';
+              }
+              return newValue;
+            }
+            const originalValue = input.isContentEditable
+              ? input.innerText
+              : input.value;
+
             if (input.isContentEditable) {
               input.innerText = '';
+              input.innerText = originalValue;
             } else {
               input.value = '';
+              input.value = originalValue;
             }
-            return newValue;
+            return newValue.substring(originalValue.length);
           }
-          const originalValue = input.isContentEditable
-            ? input.innerText
-            : input.value;
-
-          if (input.isContentEditable) {
-            input.innerText = '';
-            input.innerText = originalValue;
-          } else {
-            input.value = '';
-            input.value = originalValue;
-          }
-          return newValue.substring(originalValue.length);
-        }
-      JAVASCRIPT
-      text_to_type = text_to_type.to_s
-      handle.type_text(text_to_type)
+        JAVASCRIPT
+        text_to_type = text_to_type.to_s
+        handle.type_text(text_to_type) unless text_to_type.empty?
+      else
+        fill_directly(handle, value)
+      end
     when 'other-input'
-      handle.focus
-      handle.evaluate(<<~JAVASCRIPT, value)
-        (input, newValue) => {
-          input.value = newValue;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      JAVASCRIPT
+      fill_directly(handle, value)
     else
       raise Puppeteer::Error.new('Element cannot be filled out.')
     end
+  end
+
+  private def fill_directly(handle, value)
+    handle.focus
+    handle.evaluate(<<~JAVASCRIPT, value)
+      (input, newValue) => {
+        const currentValue = input.isContentEditable
+          ? input.innerText
+          : input.value;
+        if (currentValue === newValue) {
+          return;
+        }
+        if (input.isContentEditable) {
+          input.innerText = newValue;
+        } else {
+          input.value = newValue;
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    JAVASCRIPT
   end
 end
 

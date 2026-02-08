@@ -99,6 +99,31 @@ RSpec.describe 'BrowserContext cookies' do
         expect(page.evaluate('() => document.cookie')).to eq('infoCookie=secret')
       end
     end
+
+    it 'should support SameSite=Default for set and delete', sinatra: true do
+      with_test_state(incognito: true) do |page:, context:, server:, **|
+        page.goto(server.empty_page)
+        context.set_cookie(
+          name: 'defaultSameSiteCookie',
+          value: 'secret',
+          domain: 'localhost',
+          path: '/',
+          sameSite: 'Default',
+          secure: false,
+        )
+
+        expect(page.evaluate('() => document.cookie')).to eq('defaultSameSiteCookie=secret')
+
+        context.delete_cookie(
+          name: 'defaultSameSiteCookie',
+          value: 'secret',
+          domain: 'localhost',
+          path: '/',
+          sameSite: 'Default',
+        )
+        expect(page.evaluate('() => document.cookie')).to eq('')
+      end
+    end
   end
 
   describe 'BrowserContext.deleteCookies' do
