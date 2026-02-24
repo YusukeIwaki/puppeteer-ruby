@@ -803,10 +803,7 @@ class Puppeteer::Page
   end
 
   private def add_console_message(type, args, stack_trace)
-    text_tokens = args.map do |arg|
-      value = arg.remote_object.value
-      value.nil? ? arg.to_s : value
-    end
+    text_tokens = args.map { |arg| console_value_from_js_handle(arg) }
 
     stack_trace_locations =
       if stack_trace && stack_trace['callFrames']
@@ -822,6 +819,25 @@ class Puppeteer::Page
       end
     console_message = Puppeteer::ConsoleMessage.new(type, text_tokens.join(' '), args, stack_trace_locations)
     emit_event(PageEmittedEvents::Console, console_message)
+  end
+
+  private def console_value_from_js_handle(handle)
+    remote_object = handle.remote_object
+    return remote_object.value unless remote_object.object_id?
+
+    value_from_remote_object_reference(remote_object)
+  end
+
+  private def value_from_remote_object_reference(remote_object)
+    description = remote_object.description.to_s
+    if remote_object.sub_type == 'error' && !description.empty?
+      newline_index = description.index("\n")
+      return newline_index ? description[0...newline_index] : description
+    end
+
+    type = remote_object.sub_type || remote_object.type
+    class_name = remote_object.class_name || remote_object.description || 'Object'
+    "[#{type} #{class_name}]"
   end
 
   private def handle_dialog_opening(event)
