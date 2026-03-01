@@ -16,12 +16,13 @@ class Puppeteer::RemoteObject
     @object_id = payload['objectId']
     @type = payload['type']
     @sub_type = payload['subtype']
+    @class_name = payload['className']
     @unserializable_value = payload['unserializableValue']
     @value = payload['value']
     @description = payload['description']
   end
 
-  attr_reader :sub_type, :type, :description
+  attr_reader :sub_type, :type, :class_name, :description
 
   # @rbs return: bool
   def object_id?
