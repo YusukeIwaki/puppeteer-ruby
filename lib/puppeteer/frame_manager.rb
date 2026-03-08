@@ -224,7 +224,13 @@ class Puppeteer::FrameManager
     session = target.session
     frame&.send(:update_client, session)
     setup_listeners(session)
-    async_init(target.target_info.target_id, session)
+    Async do
+      begin
+        async_init(target.target_info.target_id, session).wait
+      rescue => err
+        debug_puts(err)
+      end
+    end
   end
 
   # @param event [Hash]

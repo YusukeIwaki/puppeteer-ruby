@@ -98,7 +98,10 @@ RSpec.describe 'Workers' do
       page.evaluate('() => new Worker("data:text/javascript,console.log(1,2,3,this)")')
       log = log_promise.wait
 
-      expect(log.text).to eq('1 2 3 JSHandle@object')
+      expect([
+        '1 2 3 [object DedicatedWorkerGlobalScope]',
+        '1 2 3 [object WorkerGlobalScope]',
+      ]).to include(log.text)
       expect(log.args.length).to eq(4)
     end
   end

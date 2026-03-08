@@ -315,7 +315,7 @@ RSpec.describe Puppeteer::Page do
         Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
         async_promise { page.evaluate("() => console.log('hello', 5, { foo: 'bar' })") },
       ).first
-      expect(message.text).to eq('hello 5 JSHandle@object')
+      expect(message.text).to eq('hello 5 [object Object]')
       expect(message.log_type).to eq('log')
       expect(message.args.length).to eq(3)
       expect(message.location.url).to be_a(String)
@@ -324,6 +324,26 @@ RSpec.describe Puppeteer::Page do
       expect(message.args[0].json_value).to eq('hello')
       expect(message.args[1].json_value).to eq(5)
       expect(message.args[2].json_value).to eq({ 'foo' => 'bar' })
+    end
+
+    it 'should work for Error instances' do
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.evaluate("() => console.log(new Error('test error'))") },
+      ).first
+      expect(message.text).to eq('Error: test error')
+      expect(message.log_type).to eq('log')
+      expect(message.args.length).to eq(1)
+    end
+
+    it 'should return the first line of the error message in text()' do
+      message = await_promises(
+        Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
+        async_promise { page.evaluate("() => console.log(new Error('test error\\nsecond line'))") },
+      ).first
+      expect(message.text).to eq('Error: test error')
+      expect(message.log_type).to eq('log')
+      expect(message.args.length).to eq(1)
     end
 
     it 'should work on script call right after navigation' do
@@ -357,7 +377,7 @@ RSpec.describe Puppeteer::Page do
         'calling console.dir',
         'calling console.warn',
         'calling console.error',
-        'JSHandle@promise',
+        '[promise Promise]',
       ])
     end
 
@@ -399,7 +419,7 @@ RSpec.describe Puppeteer::Page do
         Async::Promise.new.tap { |promise| page.once('console') { |m| promise.resolve(m) } },
         async_promise { page.evaluate('() => console.error(window)') },
       ).first
-      expect(['JSHandle@object', 'JSHandle@window']).to include(message.text)
+      expect(['[object Object]', '[object Window]']).to include(message.text)
     end
 
     it 'should return remote objects' do
@@ -412,7 +432,7 @@ RSpec.describe Puppeteer::Page do
       JAVASCRIPT
       log = log_promise.wait
 
-      expect(['1 2 3 JSHandle@object', '1 2 3 JSHandle@window']).to include(log.text)
+      expect(['1 2 3 [object Object]', '1 2 3 [object Window]']).to include(log.text)
       expect(log.args.length).to eq(4)
       property = log.args[3].property('test')
       expect(property.json_value).to eq(1)
