@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'chunky_png'
   spec.add_development_dependency 'dry-inflector'
   spec.add_development_dependency 'pry-byebug'
-  spec.add_development_dependency 'rake', '~> 13.3.1'
+  spec.add_development_dependency 'rake', '~> 13.4.2'
   spec.add_development_dependency 'rspec', '~> 3.13.2'
   spec.add_development_dependency 'rspec_junit_formatter' # for CircleCI.
   spec.add_development_dependency 'rbs-inline'
