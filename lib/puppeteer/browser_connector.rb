@@ -28,6 +28,8 @@ class Puppeteer::BrowserConnector
       ignore_https_errors: @browser_options.ignore_https_errors?,
       default_viewport: @browser_options.default_viewport,
       network_enabled: @browser_options.network_enabled,
+      issues_enabled: @browser_options.issues_enabled,
+      block_list: @browser_options.block_list,
       process: nil,
       close_callback: -> { connection.send_message('Browser.close') },
       target_filter_callback: @browser_options.target_filter,

@@ -32,7 +32,12 @@ module Puppeteer::Launcher
       @default_viewport = options.key?(:default_viewport) ? options[:default_viewport] : Puppeteer::Viewport.new(width: 800, height: 600)
       @slow_mo = options[:slow_mo] || 0
       @network_enabled = options.fetch(:network_enabled, true)
+      @issues_enabled = options.fetch(:issues_enabled, true)
       @protocol_timeout = options[:protocol_timeout]
+      @block_list = options[:block_list]
+      if @block_list && !@block_list.is_a?(Array)
+        raise ArgumentError.new('block_list must be an Array of URL patterns')
+      end
 
       # only for Puppeteer.connect
       @target_filter = options[:target_filter]
@@ -46,7 +51,7 @@ module Puppeteer::Launcher
       end
     end
 
-    attr_reader :default_viewport, :slow_mo, :target_filter, :is_page_target, :network_enabled, :protocol_timeout
+    attr_reader :default_viewport, :slow_mo, :target_filter, :is_page_target, :network_enabled, :issues_enabled, :protocol_timeout, :block_list
 
     def ignore_https_errors?
       @ignore_https_errors

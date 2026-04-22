@@ -2,7 +2,7 @@ class Puppeteer::ChromeTargetManager
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
-  def initialize(connection:, target_factory:, target_filter_callback:)
+  def initialize(connection:, target_factory:, target_filter_callback:, block_list: nil)
     @discovered_targets_by_target_id = {}
     @attached_targets_by_target_id = {}
     @attached_targets_by_session_id = {}
@@ -13,8 +13,13 @@ class Puppeteer::ChromeTargetManager
     @connection = connection
     @target_filter_callback = target_filter_callback
     @target_factory = target_factory
+    @block_list = block_list
+    if @block_list && !@block_list.is_a?(Array)
+      raise ArgumentError.new('block_list must be an Array of URL patterns')
+    end
     @target_interceptors = {}
     @initialize_promise = Async::Promise.new
+    @initial_attach_done = false
 
     @connection_event_listeners = []
     @connection_event_listeners << @connection.add_event_listener(
@@ -52,7 +57,7 @@ class Puppeteer::ChromeTargetManager
 
   private def store_existing_targets_for_init
     @discovered_targets_by_target_id.each do |target_id, target_info|
-      if @target_filter_callback.call(target_info) && target_info.type != 'browser'
+      if @target_filter_callback.call(target_info) && target_info.type != 'browser' && url_allowed?(target_info.url)
         @target_ids_for_init << target_id
       end
     end
@@ -64,6 +69,7 @@ class Puppeteer::ChromeTargetManager
       flatten: true,
       autoAttach: true,
     })
+    @initial_attach_done = true
     finish_initialization_if_ready
     @initialize_promise.wait
   end
@@ -204,6 +210,12 @@ class Puppeteer::ChromeTargetManager
 
     return unless @connection.auto_attached?(target_info.target_id)
 
+    if !@initial_attach_done && !url_allowed?(target_info.url)
+      finish_initialization_if_ready(target_info.target_id)
+      silent_detach.call
+      return
+    end
+
     # Special case for service workers: being attached to service workers will
     # prevent them from ever being destroyed. Therefore, we silently detach
     # from service workers unless the connection was manually created via
@@ -270,6 +282,7 @@ class Puppeteer::ChromeTargetManager
         flatten: true,
         autoAttach: true,
       }))
+      maybe_setup_network_conditions(session)
       Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
     rescue => err
       Logger.new($stderr).warn(err)
@@ -291,5 +304,39 @@ class Puppeteer::ChromeTargetManager
     return unless target
     @attached_targets_by_target_id.delete(target.target_id)
     emit_event(TargetManagerEmittedEvents::TargetGone, target)
+  end
+
+  private def url_allowed?(url)
+    return true if @block_list.nil? || @block_list.empty?
+    return true if url.nil? || url.empty? || url == 'about:blank'
+
+    @block_list.none? do |pattern|
+      File.fnmatch?(pattern, url, File::FNM_EXTGLOB)
+    rescue ArgumentError
+      false
+    end
+  end
+
+  private def maybe_setup_network_conditions(session)
+    return if @block_list.nil? || @block_list.empty?
+
+    matched_network_conditions = @block_list.map do |pattern|
+      {
+        urlPattern: pattern,
+        latency: 0,
+        downloadThroughput: -1,
+        uploadThroughput: -1,
+      }
+    end
+    Puppeteer::AsyncUtils.await(session.async_send_message('Network.enable'))
+    Puppeteer::AsyncUtils.await(session.async_send_message('Network.emulateNetworkConditionsByRule', {
+      matchedNetworkConditions: matched_network_conditions,
+      offline: true,
+    }))
+  rescue => err
+    message = err.message.to_s.downcase
+    return if message.include?('target closed') || message.include?('session closed') || message.include?('not found')
+
+    raise
   end
 end

@@ -135,6 +135,9 @@ module PageEmittedEvents ; end
   # Emitted when a frame is navigated to a new URL. Will contain a {@link Frame}.
   FrameNavigated: 'framenavigated',
 
+  # Emitted when a DevTools issue is reported.
+  Issue: 'issue',
+
   # Emitted when the JavaScript
   # {https://developer.mozilla.org/en-US/docs/Web/Events/load | load} event is dispatched.
   Load: 'load',

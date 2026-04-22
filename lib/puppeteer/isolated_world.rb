@@ -62,11 +62,13 @@ class Puppeteer::IsolaatedWorld
     @ctx_bindings = Set.new
     @detached = false
     @context = nil
+    @origin = nil
+    @world_id = nil
 
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
-  attr_reader :frame, :task_manager
+  attr_reader :frame, :task_manager, :origin, :world_id
 
   # only used in Puppeteer::WaitTask#initialize
   private def _bound_functions
@@ -107,6 +109,25 @@ class Puppeteer::IsolaatedWorld
   def detach
     @detached = true
     @task_manager.terminate_all(Puppeteer::WaitTask::TerminatedError.new('waitForFunction failed: frame got detached.'))
+  end
+
+  # @rbs origin: String -- Origin for this realm
+  # @rbs return: String -- Origin
+  def origin=(origin)
+    @origin = origin
+  end
+
+  # @rbs world_id: String -- World id for this realm
+  # @rbs return: String -- World id
+  def world_id=(world_id)
+    @world_id = world_id
+  end
+
+  # @rbs return: Puppeteer::Extension? -- Owning extension for this realm
+  def extension
+    return nil unless @world_id.is_a?(String)
+
+    frame.page.browser.extensions[@world_id]
   end
 
   def detached?

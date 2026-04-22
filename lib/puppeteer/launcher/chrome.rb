@@ -87,6 +87,8 @@ module Puppeteer::Launcher
             ignore_https_errors: @browser_options.ignore_https_errors?,
             default_viewport: @browser_options.default_viewport,
             network_enabled: @browser_options.network_enabled,
+            issues_enabled: @browser_options.issues_enabled,
+            block_list: @browser_options.block_list,
             process: runner.proc,
             close_callback: -> { runner.close },
             target_filter_callback: nil,
@@ -129,7 +131,6 @@ module Puppeteer::Launcher
           '--disable-component-update',
           '--disable-default-apps',
           '--disable-dev-shm-usage',
-          '--disable-extensions',
           # AcceptCHFrame disabled because of crbug.com/1348106.
           '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints,IPH_ReadingModePageActionLabel,ReadAnythingOmniboxChip',
           '--disable-hang-monitor',
@@ -175,6 +176,20 @@ module Puppeteer::Launcher
               chrome_arguments << arg
             end
           end
+        end
+
+        if chrome_arg_options.enable_extensions
+          chrome_arguments << '--enable-unsafe-extension-debugging'
+          if chrome_arg_options.enable_extensions.is_a?(Array) && !chrome_arg_options.enable_extensions.empty?
+            extension_paths = chrome_arg_options.enable_extensions.map do |path|
+              File.expand_path(path)
+            end
+            joined_paths = extension_paths.join(',')
+            chrome_arguments << "--disable-extensions-except=#{joined_paths}"
+            chrome_arguments << "--load-extension=#{joined_paths}"
+          end
+        else
+          chrome_arguments << '--disable-extensions'
         end
 
         if chrome_arg_options.args.all? { |arg| arg.start_with?('-') }

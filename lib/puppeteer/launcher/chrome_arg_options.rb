@@ -31,13 +31,14 @@ module Puppeteer::Launcher
       @user_data_dir = options[:user_data_dir]
       @devtools = options[:devtools] || false
       @headless = options[:headless]
+      @enable_extensions = options[:enable_extensions] || false
       if @headless.nil?
         @headless = !@devtools
       end
       @debugging_port = options[:debugging_port] || 0
     end
 
-    attr_reader :args, :user_data_dir, :debugging_port
+    attr_reader :args, :user_data_dir, :debugging_port, :enable_extensions
 
     def headless?
       @headless

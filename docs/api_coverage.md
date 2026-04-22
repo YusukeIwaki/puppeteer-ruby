@@ -26,7 +26,7 @@
 * ~~deleteMatchingCookies~~
 * disconnect
 * ~~getWindowBounds~~
-* ~~installExtension~~
+* installExtension => `#install_extension`
 * isConnected => `#connected?`
 * newPage => `#new_page`
 * pages
@@ -38,11 +38,12 @@
 * ~~setWindowBounds~~
 * target
 * targets
-* ~~uninstallExtension~~
+* uninstallExtension => `#uninstall_extension`
 * userAgent => `#user_agent`
 * version
 * waitForTarget => `#wait_for_target`
 * wsEndpoint => `#ws_endpoint`
+* extensions
 
 ## BrowserContext
 
@@ -126,7 +127,7 @@
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
 * asLocator => `#as_locator`
-* ~~autofill~~
+* autofill
 * ~~backendNodeId~~
 * boundingBox => `#bounding_box`
 * boxModel => `#box_model`
@@ -190,6 +191,7 @@
 * content
 * evaluate
 * evaluateHandle => `#evaluate_handle`
+* extensionRealms => `#extension_realms`
 * focus
 * frameElement => `#frame_element`
 * goto
@@ -253,6 +255,11 @@
 * text
 * timing
 * url
+
+## Issue
+
+* code
+* details
 
 ## JSCoverage
 
@@ -356,6 +363,7 @@
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
 * isServiceWorkerBypassed => `#service_worker_bypassed?`
+* hasDevTools => `#has_devtools`
 * locator
 * mainFrame => `#main_frame`
 * metrics
@@ -386,6 +394,7 @@
 * setViewport => `#viewport=`
 * tap
 * target
+* triggerExtensionAction => `#trigger_extension_action`
 * title
 * type => `#type_text`
 * url
@@ -401,6 +410,7 @@
 * waitForSelector => `#wait_for_selector`
 * ~~windowId~~
 * workers
+* extensionRealms => `#extension_realms`
 
 ## ~~ProtocolError~~
 
@@ -420,7 +430,7 @@
 
 ## Target
 
-* ~~asPage~~
+* asPage => `#as_page`
 * browser
 * browserContext => `#browser_context`
 * createCDPSession => `#create_cdp_session`

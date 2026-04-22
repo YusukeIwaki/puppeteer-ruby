@@ -19,6 +19,7 @@ class Puppeteer::Frame
     @url = 'about:blank'
     @lifecycle_events = Set.new
     @child_frames = Set.new
+    @extension_worlds = {}
     if parent_frame
       parent_frame._child_frames << self
     end
@@ -71,7 +72,7 @@ class Puppeteer::Frame
     @client != @frame_manager.client
   end
 
-  attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world
+  attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world, :extension_worlds
   attr_reader :client
 
   # @rbs other: Object -- Other object to compare
@@ -227,6 +228,11 @@ class Puppeteer::Frame
   # @rbs return: String? -- Frame URL
   def url
     @url
+  end
+
+  # @rbs return: Array[Puppeteer::IsolaatedWorld] -- Extension execution realms for this frame
+  def extension_realms
+    @extension_worlds.values
   end
 
   # @rbs return: Puppeteer::Frame? -- Parent frame
@@ -425,6 +431,7 @@ class Puppeteer::Frame
     @detached = true
     @main_world.detach
     @puppeteer_world.detach
+    @extension_worlds.each_value(&:detach)
     if @parent_frame
       @parent_frame._child_frames.delete(self)
     end

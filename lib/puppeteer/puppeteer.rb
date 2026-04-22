@@ -31,6 +31,9 @@ class Puppeteer::Puppeteer
   # @rbs headless: bool? -- Run browser in headless mode
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs network_enabled: bool? -- Enable network domain
+  # @rbs issues_enabled: bool? -- Enable issues domain
+  # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs enable_extensions: (bool | Array[String])? -- Enable extensions or load unpacked extensions
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
@@ -56,6 +59,9 @@ class Puppeteer::Puppeteer
     headless: nil,
     ignore_https_errors: nil,
     network_enabled: true,
+    issues_enabled: true,
+    block_list: nil,
+    enable_extensions: false,
     default_viewport: NoViewport.new,
     slow_mo: nil,
     protocol_timeout: nil,
@@ -85,6 +91,9 @@ class Puppeteer::Puppeteer
       headless: headless,
       ignore_https_errors: ignore_https_errors,
       network_enabled: network_enabled,
+      issues_enabled: issues_enabled,
+      block_list: block_list,
+      enable_extensions: enable_extensions,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,
@@ -133,6 +142,8 @@ class Puppeteer::Puppeteer
   # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs network_enabled: bool? -- Enable network domain
+  # @rbs issues_enabled: bool? -- Enable issues domain
+  # @rbs block_list: Array[String]? -- URL block list patterns
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
@@ -144,6 +155,8 @@ class Puppeteer::Puppeteer
     transport: nil,
     ignore_https_errors: nil,
     network_enabled: true,
+    issues_enabled: true,
+    block_list: nil,
     default_viewport: nil,
     slow_mo: nil,
     protocol_timeout: nil,
@@ -155,6 +168,8 @@ class Puppeteer::Puppeteer
       transport: transport,
       ignore_https_errors: ignore_https_errors,
       network_enabled: network_enabled,
+      issues_enabled: issues_enabled,
+      block_list: block_list,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,

@@ -142,6 +142,23 @@ class Puppeteer::Target
     @page
   end
 
+  # @return [Puppeteer::Page]
+  def as_page
+    existing_page = page
+    return existing_page if existing_page
+    return @as_page if @as_page
+
+    client = @session || @session_factory.call(false)
+    client.wait_for_ready if client.respond_to?(:wait_for_ready)
+    @as_page = Puppeteer::Page.create(
+      client,
+      self,
+      @ignore_https_errors,
+      nil,
+      network_enabled: @network_enabled,
+    )
+  end
+
   # @return [Puppeteer::CdpWebWorker|nil]
   def worker
     return nil unless ['service_worker', 'shared_worker'].include?(@target_info.type)
