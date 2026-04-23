@@ -230,7 +230,7 @@ class Puppeteer::Frame
     @url
   end
 
-  # @rbs return: Array[Puppeteer::IsolaatedWorld] -- Extension execution realms for this frame
+  # @rbs return: Array[untyped] -- Extension execution realms for this frame
   def extension_realms
     @extension_worlds.values
   end

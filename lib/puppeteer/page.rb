@@ -370,7 +370,7 @@ class Puppeteer::Page
     extension.trigger_action(self)
   end
 
-  # @rbs return: Array[Puppeteer::IsolaatedWorld] -- Extension execution realms on the main frame
+  # @rbs return: Array[untyped] -- Extension execution realms on the main frame
   def extension_realms
     main_frame.extension_realms
   end
