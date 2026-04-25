@@ -143,9 +143,6 @@ class Puppeteer::FrameManager
   # @return [Puppeteer::HTTPResponse]
   def navigate_frame(frame, url, referer: nil, referrer_policy: nil, timeout: nil, wait_until: nil)
     assert_no_legacy_navigation_options(wait_until: wait_until)
-    if blocked_url?(url)
-      raise NavigationError.new("net::ERR_INTERNET_DISCONNECTED at #{url}")
-    end
 
     referrer_policy ||= @network_manager.extra_http_headers['referer-policy']
     protocol_referrer_policy = referrer_policy_to_protocol(referrer_policy)
@@ -614,18 +611,6 @@ class Puppeteer::FrameManager
       client.send_message('Network.setBlockedURLs', urls: block_list)
     else
       raise
-    end
-  end
-
-  private def blocked_url?(url)
-    block_list = @page.browser.block_list
-    return false if block_list.nil? || block_list.empty?
-    return false if url.nil? || url.empty? || url == 'about:blank'
-
-    block_list.any? do |pattern|
-      File.fnmatch?(pattern, url, File::FNM_EXTGLOB)
-    rescue ArgumentError
-      false
     end
   end
 

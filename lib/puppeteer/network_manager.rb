@@ -54,6 +54,10 @@ class Puppeteer::NetworkManager
       }
     end
 
+    def active?
+      @offline || @latency != 0 || @download != -1 || @upload != -1
+    end
+
     def refresh
       update_network_conditions
     end
@@ -205,7 +209,9 @@ class Puppeteer::NetworkManager
     apply_user_agent(client)
     apply_protocol_cache_disabled(client)
     apply_protocol_request_interception(client)
-    safe_send_message(client, 'Network.emulateNetworkConditions', @internal_network_condition.params)
+    if @internal_network_condition.active?
+      safe_send_message(client, 'Network.emulateNetworkConditions', @internal_network_condition.params)
+    end
   end
 
   # @param username [String|NilClass]

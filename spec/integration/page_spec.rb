@@ -178,8 +178,14 @@ RSpec.describe Puppeteer::Page do
       error_promise = Async::Promise.new.tap do |promise|
         page.once('error') { |err| promise.resolve(err) }
       end
-      async_promise { page.goto("chrome://crash") }
-      expect(error_promise.wait.message).to eq("Page crashed!")
+      navigation_promise = async_promise do
+        page.goto("chrome://crash")
+      rescue
+        nil
+      end
+
+      error, = await_promises(error_promise, navigation_promise)
+      expect(error.message).to eq("Page crashed!")
     end
   end
 
