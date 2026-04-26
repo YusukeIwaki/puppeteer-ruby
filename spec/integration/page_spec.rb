@@ -174,7 +174,7 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.Events.error' do
-    it 'should throw when page crashes' do
+    it 'should throw when page crashes', debug_cdp: true do
       error_promise = Async::Promise.new.tap do |promise|
         page.once('error') { |err| promise.resolve(err) }
       end
