@@ -5,6 +5,7 @@ class Puppeteer::FrameManager
   using Puppeteer::DefineAsyncMethod
 
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
+  CHROME_EXTENSION_PREFIX = 'chrome-extension://'
 
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Page} page
@@ -89,6 +90,9 @@ class Puppeteer::FrameManager
         handle_lifecycle_event(event)
       end
     end
+    client.on_event('Audits.issueAdded') do |event|
+      @page.emit_event(PageEmittedEvents::Issue, Puppeteer::Issue.new(event['issue']))
+    end
   end
 
   attr_reader :client, :timeout_settings
@@ -109,7 +113,9 @@ class Puppeteer::FrameManager
     Puppeteer::AsyncUtils.await_promise_all(
       client.async_send_message('Page.setLifecycleEventsEnabled', enabled: true),
       client.async_send_message('Runtime.enable'),
+      @page.browser.issues_enabled? ? client.async_send_message('Audits.enable') : nil,
     )
+    maybe_setup_block_list(client)
     ensure_isolated_world(client, UTILITY_WORLD_NAME)
     @network_manager.init unless cdp_session
   rescue => err
@@ -225,11 +231,9 @@ class Puppeteer::FrameManager
     frame&.send(:update_client, session)
     setup_listeners(session)
     Async do
-      begin
-        async_init(target.target_info.target_id, session).wait
-      rescue => err
-        debug_puts(err)
-      end
+      async_init(target.target_info.target_id, session).wait
+    rescue => err
+      debug_puts(err)
     end
   end
 
@@ -499,6 +503,7 @@ class Puppeteer::FrameManager
   # @pram session [Puppeteer::CDPSession]
   def handle_execution_context_created(context_payload, session)
     frame = if_present(context_payload.dig('auxData', 'frameId')) { |frame_id| @frames[frame_id] }
+    origin = context_payload['origin']
 
     world = nil
     if frame
@@ -514,6 +519,17 @@ class Puppeteer::FrameManager
         # connections so we might end up creating multiple isolated worlds.
         # We can use either.
         world = frame.puppeteer_world
+      elsif extension_origin?(origin)
+        extension_id = extract_extension_id(origin)
+        if extension_id
+          world = frame.extension_worlds[extension_id]
+          unless world
+            world = Puppeteer::IsolaatedWorld.new(frame._client || @client, self, frame, @timeout_settings)
+            frame.extension_worlds[extension_id] = world
+          end
+          world.origin = origin
+          world.world_id = extension_id
+        end
       end
     end
 
@@ -527,6 +543,19 @@ class Puppeteer::FrameManager
     end
     key = "#{session.id}:#{context_payload['id']}"
     @context_id_to_context[key] = context
+  end
+
+  private def extension_origin?(origin)
+    origin.is_a?(String) && origin.start_with?(CHROME_EXTENSION_PREFIX)
+  end
+
+  private def extract_extension_id(origin)
+    return nil unless extension_origin?(origin)
+
+    path_part = origin[CHROME_EXTENSION_PREFIX.length..]
+    return nil unless path_part
+    slash_index = path_part.index('/')
+    slash_index ? path_part[0...slash_index] : path_part
   end
 
   # @param execution_context_id [Integer]
@@ -543,7 +572,7 @@ class Puppeteer::FrameManager
   def handle_execution_contexts_cleared(session)
     session_id = session.id
     @context_id_to_context.select! do |execution_context_id, context|
-      key_session_id, context_id = execution_context_id.split(':', 2)
+      key_session_id, _context_id = execution_context_id.split(':', 2)
       # Make sure to only clear execution contexts that belong
       # to the current session.
       if key_session_id != session_id
@@ -558,6 +587,31 @@ class Puppeteer::FrameManager
   def execution_context_by_id(context_id, session)
     key = "#{session.id}:#{context_id}"
     @context_id_to_context[key] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
+  end
+
+  private def maybe_setup_block_list(client)
+    block_list = @page.browser.block_list
+    return if block_list.nil? || block_list.empty?
+
+    client.send_message('Network.enable')
+    matched_network_conditions = block_list.map do |pattern|
+      {
+        urlPattern: pattern,
+        latency: 0,
+        downloadThroughput: -1,
+        uploadThroughput: -1,
+      }
+    end
+    client.send_message('Network.emulateNetworkConditionsByRule', {
+      matchedNetworkConditions: matched_network_conditions,
+      offline: true,
+    })
+  rescue Puppeteer::Connection::ProtocolError => err
+    if err.message.include?('Method not available') || err.message.include?("wasn't found")
+      client.send_message('Network.setBlockedURLs', urls: block_list)
+    else
+      raise
+    end
   end
 
   # @param {!Frame} frame

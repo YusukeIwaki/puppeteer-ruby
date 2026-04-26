@@ -540,6 +540,22 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
+  # @rbs credit_card: Hash[Symbol | String, untyped]? -- Credit card autofill payload
+  # @rbs address: Hash[Symbol | String, untyped]? -- Address autofill payload
+  # @rbs return: void -- No return value
+  def autofill(credit_card: nil, address: nil)
+    node_info = @remote_object.node_info(@client)
+    field_id = node_info.dig('node', 'backendNodeId')
+    @client.send_message('Autofill.trigger', {
+      fieldId: field_id,
+      frameId: @frame.id,
+      card: credit_card,
+      address: address,
+    }.compact)
+  end
+
+  define_async_method :async_autofill
+
   # @rbs block: Proc? -- Optional block for Object#tap usage
   # @rbs return: Puppeteer::ElementHandle | nil -- Element handle or nil
   def tap(&block)

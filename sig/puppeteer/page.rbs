@@ -82,6 +82,16 @@ class Puppeteer::Page
   # @rbs return: Puppeteer::BrowserContext -- Owning browser context
   def browser_context: () -> Puppeteer::BrowserContext
 
+  # @rbs return: bool -- Whether DevTools is attached to this page
+  def has_devtools: () -> bool
+
+  # @rbs extension: Puppeteer::Extension -- Extension to trigger
+  # @rbs return: void -- No return value
+  def trigger_extension_action: (Puppeteer::Extension extension) -> void
+
+  # @rbs return: Array[untyped] -- Extension execution realms on the main frame
+  def extension_realms: () -> Array[untyped]
+
   class TargetCrashedError < Puppeteer::Error
   end
 
@@ -257,6 +267,10 @@ class Puppeteer::Page
   def handle_binding_called: (Hash[String, untyped] event) -> void
 
   private def add_console_message: (untyped type, untyped args, untyped stack_trace) -> untyped
+
+  private def console_value_from_js_handle: (untyped handle) -> untyped
+
+  private def value_from_remote_object_reference: (untyped remote_object) -> untyped
 
   private def handle_dialog_opening: (untyped event) -> untyped
 

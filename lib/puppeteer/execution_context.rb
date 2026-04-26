@@ -52,13 +52,18 @@ class Puppeteer::ExecutionContext
     # @param context_id [String]
     # @return [Object|JSHandle]
     def evaluate_with(client:, context_id:)
-      result = client.send_message('Runtime.evaluate',
-        expression: expression_with_source_url,
-        contextId: context_id,
-        returnByValue: @return_by_value,
-        awaitPromise: true,
-        userGesture: true,
-      )
+      result =
+        begin
+          client.send_message('Runtime.evaluate',
+            expression: expression_with_source_url,
+            contextId: context_id,
+            returnByValue: @return_by_value,
+            awaitPromise: true,
+            userGesture: true,
+          )
+        rescue Puppeteer::Connection::ProtocolError => err
+          raise @execution_context.send(:rewrite_evaluation_error, err)
+        end
       # }).catch(rewriteError);
 
       exception_details = result['exceptionDetails']
@@ -110,14 +115,19 @@ class Puppeteer::ExecutionContext
       # Original puppeteer implementation take it into consideration.
       # But we don't support the syntax here.
 
-      result = client.send_message('Runtime.callFunctionOn',
-        functionDeclaration: function_declaration,
-        executionContextId: context_id,
-        arguments: converted_args,
-        returnByValue: @return_by_value,
-        awaitPromise: true,
-        userGesture: true,
-      ) # .catch(rewriteError);
+      result =
+        begin
+          client.send_message('Runtime.callFunctionOn',
+            functionDeclaration: function_declaration,
+            executionContextId: context_id,
+            arguments: converted_args,
+            returnByValue: @return_by_value,
+            awaitPromise: true,
+            userGesture: true,
+          )
+        rescue Puppeteer::Connection::ProtocolError => err
+          raise @execution_context.send(:rewrite_evaluation_error, err)
+        end # .catch(rewriteError);
 
       exception_details = result['exceptionDetails']
       if exception_details
@@ -335,6 +345,18 @@ class Puppeteer::ExecutionContext
       client: @client,
       context_id: @context_id,
     )
+  end
+
+  # @param error [Puppeteer::Connection::ProtocolError]
+  # @return [StandardError]
+  private def rewrite_evaluation_error(error)
+    message = error.message
+    if message.end_with?('Cannot find context with specified id') ||
+       message.end_with?('Inspected target navigated or closed')
+      return Puppeteer::Error.new('Execution context was destroyed, most likely because of a navigation.')
+    end
+
+    error
   end
 
   # @rbs page_function: String -- JavaScript code to check

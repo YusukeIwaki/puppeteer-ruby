@@ -14,6 +14,8 @@ class Puppeteer::Browser
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs network_enabled: bool -- Whether network events are enabled
+  # @rbs issues_enabled: bool -- Whether issues events are enabled
+  # @rbs block_list: Array[String]? -- URL block list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -25,6 +27,8 @@ class Puppeteer::Browser
                   ignore_https_errors:,
                   default_viewport:,
                   network_enabled: true,
+                  issues_enabled: true,
+                  block_list: nil,
                   process:,
                   close_callback:,
                   target_filter_callback:,
@@ -36,6 +40,8 @@ class Puppeteer::Browser
       ignore_https_errors: ignore_https_errors,
       default_viewport: default_viewport,
       network_enabled: network_enabled,
+      issues_enabled: issues_enabled,
+      block_list: block_list,
       process: process,
       close_callback: close_callback,
       target_filter_callback: target_filter_callback,
@@ -51,6 +57,8 @@ class Puppeteer::Browser
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs network_enabled: bool -- Whether network events are enabled
+  # @rbs issues_enabled: bool -- Whether issues events are enabled
+  # @rbs block_list: Array[String]? -- URL block list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -62,6 +70,8 @@ class Puppeteer::Browser
                  ignore_https_errors:,
                  default_viewport:,
                  network_enabled: true,
+                 issues_enabled: true,
+                 block_list: nil,
                  process:,
                  close_callback:,
                  target_filter_callback:,
@@ -73,6 +83,8 @@ class Puppeteer::Browser
     @ignore_https_errors = ignore_https_errors
     @default_viewport = default_viewport
     @network_enabled = network_enabled
+    @issues_enabled = issues_enabled
+    @block_list = block_list
     @process = process
     @connection = connection
     @close_callback = close_callback
@@ -89,7 +101,9 @@ class Puppeteer::Browser
       connection: connection,
       target_factory: method(:create_target),
       target_filter_callback: @target_filter_callback,
+      block_list: block_list,
     )
+    @extensions = {}
   end
 
   private def default_target_filter_callback(target_info)
@@ -161,6 +175,10 @@ class Puppeteer::Browser
 
   private def target_manager
     @target_manager
+  end
+
+  private def connection
+    @connection
   end
 
   # @rbs return: Puppeteer::BrowserContext -- New incognito browser context
@@ -374,6 +392,63 @@ class Puppeteer::Browser
   # @rbs return: String -- Browser user agent string
   def user_agent
     Version.fetch(@connection).user_agent
+  end
+
+  # @rbs page_target_id: String -- Page target id
+  # @rbs return: String? -- DevTools target id for page
+  def _has_devtools_target(page_target_id)
+    result = @connection.send_message('Target.getDevToolsTarget', targetId: page_target_id)
+    result['targetId']
+  end
+
+  # @rbs path: String -- Extension path
+  # @rbs return: String -- Installed extension id
+  def install_extension(path)
+    result = @connection.send_message('Extensions.loadUnpacked', path: path)
+    extension_id = result['id']
+    @extensions.delete(extension_id)
+    extension_id
+  end
+
+  # @rbs extension_id: String -- Extension id
+  # @rbs return: void -- No return value
+  def uninstall_extension(extension_id)
+    @connection.send_message('Extensions.uninstall', id: extension_id)
+    @extensions.delete(extension_id)
+  end
+
+  # @rbs return: Hash[String, Puppeteer::Extension] -- Installed extensions
+  def extensions
+    response = @connection.send_message('Extensions.getExtensions')
+    extension_map = {}
+    response.fetch('extensions', []).each do |payload|
+      extension_id = payload['id']
+      existing_extension = @extensions[extension_id]
+      extension_map[extension_id] =
+        if existing_extension
+          existing_extension
+        else
+          Puppeteer::Extension.new(
+            id: extension_id,
+            version: payload['version'],
+            name: payload['name'],
+            path: payload['path'],
+            enabled: payload['enabled'],
+            browser: self,
+          )
+        end
+    end
+    @extensions = extension_map
+  end
+
+  # @rbs return: bool -- Whether issue events are enabled
+  def issues_enabled?
+    @issues_enabled
+  end
+
+  # @rbs return: Array[String]? -- URL block list patterns
+  def block_list
+    @block_list
   end
 
   # @rbs return: void -- No return value

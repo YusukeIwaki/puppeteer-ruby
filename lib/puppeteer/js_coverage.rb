@@ -26,6 +26,7 @@ class Puppeteer::JSCoverage
     @enabled = false
     @script_urls = {}
     @script_sources = {}
+    @script_parsed_tasks = []
   end
 
   def start(
@@ -52,9 +53,10 @@ class Puppeteer::JSCoverage
     @enabled = true
     @script_urls.clear
     @script_sources.clear
+    @script_parsed_tasks.clear
     @event_listeners = []
     @event_listeners << @client.add_event_listener('Debugger.scriptParsed') do |event|
-      Async do
+      @script_parsed_tasks << Async do
         Puppeteer::AsyncUtils.future_with_logging { on_script_parsed(event) }.call
       end
     end
@@ -95,11 +97,22 @@ class Puppeteer::JSCoverage
     response = @client.send_message('Debugger.getScriptSource', scriptId: event['scriptId'])
     @script_urls[event['scriptId']] = url
     @script_sources[event['scriptId']] = response['scriptSource']
+  rescue Puppeteer::Connection::ProtocolError
+    # The page can navigate while we are fetching sources for coverage.
+    # This matches upstream behavior that ignores these transient failures.
+    nil
+  end
+
+  private def drain_script_parsed_tasks
+    pending_tasks = @script_parsed_tasks
+    @script_parsed_tasks = []
+    pending_tasks.each(&:wait)
   end
 
   def stop
     raise 'JSCoverage is not enabled' unless @enabled
     @enabled = false
+    drain_script_parsed_tasks
 
     results = Puppeteer::AsyncUtils.await_promise_all(
       @client.async_send_message('Profiler.takePreciseCoverage'),

@@ -202,10 +202,21 @@ RSpec.configure do |config|
   timeout_sec = (ENV['PUPPETEER_TIMEOUT_RSPEC'] || 15).to_i
 
   config.around(:each, type: :integration) do |example|
-    if timeout_sec > 0
-      Timeout.timeout(timeout_sec) { example.run }
-    else
-      example.run
+    original_debug = ENV['DEBUG']
+    ENV['DEBUG'] = '1' if example.metadata[:debug_cdp]
+
+    begin
+      if timeout_sec > 0
+        Timeout.timeout(timeout_sec) { example.run }
+      else
+        example.run
+      end
+    ensure
+      if original_debug.nil?
+        ENV.delete('DEBUG')
+      else
+        ENV['DEBUG'] = original_debug
+      end
     end
   end
 

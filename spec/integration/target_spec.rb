@@ -3,6 +3,19 @@ require 'spec_helper'
 RSpec.describe 'Target' do
   include Utils::WaitEvent
 
+  it 'Target.asPage() should return the same instance' do
+    with_test_state do |page:, **|
+      target = page.target
+      page1 = target.page
+      page2 = target.as_page
+      page3 = target.as_page
+
+      expect(page1).to eq(page)
+      expect(page2).to eq(page)
+      expect(page3).to eq(page)
+    end
+  end
+
   it 'Browser.targets should return all of the targets' do
     with_test_state do |browser:, **|
       targets = browser.targets

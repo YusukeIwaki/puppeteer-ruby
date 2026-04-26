@@ -359,6 +359,22 @@ class Puppeteer::Page
     @target.browser_context
   end
 
+  # @rbs return: bool -- Whether DevTools is attached to this page
+  def has_devtools
+    !!browser._has_devtools_target(@target.target_id)
+  end
+
+  # @rbs extension: Puppeteer::Extension -- Extension to trigger
+  # @rbs return: void -- No return value
+  def trigger_extension_action(extension)
+    extension.trigger_action(self)
+  end
+
+  # @rbs return: Array[untyped] -- Extension execution realms on the main frame
+  def extension_realms
+    main_frame.extension_realms
+  end
+
   class TargetCrashedError < Puppeteer::Error; end
 
   private def handle_target_crashed

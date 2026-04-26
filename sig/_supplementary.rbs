@@ -189,6 +189,10 @@ class Puppeteer::FrameManager
   def remove_frame_recursively: (Puppeteer::Frame frame) -> void
   def referrer_policy_to_protocol: (String? referrer_policy) -> String?
   def assert_no_legacy_navigation_options: (wait_until: (String | Array[String] | nil)) -> void
+  def extension_origin?: (untyped origin) -> bool
+  def extract_extension_id: (untyped origin) -> String?
+  def maybe_setup_block_list: (Puppeteer::CDPSession client) -> void
+  def blocked_url?: (String? url) -> bool
 end
 
 class Puppeteer::NetworkCondition
@@ -226,6 +230,7 @@ class Puppeteer::Target
   def browser: () -> Puppeteer::Browser
   def browser_context: () -> Puppeteer::BrowserContext
   def opener: () -> Puppeteer::Target?
+  def as_page: () -> Puppeteer::Page?
   def handle_target_info_changed: (Puppeteer::Target::TargetInfo target_info) -> void
 
   private

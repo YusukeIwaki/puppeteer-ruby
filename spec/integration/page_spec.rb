@@ -174,12 +174,19 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.Events.error' do
-    it 'should throw when page crashes' do
+    it 'should throw when page crashes', debug_cdp: true do
+      pending 'Inspector.onTargetCrashed is not notified. Inspector.detached is notified instead.' if ENV['CI']
       error_promise = Async::Promise.new.tap do |promise|
         page.once('error') { |err| promise.resolve(err) }
       end
-      async_promise { page.goto("chrome://crash") }
-      expect(error_promise.wait.message).to eq("Page crashed!")
+      navigation_promise = async_promise do
+        page.goto("chrome://crash")
+      rescue
+        nil
+      end
+
+      error, = await_promises(error_promise, navigation_promise)
+      expect(error.message).to eq("Page crashed!")
     end
   end
 

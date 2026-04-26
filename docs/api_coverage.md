@@ -26,7 +26,7 @@
 * ~~deleteMatchingCookies~~
 * disconnect
 * ~~getWindowBounds~~
-* ~~installExtension~~
+* installExtension => `#install_extension`
 * isConnected => `#connected?`
 * newPage => `#new_page`
 * pages
@@ -38,7 +38,7 @@
 * ~~setWindowBounds~~
 * target
 * targets
-* ~~uninstallExtension~~
+* uninstallExtension => `#uninstall_extension`
 * userAgent => `#user_agent`
 * version
 * waitForTarget => `#wait_for_target`
@@ -126,7 +126,7 @@
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
 * asLocator => `#as_locator`
-* ~~autofill~~
+* autofill
 * ~~backendNodeId~~
 * boundingBox => `#bounding_box`
 * boxModel => `#box_model`
@@ -420,7 +420,7 @@
 
 ## Target
 
-* ~~asPage~~
+* asPage => `#as_page`
 * browser
 * browserContext => `#browser_context`
 * createCDPSession => `#create_cdp_session`

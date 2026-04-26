@@ -54,6 +54,10 @@ class Puppeteer::NetworkManager
       }
     end
 
+    def active?
+      @offline || @latency != 0 || @download != -1 || @upload != -1
+    end
+
     def refresh
       update_network_conditions
     end
@@ -102,7 +106,6 @@ class Puppeteer::NetworkManager
     @user_cache_disabled = nil
     @internal_network_condition = InternalNetworkCondition.new(method(:send_to_clients))
     @interception_semaphore = Async::Semaphore.new(1)
-
     add_client(@client)
   end
 
@@ -138,10 +141,8 @@ class Puppeteer::NetworkManager
     "#<Puppeteer::HTTPRequest #{values.join(' ')}>"
   end
 
-  private def apply_to_clients
-    @clients.each do |client|
-      yield client
-    end
+  private def apply_to_clients(&block)
+    @clients.each(&block)
   end
 
   private def ignore_client_error?(error)
@@ -192,7 +193,7 @@ class Puppeteer::NetworkManager
     if @protocol_request_interception_enabled
       safe_send_message(client, 'Fetch.enable',
         handleAuthRequests: true,
-        patterns: [{ urlPattern: '*' }],
+        patterns: [{ urlPattern: '*' }]
       )
     else
       safe_send_message(client, 'Fetch.disable')
@@ -208,7 +209,9 @@ class Puppeteer::NetworkManager
     apply_user_agent(client)
     apply_protocol_cache_disabled(client)
     apply_protocol_request_interception(client)
-    safe_send_message(client, 'Network.emulateNetworkConditions', @internal_network_condition.params)
+    if @internal_network_condition.active?
+      safe_send_message(client, 'Network.emulateNetworkConditions', @internal_network_condition.params)
+    end
   end
 
   # @param username [String|NilClass]
@@ -343,11 +346,9 @@ class Puppeteer::NetworkManager
   private def dispatch_intercepted_request(event, fetch_request_id, client:)
     if Async::Task.current?
       Async do
-        begin
-          handle_request(event, fetch_request_id, client: client)
-        rescue => err
-          debug_puts(err)
-        end
+        handle_request(event, fetch_request_id, client: client)
+      rescue => err
+        debug_puts(err)
       end
     else
       handle_request(event, fetch_request_id, client: client)
@@ -365,6 +366,7 @@ class Puppeteer::NetworkManager
     if existing_request &&
        existing_request.url == event_url &&
        existing_request.method == event.dig('request', 'method')
+
       if_present(@network_event_manager.request_extra_info(network_request_id).shift) do |extra_info|
         existing_request.update_headers(extra_info['headers'])
       end
@@ -474,12 +476,10 @@ class Puppeteer::NetworkManager
     end
   end
 
-  private def with_interception_lock
+  private def with_interception_lock(&block)
     return yield unless Async::Task.current?
 
-    @interception_semaphore.acquire do
-      yield
-    end
+    @interception_semaphore.acquire(&block)
   end
 
   private def handle_request_without_network_instrumentation(event, client)
