@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.56.0",
+    "toolVersion": "7.58.2",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -663,49 +663,389 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "Interface",
-          "canonicalReference": "puppeteer-core!AutofillData:interface",
+          "kind": "Enum",
+          "canonicalReference": "puppeteer-core!AutofillAddressField:enum",
+          "docComment": "/**\n * Supported autofill address field names.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare const enum AutofillAddressField "
+            }
+          ],
+          "fileUrlPath": "src/api/ElementHandle.ts",
+          "releaseTag": "Public",
+          "name": "AutofillAddressField",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeCity:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeCity = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_CITY\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeCity"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeCountry:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeCountry = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_COUNTRY\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeCountry"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeLine1:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeLine1 = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_LINE1\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeLine1"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeLine2:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeLine2 = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_LINE2\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeLine2"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeState = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_STATE\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeState"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeStreetAddress:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeStreetAddress = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_STREET_ADDRESS\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeStreetAddress"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.AddressHomeZip:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AddressHomeZip = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ADDRESS_HOME_ZIP\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "AddressHomeZip"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.EmailAddress:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "EmailAddress = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"EMAIL_ADDRESS\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "EmailAddress"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.NameFirst:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "NameFirst = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"NAME_FIRST\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "NameFirst"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.NameFull:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "NameFull = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"NAME_FULL\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "NameFull"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.NameLast:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "NameLast = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"NAME_LAST\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "NameLast"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.NameMiddle:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "NameMiddle = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"NAME_MIDDLE\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "NameMiddle"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.PhoneHomeCityAndNumber:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "PhoneHomeCityAndNumber = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"PHONE_HOME_CITY_AND_NUMBER\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "PhoneHomeCityAndNumber"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.PhoneHomeNumber:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "PhoneHomeNumber = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"PHONE_HOME_NUMBER\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "PhoneHomeNumber"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!AutofillAddressField.PhoneHomeWholeNumber:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "PhoneHomeWholeNumber = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"PHONE_HOME_WHOLE_NUMBER\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "PhoneHomeWholeNumber"
+            }
+          ]
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!AutofillData:type",
           "docComment": "/**\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export interface AutofillData "
+              "text": "export type AutofillData = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    creditCard: {\n        number: string;\n        name: string;\n        expiryMonth: string;\n        expiryYear: string;\n        cvc: string;\n    };\n    address?: never;\n} | {\n    address: {\n        fields: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Array",
+              "canonicalReference": "!Array:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n            name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "AutofillAddressField",
+              "canonicalReference": "puppeteer-core!AutofillAddressField:enum"
+            },
+            {
+              "kind": "Content",
+              "text": " | (string & "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<never, never>);\n            value: string;\n        }>;\n    };\n    creditCard?: never;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
             }
           ],
           "fileUrlPath": "src/api/ElementHandle.ts",
           "releaseTag": "Public",
           "name": "AutofillData",
-          "preserveMemberOrder": false,
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "puppeteer-core!AutofillData#creditCard:member",
-              "docComment": "/**\n * See {@link https://chromedevtools.github.io/devtools-protocol/tot/Autofill/#type-CreditCard | Autofill.CreditCard}.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "creditCard: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        number: string;\n        name: string;\n        expiryMonth: string;\n        expiryYear: string;\n        cvc: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": false,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "creditCard",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 8
+          }
         },
         {
           "kind": "TypeAlias",
@@ -1940,6 +2280,60 @@
               "isOptional": false,
               "isAbstract": true,
               "name": "disconnect"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#extensions:member(1)",
+              "docComment": "/**\n * Retrieves a map of all extensions installed in the browser, where the keys are extension IDs and the values are the corresponding {@link Extension} instances.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract extensions(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Map",
+                  "canonicalReference": "!Map:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Extension",
+                  "canonicalReference": "puppeteer-core!Extension:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "extensions"
             },
             {
               "kind": "Method",
@@ -7102,6 +7496,33 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!ConnectOptions#blockList:member",
+              "docComment": "/**\n * A list of URL patterns to block.\n *\n * This option allows you to restrict the browser from accessing specific URLs or origins. It uses the standard [URLPattern](https://urlpattern.spec.whatwg.org/) API to match URLs.\n *\n * When connecting to an existing browser, Puppeteer will silently detach from any already open targets that violate the patterns.\n *\n * For any network requests made by the browser (including navigations and subresources like images or scripts), the request will fail with an error if the URL matches a blocked pattern.\n *\n * @remarks\n *\n * Currently only supported for CDP connections.\n *\n * @example\n *\n * Pattern to block a specific domain: `*://example.com/*`\n *\n * @example\n *\n * Pattern to block all subdomains: `*://*.evil.com/*`\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "blockList?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "blockList",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!ConnectOptions#browserURL:member",
               "docComment": "",
               "excerptTokens": [
@@ -7327,6 +7748,33 @@
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!ConnectOptions#issuesEnabled:member",
+              "docComment": "/**\n * Experimental setting to disable monitoring issue events by default.\n *\n * @defaultValue `true`\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "issuesEnabled?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "issuesEnabled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
               }
             },
             {
@@ -11574,7 +12022,7 @@
                 {
                   "kind": "Reference",
                   "text": "AutofillData",
-                  "canonicalReference": "puppeteer-core!AutofillData:interface"
+                  "canonicalReference": "puppeteer-core!AutofillData:type"
                 },
                 {
                   "kind": "Content",
@@ -14923,6 +15371,319 @@
         },
         {
           "kind": "Class",
+          "canonicalReference": "puppeteer-core!Extension:class",
+          "docComment": "/**\n * {@link Extension} represents a browser extension installed in the browser. It provides access to the extension's ID, name, and version, as well as methods for interacting with the extension's background workers and pages.\n *\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `Extension` class.\n *\n * @example\n *\n * To get all extensions installed in the browser:\n * ```ts\n * const extensions = await browser.extensions();\n * for (const [id, extension] of extensions) {\n *   console.log(extension.name, id);\n * }\n * ```\n *\n * @experimental @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare abstract class Extension "
+            }
+          ],
+          "fileUrlPath": "src/api/Extension.ts",
+          "releaseTag": "Public",
+          "isAbstract": true,
+          "name": "Extension",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Extension#enabled:member",
+              "docComment": "/**\n * Whether the extension is enabled.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get enabled(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "enabled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Extension#id:member",
+              "docComment": "/**\n * The unique identifier of the extension.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get id(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Extension#name:member",
+              "docComment": "/**\n * The name of the extension as specified in its manifest.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get name(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Extension#pages:member(1)",
+              "docComment": "/**\n * Returns a list of the currently active and visible pages belonging to the extension.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract pages(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Page",
+                  "canonicalReference": "puppeteer-core!Page:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "pages"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Extension#path:member",
+              "docComment": "/**\n * The path in the file system where the extension is located.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get path(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Extension#triggerAction:member(1)",
+              "docComment": "/**\n * Triggers the default action of the extension for a specified page. This typically simulates a user clicking the extension's action icon in the browser toolbar, potentially opening a popup or executing an action script.\n *\n * @param page - The page to trigger the action on.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract triggerAction(page: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Page",
+                  "canonicalReference": "puppeteer-core!Page:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "page",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "triggerAction"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Extension#version:member",
+              "docComment": "/**\n * The version of the extension as specified in its manifest.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get version(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "version",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Extension#workers:member(1)",
+              "docComment": "/**\n * Returns a list of the currently active service workers belonging to the extension.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract workers(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebWorker",
+                  "canonicalReference": "puppeteer-core!WebWorker:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "workers"
+            }
+          ],
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Class",
           "canonicalReference": "puppeteer-core!ExtensionTransport:class",
           "docComment": "/**\n * Experimental ExtensionTransport allows establishing a connection via chrome.debugger API if Puppeteer runs in an extension. Since Chrome DevTools Protocol is restricted for extensions, the transport implements missing commands and events.\n *\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `ExtensionTransport` class.\n *\n * @experimental @public\n */\n",
           "excerptTokens": [
@@ -16815,6 +17576,42 @@
               "isOptional": false,
               "isAbstract": false,
               "name": "evaluateHandle"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Frame#extensionRealms:member(1)",
+              "docComment": "/**\n * Retrieves the list of extension execution realms associated with this frame. Extension execution realms are created by extension content scripts injected into the frame.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract extensionRealms(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Realm",
+                  "canonicalReference": "puppeteer-core!Realm:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "extensionRealms"
             },
             {
               "kind": "Method",
@@ -20750,6 +21547,79 @@
               "endIndex": 2
             }
           ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!Issue:interface",
+          "docComment": "/**\n * The Issue interface represents a DevTools issue.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface Issue "
+            }
+          ],
+          "fileUrlPath": "src/api/Issue.ts",
+          "releaseTag": "Public",
+          "name": "Issue",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!Issue#code:member",
+              "docComment": "/**\n * The code of the issue.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "code: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "code",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!Issue#details:member",
+              "docComment": "/**\n * The details of the issue.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "details: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Protocol.Audits.InspectorIssueDetails",
+                  "canonicalReference": "devtools-protocol!Protocol.Audits.InspectorIssueDetails:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "details",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Class",
@@ -29461,6 +30331,42 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#extensionRealms:member(1)",
+              "docComment": "/**\n * Retrieves the list of extension execution realms in the main frame of the page. These realms correspond to extension content scripts running on the page.\n *\n * Shortcut for {@link Frame.extensionRealms | mainFrame().extensionRealms()}.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract extensionRealms(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Realm",
+                  "canonicalReference": "puppeteer-core!Realm:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "extensionRealms"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#focus:member(1)",
               "docComment": "/**\n * This method fetches an element with `selector` and focuses it. If there's no element matching `selector`, the method throws an error.\n *\n * @remarks\n *\n * Shortcut for {@link Frame.focus | page.mainFrame().focus(selector)}.\n *\n * @param selector - {@link https://pptr.dev/guides/page-interactions#selectors | selector} to query the page for. {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | CSS selectors} can be passed as-is and a {@link https://pptr.dev/guides/page-interactions#non-css-selectors | Puppeteer-specific selector syntax} allows querying by {@link https://pptr.dev/guides/page-interactions#text-selectors--p-text | text}, {@link https://pptr.dev/guides/page-interactions#aria-selectors--p-aria | a11y role and name}, and {@link https://pptr.dev/guides/page-interactions#xpath-selectors--p-xpath | xpath} and {@link https://pptr.dev/guides/page-interactions#querying-elements-in-shadow-dom | combining these queries across shadow roots}. Alternatively, you can specify the selector type using a {@link https://pptr.dev/guides/page-interactions#prefixed-selector-syntax | prefix}. If there are multiple elements satisfying the selector, the first will be focused.\n *\n * @returns Promise which resolves when the element matching selector is successfully focused. The promise will be rejected if there is no element matching selector.\n */\n",
               "excerptTokens": [
@@ -29814,6 +30720,42 @@
               "isOptional": false,
               "isAbstract": false,
               "name": "goto"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#hasDevTools:member(1)",
+              "docComment": "/**\n * Returns true if DevTools is attached to the current page. Use {@link Page.openDevTools} to get the DevTools page.\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract hasDevTools(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<boolean>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "hasDevTools"
             },
             {
               "kind": "Method",
@@ -32069,6 +33011,60 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#triggerExtensionAction:member(1)",
+              "docComment": "/**\n * Triggers the default action of the specified extension for this page. This simulates clicking the extension's icon in the browser's toolbar.\n *\n * @param extension - The {@link Extension} whose action to trigger.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract triggerExtensionAction(extension: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Extension",
+                  "canonicalReference": "puppeteer-core!Extension:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "extension",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "triggerExtensionAction"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#type:member(1)",
               "docComment": "/**\n * Sends a `keydown`, `keypress/input`, and `keyup` event for each character in the text.\n *\n * To press a special key, like `Control` or `ArrowDown`, use {@link Keyboard.press}.\n *\n * @param selector - {@link https://pptr.dev/guides/page-interactions#selectors | selector} to query the page for. {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | CSS selectors} can be passed as-is and a {@link https://pptr.dev/guides/page-interactions#non-css-selectors | Puppeteer-specific selector syntax} allows querying by {@link https://pptr.dev/guides/page-interactions#text-selectors--p-text | text}, {@link https://pptr.dev/guides/page-interactions#aria-selectors--p-aria | a11y role and name}, and {@link https://pptr.dev/guides/page-interactions#xpath-selectors--p-xpath | xpath} and {@link https://pptr.dev/guides/page-interactions#querying-elements-in-shadow-dom | combining these queries across shadow roots}. Alternatively, you can specify the selector type using a {@link https://pptr.dev/guides/page-interactions#prefixed-selector-syntax | prefix}.\n *\n * @param text - A text to type into a focused element.\n *\n * @param options - have property `delay` which is the Time to wait between key presses in milliseconds. Defaults to `0`.\n *\n * @returns \n *\n * @example\n * ```ts\n * await page.type('#mytextarea', 'Hello');\n * // Types instantly\n * await page.type('#mytextarea', 'World', {delay: 100});\n * // Types slower, like a user\n * ```\n *\n */\n",
               "excerptTokens": [
@@ -33048,6 +34044,37 @@
               "name": "waitForSelector"
             },
             {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Page#webmcp:member",
+              "docComment": "/**\n * Experimental API for {@link https://github.com/webmachinelearning/webmcp | WebMCP}. Requires Chrome 149+ with the `--enable-features=WebMCPTesting,DevToolsWebMCPSupport` flags enabled.\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract get webmcp(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCP",
+                  "canonicalReference": "puppeteer-core!WebMCP:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "webmcp",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": true
+            },
+            {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#windowId:member(1)",
               "docComment": "/**\n * Returns the page's window id.\n *\n * @experimental\n */\n",
@@ -33317,6 +34344,27 @@
               },
               "releaseTag": "Public",
               "name": "FrameNavigated"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!PageEvent.Issue:member",
+              "docComment": "/**\n * Emitted when a DevTools issue is reported.\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "Issue = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"issue\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "Issue"
             },
             {
               "kind": "EnumMember",
@@ -33877,6 +34925,43 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "framenavigated",
+              "propertyTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PageEvents#issue:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PageEvent.Issue",
+                  "canonicalReference": "puppeteer-core!PageEvent.Issue:member"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Issue",
+                  "canonicalReference": "puppeteer-core!Issue:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "issue",
               "propertyTypeTokenRange": {
                 "startIndex": 3,
                 "endIndex": 4
@@ -36615,6 +37700,596 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "puppeteer-core!Realm:class",
+          "docComment": "/**\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `Realm` class.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare abstract class Realm "
+            }
+          ],
+          "fileUrlPath": "src/api/Realm.ts",
+          "releaseTag": "Public",
+          "isAbstract": true,
+          "name": "Realm",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Realm#evaluate:member(1)",
+              "docComment": "/**\n * Evaluates a function in the realm's context and returns the resulting value.\n *\n * If the function passed to `realm.evaluate` returns a Promise, the method will wait for the promise to resolve and return its value.\n *\n * {@link JSHandle} instances can be passed as arguments to the function.\n *\n * @param pageFunction - A function to be evaluated in the realm.\n *\n * @param args - Arguments to be passed to the `pageFunction`.\n *\n * @returns A promise that resolves to the return value of the function.\n *\n * @example\n * ```ts\n * const result = await realm.evaluate(() => {\n *   return Promise.resolve(8 * 7);\n * });\n * console.log(result); // prints \"56\"\n * ```\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract evaluate<Params extends "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", Func extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EvaluateFunc",
+                  "canonicalReference": "puppeteer-core!EvaluateFunc:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Params>"
+                },
+                {
+                  "kind": "Content",
+                  "text": " = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EvaluateFunc",
+                  "canonicalReference": "puppeteer-core!EvaluateFunc:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Params>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">(pageFunction: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Func | string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ...args: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Params"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Awaited",
+                  "canonicalReference": "!Awaited:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReturnType",
+                  "canonicalReference": "!ReturnType:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Func>>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "Params",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                },
+                {
+                  "typeParameterName": "Func",
+                  "constraintTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 5
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 8
+                  }
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 13,
+                "endIndex": 19
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "pageFunction",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 10
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "args",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 11,
+                    "endIndex": 12
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "evaluate"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Realm#evaluateHandle:member(1)",
+              "docComment": "/**\n * Evaluates a function in the realm's context and returns a {@link JSHandle} to the result.\n *\n * If the function passed to `realm.evaluateHandle` returns a Promise, the method will wait for the promise to resolve and return its value.\n *\n * {@link JSHandle} instances can be passed as arguments to the function.\n *\n * @param pageFunction - A function to be evaluated in the realm.\n *\n * @param args - Arguments to be passed to the `pageFunction`.\n *\n * @returns A promise that resolves to a {@link JSHandle} containing the result.\n *\n * @example\n * ```ts\n * const aHandle = await realm.evaluateHandle(() => document.body);\n * const resultHandle = await realm.evaluateHandle(\n *   body => body.innerHTML,\n *   aHandle,\n * );\n * ```\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract evaluateHandle<Params extends "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", Func extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EvaluateFunc",
+                  "canonicalReference": "puppeteer-core!EvaluateFunc:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Params>"
+                },
+                {
+                  "kind": "Content",
+                  "text": " = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EvaluateFunc",
+                  "canonicalReference": "puppeteer-core!EvaluateFunc:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Params>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">(pageFunction: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Func | string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ...args: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Params"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HandleFor",
+                  "canonicalReference": "puppeteer-core!HandleFor:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Awaited",
+                  "canonicalReference": "!Awaited:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReturnType",
+                  "canonicalReference": "!ReturnType:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Func>>>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "Params",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                },
+                {
+                  "typeParameterName": "Func",
+                  "constraintTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 5
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 8
+                  }
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 13,
+                "endIndex": 21
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "pageFunction",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 10
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "args",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 11,
+                    "endIndex": 12
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "evaluateHandle"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Realm#extension:member(1)",
+              "docComment": "/**\n * Returns the {@link Extension} that created this realm, if applicable. This is typically populated when the realm was created by an extension content script injected into a page.\n *\n * @returns A promise that resolves to the {@link Extension} or `null` if not created by an extension.\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract extension(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Extension",
+                  "canonicalReference": "puppeteer-core!Extension:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "extension"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Realm#origin:member",
+              "docComment": "/**\n * Returns the origin that created the Realm. For example, if the realm was created by an extension content script, this will return the origin of the extension (e.g., `chrome-extension://<extension-id>`).\n *\n * @example\n *\n * `chrome-extension://<chrome-extension-id>`\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract get origin(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "origin",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": true
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Realm#waitForFunction:member(1)",
+              "docComment": "/**\n * Waits for a function to return a truthy value when evaluated in the realm's context.\n *\n * Arguments can be passed from Node.js to `pageFunction`.\n *\n * @param pageFunction - A function to evaluate in the realm.\n *\n * @param options - Options for polling and timeouts.\n *\n * @param args - Arguments to pass to the function.\n *\n * @returns A promise that resolves when the function returns a truthy value.\n *\n * @example\n * ```ts\n * const selector = '.foo';\n * await realm.waitForFunction(\n *   selector => !!document.querySelector(selector),\n *   {},\n *   selector,\n * );\n * ```\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "waitForFunction<Params extends "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", Func extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EvaluateFunc",
+                  "canonicalReference": "puppeteer-core!EvaluateFunc:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Params>"
+                },
+                {
+                  "kind": "Content",
+                  "text": " = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EvaluateFunc",
+                  "canonicalReference": "puppeteer-core!EvaluateFunc:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Params>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">(pageFunction: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Func | string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        polling?: 'raf' | 'mutation' | number;\n        timeout?: number;\n        root?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ElementHandle",
+                  "canonicalReference": "puppeteer-core!ElementHandle:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Node",
+                  "canonicalReference": "!Node:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">;\n        signal?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AbortSignal",
+                  "canonicalReference": "!AbortSignal:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ...args: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Params"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HandleFor",
+                  "canonicalReference": "puppeteer-core!HandleFor:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Awaited",
+                  "canonicalReference": "!Awaited:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReturnType",
+                  "canonicalReference": "!ReturnType:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Func>>>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "Params",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                },
+                {
+                  "typeParameterName": "Func",
+                  "constraintTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 5
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 8
+                  }
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 21,
+                "endIndex": 29
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "pageFunction",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 10
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 11,
+                    "endIndex": 18
+                  },
+                  "isOptional": true
+                },
+                {
+                  "parameterName": "args",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 19,
+                    "endIndex": 20
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "waitForFunction"
+            }
+          ],
+          "implementsTokenRanges": []
         },
         {
           "kind": "Interface",
@@ -41600,6 +43275,1088 @@
         },
         {
           "kind": "Class",
+          "canonicalReference": "puppeteer-core!WebMCP:class",
+          "docComment": "/**\n * The experimental WebMCP class provides an API for the WebMCP API.\n *\n * See the {@link https://pptr.dev/guides/webmcp | WebMCP guide} for more details.\n *\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `WebMCP` class.\n *\n * @example\n * ```ts\n * await page.goto('https://www.example.com');\n * const tools = page.webmcp.tools();\n * for (const tool of tools) {\n *   console.log(`Tool found: ${tool.name} - ${tool.description}`);\n * }\n * ```\n *\n * @experimental @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class WebMCP extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EventEmitter",
+              "canonicalReference": "puppeteer-core!EventEmitter:class"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    toolsadded: "
+            },
+            {
+              "kind": "Reference",
+              "text": "WebMCPToolsAddedEvent",
+              "canonicalReference": "puppeteer-core!WebMCPToolsAddedEvent:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toolsremoved: "
+            },
+            {
+              "kind": "Reference",
+              "text": "WebMCPToolsRemovedEvent",
+              "canonicalReference": "puppeteer-core!WebMCPToolsRemovedEvent:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toolinvoked: "
+            },
+            {
+              "kind": "Reference",
+              "text": "WebMCPToolCall",
+              "canonicalReference": "puppeteer-core!WebMCPToolCall:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toolresponded: "
+            },
+            {
+              "kind": "Reference",
+              "text": "WebMCPToolCallResult",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}>"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "WebMCP",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCP#toolinvoked:member",
+              "docComment": "/**\n * Emitted when a tool invocation starts.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toolinvoked: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolCall",
+                  "canonicalReference": "puppeteer-core!WebMCPToolCall:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "toolinvoked",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCP#toolresponded:member",
+              "docComment": "/**\n * Emitted when a tool invocation completes or fails.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toolresponded: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolCallResult",
+                  "canonicalReference": "puppeteer-core!WebMCPToolCallResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "toolresponded",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!WebMCP#tools:member(1)",
+              "docComment": "/**\n * Gets all WebMCP tools defined by the page.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "tools(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPTool",
+                  "canonicalReference": "puppeteer-core!WebMCPTool:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "tools"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCP#toolsadded:member",
+              "docComment": "/**\n * Emitted when tools are added.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toolsadded: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolsAddedEvent",
+                  "canonicalReference": "puppeteer-core!WebMCPToolsAddedEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "toolsadded",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCP#toolsremoved:member",
+              "docComment": "/**\n * Emitted when tools are removed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toolsremoved: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolsRemovedEvent",
+                  "canonicalReference": "puppeteer-core!WebMCPToolsRemovedEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "toolsremoved",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 11
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WebMCPAnnotation:interface",
+          "docComment": "/**\n * Tool annotations\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WebMCPAnnotation "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "name": "WebMCPAnnotation",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPAnnotation#autosubmit:member",
+              "docComment": "/**\n * If the declarative tool was declared with the autosubmit attribute.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "autosubmit?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "autosubmit",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPAnnotation#readOnly:member",
+              "docComment": "/**\n * A hint indicating that the tool does not modify any state.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readOnly?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "readOnly",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!WebMCPInvocationStatus:type",
+          "docComment": "/**\n * Represents the status of a tool invocation.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type WebMCPInvocationStatus = "
+            },
+            {
+              "kind": "Content",
+              "text": "'Completed' | 'Canceled' | 'Error'"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "name": "WebMCPInvocationStatus",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "puppeteer-core!WebMCPTool:class",
+          "docComment": "/**\n * Represents a registered WebMCP tool available on the page.\n *\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `WebMCPTool` class.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class WebMCPTool extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EventEmitter",
+              "canonicalReference": "puppeteer-core!EventEmitter:class"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    toolinvoked: "
+            },
+            {
+              "kind": "Reference",
+              "text": "WebMCPToolCall",
+              "canonicalReference": "puppeteer-core!WebMCPToolCall:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}>"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "WebMCPTool",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#annotations:member",
+              "docComment": "/**\n * Optional annotations for the tool.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "annotations?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPAnnotation",
+                  "canonicalReference": "puppeteer-core!WebMCPAnnotation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "annotations",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#description:member",
+              "docComment": "/**\n * Tool description.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "description: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "description",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!WebMCPTool#execute:member(1)",
+              "docComment": "/**\n * Executes tool with input parameters, matching tool's `inputSchema`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "execute(input?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "object"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolCallResult",
+                  "canonicalReference": "puppeteer-core!WebMCPToolCallResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 7
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "input",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": true
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "execute"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#formElement:member",
+              "docComment": "/**\n * The corresponding ElementHandle when tool was registered via a form.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get formElement(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ElementHandle",
+                  "canonicalReference": "puppeteer-core!ElementHandle:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLFormElement",
+                  "canonicalReference": "!HTMLFormElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "> | undefined>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "formElement",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#frame:member",
+              "docComment": "/**\n * Frame the tool was defined for.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "frame: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Frame",
+                  "canonicalReference": "puppeteer-core!Frame:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "frame",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#inputSchema:member",
+              "docComment": "/**\n * Schema for the tool's input parameters.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "inputSchema?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "object"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "inputSchema",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#location:member",
+              "docComment": "/**\n * Source location that defined the tool (if available).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "location?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ConsoleMessageLocation",
+                  "canonicalReference": "puppeteer-core!ConsoleMessageLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPTool#name:member",
+              "docComment": "/**\n * Tool name.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPTool#toolinvoked:member",
+              "docComment": "/**\n * Emitted when invocation starts.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toolinvoked: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolCall",
+                  "canonicalReference": "puppeteer-core!WebMCPToolCall:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "toolinvoked",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "puppeteer-core!WebMCPToolCall:class",
+          "docComment": "/**\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `WebMCPToolCall` class.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class WebMCPToolCall "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "WebMCPToolCall",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPToolCall#id:member",
+              "docComment": "/**\n * Tool invocation identifier.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "id: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPToolCall#input:member",
+              "docComment": "/**\n * The input parameters used for the call.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "input: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "object"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "input",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!WebMCPToolCall#tool:member",
+              "docComment": "/**\n * Tool that was called.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "tool: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPTool",
+                  "canonicalReference": "puppeteer-core!WebMCPTool:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tool",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            }
+          ],
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WebMCPToolCallResult:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WebMCPToolCallResult "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "name": "WebMCPToolCallResult",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult#call:member",
+              "docComment": "/**\n * The corresponding tool call if available.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "call?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolCall",
+                  "canonicalReference": "puppeteer-core!WebMCPToolCall:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "call",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult#errorText:member",
+              "docComment": "/**\n * Error text.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "errorText?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "errorText",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult#exception:member",
+              "docComment": "/**\n * The exception object, if the javascript tool threw an error.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "exception?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Protocol.Runtime.RemoteObject",
+                  "canonicalReference": "devtools-protocol!Protocol.Runtime.RemoteObject:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "exception",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult#id:member",
+              "docComment": "/**\n * Tool invocation identifier.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "id: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult#output:member",
+              "docComment": "/**\n * Output or error delivered as delivered to the agent. Missing if `status` is anything other than Completed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "output?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "any"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "output",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolCallResult#status:member",
+              "docComment": "/**\n * Status of the invocation.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "status: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPInvocationStatus",
+                  "canonicalReference": "puppeteer-core!WebMCPInvocationStatus:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "status",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WebMCPToolsAddedEvent:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WebMCPToolsAddedEvent "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "name": "WebMCPToolsAddedEvent",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolsAddedEvent#tools:member",
+              "docComment": "/**\n * Array of tools that were added.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "tools: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPTool",
+                  "canonicalReference": "puppeteer-core!WebMCPTool:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tools",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WebMCPToolsRemovedEvent:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WebMCPToolsRemovedEvent "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "name": "WebMCPToolsRemovedEvent",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolsRemovedEvent#tools:member",
+              "docComment": "/**\n * Array of tools that were removed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "tools: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPTool",
+                  "canonicalReference": "puppeteer-core!WebMCPTool:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tools",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Class",
           "canonicalReference": "puppeteer-core!WebWorker:class",
           "docComment": "/**\n * This class represents a {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API | WebWorker}.\n *\n * @remarks\n *\n * The events `workercreated` and `workerdestroyed` are emitted on the page object to signal the worker lifecycle.\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `WebWorker` class.\n *\n * @example\n * ```ts\n * page.on('workercreated', worker =>\n *   console.log('Worker created: ' + worker.url()),\n * );\n * page.on('workerdestroyed', worker =>\n *   console.log('Worker destroyed: ' + worker.url()),\n * );\n *\n * console.log('Current workers:');\n * for (const worker of page.workers()) {\n *   console.log('  ' + worker.url());\n * }\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
@@ -41618,21 +44375,12 @@
             },
             {
               "kind": "Reference",
-              "text": "Record",
-              "canonicalReference": "!Record:type"
+              "text": "WebWorkerEvents",
+              "canonicalReference": "puppeteer-core!WebWorkerEvents:interface"
             },
             {
               "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "EventType",
-              "canonicalReference": "puppeteer-core!EventType:type"
-            },
-            {
-              "kind": "Content",
-              "text": ", unknown>>"
+              "text": ">"
             },
             {
               "kind": "Content",
@@ -42045,9 +44793,187 @@
           ],
           "extendsTokenRange": {
             "startIndex": 1,
-            "endIndex": 7
+            "endIndex": 5
           },
           "implementsTokenRanges": []
+        },
+        {
+          "kind": "Enum",
+          "canonicalReference": "puppeteer-core!WebWorkerEvent:enum",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare enum WebWorkerEvent "
+            }
+          ],
+          "fileUrlPath": "src/api/WebWorker.ts",
+          "releaseTag": "Public",
+          "name": "WebWorkerEvent",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!WebWorkerEvent.Console:member",
+              "docComment": "/**\n * Emitted when the worker calls a console API.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "Console = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"console\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "Console"
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "puppeteer-core!WebWorkerEvent.Error:member",
+              "docComment": "/**\n * Emitted when the worker throws an exception.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "Error = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"error\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "Error"
+            }
+          ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WebWorkerEvents:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WebWorkerEvents extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "EventType",
+              "canonicalReference": "puppeteer-core!EventType:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", unknown>"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/api/WebWorker.ts",
+          "releaseTag": "Public",
+          "name": "WebWorkerEvents",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebWorkerEvents#console:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebWorkerEvent.Console",
+                  "canonicalReference": "puppeteer-core!WebWorkerEvent.Console:member"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ConsoleMessage",
+                  "canonicalReference": "puppeteer-core!ConsoleMessage:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "console",
+              "propertyTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebWorkerEvents#error:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebWorkerEvent.Error",
+                  "canonicalReference": "puppeteer-core!WebWorkerEvent.Error:member"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Error",
+                  "canonicalReference": "!Error:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "error",
+              "propertyTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 5
+            }
+          ]
         },
         {
           "kind": "Interface",

@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v24.37.5
+- Puppeteer version: v24.42.0
 - puppeteer-ruby version: 0.51.0
 
 ## Puppeteer
@@ -25,6 +25,7 @@
 * ~~deleteCookie~~
 * ~~deleteMatchingCookies~~
 * disconnect
+* extensions
 * ~~getWindowBounds~~
 * installExtension => `#install_extension`
 * isConnected => `#connected?`
@@ -165,6 +166,12 @@
 * ~~once~~
 * ~~removeAllListeners~~
 
+## Extension
+
+* pages
+* triggerAction => `#trigger_action`
+* workers
+
 ## ~~ExtensionTransport~~
 
 * ~~close~~
@@ -190,6 +197,7 @@
 * content
 * evaluate
 * evaluateHandle => `#evaluate_handle`
+* extensionRealms => `#extension_realms`
 * focus
 * frameElement => `#frame_element`
 * goto
@@ -344,6 +352,7 @@
 * evaluateHandle => `#evaluate_handle`
 * evaluateOnNewDocument => `#evaluate_on_new_document`
 * exposeFunction => `#expose_function`
+* extensionRealms => `#extension_realms`
 * focus
 * frames
 * ~~getDefaultNavigationTimeout~~
@@ -351,6 +360,7 @@
 * goBack => `#go_back`
 * goForward => `#go_forward`
 * goto
+* ~~hasDevTools~~
 * hover
 * isClosed => `#closed?`
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
@@ -387,6 +397,7 @@
 * tap
 * target
 * title
+* triggerExtensionAction => `#trigger_extension_action`
 * type => `#type_text`
 * url
 * viewport
@@ -404,6 +415,13 @@
 
 ## ~~ProtocolError~~
 
+
+## ~~Realm~~
+
+* ~~evaluate~~
+* ~~evaluateHandle~~
+* ~~extension~~
+* ~~waitForFunction~~
 
 ## ~~ScreenRecorder~~
 
@@ -449,6 +467,17 @@
 * stop
 
 ## ~~UnsupportedOperation~~
+
+
+## ~~WebMCP~~
+
+* ~~tools~~
+
+## ~~WebMCPTool~~
+
+* ~~execute~~
+
+## ~~WebMCPToolCall~~
 
 
 ## WebWorker

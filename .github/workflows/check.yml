@@ -15,6 +15,15 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 22
+    - name: Check REF_PUPPETEER_VERSION matches DOCS_VERSION
+      run: |
+        set -euo pipefail
+        docs_version="$(cat development/DOCS_VERSION)"
+        ref_version="$(ruby -r ./lib/puppeteer/version -e 'puts Puppeteer::REF_PUPPETEER_VERSION')"
+        if [ "$docs_version" != "$ref_version" ]; then
+          echo "REF_PUPPETEER_VERSION (${ref_version}) does not match development/DOCS_VERSION (${docs_version})" >&2
+          exit 1
+        fi
     - name: Check puppeteer.api.json is updated
       run: |
         set -euo pipefail
