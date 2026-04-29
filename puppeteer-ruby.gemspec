@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
 
   spec.files         = Dir.chdir(File.expand_path(__dir__)) do
     git_files = `git ls-files -z`.split("\x0").reject do |f|
-      f.match(%r{^(test|spec|features)/}) || f.include?(".git") || f.include?(".circleci") || f.start_with?("development/")
+      f.match(%r{^(test|spec|features|smartest)/}) || f.include?(".git") || f.include?(".circleci") || f.start_with?("development/")
     end
     sig_files = Dir.glob("sig/**/*.rbs")
     git_files + sig_files
@@ -39,6 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop', '~> 1.84.0'
   spec.add_development_dependency 'rubocop-rspec', '~> 3.9.0'
   spec.add_development_dependency 'sinatra', '< 5.0.0'
+  spec.add_development_dependency 'smartest', '~> 0.3.0'
   spec.add_development_dependency 'steep'
   spec.add_development_dependency 'webrick'
 end

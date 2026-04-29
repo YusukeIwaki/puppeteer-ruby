@@ -2,7 +2,7 @@
 
 > **IMPORTANT: Spec Migration Tracking**
 >
-> Test porting from Node.js Puppeteer to Ruby RSpec is tracked in **[CLAUDE/spec_migration_plans.md](./CLAUDE/spec_migration_plans.md)**.
+> Test porting from Node.js Puppeteer to Ruby browser tests is tracked in **[CLAUDE/spec_migration_plans.md](./CLAUDE/spec_migration_plans.md)**.
 >
 > - Before porting tests: Check the migration plan for priorities and status
 > - After porting tests: Update the migration plan to reflect progress
@@ -26,28 +26,34 @@ puppeteer-ruby is a Ruby port of [Puppeteer](https://pptr.dev/), the Node.js bro
 
 ```bash
 # Run all tests
+bundle exec rake
+
+# Run RSpec unit tests only
 bundle exec rspec
 
-# Run specific test file
-bundle exec rspec spec/integration/page_spec.rb
+# Run Smartest browser tests only
+bundle exec smartest
+
+# Run specific browser test file
+bundle exec smartest smartest/integration/page_test.rb
 
 # Run in debug mode (non-headless)
-DEBUG=1 bundle exec rspec spec/integration/page_spec.rb
+DEBUG=1 bundle exec smartest smartest/integration/page_test.rb
 ```
 
-> **Note for Codex CLI**: When executing RSpec from Codex CLI, always use `rbenv exec`:
+> **Note for Codex CLI**: When executing tests from Codex CLI, always use `rbenv exec`:
 > ```bash
-> rbenv exec bundle exec rspec spec/integration/click_spec.rb
+> rbenv exec bundle exec smartest smartest/integration/click_test.rb
 > ```
 
 ### Key Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `PUPPETEER_EXECUTABLE_PATH_RSPEC` | Custom browser executable path |
-| `PUPPETEER_CHANNEL_RSPEC` | Chrome channel (e.g., `chrome`, `chrome-beta`) |
+| `PUPPETEER_EXECUTABLE_PATH_SMARTEST` / `PUPPETEER_EXECUTABLE_PATH_RSPEC` | Custom browser executable path |
+| `PUPPETEER_CHANNEL_SMARTEST` / `PUPPETEER_CHANNEL_RSPEC` | Chrome channel (e.g., `chrome`, `chrome-beta`) |
 | `DEBUG` | Set to `1` for debug output |
-| `PUPPETEER_NO_SANDBOX_RSPEC` | Add `--no-sandbox` flag (for containers) |
+| `PUPPETEER_NO_SANDBOX_SMARTEST` / `PUPPETEER_NO_SANDBOX_RSPEC` | Add `--no-sandbox` flag (for containers) |
 
 ### Code Quality
 
@@ -126,26 +132,25 @@ end
 
 ### Test Types
 
-- **Unit tests**: `spec/puppeteer/` - Test individual classes without browser
-- **Integration tests**: `spec/integration/` - Test with real browser
+- **Unit tests**: `spec/puppeteer/` - RSpec tests for individual classes without browser
+- **Integration tests**: `smartest/integration/` - Smartest tests with a real browser
 
 ### Integration Test Setup
 
-Integration tests use RSpec metadata:
+Integration tests use Smartest plus a thin RSpec-like compatibility DSL for the upstream-style browser tests:
 
 ```ruby
-RSpec.describe 'Page', type: :puppeteer do
+describe 'Page' do
   it 'navigates to a page' do
-    page.goto('https://example.com')
-    expect(page.title).to eq('Example Domain')
+    with_test_state do |page:, **|
+      page.goto('https://example.com')
+      expect(page.title).to eq('Example Domain')
+    end
   end
 end
 ```
 
-The `type: :puppeteer` metadata automatically:
-- Launches Chrome before each test
-- Provides `page` helper method
-- Closes browser after test
+Smartest fixtures in `smartest/fixtures/` start the shared browser and test servers. Use `with_test_state` or metadata helpers to create isolated pages and contexts for each browser test.
 
 ## Porting from Puppeteer
 
@@ -210,7 +215,7 @@ end
 
 When investigating a bug reported by a user (e.g., GitHub issue):
 
-1. **First, reproduce the issue** - Write a minimal reproduction script or RSpec test that demonstrates the bug
+1. **First, reproduce the issue** - Write a minimal reproduction script, Smartest browser test, or RSpec unit test that demonstrates the bug
 2. **Verify the reproduction** - Run the test and confirm it fails as described in the report
 3. **Then investigate** - Only after reproduction is confirmed, analyze the root cause
 4. **Implement the fix** - Make the necessary code changes
@@ -223,7 +228,7 @@ This workflow ensures:
 
 ### Before Submitting Changes
 
-1. Run tests: `bundle exec rspec`
+1. Run tests: `bundle exec rake`
 2. Run RuboCop: `bundle exec rubocop`
 3. Run type check: `bundle exec steep check`
 4. Update `docs/api_coverage.md` if adding new API methods

@@ -1,24 +1,24 @@
 # Puppeteer Test Comparison Report
 
-This report compares test files between [puppeteer/puppeteer](https://github.com/puppeteer/puppeteer/tree/main/test/src) (Node.js) and [puppeteer-ruby](https://github.com/YusukeIwaki/puppeteer-ruby/tree/main/spec/integration).
+This report compares test files between [puppeteer/puppeteer](https://github.com/puppeteer/puppeteer/tree/main/test/src) (Node.js) and [puppeteer-ruby](https://github.com/YusukeIwaki/puppeteer-ruby/tree/main/smartest/integration).
 
 ---
 
 ## Migration Rules
 
 ### 1. Faithful Porting Principle
-Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
+Tests must be **faithfully ported** from Node.js Puppeteer to Ruby Smartest:
 - `describe` blocks in Node.js should correspond to `describe` or `context` blocks in Ruby
 - `it` blocks should have equivalent test cases with the same test name (converted to snake_case)
 - Test logic and assertions should match the original implementation
 - If a test cannot be ported exactly (e.g., due to language differences), document the reason
 
 ### 2. File Naming Convention
-- **`xxx_spec.rb`**: Contains tests ported from Node.js Puppeteer
+- **`xxx_test.rb`**: Contains tests ported from Node.js Puppeteer
   - These files should only contain faithful ports of upstream tests
   - The structure should mirror the Node.js test file as closely as possible
 
-- **`xxx_ext_spec.rb`**: Contains Ruby-only tests (extensions)
+- **`xxx_ext_test.rb`**: Contains Ruby-only tests (extensions)
   - Tests that exist only in Ruby (not in Node.js) MUST be placed here
   - Ruby-specific features, additional validations, or regression tests go here
   - Examples: Ruby block-style APIs, Ruby-specific error handling
@@ -43,8 +43,8 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 ---
 
 **Legend:**
-- `[MISSING IN RUBY]` - Test exists in Node.js but not ported to RSpec
-- `[RUBY ONLY]` - Test exists only in Ruby (should be moved to `xxx_ext_spec.rb`)
+- `[MISSING IN RUBY]` - Test exists in Node.js but not ported to Smartest
+- `[RUBY ONLY]` - Test exists only in Ruby (should be moved to `xxx_ext_test.rb`)
 - `[PORTED]` - Test successfully ported
 - `[PARTIAL]` - Test exists but implementation differs significantly
 - `[ ]` - Not started
@@ -60,54 +60,54 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 |--------------|-----------|--------|
 | acceptInsecureCerts.spec.ts | - | No Ruby equivalent (feature may be in launcher_spec) |
 | accessibility.spec.ts | - | **[MISSING]** Not ported |
-| ariaqueryhandler.spec.ts | aria_query_handler_spec.rb | [x] Ported |
+| ariaqueryhandler.spec.ts | aria_query_handler_test.rb | [x] Ported |
 | autofill.spec.ts | - | **[MISSING]** Not ported |
 | bluetooth-emulation.spec.ts | - | Low priority (specialized feature) |
-| browser.spec.ts | browser_spec.rb | [x] Ported |
-| browsercontext.spec.ts | browser_context_spec.rb | [x] Ported |
-| browsercontext-cookies.spec.ts | browser_context_cookies_spec.rb | [x] Ported |
-| click.spec.ts | click_spec.rb | [x] Ported |
-| connect.spec.ts | (in launcher_spec.rb) | [x] Ported |
-| cookies.spec.ts | cookies_spec.rb | [x] Ported |
-| coverage.spec.ts | coverage_spec.rb | [x] Ported |
+| browser.spec.ts | browser_test.rb | [x] Ported |
+| browsercontext.spec.ts | browser_context_test.rb | [x] Ported |
+| browsercontext-cookies.spec.ts | browser_context_cookies_test.rb | [x] Ported |
+| click.spec.ts | click_test.rb | [x] Ported |
+| connect.spec.ts | (in launcher_test.rb) | [x] Ported |
+| cookies.spec.ts | cookies_test.rb | [x] Ported |
+| coverage.spec.ts | coverage_test.rb | [x] Ported |
 | debugInfo.spec.ts | - | Low priority (debugging feature) |
-| defaultbrowsercontext.spec.ts | (in browser_context_spec.rb) | [x] Ported |
+| defaultbrowsercontext.spec.ts | (in browser_context_test.rb) | [x] Ported |
 | device-request-prompt.spec.ts | - | **[MISSING]** Not ported |
-| dialog.spec.ts | dialog_spec.rb | [x] Ported |
-| download.spec.ts | download_spec.rb | [x] Ported |
-| drag-and-drop.spec.ts | drag_and_drop_spec.rb | [x] Ported |
-| elementhandle.spec.ts | element_handle_spec.rb | [x] Ported |
-| emulation.spec.ts | emulation_spec.rb | [x] Ported |
-| evaluation.spec.ts | evaluation_spec.rb | [x] Ported |
+| dialog.spec.ts | dialog_test.rb | [x] Ported |
+| download.spec.ts | download_test.rb | [x] Ported |
+| drag-and-drop.spec.ts | drag_and_drop_test.rb | [x] Ported |
+| elementhandle.spec.ts | element_handle_test.rb | [x] Ported |
+| emulation.spec.ts | emulation_test.rb | [x] Ported |
+| evaluation.spec.ts | evaluation_test.rb | [x] Ported |
 | fixtures.spec.ts | - | N/A (test infrastructure) |
-| frame.spec.ts | frame_spec.rb | [x] Ported |
+| frame.spec.ts | frame_test.rb | [x] Ported |
 | headful.spec.ts | - | Low priority (headful-specific) |
-| idle_override.spec.ts | idle_override_spec.rb | [x] Ported |
+| idle_override.spec.ts | idle_override_test.rb | [x] Ported |
 | injected.spec.ts | - | N/A (internal implementation) |
-| input.spec.ts | input_spec.rb | [x] Ported |
-| jshandle.spec.ts | js_handle_spec.rb | [x] Ported |
-| keyboard.spec.ts | keyboard_spec.rb | [x] Ported |
-| launcher.spec.ts | launcher_spec.rb | [x] Ported |
-| locator.spec.ts | locator_spec.rb | [x] Ported |
-| mouse.spec.ts | mouse_spec.rb | [x] Ported |
-| navigation.spec.ts | navigation_spec.rb | [x] Ported |
-| network.spec.ts | network_spec.rb | [x] Ported |
-| oopif.spec.ts | oopif_spec.rb | [x] Ported |
-| page.spec.ts | page_spec.rb | [x] Ported |
+| input.spec.ts | input_test.rb | [x] Ported |
+| jshandle.spec.ts | js_handle_test.rb | [x] Ported |
+| keyboard.spec.ts | keyboard_test.rb | [x] Ported |
+| launcher.spec.ts | launcher_test.rb | [x] Ported |
+| locator.spec.ts | locator_test.rb | [x] Ported |
+| mouse.spec.ts | mouse_test.rb | [x] Ported |
+| navigation.spec.ts | navigation_test.rb | [x] Ported |
+| network.spec.ts | network_test.rb | [x] Ported |
+| oopif.spec.ts | oopif_test.rb | [x] Ported |
+| page.spec.ts | page_test.rb | [x] Ported |
 | proxy.spec.ts | - | **[MISSING]** Not ported |
-| queryhandler.spec.ts | query_handler_spec.rb | [x] Ported |
-| queryselector.spec.ts | query_selector_spec.rb | [x] Ported |
-| requestinterception.spec.ts | request_interception_spec.rb | [x] Ported |
-| requestinterception-experimental.spec.ts | request_interception_experimental_spec.rb | [x] Ported |
-| screenshot.spec.ts | screenshot_spec.rb | [x] Ported |
+| queryhandler.spec.ts | query_handler_test.rb | [x] Ported |
+| queryselector.spec.ts | query_selector_test.rb | [x] Ported |
+| requestinterception.spec.ts | request_interception_test.rb | [x] Ported |
+| requestinterception-experimental.spec.ts | request_interception_experimental_test.rb | [x] Ported |
+| screenshot.spec.ts | screenshot_test.rb | [x] Ported |
 | stacktrace.spec.ts | - | Low priority (debugging feature) |
-| target.spec.ts | target_spec.rb | [PARTIAL] AbortSignal not supported |
-| touchscreen.spec.ts | touchscreen_spec.rb | [x] Ported |
-| tracing.spec.ts | tracing_spec.rb | [x] Ported |
-| waittask.spec.ts | wait_task_spec.rb | [x] Ported |
+| target.spec.ts | target_test.rb | [PARTIAL] AbortSignal not supported |
+| touchscreen.spec.ts | touchscreen_test.rb | [x] Ported |
+| tracing.spec.ts | tracing_test.rb | [x] Ported |
+| waittask.spec.ts | wait_task_test.rb | [x] Ported |
 | webExtension.spec.ts | - | Low priority (Chrome extension feature) |
 | webgl.spec.ts | - | Low priority (WebGL-specific) |
-| worker.spec.ts | worker_spec.rb | [x] Ported |
+| worker.spec.ts | worker_test.rb | [x] Ported |
 
 ---
 
@@ -137,17 +137,17 @@ Node.js tests include:
 - `Locator.prototype.map/filter/wait/clone`
 - `FunctionLocator`
 
-**Ruby status:** Implemented and ported to `spec/integration/locator_spec.rb`.
+**Ruby status:** Implemented and ported to `smartest/integration/locator_test.rb`.
 
 ### 3. Navigation Tests (`navigation.spec.ts`)
 **Priority: HIGH** - Core navigation functionality
 
-**Ruby status:** Ported to `spec/integration/navigation_spec.rb`.
+**Ruby status:** Ported to `smartest/integration/navigation_test.rb`.
 
 ### 4. Network Tests (`network.spec.ts`)
 **Priority: HIGH** - Network inspection is core functionality
 
-**Ruby status:** Ported to `spec/integration/network_spec.rb`.
+**Ruby status:** Ported to `smartest/integration/network_test.rb`.
 
 ### 5. Target API (`target.spec.ts`)
 **Priority: MEDIUM** - Target management
@@ -155,7 +155,7 @@ Node.js tests include:
 Missing tests:
 - `Browser.waitForTarget` with abort
 
-**Ruby status:** Ported to `spec/integration/target_spec.rb`, with AbortSignal test skipped.
+**Ruby status:** Ported to `smartest/integration/target_test.rb`, with AbortSignal test skipped.
 
 ---
 
@@ -168,7 +168,7 @@ Node.js tests:
 - `Browser.createBrowserContext > should download to configured location`
 - `Browser.createBrowserContext > should not download to location`
 
-**Ruby status:** Ported (see `spec/integration/download_spec.rb`).
+**Ruby status:** Ported (see `smartest/integration/download_test.rb`).
 
 ### 7. Proxy Support (`proxy.spec.ts`)
 **Priority: MEDIUM** - Proxy configuration
@@ -185,10 +185,10 @@ Node.js tests:
 ## Migration Progress Tracking
 
 ### Phase 1: Core Functionality Gaps (High Priority)
-- [ ] Port `accessibility.spec.ts` tests → Create `accessibility_spec.rb`
-- [x] Port missing `navigation.spec.ts` tests → Create `navigation_spec.rb`
-- [x] Port missing `network.spec.ts` tests → Expand `network_spec.rb`
-- [x] Port missing `target.spec.ts` tests → Create `target_spec.rb` (AbortSignal pending)
+- [ ] Port `accessibility.spec.ts` tests → Create `accessibility_test.rb`
+- [x] Port missing `navigation.spec.ts` tests → Create `navigation_test.rb`
+- [x] Port missing `network.spec.ts` tests → Expand `network_test.rb`
+- [x] Port missing `target.spec.ts` tests → Create `target_test.rb` (AbortSignal pending)
 
 ### Phase 2: New APIs (High Priority)
 - [x] Implement Locator API and port `locator.spec.ts` tests
@@ -199,7 +199,7 @@ Node.js tests:
 - [x] Port missing `waittask.spec.ts` tests (especially `Frame.waitForFunction`)
 
 ### Phase 4: Clean Up
-- [ ] Move Ruby-only tests to `_ext_spec.rb` files
+- [ ] Move Ruby-only tests to `_ext_test.rb` files
 - [ ] Port remaining edge case tests from Node.js
 
 ---
@@ -208,7 +208,7 @@ Node.js tests:
 
 ---
 
-## 1. browsercontext.spec.ts vs browser_context_spec.rb
+## 1. browsercontext.spec.ts vs browser_context_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -239,7 +239,7 @@ Node.js tests:
 
 ---
 
-## 2. browser.spec.ts vs browser_spec.rb
+## 2. browser.spec.ts vs browser_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -263,7 +263,7 @@ Node.js tests:
 
 ---
 
-## 3. click.spec.ts vs click_spec.rb
+## 3. click.spec.ts vs click_test.rb
 
 ### Ported Tests (All tests appear to be faithfully ported)
 | Node.js Test | Ruby Test | Status |
@@ -301,7 +301,7 @@ Node.js tests:
 
 ---
 
-## 4. cookies.spec.ts vs cookies_spec.rb
+## 4. cookies.spec.ts vs cookies_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -351,7 +351,7 @@ Node.js tests:
 
 ---
 
-## 5. dialog.spec.ts vs dialog_spec.rb
+## 5. dialog.spec.ts vs dialog_test.rb
 
 ### Ported Tests (Fully ported)
 | Node.js Test | Ruby Test | Status |
@@ -362,7 +362,7 @@ Node.js tests:
 
 ---
 
-## 6. elementhandle.spec.ts vs element_handle_spec.rb
+## 6. elementhandle.spec.ts vs element_handle_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -425,7 +425,7 @@ Node.js tests:
 
 ---
 
-## 7. evaluation.spec.ts vs evaluation_spec.rb
+## 7. evaluation.spec.ts vs evaluation_test.rb
 
 ### Ported Tests (Comprehensive porting)
 Most tests are faithfully ported. Notable coverage includes:
@@ -444,7 +444,7 @@ Most tests are faithfully ported. Notable coverage includes:
 
 ---
 
-## 8. frame.spec.ts vs frame_spec.rb
+## 8. frame.spec.ts vs frame_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -473,7 +473,7 @@ Most tests are faithfully ported. Notable coverage includes:
 
 ---
 
-## 9. input.spec.ts vs input_spec.rb
+## 9. input.spec.ts vs input_test.rb
 
 ### Ported Tests (All major tests ported)
 | Node.js Test | Ruby Test | Status |
@@ -507,7 +507,7 @@ Most tests are faithfully ported. Notable coverage includes:
 
 ---
 
-## 10. jshandle.spec.ts vs js_handle_spec.rb
+## 10. jshandle.spec.ts vs js_handle_test.rb
 
 ### Ported Tests (Comprehensive)
 All major tests are ported including:
@@ -522,7 +522,7 @@ All major tests are ported including:
 
 ---
 
-## 11. keyboard.spec.ts vs keyboard_spec.rb
+## 11. keyboard.spec.ts vs keyboard_test.rb
 
 ### Ported Tests (All major tests ported)
 All keyboard tests appear to be faithfully ported including:
@@ -541,7 +541,7 @@ All keyboard tests appear to be faithfully ported including:
 
 ---
 
-## 12. launcher.spec.ts vs launcher_spec.rb
+## 12. launcher.spec.ts vs launcher_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -604,7 +604,7 @@ All keyboard tests appear to be faithfully ported including:
 
 ---
 
-## 13. mouse.spec.ts vs mouse_spec.rb
+## 13. mouse.spec.ts vs mouse_test.rb
 
 ### Ported Tests (All major tests ported)
 | Node.js Test | Ruby Test | Status |
@@ -626,7 +626,7 @@ All keyboard tests appear to be faithfully ported including:
 
 ---
 
-## 14. network.spec.ts vs network_spec.rb
+## 14. network.spec.ts vs network_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -660,11 +660,11 @@ All keyboard tests appear to be faithfully ported including:
 | Request.resourceType > (all tests) | [MISSING IN RUBY] |
 | Response.remoteAddress > (all tests) | [MISSING IN RUBY] |
 
-**Note:** The Ruby network_spec.rb is minimal compared to Node.js. Many network tests may exist in other spec files or require porting.
+**Note:** The Ruby network_test.rb is minimal compared to Node.js. Many network tests may exist in other spec files or require porting.
 
 ---
 
-## 15. page.spec.ts vs page_spec.rb
+## 15. page.spec.ts vs page_test.rb
 
 ### Ported Tests (Extensive coverage)
 Most Page tests are faithfully ported. Key areas covered:
@@ -723,7 +723,7 @@ Most Page tests are faithfully ported. Key areas covered:
 
 ---
 
-## 16. queryselector.spec.ts vs query_selector_spec.rb
+## 16. queryselector.spec.ts vs query_selector_test.rb
 
 ### Ported Tests (All major tests ported)
 All querySelector tests are faithfully ported including:
@@ -739,10 +739,10 @@ All querySelector tests are faithfully ported including:
 
 ---
 
-## 17. requestinterception.spec.ts vs request_interception_spec.rb
+## 17. requestinterception.spec.ts vs request_interception_test.rb
 
 ### Ported Tests (Comprehensive coverage)
-The Ruby spec has extensive request interception tests including:
+The Ruby test has extensive request interception tests including:
 - Page.setRequestInterception basics
 - Request.continue
 - Request.respond
@@ -763,7 +763,7 @@ The Ruby spec has extensive request interception tests including:
 
 ---
 
-## 18. screenshot.spec.ts vs screenshot_spec.rb
+## 18. screenshot.spec.ts vs screenshot_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -811,17 +811,17 @@ The Ruby spec has extensive request interception tests including:
 
 ---
 
-## 19. waittask.spec.ts vs wait_task_spec.rb
+## 19. waittask.spec.ts vs wait_task_test.rb
 
 ### Ported Tests
-All tests from `waittask.spec.ts` have been ported to `spec/integration/wait_task_spec.rb`, including:
+All tests from `waittask.spec.ts` have been ported to `smartest/integration/wait_task_test.rb`, including:
 - `Frame.waitForFunction` coverage (string input, polling modes, timeouts, navigation survival, cancellation)
 - `Frame.waitForSelector` coverage (shadow DOM, pseudo-classes, visibility/hidden variants, xpath)
 - protocol timeout behavior
 
 ---
 
-## 20. worker.spec.ts vs worker_spec.rb
+## 20. worker.spec.ts vs worker_test.rb
 
 ### Ported Tests
 | Node.js Test | Ruby Test | Status |
@@ -842,7 +842,7 @@ All tests from `waittask.spec.ts` have been ported to `spec/integration/wait_tas
 
 ---
 
-## 21. emulation.spec.ts vs emulation_spec.rb
+## 21. emulation.spec.ts vs emulation_test.rb
 
 ### Ported Tests (Comprehensive)
 | Node.js Test | Ruby Test | Status |
@@ -878,7 +878,7 @@ All tests from `waittask.spec.ts` have been ported to `spec/integration/wait_tas
 
 ---
 
-## 22. touchscreen.spec.ts vs touchscreen_spec.rb
+## 22. touchscreen.spec.ts vs touchscreen_test.rb
 
 ### Ported Tests (Comprehensive)
 All touchscreen tests are faithfully ported including:
@@ -888,7 +888,7 @@ All touchscreen tests are faithfully ported including:
 
 ---
 
-## 23. drag-and-drop.spec.ts vs drag_and_drop_spec.rb
+## 23. drag-and-drop.spec.ts vs drag_and_drop_test.rb
 
 ### Ported Tests (All ported)
 | Node.js Test | Ruby Test | Status |
@@ -907,7 +907,7 @@ All touchscreen tests are faithfully ported including:
 
 ---
 
-## 24. coverage.spec.ts vs coverage_spec.rb
+## 24. coverage.spec.ts vs coverage_test.rb
 
 ### Ported Tests (Comprehensive)
 All JSCoverage and CSSCoverage tests are ported including:
@@ -927,14 +927,14 @@ All JSCoverage and CSSCoverage tests are ported including:
 
 ---
 
-## 25. tracing.spec.ts vs tracing_spec.rb
+## 25. tracing.spec.ts vs tracing_test.rb
 
 ### Ported Tests (All ported)
 All tracing tests are faithfully ported.
 
 ---
 
-## 26. oopif.spec.ts vs oopif_spec.rb
+## 26. oopif.spec.ts vs oopif_test.rb
 
 ### Ported Tests (Comprehensive)
 Most OOPIF tests are ported including:
@@ -962,7 +962,7 @@ Most OOPIF tests are ported including:
 
 ---
 
-## 27. aria_query_handler.spec.ts vs aria_query_handler_spec.rb
+## 27. aria_query_handler.spec.ts vs aria_query_handler_test.rb
 
 ### Ported Tests (Core functionality ported)
 - parseAriaSelector tests
@@ -992,7 +992,7 @@ Most OOPIF tests are ported including:
 | Category | Count |
 |----------|-------|
 | Node.js spec files | 47 |
-| Ruby spec files | 42 |
+| Ruby test files | 42 |
 | Fully ported spec files | 35 |
 | Partially ported spec files | 1 |
 | Missing spec files (important) | 4 |
@@ -1004,7 +1004,7 @@ Most OOPIF tests are ported including:
 aria_query_handler, browser, browser_context, browser_context_cookies, click, connect (in launcher), cookies, coverage, defaultbrowsercontext (in browser_context), dialog, download, drag_and_drop, element_handle, emulation, evaluation, frame, idle_override, input, js_handle, keyboard, launcher, locator, mouse, navigation, network, oopif, page, query_handler, query_selector, request_interception, request_interception_experimental, screenshot, touchscreen, tracing, waittask, worker
 
 **Partially Ported (1):**
-- target.spec.ts → target_spec.rb (AbortSignal unsupported)
+- target.spec.ts → target_test.rb (AbortSignal unsupported)
 
 **Missing - High Priority (3):**
 1. **accessibility.spec.ts** - Accessibility API not implemented
@@ -1029,11 +1029,11 @@ acceptInsecureCerts, bluetooth-emulation, debugInfo, device-request-prompt, fixt
 2. Firefox-specific tests (puppeteer-ruby focuses on Chrome)
 3. WebGL, Bluetooth, Web Extension tests
 
-### Files that may need `_ext_spec.rb` split
-The following Ruby-only tests should potentially be moved to extension spec files:
-- `cookies_spec.rb` - "should fail if specifying wrong cookie" (Ruby-specific validation)
-- `screenshot_spec.rb` - Issue #96 regression tests
-- `launcher_spec.rb` - Ruby-specific API tests (default_args, product)
-- `element_handle_spec.rb` - XPath-specific tests
-- `drag_and_drop_spec.rb` - Ruby-specific validation tests
-- `coverage_spec.rb` - Ruby block-style API tests
+### Files that may need `_ext_test.rb` split
+The following Ruby-only tests should potentially be moved to extension test files:
+- `cookies_test.rb` - "should fail if specifying wrong cookie" (Ruby-specific validation)
+- `screenshot_test.rb` - Issue #96 regression tests
+- `launcher_test.rb` - Ruby-specific API tests (default_args, product)
+- `element_handle_test.rb` - XPath-specific tests
+- `drag_and_drop_test.rb` - Ruby-specific validation tests
+- `coverage_test.rb` - Ruby block-style API tests
