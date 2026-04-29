@@ -7,7 +7,7 @@ on:
 
 jobs:
   rspec_chrome:
-    name: RSpec on Linux / Chrome (Ruby ${{ matrix.ruby }})
+    name: Tests on Linux / Chrome (Ruby ${{ matrix.ruby }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -26,11 +26,14 @@ jobs:
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v2
 
-      - name: Run RSpec
+      - name: Run RSpec unit tests
         run: bundle exec rspec --profile 10 --format documentation
 
+      - name: Run Smartest browser tests
+        run: bundle exec smartest
+
   rspec_chromium_alpine:
-    name: RSpec on Alpine / Chromium (Ruby ${{ matrix.ruby }})
+    name: Tests on Alpine / Chromium (Ruby ${{ matrix.ruby }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -51,7 +54,10 @@ jobs:
           bundle config set --local path vendor/bundle
           bundle install --jobs 4 --retry 3
 
-      - name: Run RSpec
+      - name: Run RSpec unit tests
+        run: bundle exec rspec --profile 10 --format documentation
+
+      - name: Run Smartest browser tests
         env:
           PUPPETEER_NO_SANDBOX_RSPEC: true
-        run: bundle exec rspec --profile 10 --format documentation
+        run: bundle exec smartest
