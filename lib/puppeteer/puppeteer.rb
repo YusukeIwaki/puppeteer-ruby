@@ -140,6 +140,7 @@ class Puppeteer::Puppeteer
   # @rbs browser_ws_endpoint: String? -- Browser WebSocket endpoint
   # @rbs browser_url: String? -- Browser HTTP URL for WebSocket discovery
   # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
+  # @rbs channel: (String | Symbol)? -- Browser channel
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs network_enabled: bool? -- Enable network domain
   # @rbs issues_enabled: bool? -- Enable issues domain
@@ -153,11 +154,12 @@ class Puppeteer::Puppeteer
     browser_ws_endpoint: nil,
     browser_url: nil,
     transport: nil,
+    channel: nil,
     ignore_https_errors: nil,
     network_enabled: true,
     issues_enabled: true,
     block_list: nil,
-    default_viewport: nil,
+    default_viewport: NoViewport.new,
     slow_mo: nil,
     protocol_timeout: nil,
     &block
@@ -166,14 +168,17 @@ class Puppeteer::Puppeteer
       browser_ws_endpoint: browser_ws_endpoint,
       browser_url: browser_url,
       transport: transport,
+      channel: channel&.to_s,
       ignore_https_errors: ignore_https_errors,
       network_enabled: network_enabled,
       issues_enabled: issues_enabled,
       block_list: block_list,
-      default_viewport: default_viewport,
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,
     }.compact
+    unless default_viewport.is_a?(NoViewport)
+      options[:default_viewport] = default_viewport
+    end
     if async_context?
       browser = Puppeteer::BrowserConnector.new(options).connect_to_browser
       if block

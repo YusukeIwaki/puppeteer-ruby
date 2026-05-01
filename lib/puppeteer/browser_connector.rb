@@ -1,4 +1,5 @@
 require_relative './browser'
+require_relative './chrome_user_data_dir'
 require_relative './launcher/browser_options'
 
 class Puppeteer::BrowserConnector
@@ -7,6 +8,7 @@ class Puppeteer::BrowserConnector
     @browser_ws_endpoint = options[:browser_ws_endpoint]
     @browser_url = options[:browser_url]
     @transport = options[:transport]
+    @channel = options[:channel]
   end
 
   # @return [Puppeteer::Browser]
@@ -38,16 +40,24 @@ class Puppeteer::BrowserConnector
   end
 
   private def connection
-    @connection ||=
-      if @browser_ws_endpoint && @browser_url.nil? && @transport.nil?
-        connect_with_browser_ws_endpoint(@browser_ws_endpoint)
-      elsif @browser_ws_endpoint.nil? && @browser_url && @transport.nil?
-        connect_with_browser_url(@browser_url)
-      elsif @browser_ws_endpoint.nil? && @browser_url.nil? && @transport
-        connect_with_transport(@transport)
-      else
-        raise ArgumentError.new("Exactly one of browserWSEndpoint, browserURL or transport must be passed to puppeteer.connect")
+    @connection ||= begin
+      connection_options = [@browser_ws_endpoint, @browser_url, @transport, @channel]
+      unless connection_options.count { |option| !!option } == 1
+        raise ArgumentError.new('Exactly one of browserWSEndpoint, browserURL, transport or channel must be passed to puppeteer.connect')
       end
+
+      if @transport
+        connect_with_transport(@transport)
+      elsif @browser_ws_endpoint
+        connect_with_browser_ws_endpoint(@browser_ws_endpoint)
+      elsif @browser_url
+        connect_with_browser_url(@browser_url)
+      elsif @channel
+        connect_with_channel(@channel)
+      else
+        raise ArgumentError.new('Invalid connection options')
+      end
+    end
   end
 
   # @return [Puppeteer::Connection]
@@ -70,6 +80,31 @@ class Puppeteer::BrowserConnector
     json = JSON.parse(response_body)
     connection_url = json['webSocketDebuggerUrl']
     connect_with_browser_ws_endpoint(connection_url)
+  end
+
+  # @return [Puppeteer::Connection]
+  private def connect_with_channel(channel)
+    port_path = File.join(
+      Puppeteer::ChromeUserDataDir.resolve_default(channel),
+      'DevToolsActivePort',
+    )
+
+    begin
+      file_content = File.read(port_path, mode: 'r:ASCII')
+      raw_port, raw_path = file_content.lines.map(&:strip).reject(&:empty?)
+      unless raw_port && raw_path
+        raise Puppeteer::Error.new("Invalid DevToolsActivePort '#{file_content}' found")
+      end
+
+      port = raw_port.to_i
+      if port <= 0 || port > 65_535
+        raise Puppeteer::Error.new("Invalid port '#{raw_port}' found")
+      end
+
+      connect_with_browser_ws_endpoint("ws://localhost:#{port}#{raw_path}")
+    rescue StandardError
+      raise Puppeteer::Error.new("Could not find DevToolsActivePort for #{channel} at #{port_path}")
+    end
   end
 
   # @return [Puppeteer::Connection]
