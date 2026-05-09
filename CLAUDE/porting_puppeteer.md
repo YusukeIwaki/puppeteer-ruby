@@ -175,19 +175,19 @@ To verify test alignment between TypeScript and Ruby:
    - No missing tests
 
 3. **Handle differences:**
-   - **TypeScript-only tests**: Add to Ruby spec with `skip('Not implemented')` or implement
-   - **Ruby-only tests**: Move to `*_ext_spec.rb` file
+   - **TypeScript-only tests**: Add to Ruby test with `skip('Not implemented')` or implement
+   - **Ruby-only tests**: Move to `*_ext_test.rb` file
 
 ### Key Test File Pairs
 
 | TypeScript | Ruby | Ruby Extension |
 |------------|------|----------------|
-| `test/src/page.spec.ts` | `spec/integration/page_spec.rb` | `page_ext_spec.rb` |
-| `test/src/frame.spec.ts` | `spec/integration/frame_spec.rb` | `frame_ext_spec.rb` |
-| `test/src/keyboard.spec.ts` | `spec/integration/keyboard_spec.rb` | `keyboard_ext_spec.rb` |
-| `test/src/click.spec.ts` | `spec/integration/click_spec.rb` | - |
+| `test/src/page.spec.ts` | `smartest/integration/page_test.rb` | `page_ext_test.rb` |
+| `test/src/frame.spec.ts` | `smartest/integration/frame_test.rb` | `frame_ext_test.rb` |
+| `test/src/keyboard.spec.ts` | `smartest/integration/keyboard_test.rb` | `keyboard_ext_test.rb` |
+| `test/src/click.spec.ts` | `smartest/integration/click_test.rb` | - |
 
-Note: Some tests (e.g., `BrowserContext#override_permissions`) may be split into separate files like `browser_context_permissions_spec.rb` if they represent distinct features.
+Note: Some tests (e.g., `BrowserContext#override_permissions`) may be split into separate files like `browser_context_permissions_test.rb` if they represent distinct features.
 
 ### Porting Principles
 
@@ -195,7 +195,7 @@ Note: Some tests (e.g., `BrowserContext#override_permissions`) may be split into
 2. **Preserve test names** - Use the same test descriptions
 3. **Preserve test structure** - Don't add extra `context`/`describe` wrappers
 4. **Preserve asset files** - Keep `spec/assets/` identical to upstream `test/assets/`
-5. **Separate Ruby-specific tests** - Move Ruby-only features to `*_ext_spec.rb` files
+5. **Separate Ruby-specific tests** - Move Ruby-only features to `*_ext_test.rb` files
 
 ## Fidelity Notes
 
@@ -207,14 +207,14 @@ Note: Some tests (e.g., `BrowserContext#override_permissions`) may be split into
   heredoc so the regex survives Ruby parsing. `wait_for` should use `Frame#default_timeout` to match
   Node's timeout settings.
 
-### Ruby-Specific Tests (`*_ext_spec.rb`)
+### Ruby-Specific Tests (`*_ext_test.rb`)
 
-When porting tests, separate Ruby-only features into dedicated extension spec files:
+When porting tests, separate Ruby-only features into dedicated extension test files:
 
 ```
-spec/integration/
-├── keyboard_spec.rb       # Upstream port (faithful to test/src/keyboard.spec.ts)
-└── keyboard_ext_spec.rb   # Ruby-specific extensions
+smartest/integration/
+├── keyboard_test.rb       # Upstream port (faithful to test/src/keyboard.spec.ts)
+└── keyboard_ext_test.rb   # Ruby-specific extensions
 ```
 
 **Ruby-specific features to separate:**
@@ -222,10 +222,10 @@ spec/integration/
 - Nested block syntax: `press('Shift') { press('Comma') }`
 - Other Ruby idioms not present in upstream
 
-**Example `*_ext_spec.rb` structure:**
+**Example `*_ext_test.rb` structure:**
 
 ```ruby
-RSpec.describe 'Keyboard (white-box / Ruby-specific)' do
+describe 'Keyboard (white-box / Ruby-specific)' do
   def with_textarea(&block)
     with_test_state do |page:, **|
       page.evaluate(<<~JAVASCRIPT)
@@ -257,7 +257,7 @@ end
 Use `with_test_state` block to access test helpers explicitly:
 
 ```ruby
-RSpec.describe Puppeteer::Page do
+describe Puppeteer::Page do
   it 'should click button' do
     with_test_state do |page:, server:, **|
       page.goto("#{server.prefix}/input/button.html")
@@ -299,7 +299,7 @@ describe('Keyboard', function () {
 
 ```ruby
 # Ruby
-RSpec.describe Puppeteer::Keyboard do
+describe Puppeteer::Keyboard do
   it 'should type into a textarea' do
     with_test_state do |page:, **|
       page.evaluate(<<~JAVASCRIPT)
@@ -330,7 +330,7 @@ end
 
 #### Assertion Mappings
 
-| TypeScript (Jest) | Ruby (RSpec) |
+| TypeScript (Jest) | Ruby (Smartest) |
 |-------------------|--------------|
 | `expect(x).toBe(y)` | `expect(x).to eq(y)` |
 | `expect(x).toEqual(y)` | `expect(x).to eq(y)` |

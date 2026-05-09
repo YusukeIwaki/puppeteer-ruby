@@ -6,56 +6,66 @@ This document describes the testing approach for puppeteer-ruby.
 
 ```
 spec/
-├── integration/              # Browser automation tests (type: :puppeteer)
-│   ├── page_spec.rb
-│   ├── element_handle_spec.rb
-│   ├── click_spec.rb
-│   └── ...
-├── puppeteer/                # Unit tests (no browser required)
-│   ├── devices_spec.rb
-│   ├── launcher_spec.rb
-│   └── ...
-├── assets/                   # Test HTML/JS/CSS files
-├── golden_matcher.rb         # Screenshot comparison matcher
-├── spec_helper.rb            # RSpec configuration
-└── utils.rb                  # Test utilities
+├── puppeteer/                # RSpec unit tests (no browser required)
+├── assets/                   # Upstream-compatible HTML/JS/CSS/image fixtures
+├── support/                  # Shared server and RSpec support code
+├── spec_helper.rb            # RSpec configuration for unit tests
+└── utils.rb                  # Shared browser-test utilities
+
+smartest/
+├── integration/              # Smartest browser automation tests
+├── fixtures/                 # Shared browser and test-server fixtures
+├── matchers/                 # Browser-test matchers, including golden matching
+├── support/                  # Smartest compatibility DSL and server adapters
+└── test_helper.rb            # Smartest configuration
 ```
+
+Unit tests stay on RSpec. Browser-driven integration tests run on Smartest.
 
 ## Integration Tests
 
 ### Basic Structure
 
-Integration tests use `type: :puppeteer` metadata which is automatically applied to files in `spec/integration/`:
+Integration tests live in `smartest/integration/**/*_test.rb` and require `test_helper`:
 
 ```ruby
-RSpec.describe 'Page#goto' do
-  # This file is in spec/integration/, so type: :puppeteer is applied
+require 'test_helper'
 
+describe 'Page#goto' do
   it 'navigates to a URL' do
-    page.goto('https://example.com')
-    expect(page.title).to eq('Example Domain')
+    with_test_state do |page:, **|
+      page.goto('https://example.com')
+      expect(page.title).to eq('Example Domain')
+    end
   end
 end
 ```
 
-### Available Helpers
+The compatibility DSL keeps upstream-style `describe`, `context`, `it`, `before`, `after`, `let`, `subject`, and common RSpec matchers available while Smartest supplies fixtures and execution.
 
-The `type: :puppeteer` metadata provides these helpers:
+### Available Helpers
 
 | Helper | Description |
 |--------|-------------|
-| `page` | Current `Puppeteer::Page` instance |
-| `browser` | Browser instance (requires `puppeteer: :browser` metadata) |
-| `browser_context` | BrowserContext (requires `browser_context: :incognito`) |
-| `headless?` | Whether running in headless mode |
-| `default_launch_options` | Launch options used for current test |
+| `with_test_state` | Creates an isolated page/context and cleans it up after the block |
+| `page` | Current `Puppeteer::Page` when the test uses metadata-backed state |
+| `browser` | Shared browser instance, or metadata-backed browser state |
+| `browser_context` / `context` | Current `BrowserContext` when available |
+| `server` / `https_server` | Shared HTTP/HTTPS test servers |
+| `sinatra` | Route adapter for the shared HTTP server |
+| `server_prefix` | HTTP server prefix |
+| `server_cross_process_prefix` | Cross-process HTTP server prefix |
+| `server_empty_page` | Empty page URL on the shared server |
+| `asset_path(relative_path)` | Absolute path under `spec/assets` |
+| `headless?` | Whether tests run headless |
+| `default_launch_options` | Launch options used for browser tests |
 
-### Test with Sinatra Server
+### Test with Local Server
 
-For tests requiring a web server, use `sinatra: true` metadata:
+For tests requiring local routes, use `sinatra: true` metadata and the `sinatra` adapter:
 
 ```ruby
-RSpec.describe 'Page#goto', sinatra: true do
+describe 'Page#goto', sinatra: true do
   it 'navigates to local server' do
     sinatra.get('/hello') { 'Hello World' }
 
@@ -65,25 +75,19 @@ RSpec.describe 'Page#goto', sinatra: true do
 end
 ```
 
-Sinatra helpers:
+### Test with Direct Browser Access
 
-| Helper | Description |
-|--------|-------------|
-| `sinatra` | Sinatra app instance |
-| `server_prefix` | `http://localhost:4567` |
-| `server_cross_process_prefix` | `http://127.0.0.1:4567` |
-| `server_empty_page` | `http://localhost:4567/empty.html` |
-
-### Test with Browser Instance
-
-For tests that need direct browser access:
+For tests that need direct browser access, use `puppeteer: :browser` metadata:
 
 ```ruby
-RSpec.describe 'Browser', puppeteer: :browser do
+describe 'Browser', puppeteer: :browser do
   it 'creates new pages' do
     page1 = browser.new_page
     page2 = browser.new_page
     expect(browser.pages.length).to eq(2)
+  ensure
+    page1&.close
+    page2&.close
   end
 end
 ```
@@ -91,15 +95,14 @@ end
 ### Incognito Context Tests
 
 ```ruby
-RSpec.describe 'BrowserContext', browser_context: :incognito do
+describe 'BrowserContext', browser_context: :incognito do
   it 'has isolated cookies' do
     browser_context.set_cookie(name: 'test', value: 'value')
-    # Cookies are isolated to this context
   end
 end
 ```
 
-### OOPIF (Out-of-Process IFrame) Tests
+### OOPIF Tests
 
 For tests requiring cross-process iframes, use `enable_site_per_process_flag: true`:
 
@@ -107,7 +110,6 @@ For tests requiring cross-process iframes, use `enable_site_per_process_flag: tr
 it 'clicks button in cross-process iframe', enable_site_per_process_flag: true do
   with_test_state do |page:, server:, **|
     page.goto(server.empty_page)
-    # Use cross_process_prefix (127.0.0.1) instead of prefix (localhost)
     attach_frame(page, 'frame-id', "#{server.cross_process_prefix}/input/button.html")
 
     frame = page.frames[1]
@@ -116,95 +118,105 @@ it 'clicks button in cross-process iframe', enable_site_per_process_flag: true d
 end
 ```
 
-This metadata launches Chrome with `--site-per-process` and `--host-rules=MAP * 127.0.0.1` flags.
+This metadata launches an isolated browser with `--site-per-process` and `--host-rules=MAP * 127.0.0.1`.
 
 ## Running Tests
 
 ### Basic Commands
 
 ```bash
-# Run all tests
+# Run RSpec unit tests and Smartest browser tests
+bundle exec rake
+
+# Run RSpec unit tests only
 bundle exec rspec
 
-# Run specific file
-bundle exec rspec spec/integration/page_spec.rb
+# Run Smartest browser tests only
+bundle exec smartest
 
-# Run specific test by line number
-bundle exec rspec spec/integration/page_spec.rb:42
+# Run a specific Smartest file
+bundle exec smartest smartest/integration/page_test.rb
 
-# Run with documentation format
-bundle exec rspec --format documentation
+# Run a specific Smartest test by line number
+bundle exec smartest smartest/integration/page_test.rb:42
+
+# Run Smartest with profiling disabled
+bundle exec smartest --profile 0 smartest/integration/page_test.rb
 ```
 
 ### Chrome Configuration
 
 ```bash
-# Run with custom Chrome path
-PUPPETEER_EXECUTABLE_PATH_RSPEC=/path/to/chrome bundle exec rspec
+# Run Smartest with a custom Chrome path
+PUPPETEER_EXECUTABLE_PATH_SMARTEST=/path/to/chrome bundle exec smartest
 
-# Run with Chrome channel
-PUPPETEER_CHANNEL_RSPEC=chrome-beta bundle exec rspec
+# Run Smartest with a Chrome channel
+PUPPETEER_CHANNEL_SMARTEST=chrome-beta bundle exec smartest
 ```
+
+The legacy `_RSPEC` environment variable names are still accepted by Smartest for compatibility with existing scripts.
 
 ### Debug Mode
 
 ```bash
-# Non-headless mode (see the browser)
-DEBUG=1 bundle exec rspec spec/integration/page_spec.rb
+# Non-headless mode and CDP debug logging
+DEBUG=1 bundle exec smartest smartest/integration/page_test.rb
 
-# With debug output
-DEBUG=1 bundle exec rspec spec/integration/page_spec.rb 2>&1 | tee test.log
+# Save debug output
+DEBUG=1 bundle exec smartest smartest/integration/page_test.rb 2>&1 | tee test.log
 ```
 
 ### Container/CI Mode
 
 ```bash
 # Add --no-sandbox flag
-PUPPETEER_NO_SANDBOX_RSPEC=true bundle exec rspec
+PUPPETEER_NO_SANDBOX_SMARTEST=true bundle exec smartest
 ```
 
 ## Screenshot Testing
 
 ### Golden Matcher
 
-Use `match_golden` matcher for screenshot comparisons:
+Use `match_golden` / `be_golden` for screenshot comparisons:
 
 ```ruby
-RSpec.describe 'Page#screenshot' do
+describe 'Page#screenshot' do
   it 'captures page screenshot' do
     page.goto(server_empty_page)
     screenshot = page.screenshot
 
-    expect(screenshot).to match_golden('empty-page.png')
+    expect(screenshot).to match_golden('screenshot-empty-page.png')
   end
 end
 ```
 
-Golden images are stored in `spec/golden/`.
+Golden images are stored in `spec/integration/golden-chromium/`.
 
 ### Updating Golden Images
 
 When intentionally changing visual output:
 
 ```bash
-# Remove old golden and re-run test to generate new one
-rm spec/golden/empty-page.png
-bundle exec rspec spec/integration/screenshot_spec.rb
+# Remove old golden and re-run the relevant Smartest test to generate a new one
+rm spec/integration/golden-chromium/screenshot-empty-page.png
+bundle exec smartest smartest/integration/screenshot_test.rb
 ```
 
 ## Writing New Tests
 
 ### Guidelines
 
-1. **One assertion per test when possible** - Easier to identify failures
-2. **Use descriptive test names** - Should read like documentation
-3. **Clean up resources** - Close pages, restore state in `after` blocks
-4. **Minimize flakiness** - Use explicit waits, not sleeps
+1. Keep upstream-equivalent browser tests in `smartest/integration/*_test.rb`.
+2. Keep non-browser unit tests in `spec/puppeteer/*_spec.rb`.
+3. Use `with_test_state` for explicit browser/page setup when possible.
+4. Use Smartest fixtures and matchers instead of per-test browser bootstrapping.
+5. Clean up resources created outside `with_test_state`.
+6. Minimize flakiness with explicit waits instead of sleeps.
 
 ### Example Test Pattern
 
 ```ruby
-RSpec.describe 'ElementHandle#click', sinatra: true do
+describe 'ElementHandle#click', sinatra: true do
   before do
     sinatra.get('/button') do
       <<~HTML
@@ -221,38 +233,25 @@ RSpec.describe 'ElementHandle#click', sinatra: true do
     result = page.evaluate('() => window.clicked')
     expect(result).to eq(true)
   end
-
-  it 'triggers click event' do
-    events = []
-    page.evaluate(<<~JS)
-      document.querySelector('button').addEventListener('click', () => {
-        window.clickEvent = true;
-      });
-    JS
-
-    page.click('button')
-
-    expect(page.evaluate('() => window.clickEvent')).to eq(true)
-  end
 end
 ```
 
 ## CI Configuration
 
-Tests run on GitHub Actions with matrix of:
+GitHub Actions run both suites:
 
-- Ruby versions: 3.2, 3.3, 3.4
-- Environments: Ubuntu with Chrome, Alpine with Chromium
+- `bundle exec rspec --profile 10 --format documentation` for unit tests
+- `bundle exec smartest` for browser integration tests
 
-See `.github/workflows/ci.yml` for details.
+The matrix covers Ruby 3.2, 3.3, 3.4 with latest Chrome, plus Alpine with Chromium.
 
 ## Debugging Tips
 
 ### See What's Happening
 
 ```bash
-# Run with visible browser
-DEBUG=1 bundle exec rspec spec/integration/page_spec.rb
+# Run with visible browser and CDP logs
+DEBUG=1 bundle exec smartest smartest/integration/page_test.rb
 
 # Add screenshots for debugging
 page.screenshot(path: 'debug.png')
@@ -264,7 +263,6 @@ puts page.content
 ### Slow Down Execution
 
 ```ruby
-# In spec_helper.rb or individual test
 Puppeteer.launch(slow_mo: 100) do |browser|
   # Actions are slowed by 100ms each
 end
@@ -273,6 +271,5 @@ end
 ### Inspect CDP Messages
 
 ```bash
-# Enable CDP debug logging
-DEBUG=1 bundle exec rspec 2>&1 | grep -E "(SEND|RECV)"
+DEBUG=1 bundle exec smartest 2>&1 | grep -E "(SEND|RECV)"
 ```
