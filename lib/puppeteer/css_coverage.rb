@@ -20,6 +20,10 @@ class Puppeteer::CSSCoverage
     @stylesheet_sources = {}
   end
 
+  def update_client(client)
+    @client = client
+  end
+
   def start(reset_on_navigation: nil)
     raise 'CSSCoverage is already enabled' if @enabled
 

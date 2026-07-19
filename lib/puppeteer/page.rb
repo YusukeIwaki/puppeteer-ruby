@@ -40,7 +40,9 @@ class Puppeteer::Page
     @closed = false
     @client = client
     @target = target
-    @tab_id = nil
+    @tab_session = client.parent_session || client
+    @tab_target = @tab_session.target || target
+    @tab_id = @tab_target.target_id
     @keyboard = Puppeteer::Keyboard.new(client)
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
@@ -57,15 +59,24 @@ class Puppeteer::Page
     @inflight_requests = Set.new
     @request_intercepted_listener_map = ObjectSpace::WeakMap.new
     @attached_sessions = Set.new
+    @primary_session_listener_ids = []
 
     @workers = {}
     @user_drag_interception_enabled = false
     @service_worker_bypassed = false
 
-    @attached_session_listener_id = @client.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
-      handle_attached_to_session(session)
+    @swapped_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Swapped) do |session|
+      Async do
+        handle_activation(session)
+      rescue => err
+        debug_puts(err)
+      end
     end
-    @target_gone_listener_id = @target.target_manager.add_event_listener(
+    @secondary_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
+      handle_secondary_target(session)
+    end
+    @target_manager = @target.target_manager
+    @target_gone_listener_id = @target_manager.add_event_listener(
       TargetManagerEmittedEvents::TargetGone,
       &method(:handle_detached_from_target)
     )
@@ -102,47 +113,94 @@ class Puppeteer::Page
     @file_chooser_interception_is_disabled = false
     @file_chooser_interceptors = Set.new
 
-    @client.on_event('Page.domContentEventFired') do |event|
+    setup_primary_target_listeners(@client)
+  end
+
+  private def setup_primary_target_listeners(client)
+    listener_id = client.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
+      handle_attached_to_session(session)
+    end
+    @primary_session_listener_ids << [client, listener_id]
+
+    client.on_event('Page.domContentEventFired') do |event|
       emit_event(PageEmittedEvents::DOMContentLoaded)
     end
-    @client.on_event('Page.loadEventFired') do |event|
+    client.on_event('Page.loadEventFired') do |event|
       emit_event(PageEmittedEvents::Load)
     end
-    @client.add_event_listener('Runtime.consoleAPICalled') do |event|
+    client.add_event_listener('Runtime.consoleAPICalled') do |event|
       handle_console_api(event)
     end
-    @client.add_event_listener('Runtime.bindingCalled') do |event|
+    client.add_event_listener('Runtime.bindingCalled') do |event|
       handle_binding_called(event)
     end
-    @client.on_event('Page.javascriptDialogOpening') do |event|
+    client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
     end
-    @client.on_event('Runtime.exceptionThrown') do |exception|
+    client.on_event('Runtime.exceptionThrown') do |exception|
       handle_exception(exception['exceptionDetails'])
     end
-    @client.on_event('Inspector.targetCrashed') do |event|
+    client.on_event('Inspector.targetCrashed') do |event|
       handle_target_crashed
     end
-    @client.on_event('Performance.metrics') do |event|
+    client.on_event('Performance.metrics') do |event|
       emit_event(PageEmittedEvents::Metrics, MetricsEvent.new(event))
     end
-    @client.on_event('Log.entryAdded') do |event|
+    client.on_event('Log.entryAdded') do |event|
       handle_log_entry_added(event)
     end
-    @client.on_event('Page.fileChooserOpened') do |event|
+    client.on_event('Page.fileChooserOpened') do |event|
       handle_file_chooser(event)
-    end
-    Async do
-      @target.is_closed_promise.wait
-      @client.remove_event_listener(@attached_session_listener_id)
-      @target.target_manager.remove_event_listener(@target_gone_listener_id)
-
-      emit_event(PageEmittedEvents::Close)
-      @closed = true
     end
   end
 
+  private def handle_activation(session)
+    @client = session
+    @target = session.target
+    @target.instance_variable_set(:@page, self)
+    @keyboard.update_client(session)
+    @mouse.update_client(session)
+    @touchscreen.update_client(session)
+    @emulation_manager.update_client(session)
+    @tracing.update_client(session)
+    @coverage.update_client(session)
+    @frame_manager.swap_frame_tree(session)
+    setup_primary_target_listeners(session)
+  end
+
+  private def handle_secondary_target(session)
+    target = session.target
+    return unless target&.target_info&.subtype == 'prerender'
+
+    @frame_manager.register_speculative_session(session)
+    @emulation_manager.register_speculative_session(session)
+  end
+
+  private def mark_closed
+    return if @closed
+
+    cleanup_page_listeners
+    @closed = true
+    emit_event(PageEmittedEvents::Close)
+  end
+
+  private def cleanup_page_listeners
+    return if @page_listeners_cleaned
+
+    @page_listeners_cleaned = true
+    @primary_session_listener_ids.each do |session, listener_id|
+      session.remove_event_listener(listener_id)
+    end
+    @tab_session.remove_event_listener(@swapped_session_listener_id, @secondary_session_listener_id)
+    @target_manager.remove_event_listener(@target_gone_listener_id)
+  end
+
   private def handle_detached_from_target(target)
+    if target == @tab_target
+      mark_closed
+      return
+    end
+
     session_id = target.session&.id
     @frame_manager.handle_detached_from_target(target)
     return unless session_id
@@ -1619,13 +1677,7 @@ class Puppeteer::Page
         @client.send_message('Page.close')
       else
         @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
-        @target.is_closed_promise.wait
-
-        # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
-        25.times do
-          break if @closed
-          Puppeteer::AsyncUtils.sleep_seconds(0.004)
-        end
+        @tab_target.is_closed_promise.wait
       end
     rescue Puppeteer::Connection::ProtocolError => err
       raise unless err.message.match?(/Target closed/i)

@@ -5,6 +5,11 @@ class Puppeteer::Coverage
     @css = Puppeteer::CSSCoverage.new(client)
   end
 
+  def update_client(client)
+    @js.update_client(client)
+    @css.update_client(client)
+  end
+
   def start_js_coverage(
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,

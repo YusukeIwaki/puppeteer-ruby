@@ -44,10 +44,7 @@ class Puppeteer::ChromeTargetManager
     Async do
       @connection.async_send_message('Target.setDiscoverTargets', {
         discover: true,
-        filter: [
-          { type: 'tab', exclude: true },
-          {},
-        ],
+        filter: [{}],
       }).wait
       store_existing_targets_for_init
     rescue => err
@@ -57,7 +54,7 @@ class Puppeteer::ChromeTargetManager
 
   private def store_existing_targets_for_init
     @discovered_targets_by_target_id.each do |target_id, target_info|
-      if @target_filter_callback.call(target_info) && target_info.type != 'browser' && url_allowed?(target_info.url)
+      if @target_filter_callback.call(target_info) && target_info.type == 'tab' && url_allowed?(target_info.url)
         @target_ids_for_init << target_id
       end
     end
@@ -68,6 +65,10 @@ class Puppeteer::ChromeTargetManager
       waitForDebuggerOnStart: true,
       flatten: true,
       autoAttach: true,
+      filter: [
+        { type: 'page', exclude: true },
+        {},
+      ],
     })
     @initial_attach_done = true
     finish_initialization_if_ready
@@ -171,6 +172,10 @@ class Puppeteer::ChromeTargetManager
       return
     end
     original_target = @attached_targets_by_target_id[target_info.target_id]
+    if original_target&.target_info&.subtype && !target_info.subtype
+      session = original_target.session
+      session&.parent_session&.emit_event(CDPSessionEmittedEvents::Swapped, session)
+    end
     emit_event(TargetManagerEmittedEvents::TargetChanged, original_target, target_info) if original_target
   end
 
@@ -189,7 +194,7 @@ class Puppeteer::ChromeTargetManager
         begin
           Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
         rescue => err
-          Logger.new($stderr).warn(err)
+          debug_puts(err)
         end
 
         # We don't use `session.detach()` because that dispatches all commands on
@@ -199,7 +204,7 @@ class Puppeteer::ChromeTargetManager
             sessionId: session.id,
           }))
         rescue => err
-          Logger.new($stderr).warn(err)
+          debug_puts(err)
         ensure
           if detached_promise && !detached_promise.resolved?
             detached_promise.resolve(true)
@@ -238,7 +243,8 @@ class Puppeteer::ChromeTargetManager
 
     unless @target_filter_callback.call(target_info)
       @ignored_targets << target_info.target_id
-      finish_initialization_if_ready(target_info.target_id)
+      parent_target = parent_session.is_a?(Puppeteer::CDPSession) ? parent_session.target : nil
+      finish_initialization_if_ready(parent_target.target_id) if parent_target&.raw_type == 'tab'
       silent_detach.call
 
       return
@@ -267,12 +273,13 @@ class Puppeteer::ChromeTargetManager
       end
     end
 
-    @target_ids_for_init.delete(target.target_id)
     unless is_existing_target
       Async do
         Puppeteer::AsyncUtils.future_with_logging { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }.call
       end
     end
+    parent_target = parent_session.is_a?(Puppeteer::CDPSession) ? parent_session.target : nil
+    finish_initialization_if_ready(parent_target.target_id) if parent_target&.raw_type == 'tab'
     finish_initialization_if_ready
     parent_session.emit_event(CDPSessionEmittedEvents::Ready, session)
 
@@ -281,11 +288,12 @@ class Puppeteer::ChromeTargetManager
         waitForDebuggerOnStart: true,
         flatten: true,
         autoAttach: true,
+        filter: [{}],
       }))
       maybe_setup_network_conditions(session)
       Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
     rescue => err
-      Logger.new($stderr).warn(err)
+      debug_puts(err)
     ensure
       session.mark_ready
     end

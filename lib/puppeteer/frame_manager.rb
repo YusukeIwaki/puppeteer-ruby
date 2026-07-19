@@ -40,6 +40,7 @@ class Puppeteer::FrameManager
     @frame_tree_mutex = Mutex.new
 
     setup_listeners(@client)
+    setup_client_disconnect_listener(@client)
   end
 
   private def setup_listeners(client)
@@ -96,6 +97,69 @@ class Puppeteer::FrameManager
   end
 
   attr_reader :client, :timeout_settings
+
+  # When the main frame is replaced by another main frame, preserve the
+  # existing Frame object while replacing its ID, client, and frame tree.
+  def swap_frame_tree(client)
+    @client = client
+    frame = @main_frame
+    if frame
+      target_id = client.target.target_id
+      @frame_naviigated_received << target_id
+      @frames.delete(frame.id)
+      frame.id = target_id
+      @frames[target_id] = frame
+      frame.send(:update_client, client)
+    end
+
+    setup_listeners(client)
+    setup_client_disconnect_listener(client)
+    init(client.target.target_id, client)
+    @network_manager.add_client(client)
+    emit_event(FrameManagerEmittedEvents::FrameSwappedByActivation, frame) if frame
+  end
+
+  def register_speculative_session(client)
+    @network_manager.add_client(client)
+  end
+
+  private def setup_client_disconnect_listener(client)
+    client.once(CDPSessionEmittedEvents::Disconnected) do
+      Async do
+        handle_client_disconnect(client)
+      rescue => err
+        debug_puts(err)
+      end
+    end
+  end
+
+  # A disconnected primary client can mean either that the page closed or
+  # that a prerendered target is about to replace it. Wait for one of those
+  # events instead of guessing with a timer.
+  private def handle_client_disconnect(client)
+    frame = @main_frame
+    return unless frame
+    return unless @client == client
+
+    unless @page.browser.connected? && !@page.closed?
+      remove_frame_recursively(frame)
+      return
+    end
+
+    frame.child_frames.each { |child| remove_frame_recursively(child) }
+    swapped = Async::Promise.new
+    swap_listener_id = add_event_listener(FrameManagerEmittedEvents::FrameSwappedByActivation) do |swapped_frame|
+      swapped.resolve(true) if swapped_frame == frame && !swapped.resolved?
+    end
+    close_listener_id = @page.add_event_listener(PageEmittedEvents::Close) do
+      swapped.resolve(false) unless swapped.resolved?
+    end
+
+    remove_frame_recursively(frame) unless swapped.wait
+  ensure
+    remove_event_listener(swap_listener_id) if swap_listener_id
+    @page.remove_event_listener(close_listener_id) if close_listener_id
+  end
 
   private def init(target_id, cdp_session = nil)
     @frames_pending_target_init[target_id] ||= Async::Promise.new

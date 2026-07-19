@@ -35,6 +35,7 @@ module CDPSessionEmittedEvents ; end
 {
   Disconnected: EventsDefinitionUtils.symbol('CDPSession.Disconnected'),
   Ready: EventsDefinitionUtils.symbol('CDPSession.Ready'),
+  Swapped: EventsDefinitionUtils.symbol('CDPSession.Swapped'),
 }.define_const_into(CDPSessionEmittedEvents)
 
 # All the events a Browser may emit.
@@ -98,6 +99,7 @@ module FrameManagerEmittedEvents ; end
   FrameNavigated: EventsDefinitionUtils.symbol('FrameManager.FrameNavigated'),
   FrameDetached: EventsDefinitionUtils.symbol('FrameManager.FrameDetached'),
   FrameSwapped: EventsDefinitionUtils.symbol('FrameManager.FrameSwapped'),
+  FrameSwappedByActivation: EventsDefinitionUtils.symbol('FrameManager.FrameSwappedByActivation'),
   LifecycleEvent: EventsDefinitionUtils.symbol('FrameManager.LifecycleEvent'),
   FrameNavigatedWithinDocument: EventsDefinitionUtils.symbol('FrameManager.FrameNavigatedWithinDocument'),
   ExecutionContextCreated: EventsDefinitionUtils.symbol('FrameManager.ExecutionContextCreated'),

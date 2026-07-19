@@ -13,6 +13,12 @@ class Puppeteer::TouchScreen
     @touches = []
   end
 
+  # @rbs client: Puppeteer::CDPSession -- Replacement CDP session
+  # @rbs return: void -- No return value
+  def update_client(client)
+    @client = client
+  end
+
   # @rbs x: Numeric -- X coordinate
   # @rbs y: Numeric -- Y coordinate
   # @rbs return: void -- No return value

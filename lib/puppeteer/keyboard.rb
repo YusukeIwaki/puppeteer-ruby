@@ -16,6 +16,12 @@ class Puppeteer::Keyboard
 
   attr_reader :modifiers
 
+  # @rbs client: Puppeteer::CDPSession -- Replacement CDP session
+  # @rbs return: void -- No return value
+  def update_client(client)
+    @client = client
+  end
+
   # @rbs key: String -- Key name
   # @rbs text: String? -- Text to input
   # @rbs commands: Array[String]? -- Editing commands

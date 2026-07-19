@@ -261,7 +261,7 @@ class Puppeteer::Browser
   end
 
   private def handle_attached_to_target(target)
-    if target.initialized_promise.wait
+    if target.exposed? && target.initialized_promise.wait
       emit_event(BrowserEmittedEvents::TargetCreated, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
     end
@@ -270,7 +270,7 @@ class Puppeteer::Browser
   private def handle_detached_from_target(target)
     target.ignore_initialize_callback_promise
     target.closed_callback
-    if target.initialized_promise.wait
+    if target.exposed? && target.initialized_promise.wait
       emit_event(BrowserEmittedEvents::TargetDestroyed, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetDestroyed, target)
     end
@@ -312,7 +312,7 @@ class Puppeteer::Browser
     }.compact
     result = @connection.send_message('Target.createTarget', **create_target_params)
     target_id = result['targetId']
-    target = @target_manager.available_targets[target_id]
+    target = wait_for_available_target(target_id)
     unless target
       raise MissingTargetError.new("Missing target for page (id = #{target_id})")
     end
@@ -326,11 +326,31 @@ class Puppeteer::Browser
     page
   end
 
+  private def wait_for_available_target(target_id)
+    target = @target_manager.available_targets[target_id]
+    return target if target
+
+    promise = Async::Promise.new
+    listener_id = @target_manager.add_event_listener(TargetManagerEmittedEvents::TargetAvailable) do |available_target|
+      if available_target.target_id == target_id && !promise.resolved?
+        promise.resolve(available_target)
+      end
+    end
+    target = @target_manager.available_targets[target_id]
+    return target if target
+
+    Puppeteer::AsyncUtils.async_timeout(30_000, promise).wait
+  rescue Async::TimeoutError
+    nil
+  ensure
+    @target_manager.remove_event_listener(listener_id) if listener_id
+  end
+
   # All active targets inside the Browser. In case of multiple browser contexts, returns
   # an array with all the targets in all browser contexts.
   # @rbs return: Array[Puppeteer::Target] -- Active targets
   def targets
-    @target_manager.available_targets.values.select { |target| target.initialized? }
+    @target_manager.available_targets.values.select { |target| target.exposed? && target.initialized? }
   end
 
 

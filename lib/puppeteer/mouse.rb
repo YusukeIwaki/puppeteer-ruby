@@ -40,6 +40,12 @@ class Puppeteer::Mouse
     @dispatch_mutex = Mutex.new
   end
 
+  # @rbs client: Puppeteer::CDPSession -- Replacement CDP session
+  # @rbs return: void -- No return value
+  def update_client(client)
+    @client = client
+  end
+
   # @rbs return: void -- No return value
   def reset
     [
