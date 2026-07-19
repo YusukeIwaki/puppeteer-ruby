@@ -8,6 +8,8 @@ class Puppeteer::EmulationManager
     @emulating_mobile = false
     @has_touch = false
     @viewport = nil
+    @locale = nil
+    @locale_configured = false
     @secondary_clients = Set.new
   end
 
@@ -21,9 +23,16 @@ class Puppeteer::EmulationManager
     client.once(CDPSessionEmittedEvents::Disconnected) do
       @secondary_clients.delete(client)
     end
-    return unless @viewport
+    promises = []
+    promises.concat(viewport_promises(client, @viewport)) if @viewport
+    if @locale_configured
+      promises << client.async_send_message(
+        'Emulation.setLocaleOverride',
+        { locale: @locale }.compact,
+      )
+    end
+    return if promises.empty?
 
-    promises = viewport_promises(client, @viewport)
     Async do
       Puppeteer::AsyncUtils.await_promise_all(*promises)
     rescue => err
@@ -78,4 +87,21 @@ class Puppeteer::EmulationManager
   end
 
   define_async_method :async_emulate_viewport
+
+  # @rbs locale: String? -- Locale to emulate, or nil to disable emulation
+  # @rbs return: void -- No return value
+  def emulate_locale(locale)
+    @locale = locale
+    @locale_configured = true
+    clients = [@client, *@secondary_clients]
+    promises = clients.map do |client|
+      client.async_send_message(
+        'Emulation.setLocaleOverride',
+        { locale: locale }.compact,
+      )
+    end
+    Puppeteer::AsyncUtils.await_promise_all(*promises)
+  end
+
+  define_async_method :async_emulate_locale
 end

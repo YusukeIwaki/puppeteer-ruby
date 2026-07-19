@@ -1382,6 +1382,13 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs locale: String? -- Locale to emulate, or nil to disable emulation
+  # @rbs return: void -- No return value
+  def emulate_locale(locale = nil)
+    @emulation_manager.emulate_locale(locale)
+    @frame_manager.network_manager.set_accept_language(locale)
+  end
+
   VISION_DEFICIENCY_TYPES = %w[
     none
     achromatopsia

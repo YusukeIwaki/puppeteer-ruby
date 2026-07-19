@@ -98,7 +98,9 @@ class Puppeteer::NetworkManager
 
     @extra_http_headers = {}
     @user_agent = nil
+    @default_user_agent = nil
     @user_agent_metadata = nil
+    @accept_language = nil
 
     @attempted_authentications = Set.new
     @user_request_interception_enabled = false
@@ -175,10 +177,12 @@ class Puppeteer::NetworkManager
   end
 
   private def apply_user_agent(client)
-    return unless @user_agent
+    user_agent = @user_agent || @default_user_agent
+    return unless user_agent
 
     safe_send_message(client, 'Network.setUserAgentOverride', {
-      userAgent: @user_agent,
+      userAgent: user_agent,
+      acceptLanguage: @accept_language,
       userAgentMetadata: @user_agent_metadata,
     }.compact)
   end
@@ -280,6 +284,14 @@ class Puppeteer::NetworkManager
     apply_to_clients { |client| apply_user_agent(client) }
   end
   alias_method :user_agent=, :set_user_agent
+
+  # @rbs accept_language: String? -- Accept-Language override
+  # @rbs return: void -- No return value
+  def set_accept_language(accept_language)
+    @default_user_agent ||= @frame_manager.page.browser.user_agent
+    @accept_language = accept_language
+    apply_to_clients { |client| apply_user_agent(client) }
+  end
 
   def cache_enabled=(enabled)
     @user_cache_disabled = !enabled
