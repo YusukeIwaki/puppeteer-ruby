@@ -332,6 +332,10 @@ class Puppeteer::Connection
         else
           callback.resolve(message['result'])
         end
+      else
+        sessions = @sessions_mutex.synchronize { @sessions.values }
+        session = sessions.find { |candidate| candidate.callback?(message['id']) }
+        session&.handle_message(message)
       end
     else
       emit_event(message['method'], message['params'])

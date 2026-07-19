@@ -77,4 +77,22 @@ RSpec.describe Puppeteer::CDPSession do
       client.send_message('ThisCommand.DoesNotExist')
     }.to raise_error(/ThisCommand.DoesNotExist/)
   end
+
+  it 'should handle session callbacks when Chrome sends error without sessionId' do
+    connection = page.target.create_cdp_session.connection.__getobj__
+
+    fake_session = Puppeteer::CDPSession.new(
+      connection,
+      'other',
+      'fake-session-id',
+    )
+    connection.instance_variable_get(:@sessions)['fake-session-id'] = fake_session
+
+    expect {
+      fake_session.send_message('Runtime.evaluate', expression: '1 + 1')
+    }.to raise_error(
+      Puppeteer::CDPSession::Error,
+      'Protocol error (Runtime.evaluate): Session with given id not found.',
+    )
+  end
 end

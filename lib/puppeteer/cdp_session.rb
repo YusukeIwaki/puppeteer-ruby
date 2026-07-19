@@ -81,6 +81,12 @@ class Puppeteer::CDPSession
     promise
   end
 
+  # @rbs id: Integer -- CDP command id
+  # @rbs return: bool -- True when the session owns the callback
+  def callback?(id)
+    @callbacks_mutex.synchronize { @callbacks.key?(id) }
+  end
+
   # @rbs message: Hash[String, untyped] -- Raw CDP message
   # @rbs return: void -- No return value
   def handle_message(message)
@@ -97,11 +103,18 @@ class Puppeteer::CDPSession
 
   private def callback_with_message(callback, message)
     if message['error']
-      callback.reject(
-        Puppeteer::Connection::ProtocolError.new(
-          method: callback.method,
-          error_message: message['error']['message'],
-          error_data: message['error']['data']))
+      if message['error']['message'].include?('Session with given id not found')
+        handle_closed
+        callback.reject(
+          Error.new("Protocol error (#{callback.method}): Session with given id not found."),
+        )
+      else
+        callback.reject(
+          Puppeteer::Connection::ProtocolError.new(
+            method: callback.method,
+            error_message: message['error']['message'],
+            error_data: message['error']['data']))
+      end
     else
       callback.resolve(message['result'])
     end
