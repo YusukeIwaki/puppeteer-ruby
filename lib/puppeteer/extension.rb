@@ -62,7 +62,7 @@ class Puppeteer::Extension
   # @rbs page: Puppeteer::Page -- Target page
   # @rbs return: void -- No return value
   def trigger_action(page)
-    page.browser.send(:connection).send_message('Extensions.triggerAction', {
+    @browser.send(:connection).send_message('Extensions.triggerAction', {
       id: @id,
       targetId: page._tab_id,
     })

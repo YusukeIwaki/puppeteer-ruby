@@ -149,8 +149,7 @@ class Puppeteer::Target
 
   # @return [Puppeteer::Page]
   def as_page
-    existing_page = page
-    return existing_page if existing_page
+    return @page if @page
     return @as_page if @as_page
 
     client = @session || @session_factory.call(false)

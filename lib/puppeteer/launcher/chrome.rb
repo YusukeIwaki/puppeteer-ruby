@@ -180,7 +180,6 @@ module Puppeteer::Launcher
         end
 
         if chrome_arg_options.enable_extensions
-          chrome_arguments << '--enable-unsafe-extension-debugging'
           if chrome_arg_options.enable_extensions.is_a?(Array) && !chrome_arg_options.enable_extensions.empty?
             extension_paths = chrome_arg_options.enable_extensions.map do |path|
               File.expand_path(path)

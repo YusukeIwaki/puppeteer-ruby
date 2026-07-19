@@ -442,9 +442,13 @@ class Puppeteer::Browser
   end
 
   # @rbs path: String -- Extension path
+  # @rbs enabled_in_incognito: bool -- Enable in Incognito and OTR profiles
   # @rbs return: String -- Installed extension id
-  def install_extension(path)
-    result = @connection.send_message('Extensions.loadUnpacked', path: path)
+  def install_extension(path, enabled_in_incognito: false)
+    result = @connection.send_message('Extensions.loadUnpacked', {
+      path: path,
+      enableInIncognito: enabled_in_incognito,
+    })
     extension_id = result['id']
     @extensions.delete(extension_id)
     extension_id
@@ -454,6 +458,7 @@ class Puppeteer::Browser
   # @rbs return: void -- No return value
   def uninstall_extension(extension_id)
     @connection.send_message('Extensions.uninstall', id: extension_id)
+    @target_manager.remove_extension_service_workers(extension_id)
     @extensions.delete(extension_id)
   end
 

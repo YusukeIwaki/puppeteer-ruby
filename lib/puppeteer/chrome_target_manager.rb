@@ -91,6 +91,19 @@ class Puppeteer::ChromeTargetManager
     @attached_targets_by_target_id
   end
 
+  def remove_extension_service_workers(extension_id)
+    extension_url = "chrome-extension://#{extension_id}/"
+    target_ids = @discovered_targets_by_target_id.filter_map do |target_id, target_info|
+      if target_info.type == 'service_worker' && target_info.url.start_with?(extension_url)
+        target_id
+      end
+    end
+    target_ids.each do |target_id|
+      @ignored_targets << target_id
+      handle_target_destroyed('targetId' => target_id)
+    end
+  end
+
   def wait_for_service_worker_detach(target_id)
     promise = @service_worker_detach_promises[target_id]
     return unless promise
