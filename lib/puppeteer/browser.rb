@@ -16,6 +16,7 @@ class Puppeteer::Browser
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs issues_enabled: bool -- Whether issues events are enabled
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -29,6 +30,7 @@ class Puppeteer::Browser
                   network_enabled: true,
                   issues_enabled: true,
                   block_list: nil,
+                  allow_list: nil,
                   process:,
                   close_callback:,
                   target_filter_callback:,
@@ -42,11 +44,13 @@ class Puppeteer::Browser
       network_enabled: network_enabled,
       issues_enabled: issues_enabled,
       block_list: block_list,
+      allow_list: allow_list,
       process: process,
       close_callback: close_callback,
       target_filter_callback: target_filter_callback,
       is_page_target_callback: is_page_target_callback,
     )
+    browser.send(:validate_allow_list_version)
     browser.send(:attach)
     browser
   end
@@ -59,6 +63,7 @@ class Puppeteer::Browser
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs issues_enabled: bool -- Whether issues events are enabled
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -72,6 +77,7 @@ class Puppeteer::Browser
                  network_enabled: true,
                  issues_enabled: true,
                  block_list: nil,
+                 allow_list: nil,
                  process:,
                  close_callback:,
                  target_filter_callback:,
@@ -85,6 +91,7 @@ class Puppeteer::Browser
     @network_enabled = network_enabled
     @issues_enabled = issues_enabled
     @block_list = block_list
+    @allow_list = allow_list
     @process = process
     @connection = connection
     @close_callback = close_callback
@@ -102,12 +109,25 @@ class Puppeteer::Browser
       target_factory: method(:create_target),
       target_filter_callback: @target_filter_callback,
       block_list: block_list,
+      allow_list: allow_list,
     )
+    @connection.reject_emulate_network_conditions_calls =
+      [block_list, allow_list].any? { |list| list && !list.empty? }
     @extensions = {}
   end
 
   private def default_target_filter_callback(target_info)
     true
+  end
+
+  private def validate_allow_list_version
+    return unless @allow_list
+
+    product = Version.fetch(@connection).product
+    major_version = product[/\d+/].to_i
+    if major_version < 149
+      raise Puppeteer::Error.new('The allow_list option requires Chrome 149 or greater.')
+    end
   end
 
   private def default_is_page_target_callback(target_info)
@@ -469,6 +489,17 @@ class Puppeteer::Browser
   # @rbs return: Array[String]? -- URL block list patterns
   def block_list
     @block_list
+  end
+
+  # @rbs return: Array[String]? -- URL allow list patterns
+  def allow_list
+    @allow_list
+  end
+
+  # @rbs url: String -- URL to validate against network restriction rules
+  # @rbs return: bool -- Whether the URL is allowed
+  def url_allowed?(url)
+    @target_manager.url_allowed?(url)
   end
 
   # @rbs return: void -- No return value

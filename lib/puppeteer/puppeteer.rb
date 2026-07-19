@@ -33,6 +33,7 @@ class Puppeteer::Puppeteer
   # @rbs network_enabled: bool? -- Enable network domain
   # @rbs issues_enabled: bool? -- Enable issues domain
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs enable_extensions: (bool | Array[String])? -- Enable extensions or load unpacked extensions
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
@@ -61,6 +62,7 @@ class Puppeteer::Puppeteer
     network_enabled: true,
     issues_enabled: true,
     block_list: nil,
+    allow_list: nil,
     enable_extensions: false,
     default_viewport: NoViewport.new,
     slow_mo: nil,
@@ -93,6 +95,7 @@ class Puppeteer::Puppeteer
       network_enabled: network_enabled,
       issues_enabled: issues_enabled,
       block_list: block_list,
+      allow_list: allow_list,
       enable_extensions: enable_extensions,
       default_viewport: default_viewport,
       slow_mo: slow_mo,
@@ -145,6 +148,7 @@ class Puppeteer::Puppeteer
   # @rbs network_enabled: bool? -- Enable network domain
   # @rbs issues_enabled: bool? -- Enable issues domain
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
@@ -159,6 +163,7 @@ class Puppeteer::Puppeteer
     network_enabled: true,
     issues_enabled: true,
     block_list: nil,
+    allow_list: nil,
     default_viewport: NoViewport.new,
     slow_mo: nil,
     protocol_timeout: nil,
@@ -173,6 +178,7 @@ class Puppeteer::Puppeteer
       network_enabled: network_enabled,
       issues_enabled: issues_enabled,
       block_list: block_list,
+      allow_list: allow_list,
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,
     }.compact

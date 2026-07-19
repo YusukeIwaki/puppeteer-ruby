@@ -179,7 +179,6 @@ class Puppeteer::FrameManager
       client.async_send_message('Runtime.enable'),
       @page.browser.issues_enabled? ? client.async_send_message('Audits.enable') : nil,
     )
-    maybe_setup_block_list(client)
     ensure_isolated_world(client, UTILITY_WORLD_NAME)
     @network_manager.init unless cdp_session
   rescue => err
@@ -207,6 +206,11 @@ class Puppeteer::FrameManager
   # @return [Puppeteer::HTTPResponse]
   def navigate_frame(frame, url, referer: nil, referrer_policy: nil, timeout: nil, wait_until: nil)
     assert_no_legacy_navigation_options(wait_until: wait_until)
+    unless @page.browser.url_allowed?(url)
+      raise Puppeteer::Error.new(
+        "Navigation to #{url} is blocked by blocklist/allowlist rules",
+      )
+    end
 
     referrer_policy ||= @network_manager.extra_http_headers['referer-policy']
     protocol_referrer_policy = referrer_policy_to_protocol(referrer_policy)
@@ -651,31 +655,6 @@ class Puppeteer::FrameManager
   def execution_context_by_id(context_id, session)
     key = "#{session.id}:#{context_id}"
     @context_id_to_context[key] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
-  end
-
-  private def maybe_setup_block_list(client)
-    block_list = @page.browser.block_list
-    return if block_list.nil? || block_list.empty?
-
-    client.send_message('Network.enable')
-    matched_network_conditions = block_list.map do |pattern|
-      {
-        urlPattern: pattern,
-        latency: 0,
-        downloadThroughput: -1,
-        uploadThroughput: -1,
-      }
-    end
-    client.send_message('Network.emulateNetworkConditionsByRule', {
-      matchedNetworkConditions: matched_network_conditions,
-      offline: true,
-    })
-  rescue Puppeteer::Connection::ProtocolError => err
-    if err.message.include?('Method not available') || err.message.include?("wasn't found")
-      client.send_message('Network.setBlockedURLs', urls: block_list)
-    else
-      raise
-    end
   end
 
   # @param {!Frame} frame

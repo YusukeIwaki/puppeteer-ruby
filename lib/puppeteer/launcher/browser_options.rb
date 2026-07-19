@@ -38,6 +38,21 @@ module Puppeteer::Launcher
       if @block_list && !@block_list.is_a?(Array)
         raise ArgumentError.new('block_list must be an Array of URL patterns')
       end
+      @allow_list = options[:allow_list]
+      if @allow_list && !@allow_list.is_a?(Array)
+        raise ArgumentError.new('allow_list must be an Array of URL patterns')
+      end
+      if @block_list && @allow_list
+        raise ArgumentError.new('Cannot specify both blocklist and allowlist')
+      end
+      [*@block_list, *@allow_list].each do |pattern|
+        unless pattern.is_a?(String)
+          raise ArgumentError.new('URLPattern rules must be strings')
+        end
+        if pattern.match?(/\s/) || pattern.count('(') != pattern.count(')')
+          raise ArgumentError.new("Invalid URLPattern: #{pattern}")
+        end
+      end
 
       # only for Puppeteer.connect
       @target_filter = options[:target_filter]
@@ -51,7 +66,7 @@ module Puppeteer::Launcher
       end
     end
 
-    attr_reader :default_viewport, :slow_mo, :target_filter, :is_page_target, :network_enabled, :issues_enabled, :protocol_timeout, :block_list
+    attr_reader :default_viewport, :slow_mo, :target_filter, :is_page_target, :network_enabled, :issues_enabled, :protocol_timeout, :block_list, :allow_list
 
     def ignore_https_errors?
       @ignore_https_errors

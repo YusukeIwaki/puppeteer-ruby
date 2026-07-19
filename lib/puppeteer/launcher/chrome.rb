@@ -89,6 +89,7 @@ module Puppeteer::Launcher
             network_enabled: @browser_options.network_enabled,
             issues_enabled: @browser_options.issues_enabled,
             block_list: @browser_options.block_list,
+            allow_list: @browser_options.allow_list,
             process: runner.proc,
             close_callback: -> { runner.close },
             target_filter_callback: nil,

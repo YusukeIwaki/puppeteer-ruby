@@ -69,6 +69,8 @@ class Puppeteer::CDPSession
       raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
     end
 
+    @connection.ensure_command_allowed!(method)
+
     promise = Async::Promise.new
 
     @connection.generate_id do |id|

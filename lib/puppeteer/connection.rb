@@ -44,6 +44,7 @@ class Puppeteer::Connection
     @callbacks_mutex = Mutex.new
     @delay = delay
     @protocol_timeout = protocol_timeout
+    @reject_emulate_network_conditions_calls = false
 
     @network_message_queue = Async::Queue.new
     @network_message_task = nil
@@ -71,6 +72,16 @@ class Puppeteer::Connection
   end
 
   attr_reader :protocol_timeout
+  attr_writer :reject_emulate_network_conditions_calls
+
+  def ensure_command_allowed!(method)
+    return unless method == 'Network.emulateNetworkConditions'
+    return unless @reject_emulate_network_conditions_calls
+
+    raise Puppeteer::Error.new(
+      'Cannot reset network conditions: rule-based emulation is enabled.',
+    )
+  end
 
   # used only in Browser#connected?
   def closed?
@@ -176,6 +187,7 @@ class Puppeteer::Connection
   end
 
   def async_send_message(method, params = {})
+    ensure_command_allowed!(method)
     promise = Async::Promise.new
 
     generate_id do |id|
