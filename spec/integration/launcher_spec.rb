@@ -324,6 +324,7 @@ RSpec.describe Puppeteer::Launcher do
       disable_features = Puppeteer.default_args.find { |arg| arg.start_with?('--disable-features=') }
       expect(disable_features).to include('IPH_ReadingModePageActionLabel')
       expect(disable_features).to include('ReadAnythingOmniboxChip')
+      expect(disable_features).to include('WebUIReloadButton')
     end
   end
 

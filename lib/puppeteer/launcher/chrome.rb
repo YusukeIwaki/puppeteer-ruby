@@ -3,6 +3,24 @@ require 'tmpdir'
 # https://github.com/puppeteer/puppeteer/blob/main/src/node/Launcher.ts
 module Puppeteer::Launcher
   class Chrome
+    def self.get_features(flag, options = [])
+      prefix = flag.end_with?('=') ? flag : "#{flag}="
+      options
+        .select { |option| option.start_with?(prefix) }
+        .flat_map do |option|
+          option[(option.index('=') + 1)..]
+            .strip
+            .split(',')
+            .map(&:strip)
+        end
+        .reject(&:empty?)
+    end
+
+    def self.remove_matching_flags(array, flag)
+      prefix = flag.end_with?('=') ? flag : "#{flag}="
+      array.delete_if { |option| option.start_with?(prefix) }
+    end
+
     def initialize(project_root:, preferred_revision:, is_puppeteer_core:)
       @project_root = project_root
       @preferred_revision = preferred_revision
@@ -121,6 +139,33 @@ module Puppeteer::Launcher
       # @param options [Launcher::ChromeArgOptions]
       def initialize(chrome_arg_options)
         # See https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
+        user_disabled_features = Chrome.get_features('--disable-features', chrome_arg_options.args)
+        if user_disabled_features.any?
+          Chrome.remove_matching_flags(chrome_arg_options.args, '--disable-features')
+        end
+
+        user_enabled_features = Chrome.get_features('--enable-features', chrome_arg_options.args)
+        if user_enabled_features.any?
+          Chrome.remove_matching_flags(chrome_arg_options.args, '--enable-features')
+        end
+
+        enabled_features = [
+          'NetworkServiceInProcess2',
+          *user_enabled_features,
+        ].reject(&:empty?)
+
+        disabled_features = [
+          'Translate',
+          'BackForwardCache',
+          'AcceptCHFrame',
+          'MediaRouter',
+          'OptimizationHints',
+          'IPH_ReadingModePageActionLabel',
+          'ReadAnythingOmniboxChip',
+          'WebUIReloadButton',
+          *user_disabled_features,
+        ].reject(&:empty?).reject { |feature| enabled_features.include?(feature) }
+
         chrome_arguments = [
           '--allow-pre-commit-input',
           '--disable-background-networking',
@@ -132,8 +177,7 @@ module Puppeteer::Launcher
           '--disable-component-update',
           '--disable-default-apps',
           '--disable-dev-shm-usage',
-          # AcceptCHFrame disabled because of crbug.com/1348106.
-          '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints,IPH_ReadingModePageActionLabel,ReadAnythingOmniboxChip',
+          "--disable-features=#{disabled_features.join(',')}",
           '--disable-hang-monitor',
           '--disable-ipc-flooding-protection',
           '--disable-popup-blocking',
@@ -144,7 +188,7 @@ module Puppeteer::Launcher
           # TODO(sadym): remove '--enable-blink-features=IdleDetection' once
           # IdleDetection is turned on by default.
           '--enable-blink-features=IdleDetection',
-          '--enable-features=NetworkServiceInProcess2',
+          "--enable-features=#{enabled_features.join(',')}",
           '--export-tagged-pdf',
           '--force-color-profile=srgb',
           '--metrics-recording-only',
