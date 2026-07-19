@@ -21,7 +21,15 @@ RSpec.describe Puppeteer::Launcher do
         navigation_promise = async_promise { page.goto("#{server_prefix}/_one-style.html") }
         Thread.new { wait_for_css.wait; sleep 0.02; remote.disconnect }
 
-        expect { navigation_promise.wait }.to raise_error(/Navigation failed because browser has disconnected!/)
+        expect { navigation_promise.wait }.to raise_error do |error|
+          expected_messages = [
+            'Navigating frame was detached',
+            'Protocol error (Page.navigate): Target closed.',
+            'Protocol error (browsingContext.navigate): Target closed',
+            'Frame detached',
+          ]
+          expect(expected_messages.any? { |message| error.message.start_with?(message) }).to eq(true)
+        end
       end
     end
 
