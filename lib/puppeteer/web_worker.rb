@@ -8,6 +8,7 @@ class Puppeteer::WorkerWorld
   def initialize(client)
     @client = client
     @context_promise = Async::Promise.new
+    @disposed = false
   end
 
   # @rbs context: Puppeteer::ExecutionContext -- Execution context to bind
@@ -39,6 +40,48 @@ class Puppeteer::WorkerWorld
 
   define_async_method :async_evaluate_handle
 
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs polling: (Integer | String)? -- Polling interval or mode
+  # @rbs timeout: Integer? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::JSHandle -- Handle to the truthy evaluation result
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
+    polling_interval = polling || 100
+    unless polling_interval.is_a?(Numeric) && polling_interval >= 0
+      raise ArgumentError.new("Cannot poll with non-positive interval: #{polling_interval}")
+    end
+
+    timeout_ms = timeout.nil? ? 30_000 : timeout
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    loop do
+      if @disposed
+        raise Puppeteer::WaitTask::TerminatedError.new(
+          'waitForFunction failed: worker got detached.',
+        )
+      end
+
+      handle = evaluate_handle(page_function, *args)
+      return handle if handle.evaluate('value => Boolean(value)')
+
+      handle.dispose
+      elapsed_ms = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000
+      if timeout_ms && timeout_ms > 0 && elapsed_ms >= timeout_ms
+        raise Puppeteer::WaitTask::TimeoutError.new(timeout: timeout_ms)
+      end
+      Puppeteer::AsyncUtils.sleep_seconds(polling_interval / 1000.0)
+    rescue Puppeteer::WaitTask::TimeoutError, Puppeteer::WaitTask::TerminatedError
+      raise
+    rescue => err
+      raise Puppeteer::WaitTask::TerminatedError.new(
+        'waitForFunction failed: worker got detached.',
+      ) if @disposed
+
+      raise err
+    end
+  end
+
+  define_async_method :async_wait_for_function
+
   # @rbs return: nil -- Workers do not have frames
   def frame
     nil
@@ -46,6 +89,7 @@ class Puppeteer::WorkerWorld
 
   # @rbs return: void -- Dispose world resources
   def dispose
+    @disposed = true
     @context_promise = Async::Promise.new
   end
 end
@@ -96,6 +140,22 @@ class Puppeteer::WebWorker
 
   define_async_method :async_evaluate_handle
 
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs polling: (Integer | String)? -- Polling interval or mode
+  # @rbs timeout: Integer? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::JSHandle -- Handle to the truthy evaluation result
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
+    main_realm.wait_for_function(
+      page_function,
+      args: args,
+      polling: polling || 100,
+      timeout: timeout.nil? ? @timeout_settings.timeout : timeout,
+    )
+  end
+
+  define_async_method :async_wait_for_function
+
   # @rbs return: void -- Not supported
   def close
     raise Puppeteer::Error.new('WebWorker.close() is not supported')
@@ -118,9 +178,13 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
     @target_id = target_id
     @target_type = target_type
     @world = Puppeteer::WorkerWorld.new(@client)
+    @worker_loaded_promise = Async::Promise.new
 
     @client.once('Runtime.executionContextCreated') do |event|
       @world.set_context(Puppeteer::ExecutionContext.new(@client, event['context'], @world))
+    end
+    @client.once('Inspector.workerScriptLoaded') do
+      @worker_loaded_promise.resolve(nil) unless @worker_loaded_promise.resolved?
     end
     if console_api_called
       @client.on_event('Runtime.consoleAPICalled') do |event|
@@ -157,6 +221,32 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
   # @rbs return: Puppeteer::CDPSession -- Worker CDP session
   def client
     @client
+  end
+
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs return: untyped -- Evaluation result
+  def evaluate(page_function, *args)
+    @worker_loaded_promise.wait
+    super
+  end
+
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs return: Puppeteer::JSHandle -- Handle to evaluation result
+  def evaluate_handle(page_function, *args)
+    @worker_loaded_promise.wait
+    super
+  end
+
+  # @rbs page_function: String -- Function or expression to evaluate
+  # @rbs args: Array[untyped] -- Arguments for evaluation
+  # @rbs polling: (Integer | String)? -- Polling interval or mode
+  # @rbs timeout: Integer? -- Maximum wait time in milliseconds
+  # @rbs return: Puppeteer::JSHandle -- Handle to the truthy evaluation result
+  def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
+    @worker_loaded_promise.wait
+    super
   end
 
   # @rbs return: void -- Close the worker
