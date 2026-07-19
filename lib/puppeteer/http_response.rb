@@ -54,7 +54,8 @@ class Puppeteer::HTTPResponse
     @headers = {}
     headers = extra_info ? extra_info['headers'] : response_payload['headers']
     headers.each do |key, value|
-      @headers[key.downcase] = value
+      header_name = key.downcase
+      @headers[header_name] = normalize_header_value(header_name, value)
     end
     @security_details = if_present(response_payload['securityDetails']) do |security_payload|
       SecurityDetails.new(security_payload)
@@ -67,6 +68,19 @@ class Puppeteer::HTTPResponse
   attr_reader :internal
 
   attr_reader :remote_address, :url, :status, :status_text, :headers, :security_details, :request, :timing
+
+  # Multiline values represent duplicate fields in CDP. RFC 9110 allows
+  # comma-combining fields except Set-Cookie, whose lines must stay separate.
+  private def normalize_header_value(name, value)
+    return value unless value.include?("\n")
+
+    separator = name == 'set-cookie' ? "\n " : ', '
+    value
+      .split("\n")
+      .map(&:strip)
+      .reject(&:empty?)
+      .join(separator)
+  end
 
   def inspect
     values = %i[remote_address url status status_text headers security_details request].map do |sym|
