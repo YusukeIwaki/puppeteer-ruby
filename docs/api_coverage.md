@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v24.42.0
-- puppeteer-ruby version: 0.51.0
+- Puppeteer version: v25.3.0
+- puppeteer-ruby version: 0.52.1
 
 ## Puppeteer
 
@@ -28,7 +28,6 @@
 * extensions
 * ~~getWindowBounds~~
 * installExtension => `#install_extension`
-* isConnected => `#connected?`
 * newPage => `#new_page`
 * pages
 * process
@@ -343,6 +342,7 @@
 * emulateCPUThrottling => `#emulate_cpu_throttling`
 * ~~emulateFocusedPage~~
 * emulateIdleState => `#emulate_idle_state`
+* emulateLocale => `#emulate_locale`
 * emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
 * emulateNetworkConditions => `#emulate_network_conditions`
@@ -486,3 +486,4 @@
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * url
+* waitForFunction => `#wait_for_function`
