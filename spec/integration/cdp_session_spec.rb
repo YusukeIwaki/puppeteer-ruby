@@ -14,13 +14,18 @@ RSpec.describe Puppeteer::CDPSession do
 
   it 'should not report created targets for custom CDP sessions', puppeteer: :browser do
     called = false
-    browser.browser_contexts.first.on('targetcreated') do |target|
+    context = browser.browser_contexts.first
+    listener_id = context.on('targetcreated') do |target|
       raise 'Too many targets created' if called
       called = true
 
       target.create_cdp_session
     end
-    browser.new_page
+    begin
+      browser.new_page
+    ensure
+      context.remove_event_listener(listener_id)
+    end
   end
 
   it 'should send events', sinatra: true do

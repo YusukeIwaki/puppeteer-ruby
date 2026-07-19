@@ -12,6 +12,7 @@ RSpec.describe Puppeteer::CDPSession do
         block.call(SecureRandom.hex(16))
       end
       # rubocop:enable RSpec/Yield
+      allow(connection).to receive(:ensure_command_allowed!)
       allow(connection).to receive(:raw_send) do |kwargs|
         id = kwargs[:id]
 
