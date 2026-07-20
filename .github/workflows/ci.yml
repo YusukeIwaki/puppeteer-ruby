@@ -40,7 +40,7 @@ jobs:
       image: ruby:${{ matrix.ruby }}
     steps:
       - name: Install system dependencies
-        run: apk add --no-cache build-base chromium git
+        run: apk add --no-cache build-base chromium git openssl-dev
 
       - name: Check out code
         uses: actions/checkout@v3
