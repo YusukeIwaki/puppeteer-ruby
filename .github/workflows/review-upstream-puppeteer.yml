@@ -614,7 +614,7 @@ jobs:
 
             notification_body="$(
               printf \
-                'puppeteer-ruby should be ported from upstream v%s\n\n%s' \
+                '@YusukeIwaki puppeteer-ruby should be ported from upstream v%s\n\n%s' \
                 "$LATEST_RELEASE_VERSION" \
                 "$notification_marker"
             )"
