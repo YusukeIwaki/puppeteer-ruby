@@ -1,0 +1,94 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "referenced_version",
+    "referenced_tag",
+    "referenced_commit",
+    "latest_release_version",
+    "latest_release_tag",
+    "latest_version",
+    "latest_commit",
+    "summary",
+    "changes"
+  ],
+  "properties": {
+    "referenced_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$"
+    },
+    "referenced_tag": {
+      "type": "string",
+      "pattern": "^puppeteer-v[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$"
+    },
+    "referenced_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "latest_release_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$"
+    },
+    "latest_release_tag": {
+      "type": "string",
+      "pattern": "^puppeteer-v[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$"
+    },
+    "latest_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$"
+    },
+    "latest_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "changes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "decision",
+          "rationale",
+          "upstream_references",
+          "gem_scope"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "port",
+              "do_not_port"
+            ]
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "upstream_references": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "type": "string"
+            }
+          },
+          "gem_scope": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

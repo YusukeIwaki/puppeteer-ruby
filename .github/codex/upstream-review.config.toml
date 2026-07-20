@@ -1,0 +1,18 @@
+cli_auth_credentials_store = "file"
+
+[permissions.upstream-review]
+description = "Review public upstream Puppeteer changes without access to unrelated network destinations."
+extends = ":workspace"
+
+[permissions.upstream-review.network]
+enabled = true
+
+[permissions.upstream-review.network.domains]
+"github.com" = "allow"
+"*.github.com" = "allow"
+"**.githubusercontent.com" = "allow"
+"pptr.dev" = "allow"
+
+# The workflow appends exact deny rules for the runtime auth.json, encrypted
+# auth clone, and pre-run hash so model-invoked shell commands cannot access
+# or tamper with credential state.

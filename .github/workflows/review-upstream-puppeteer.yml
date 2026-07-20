@@ -1,0 +1,737 @@
+name: Review upstream Puppeteer releases
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every Saturday at 04:07 JST.
+    - cron: "7 4 * * 6"
+      timezone: "Asia/Tokyo"
+
+concurrency:
+  group: codex-upstream-puppeteer-review
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check_release:
+    name: Check for a new Puppeteer release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      update_available: ${{ steps.release.outputs.update_available }}
+      referenced_commit: ${{ steps.release.outputs.referenced_commit }}
+      referenced_tag: ${{ steps.release.outputs.referenced_tag }}
+      referenced_version: ${{ steps.release.outputs.referenced_version }}
+      latest_commit: ${{ steps.release.outputs.latest_commit }}
+      latest_release_tag: ${{ steps.release.outputs.latest_release_tag }}
+      latest_release_version: ${{ steps.release.outputs.latest_release_version }}
+      latest_version: ${{ steps.release.outputs.latest_version }}
+    steps:
+      - name: Check out puppeteer-ruby
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Compare the referenced version with the latest stable release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          referenced_version="$(tr -d '[:space:]' < development/DOCS_VERSION)"
+          if [[ ! "$referenced_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid referenced Puppeteer version: $referenced_version" >&2
+            exit 1
+          fi
+
+          referenced_tag="puppeteer-v${referenced_version}"
+          referenced_commit="$(
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/puppeteer/puppeteer/commits/${referenced_tag}" \
+              --jq .sha
+          )"
+          if [[ ! "$referenced_commit" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid referenced Puppeteer commit: $referenced_commit" >&2
+            exit 1
+          fi
+
+          referenced_package_json="$(
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/puppeteer/puppeteer/contents/packages/puppeteer-core/package.json?ref=${referenced_commit}" \
+              --jq .content |
+              base64 --decode
+          )"
+          referenced_package_version="$(jq -er .version <<<"$referenced_package_json")"
+          if [ "$referenced_package_version" != "$referenced_version" ]; then
+            echo "Puppeteer tag/package mismatch: $referenced_tag contains $referenced_package_version" >&2
+            exit 1
+          fi
+
+          latest_release_tag="$(
+            gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/puppeteer/puppeteer/releases?per_page=100" |
+              jq -s -e -r '
+                add
+                | map(
+                    select(
+                      .draft == false and
+                      .prerelease == false and
+                      (.tag_name | startswith("puppeteer-v"))
+                    )
+                  )
+                | first
+                | .tag_name
+              '
+          )"
+          if [[ ! "$latest_release_tag" =~ ^puppeteer-v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid latest Puppeteer release tag: $latest_release_tag" >&2
+            exit 1
+          fi
+          latest_release_version="${latest_release_tag#puppeteer-v}"
+
+          latest_commit="$(
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/puppeteer/puppeteer/commits/main \
+              --jq .sha
+          )"
+          if [[ ! "$latest_commit" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid Puppeteer main commit: $latest_commit" >&2
+            exit 1
+          fi
+
+          latest_package_json="$(
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/puppeteer/puppeteer/contents/packages/puppeteer-core/package.json?ref=${latest_commit}" \
+              --jq .content |
+              base64 --decode
+          )"
+          latest_version="$(jq -er .version <<<"$latest_package_json")"
+          if [[ ! "$latest_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid Puppeteer main package version: $latest_version" >&2
+            exit 1
+          fi
+
+          if [ "$referenced_version" = "$latest_release_version" ]; then
+            update_available=false
+          else
+            update_available=true
+          fi
+
+          {
+            echo "update_available=$update_available"
+            echo "referenced_commit=$referenced_commit"
+            echo "referenced_tag=$referenced_tag"
+            echo "referenced_version=$referenced_version"
+            echo "latest_commit=$latest_commit"
+            echo "latest_release_tag=$latest_release_tag"
+            echo "latest_release_version=$latest_release_version"
+            echo "latest_version=$latest_version"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Puppeteer release check"
+            echo
+            echo "- Gem reference: \`$referenced_version\` (\`$referenced_tag\`, \`$referenced_commit\`)"
+            echo "- Latest stable: \`$latest_release_version\` (\`$latest_release_tag\`)"
+            echo "- Pinned main: \`$latest_version\` (\`$latest_commit\`)"
+            echo "- Codex review required: \`$update_available\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  review_release:
+    name: Review upstream changes with Codex
+    needs: check_release
+    if: needs.check_release.outputs.update_available == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      CODEX_VERSION: "0.144.6"
+    outputs:
+      report: ${{ steps.run_codex.outputs.report }}
+    steps:
+      - name: Check out puppeteer-ruby
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set temporary runtime paths
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          {
+            echo "CODEX_RUNTIME_HOME=$RUNNER_TEMP/codex-home"
+            echo "CODEX_ENC_REPO_DIR=$RUNNER_TEMP/codex-enc-repository"
+            echo "CODEX_AUTH_BEFORE_HASH=$RUNNER_TEMP/codex-auth-before.sha256"
+            echo "CODEX_OUTPUT_FILE=$RUNNER_TEMP/upstream-release-review.json"
+          } >> "$GITHUB_ENV"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install Codex CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm install --global "@openai/codex@${CODEX_VERSION}"
+          codex --version
+
+      - name: Create a read token for the Codex auth repository
+        id: codex_enc_read_token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.CODEX_ENC_APP_ID }}
+          private-key: ${{ secrets.CODEX_ENC_APP_PRIVATE_KEY }}
+          owner: YusukeIwaki
+          repositories: codex.enc
+          permission-contents: read
+          skip-token-revoke: true
+
+      - name: Clone the encrypted Codex auth repository
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.codex_enc_read_token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          gh auth setup-git
+          git clone \
+            --branch main \
+            --single-branch \
+            https://github.com/YusukeIwaki/codex.enc.git \
+            "$CODEX_ENC_REPO_DIR"
+
+          test -s "$CODEX_ENC_REPO_DIR/codex.enc"
+
+      - name: Revoke the clone token
+        if: always() && steps.codex_enc_read_token.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.codex_enc_read_token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          gh api --method DELETE /installation/token
+
+      - name: Restore Codex auth.json
+        shell: bash
+        env:
+          CODEX_ENC_PASSPHRASE: ${{ secrets.CODEX_ENC_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+
+          : "${CODEX_ENC_PASSPHRASE:?CODEX_ENC_PASSPHRASE is not configured}"
+
+          install -d -m 0700 "$CODEX_RUNTIME_HOME"
+          install -m 0600 \
+            .github/codex/upstream-review.config.toml \
+            "$CODEX_RUNTIME_HOME/config.toml"
+
+          {
+            echo
+            echo '[permissions.upstream-review.filesystem]'
+            printf '"%s" = "deny"\n' "$CODEX_RUNTIME_HOME/auth.json"
+            printf '"%s" = "deny"\n' "$CODEX_ENC_REPO_DIR"
+            printf '"%s" = "deny"\n' "$CODEX_AUTH_BEFORE_HASH"
+          } >> "$CODEX_RUNTIME_HOME/config.toml"
+
+          openssl enc -d \
+            -aes-256-cbc \
+            -pbkdf2 \
+            -base64 \
+            -in "$CODEX_ENC_REPO_DIR/codex.enc" \
+            -out "$CODEX_RUNTIME_HOME/auth.json" \
+            -pass env:CODEX_ENC_PASSPHRASE
+
+          chmod 600 "$CODEX_RUNTIME_HOME/auth.json"
+
+          jq -e '
+            .auth_mode == "chatgpt" and
+            ((.tokens.refresh_token // "") | length > 0)
+          ' "$CODEX_RUNTIME_HOME/auth.json" >/dev/null
+
+          sha256sum "$CODEX_RUNTIME_HOME/auth.json" |
+            awk '{ print $1 }' > "$CODEX_AUTH_BEFORE_HASH"
+
+      - name: Write fixed comparison context
+        shell: bash
+        env:
+          REFERENCED_COMMIT: ${{ needs.check_release.outputs.referenced_commit }}
+          REFERENCED_TAG: ${{ needs.check_release.outputs.referenced_tag }}
+          REFERENCED_VERSION: ${{ needs.check_release.outputs.referenced_version }}
+          LATEST_COMMIT: ${{ needs.check_release.outputs.latest_commit }}
+          LATEST_RELEASE_TAG: ${{ needs.check_release.outputs.latest_release_tag }}
+          LATEST_RELEASE_VERSION: ${{ needs.check_release.outputs.latest_release_version }}
+          LATEST_VERSION: ${{ needs.check_release.outputs.latest_version }}
+        run: |
+          set -euo pipefail
+
+          jq -n \
+            --arg referenced_commit "$REFERENCED_COMMIT" \
+            --arg referenced_tag "$REFERENCED_TAG" \
+            --arg referenced_version "$REFERENCED_VERSION" \
+            --arg latest_commit "$LATEST_COMMIT" \
+            --arg latest_release_tag "$LATEST_RELEASE_TAG" \
+            --arg latest_release_version "$LATEST_RELEASE_VERSION" \
+            --arg latest_version "$LATEST_VERSION" \
+            '{
+              referenced_commit: $referenced_commit,
+              referenced_tag: $referenced_tag,
+              referenced_version: $referenced_version,
+              latest_commit: $latest_commit,
+              latest_release_tag: $latest_release_tag,
+              latest_release_version: $latest_release_version,
+              latest_version: $latest_version
+            }' > .github/codex/upstream-release-context.json
+
+      # The GitHub App tokens and encryption passphrase are intentionally absent here.
+      - name: Review the upstream release
+        id: run_codex
+        shell: bash
+        run: |
+          set -uo pipefail
+          umask 077
+
+          set +e
+
+          CODEX_HOME="$CODEX_RUNTIME_HOME" \
+            codex --ask-for-approval never exec \
+              --strict-config \
+              --cd "$GITHUB_WORKSPACE" \
+              --ephemeral \
+              --model gpt-5.6-sol \
+              --config 'model_reasoning_effort="xhigh"' \
+              --config 'default_permissions="upstream-review"' \
+              --output-schema \
+                .github/codex/upstream-release-review.schema.json \
+              --output-last-message "$CODEX_OUTPUT_FILE" \
+              - \
+              < .github/codex/prompts/review-upstream-puppeteer-release.md \
+              > "$RUNNER_TEMP/codex.stdout" \
+              2> "$RUNNER_TEMP/codex.stderr"
+
+          codex_exit_code=$?
+
+          set -e
+
+          if [ "$codex_exit_code" -eq 0 ]; then
+            if ! jq -e '
+              .changes and
+              (.changes | type == "array" and length > 0)
+            ' "$CODEX_OUTPUT_FILE" >/dev/null; then
+              echo "::error::Codex returned an invalid upstream review"
+              codex_exit_code=70
+            elif ! git diff --quiet || ! git diff --cached --quiet || \
+              [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+              echo "::error::Codex changed tracked repository state"
+              codex_exit_code=71
+            else
+              compact_report="$(jq -c . "$CODEX_OUTPUT_FILE")"
+              printf 'report=%s\n' "$compact_report" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "::error::Codex failed with exit code ${codex_exit_code}"
+          fi
+
+          echo "exit_code=${codex_exit_code}" >> "$GITHUB_OUTPUT"
+
+          # Persist a refreshed auth.json before reflecting a Codex failure.
+          exit 0
+
+      - name: Re-encrypt refreshed Codex auth.json
+        id: persist_auth
+        if: always()
+        shell: bash
+        env:
+          CODEX_ENC_PASSPHRASE: ${{ secrets.CODEX_ENC_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+
+          : "${CODEX_ENC_PASSPHRASE:?CODEX_ENC_PASSPHRASE is not configured}"
+
+          test -f "$CODEX_RUNTIME_HOME/auth.json"
+          test -f "$CODEX_AUTH_BEFORE_HASH"
+
+          jq -e '
+            .auth_mode == "chatgpt" and
+            ((.tokens.refresh_token // "") | length > 0)
+          ' "$CODEX_RUNTIME_HOME/auth.json" >/dev/null
+
+          before_hash="$(cat "$CODEX_AUTH_BEFORE_HASH")"
+          after_hash="$(
+            sha256sum "$CODEX_RUNTIME_HOME/auth.json" |
+              awk '{ print $1 }'
+          )"
+
+          if [ "$before_hash" = "$after_hash" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          encrypted_tmp="$CODEX_ENC_REPO_DIR/codex.enc.tmp"
+
+          openssl enc \
+            -aes-256-cbc \
+            -salt \
+            -pbkdf2 \
+            -base64 \
+            -in "$CODEX_RUNTIME_HOME/auth.json" \
+            -out "$encrypted_tmp" \
+            -pass env:CODEX_ENC_PASSPHRASE
+
+          test -s "$encrypted_tmp"
+          mv "$encrypted_tmp" "$CODEX_ENC_REPO_DIR/codex.enc"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create a write token for the Codex auth repository
+        id: codex_enc_push_token
+        if: always() && steps.persist_auth.outputs.changed == 'true'
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.CODEX_ENC_APP_ID }}
+          private-key: ${{ secrets.CODEX_ENC_APP_PRIVATE_KEY }}
+          owner: YusukeIwaki
+          repositories: codex.enc
+          permission-contents: write
+
+      - name: Commit and push refreshed Codex auth
+        if: >-
+          always() &&
+          steps.persist_auth.outputs.changed == 'true' &&
+          steps.codex_enc_push_token.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.codex_enc_push_token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          git -C "$CODEX_ENC_REPO_DIR" config \
+            user.name "github-actions[bot]"
+          git -C "$CODEX_ENC_REPO_DIR" config \
+            user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git -C "$CODEX_ENC_REPO_DIR" add -- codex.enc
+          git -C "$CODEX_ENC_REPO_DIR" commit \
+            -m "chore(codex): persist refreshed authentication"
+
+          gh auth setup-git
+          git -C "$CODEX_ENC_REPO_DIR" fetch origin main
+          git -C "$CODEX_ENC_REPO_DIR" rebase origin/main
+          git -C "$CODEX_ENC_REPO_DIR" push origin HEAD:main
+
+      - name: Remove local Codex credentials
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$CODEX_RUNTIME_HOME" in
+            "$RUNNER_TEMP"/*) ;;
+            *) echo "Unexpected Codex runtime path" >&2; exit 1 ;;
+          esac
+          case "$CODEX_ENC_REPO_DIR" in
+            "$RUNNER_TEMP"/*) ;;
+            *) echo "Unexpected auth repository path" >&2; exit 1 ;;
+          esac
+
+          rm -rf -- "$CODEX_RUNTIME_HOME" "$CODEX_ENC_REPO_DIR"
+          rm -f -- \
+            "$CODEX_AUTH_BEFORE_HASH" \
+            "$CODEX_OUTPUT_FILE" \
+            "$RUNNER_TEMP/codex.stdout" \
+            "$RUNNER_TEMP/codex.stderr"
+
+      - name: Fail when Codex did not complete
+        if: always() && steps.run_codex.outputs.exit_code != '0'
+        shell: bash
+        run: |
+          echo "::error::Codex upstream review did not complete successfully"
+          exit 1
+
+  create_issue:
+    name: Create or update the upstream review issue
+    needs:
+      - check_release
+      - review_release
+    if: >-
+      needs.check_release.outputs.update_available == 'true' &&
+      needs.review_release.outputs.report != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Validate the review and write the issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODEX_REPORT: ${{ needs.review_release.outputs.report }}
+          REFERENCED_COMMIT: ${{ needs.check_release.outputs.referenced_commit }}
+          REFERENCED_TAG: ${{ needs.check_release.outputs.referenced_tag }}
+          REFERENCED_VERSION: ${{ needs.check_release.outputs.referenced_version }}
+          LATEST_COMMIT: ${{ needs.check_release.outputs.latest_commit }}
+          LATEST_RELEASE_TAG: ${{ needs.check_release.outputs.latest_release_tag }}
+          LATEST_RELEASE_VERSION: ${{ needs.check_release.outputs.latest_release_version }}
+          LATEST_VERSION: ${{ needs.check_release.outputs.latest_version }}
+        run: |
+          set -euo pipefail
+          umask 077
+
+          report_file="$(mktemp)"
+          body_file="$(mktemp)"
+          trap 'rm -f "$report_file" "$body_file"' EXIT
+
+          printf '%s' "$CODEX_REPORT" > "$report_file"
+
+          jq -e \
+            --arg referenced_commit "$REFERENCED_COMMIT" \
+            --arg referenced_tag "$REFERENCED_TAG" \
+            --arg referenced_version "$REFERENCED_VERSION" \
+            --arg latest_commit "$LATEST_COMMIT" \
+            --arg latest_release_tag "$LATEST_RELEASE_TAG" \
+            --arg latest_release_version "$LATEST_RELEASE_VERSION" \
+            --arg latest_version "$LATEST_VERSION" \
+            '
+              .referenced_commit == $referenced_commit and
+              .referenced_tag == $referenced_tag and
+              .referenced_version == $referenced_version and
+              .latest_commit == $latest_commit and
+              .latest_release_tag == $latest_release_tag and
+              .latest_release_version == $latest_release_version and
+              .latest_version == $latest_version and
+              (.summary | type == "string" and length > 0 and length <= 4000) and
+              (.changes | type == "array" and length > 0 and length <= 100) and
+              all(.changes[];
+                (.decision == "port" or .decision == "do_not_port") and
+                (.title | type == "string" and length > 0 and length <= 300) and
+                (.rationale | type == "string" and length > 0 and length <= 1200) and
+                (
+                  .upstream_references
+                  | type == "array" and
+                    length > 0 and length <= 10 and
+                    length == (unique | length) and
+                    all(.[]; type == "string" and length > 0 and length <= 500)
+                ) and
+                (
+                  .gem_scope
+                  | type == "array" and
+                    length <= 20 and
+                    length == (unique | length) and
+                    all(.[]; type == "string" and length > 0 and length <= 300)
+                )
+              )
+            ' "$report_file" >/dev/null
+
+          marker="<!-- puppeteer-ruby-upstream-review: ${REFERENCED_COMMIT}..${LATEST_COMMIT} -->"
+
+          jq -r --arg marker "$marker" '
+            def render_changes($decision):
+              [
+                .changes[]
+                | select(.decision == $decision)
+                | "### " + .title + "\n\n"
+                  + .rationale + "\n\n"
+                  + "**Upstream references**\n\n"
+                  + (.upstream_references | map("- " + .) | join("\n"))
+                  + (
+                      if (.gem_scope | length) > 0 then
+                        "\n\n**Likely gem scope**\n\n"
+                        + (.gem_scope | map("- " + .) | join("\n"))
+                      else
+                        ""
+                      end
+                    )
+              ]
+              | if length == 0 then "_None._" else join("\n\n") end;
+
+            $marker + "\n\n"
+            + "# Upstream Puppeteer main review\n\n"
+            + "| | Version / ref |\n"
+            + "| --- | --- |\n"
+            + "| Gem reference | `" + .referenced_version + "` (`" + .referenced_tag + "`, `" + .referenced_commit + "`) |\n"
+            + "| Latest stable release | `" + .latest_release_version + "` (`" + .latest_release_tag + "`) |\n"
+            + "| Upstream `main` inspected | `" + .latest_version + "` (`" + .latest_commit + "`) |\n"
+            + "| Comparison | [upstream diff](https://github.com/puppeteer/puppeteer/compare/"
+              + .referenced_commit + "..." + .latest_commit + ") |\n\n"
+            + "## Summary\n\n" + .summary + "\n\n"
+            + "## Changes to port\n\n" + render_changes("port") + "\n\n"
+            + "## Changes not to port\n\n" + render_changes("do_not_port") + "\n\n"
+            + "---\n"
+            + "Generated by the scheduled Codex upstream review workflow."
+          ' "$report_file" > "$body_file"
+
+          body_size="$(wc -c < "$body_file" | tr -d '[:space:]')"
+          if [ "$body_size" -gt 60000 ]; then
+            echo "Generated issue body is too large: ${body_size} bytes" >&2
+            exit 1
+          fi
+
+          body_hash="$(sha256sum "$body_file" | awk '{ print $1 }')"
+          notification_marker="<!-- puppeteer-ruby-upstream-review-notification: ${REFERENCED_COMMIT}..${LATEST_COMMIT}:${body_hash} -->"
+          notification_posted=false
+
+          ensure_notification_comment() {
+            local issue_number="$1"
+            local has_notification
+            local notification_body
+
+            has_notification="$(
+              gh api --paginate \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "/repos/${GITHUB_REPOSITORY}/issues/${issue_number}/comments?per_page=100" |
+                jq -sr --arg notification_marker "$notification_marker" '
+                  add
+                  | any(.[]; (.body // "") | contains($notification_marker))
+                '
+            )"
+
+            if [ "$has_notification" = "true" ]; then
+              return
+            fi
+
+            notification_body="$(
+              printf \
+                'puppeteer-ruby should be ported from upstream v%s\n\n%s' \
+                "$LATEST_RELEASE_VERSION" \
+                "$notification_marker"
+            )"
+
+            gh issue comment "$issue_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "$notification_body" >/dev/null
+            notification_posted=true
+          }
+
+          existing_issue="$(
+            gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100" |
+              jq -sc --arg marker "$marker" '
+                add
+                | map(select(.pull_request == null)) as $issues
+                | (
+                    (
+                      $issues
+                      | map(select((.body // "") | contains($marker)))
+                      | sort_by(.updated_at)
+                      | last
+                    ) //
+                    (
+                      $issues
+                      | map(
+                          select(
+                            (.body // "")
+                            | contains("<!-- puppeteer-ruby-upstream-review:")
+                          )
+                        )
+                      | sort_by(.updated_at)
+                      | last
+                    ) //
+                    (
+                      $issues
+                      | map(
+                          select(
+                            .title
+                            | test(
+                                "^Audit and port non-BiDi Puppeteer v[^ ]+ (->|→) main \\(v[^)]+\\)$";
+                                "i"
+                              )
+                          )
+                        )
+                      | sort_by(.updated_at)
+                      | last
+                    ) //
+                    {}
+                  )
+              '
+          )"
+
+          issue_title="Audit and port non-BiDi Puppeteer v${REFERENCED_VERSION} → main (v${LATEST_VERSION})"
+          existing_number="$(jq -r '.number // ""' <<<"$existing_issue")"
+
+          if [ -n "$existing_number" ]; then
+            if [[ ! "$existing_number" =~ ^[0-9]+$ ]]; then
+              echo "Invalid existing issue number: $existing_number" >&2
+              exit 1
+            fi
+
+            existing_url="$(jq -r .html_url <<<"$existing_issue")"
+            existing_title="$(jq -r .title <<<"$existing_issue")"
+            existing_body="$(jq -r '.body // ""' <<<"$existing_issue")"
+            desired_body="$(<"$body_file")"
+
+            if [ "$existing_title" = "$issue_title" ] && \
+              [ "$existing_body" = "$desired_body" ]; then
+              ensure_notification_comment "$existing_number"
+
+              {
+                echo "## Upstream review issue"
+                echo
+                if [ "$notification_posted" = "true" ]; then
+                  echo "The existing issue was current; added the missing notification: $existing_url"
+                else
+                  echo "The existing issue is already current: $existing_url"
+                fi
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+
+            gh issue edit "$existing_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$issue_title" \
+              --body-file "$body_file" >/dev/null
+
+            ensure_notification_comment "$existing_number"
+
+            {
+              echo "## Upstream review issue"
+              echo
+              echo "Updated: $existing_url"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          issue_url="$(
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$issue_title" \
+              --body-file "$body_file"
+          )"
+
+          created_number="${issue_url##*/}"
+          if [[ ! "$created_number" =~ ^[0-9]+$ ]]; then
+            echo "Could not determine created issue number from: $issue_url" >&2
+            exit 1
+          fi
+
+          ensure_notification_comment "$created_number"
+
+          {
+            echo "## Upstream review issue"
+            echo
+            echo "Created: $issue_url"
+          } >> "$GITHUB_STEP_SUMMARY"
