@@ -10,9 +10,9 @@
 * launch
 * ~~puppeteer~~
 
-## ~~Accessibility~~
+## Accessibility
 
-* ~~snapshot~~
+* snapshot
 
 ## Browser
 
@@ -360,7 +360,7 @@
 * goBack => `#go_back`
 * goForward => `#go_forward`
 * goto
-* ~~hasDevTools~~
+* hasDevTools => `#has_dev_tools`
 * hover
 * isClosed => `#closed?`
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
@@ -369,14 +369,14 @@
 * locator
 * mainFrame => `#main_frame`
 * metrics
-* ~~openDevTools~~
+* openDevTools => `#open_dev_tools`
 * pdf
 * queryObjects => `#query_objects`
 * reload
 * removeExposedFunction => `#remove_exposed_function`
 * removeScriptToEvaluateOnNewDocument => `#remove_script_to_evaluate_on_new_document`
 * ~~resize~~
-* ~~screencast~~
+* screencast
 * screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
@@ -423,9 +423,9 @@
 * ~~extension~~
 * ~~waitForFunction~~
 
-## ~~ScreenRecorder~~
+## ScreenRecorder
 
-* ~~stop~~
+* stop
 
 ## ~~SecurityDetails~~
 
@@ -469,15 +469,15 @@
 ## ~~UnsupportedOperation~~
 
 
-## ~~WebMCP~~
+## WebMCP
 
-* ~~tools~~
+* tools
 
-## ~~WebMCPTool~~
+## WebMCPTool
 
-* ~~execute~~
+* execute
 
-## ~~WebMCPToolCall~~
+## WebMCPToolCall
 
 
 ## WebWorker

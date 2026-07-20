@@ -1,6 +1,22 @@
 require 'spec_helper'
 
 RSpec.describe Puppeteer::Browser do
+  describe '#version and #user_agent' do
+    it 'caches Browser.getVersion' do
+      connection = double(Puppeteer::Connection)
+      expect(connection).to receive(:send_message).with('Browser.getVersion').once.and_return({
+        'product' => 'Chrome/150.0.0.0',
+        'userAgent' => 'test user agent',
+      })
+      browser = described_class.allocate
+      browser.instance_variable_set(:@connection, connection)
+      browser.instance_variable_set(:@version_promise, nil)
+
+      expect(browser.version).to eq('Chrome/150.0.0.0')
+      expect(browser.user_agent).to eq('test user agent')
+    end
+  end
+
   describe '#set_permission' do
     it 'delegates to the default browser context' do
       browser = described_class.allocate

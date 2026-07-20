@@ -174,7 +174,8 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.Events.error' do
-    it 'should throw when page crashes', debug_cdp: true, pending: ENV['CI'] do
+    it 'should throw when page crashes', debug_cdp: true do
+      skip 'Inspector.onTargetCrashed is not notified consistently in CI.' if ENV['CI']
       error_promise = Async::Promise.new.tap do |promise|
         page.once('error') { |err| promise.resolve(err) }
       end

@@ -141,7 +141,7 @@ class Puppeteer::FrameManager
     return unless frame
     return unless @client == client
 
-    unless @page.browser.connected? && !@page.closed? && !@page.crashed?
+    unless @page.browser.connected? && !@page.closed?
       remove_frame_recursively(frame)
       return
     end
@@ -633,6 +633,7 @@ class Puppeteer::FrameManager
     context = @context_id_to_context[key]
     return unless context
     @context_id_to_context.delete(key)
+    context.dispose
     context.world&.delete_context(context)
   end
 
@@ -646,6 +647,7 @@ class Puppeteer::FrameManager
       if key_session_id != session_id
         true # keep
       else
+        context.dispose
         context.world&.delete_context(context)
         false # remove
       end

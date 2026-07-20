@@ -8,8 +8,11 @@ class Puppeteer::WorkerWorld
   def initialize(client)
     @client = client
     @context_promise = Async::Promise.new
+    @task_manager = Puppeteer::TaskManager.new
     @disposed = false
   end
+
+  attr_reader :task_manager
 
   # @rbs context: Puppeteer::ExecutionContext -- Execution context to bind
   # @rbs return: void -- No return value
@@ -19,6 +22,11 @@ class Puppeteer::WorkerWorld
 
   # @rbs return: Puppeteer::ExecutionContext -- Worker execution context
   def execution_context
+    if @disposed
+      raise Puppeteer::WaitTask::TerminatedError.new(
+        'waitForFunction failed: worker got detached.',
+      )
+    end
     @context_promise.wait
   end
 
@@ -46,38 +54,20 @@ class Puppeteer::WorkerWorld
   # @rbs timeout: Integer? -- Maximum wait time in milliseconds
   # @rbs return: Puppeteer::JSHandle -- Handle to the truthy evaluation result
   def wait_for_function(page_function, args: [], polling: nil, timeout: nil)
-    polling_interval = polling || 100
-    unless polling_interval.is_a?(Numeric) && polling_interval >= 0
-      raise ArgumentError.new("Cannot poll with non-positive interval: #{polling_interval}")
+    runner = lambda do
+      wait_task = Puppeteer::WaitTask.new(
+        dom_world: self,
+        predicate_body: page_function,
+        title: 'function',
+        polling: polling || 100,
+        timeout: timeout.nil? ? 30_000 : timeout,
+        args: args,
+      )
+      wait_task.await_promise
     end
+    return runner.call if Async::Task.current?
 
-    timeout_ms = timeout.nil? ? 30_000 : timeout
-    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    loop do
-      if @disposed
-        raise Puppeteer::WaitTask::TerminatedError.new(
-          'waitForFunction failed: worker got detached.',
-        )
-      end
-
-      handle = evaluate_handle(page_function, *args)
-      return handle if handle.evaluate('value => Boolean(value)')
-
-      handle.dispose
-      elapsed_ms = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000
-      if timeout_ms && timeout_ms > 0 && elapsed_ms >= timeout_ms
-        raise Puppeteer::WaitTask::TimeoutError.new(timeout: timeout_ms)
-      end
-      Puppeteer::AsyncUtils.sleep_seconds(polling_interval / 1000.0)
-    rescue Puppeteer::WaitTask::TimeoutError, Puppeteer::WaitTask::TerminatedError
-      raise
-    rescue => err
-      raise Puppeteer::WaitTask::TerminatedError.new(
-        'waitForFunction failed: worker got detached.',
-      ) if @disposed
-
-      raise err
-    end
+    Sync { runner.call }
   end
 
   define_async_method :async_wait_for_function
@@ -89,8 +79,18 @@ class Puppeteer::WorkerWorld
 
   # @rbs return: void -- Dispose world resources
   def dispose
+    return if @disposed
+
     @disposed = true
-    @context_promise = Async::Promise.new
+    error = Puppeteer::WaitTask::TerminatedError.new(
+      'waitForFunction failed: worker got detached.',
+    )
+    @context_promise.reject(error) unless @context_promise.resolved?
+    @task_manager.terminate_all(error)
+  end
+
+  def detached?
+    @disposed
   end
 end
 

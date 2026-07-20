@@ -1,4 +1,11 @@
-require "async"
+require 'async'
+begin
+  require 'urlpattern'
+rescue LoadError
+  # urlpattern 0.1.1's precompiled gems do not load their versioned extension
+  # through the public entrypoint. Source-built gems use the public entrypoint.
+  require "urlpattern/#{RUBY_VERSION[/\A\d+\.\d+/]}/urlpattern"
+end
 require 'puppeteer/console_patch'
 
 # Check for Ruby versions affected by https://bugs.ruby-lang.org/issues/20907
@@ -36,6 +43,7 @@ require "puppeteer/reactor_runner"
 
 # Classes & values.
 require 'puppeteer/aria_query_handler'
+require 'puppeteer/accessibility'
 require 'puppeteer/browser'
 require 'puppeteer/browser_context'
 require 'puppeteer/browser_runner'
@@ -76,6 +84,7 @@ require 'puppeteer/p_selector_parser'
 require 'puppeteer/p_query_handler'
 require 'puppeteer/query_handler_manager'
 require 'puppeteer/remote_object'
+require 'puppeteer/screen_recorder'
 require 'puppeteer/target'
 require 'puppeteer/task_manager'
 require 'puppeteer/tracing'
@@ -85,6 +94,7 @@ require 'puppeteer/touch_handle'
 require 'puppeteer/touch_screen'
 require 'puppeteer/version'
 require 'puppeteer/wait_task'
+require 'puppeteer/web_mcp'
 require 'puppeteer/web_worker'
 require 'puppeteer/web_socket_transport'
 

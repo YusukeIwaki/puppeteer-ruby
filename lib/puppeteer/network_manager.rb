@@ -98,7 +98,6 @@ class Puppeteer::NetworkManager
 
     @extra_http_headers = {}
     @user_agent = nil
-    @default_user_agent = nil
     @user_agent_metadata = nil
     @accept_language = nil
 
@@ -177,7 +176,7 @@ class Puppeteer::NetworkManager
   end
 
   private def apply_user_agent(client)
-    user_agent = @user_agent || @default_user_agent
+    user_agent = @user_agent || @frame_manager.page.browser.user_agent
     return unless user_agent
 
     safe_send_message(client, 'Network.setUserAgentOverride', {
@@ -216,6 +215,8 @@ class Puppeteer::NetworkManager
     if @internal_network_condition.active?
       safe_send_message(client, 'Network.emulateNetworkConditions', @internal_network_condition.params)
     end
+  rescue => err
+    raise unless ignore_client_error?(err)
   end
 
   # @param username [String|NilClass]
@@ -288,7 +289,6 @@ class Puppeteer::NetworkManager
   # @rbs accept_language: String? -- Accept-Language override
   # @rbs return: void -- No return value
   def set_accept_language(accept_language)
-    @default_user_agent ||= @frame_manager.page.browser.user_agent
     @accept_language = accept_language
     apply_to_clients { |client| apply_user_agent(client) }
   end

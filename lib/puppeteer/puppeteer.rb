@@ -232,11 +232,6 @@ class Puppeteer::Puppeteer
     )
   end
 
-  # @rbs return: String -- Product name
-  def product
-    launcher.product
-  end
-
   private def async_context?
     task = Async::Task.current
     !task.nil?

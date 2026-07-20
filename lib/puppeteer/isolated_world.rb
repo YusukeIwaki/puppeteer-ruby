@@ -68,7 +68,7 @@ class Puppeteer::IsolaatedWorld
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
-  attr_reader :frame, :task_manager, :origin, :world_id
+  attr_reader :frame, :task_manager, :origin, :world_id, :context
 
   # only used in Puppeteer::WaitTask#initialize
   private def _bound_functions
@@ -246,6 +246,13 @@ class Puppeteer::IsolaatedWorld
   # @param wait_until [String|Array<String>]
   def set_content(html, timeout: nil, wait_until: nil)
     option_wait_until = [wait_until || 'load'].flatten
+    unsupported_events = option_wait_until & ['networkidle0', 'networkidle2']
+    unless unsupported_events.empty?
+      raise ArgumentError.new(
+        "set_content does not support #{unsupported_events.join(', ')}; " \
+        'compose set_content with wait_for_network_idle instead.',
+      )
+    end
     option_timeout = timeout || @timeout_settings.navigation_timeout
 
     # We rely upon the fact that document.open() will reset frame lifecycle with "init"
@@ -398,11 +405,10 @@ class Puppeteer::IsolaatedWorld
   # @param selector [String]
   # @param delay [Number]
   # @param button [String] "left"|"right"|"middle"
-  # @param click_count [Number] Deprecated: use count (click_count only sets clickCount)
   # @param count [Number]
-  def click(selector, delay: nil, button: nil, click_count: nil, count: nil)
+  def click(selector, delay: nil, button: nil, count: nil)
     handle = query_selector(selector) or raise ElementNotFoundError.new(selector)
-    handle.click(delay: delay, button: button, click_count: click_count, count: count)
+    handle.click(delay: delay, button: button, count: count)
     handle.dispose
   end
 

@@ -1,6 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe 'Page (white-box / Ruby-specific)' do
+  it 'rejects networkidle lifecycle values in set_content' do
+    with_test_state do |page:, **|
+      expect do
+        page.set_content('<div>content</div>', wait_until: 'networkidle0')
+      end.to raise_error(ArgumentError, /wait_for_network_idle/)
+    end
+  end
+
   it 'can browser html page', sinatra: true do
     with_test_state do |page:, server:, **|
       sinatra = TestServerSinatraAdapter.new(server)

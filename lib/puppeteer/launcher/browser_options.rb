@@ -46,12 +46,9 @@ module Puppeteer::Launcher
         raise ArgumentError.new('Cannot specify both blocklist and allowlist')
       end
       [*@block_list, *@allow_list].each do |pattern|
-        unless pattern.is_a?(String)
-          raise ArgumentError.new('URLPattern rules must be strings')
-        end
-        if pattern.match?(/\s/) || pattern.count('(') != pattern.count(')')
-          raise ArgumentError.new("Invalid URLPattern: #{pattern}")
-        end
+        URLPattern::URLPattern.new(pattern)
+      rescue URLPattern::Error => error
+        raise ArgumentError.new("Invalid URLPattern #{pattern.inspect}: #{error.message}")
       end
 
       # only for Puppeteer.connect

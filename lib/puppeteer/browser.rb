@@ -114,6 +114,7 @@ class Puppeteer::Browser
     @connection.reject_emulate_network_conditions_calls =
       [block_list, allow_list].any? { |list| list && !list.empty? }
     @extensions = {}
+    @version_promise = nil
   end
 
   private def default_target_filter_callback(target_info)
@@ -123,7 +124,7 @@ class Puppeteer::Browser
   private def validate_allow_list_version
     return unless @allow_list
 
-    product = Version.fetch(@connection).product
+    product = version_info.product
     major_version = product[/\d+/].to_i
     if major_version < 149
       raise Puppeteer::Error.new('The allow_list option requires Chrome 149 or greater.')
@@ -426,12 +427,24 @@ class Puppeteer::Browser
 
   # @rbs return: String -- Browser version string
   def version
-    Version.fetch(@connection).product
+    version_info.product
   end
 
   # @rbs return: String -- Browser user agent string
   def user_agent
-    Version.fetch(@connection).user_agent
+    version_info.user_agent
+  end
+
+  private def version_info
+    unless @version_promise
+      @version_promise = Async::Promise.new
+      begin
+        @version_promise.resolve(Version.new(@connection.send_message('Browser.getVersion')))
+      rescue => error
+        @version_promise.reject(error)
+      end
+    end
+    @version_promise.wait
   end
 
   # @rbs page_target_id: String -- Page target id
@@ -439,6 +452,36 @@ class Puppeteer::Browser
   def _has_devtools_target(page_target_id)
     result = @connection.send_message('Target.getDevToolsTarget', targetId: page_target_id)
     result['targetId']
+  end
+
+  # @rbs page_target_id: String -- Inspected page target id
+  # @rbs return: Puppeteer::Page -- DevTools page
+  def _create_devtools_page(page_target_id)
+    result = @connection.send_message('Target.openDevTools', targetId: page_target_id)
+    _get_devtools_target_page(result['targetId'])
+  end
+
+  # @rbs devtools_target_id: String -- DevTools target id
+  # @rbs return: Puppeteer::Page -- DevTools page
+  def _get_devtools_target_page(devtools_target_id)
+    target = wait_for_available_target(devtools_target_id)
+    unless target
+      raise MissingTargetError.new(
+        "Missing target for DevTools page (id = #{devtools_target_id})",
+      )
+    end
+    unless target.initialized_promise.wait
+      raise CreatePageError.new(
+        "Failed to create target for DevTools page (id = #{devtools_target_id})",
+      )
+    end
+    page = target.as_page
+    unless page
+      raise CreatePageError.new(
+        "Failed to create a DevTools Page for target (id = #{devtools_target_id})",
+      )
+    end
+    page
   end
 
   # @rbs path: String -- Extension path

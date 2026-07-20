@@ -22,6 +22,16 @@ class Puppeteer::Page
   # @rbs return: void -- No return value
   def initialize: (Puppeteer::CDPSession client, Puppeteer::Target target, bool ignore_https_errors, ?network_enabled: bool) -> void
 
+  private def setup_primary_target_listeners: (untyped client) -> untyped
+
+  private def handle_activation: (untyped session) -> untyped
+
+  private def handle_secondary_target: (untyped session) -> untyped
+
+  private def mark_closed: () -> untyped
+
+  private def cleanup_page_listeners: () -> untyped
+
   private def handle_detached_from_target: (untyped target) -> untyped
 
   private def handle_attached_to_session: (untyped session) -> untyped
@@ -83,7 +93,10 @@ class Puppeteer::Page
   def browser_context: () -> Puppeteer::BrowserContext
 
   # @rbs return: bool -- Whether DevTools is attached to this page
-  def has_devtools: () -> bool
+  def has_dev_tools: () -> bool
+
+  # @rbs return: Puppeteer::Page -- Existing or newly opened DevTools page
+  def open_dev_tools: () -> Puppeteer::Page
 
   # @rbs extension: Puppeteer::Extension -- Extension to trigger
   # @rbs return: void -- No return value
@@ -108,7 +121,10 @@ class Puppeteer::Page
 
   attr_reader tracing: untyped
 
-  attr_reader accessibility: untyped
+  attr_reader webmcp: untyped
+
+  # @rbs return: Puppeteer::Accessibility -- Main-frame accessibility tree
+  def accessibility: () -> Puppeteer::Accessibility
 
   # @rbs block: Proc? -- Optional block for instance_eval
   # @rbs return: Puppeteer::Keyboard -- Keyboard instance
@@ -389,6 +405,10 @@ class Puppeteer::Page
   # @rbs return: void -- No return value
   def emulate_timezone: (String? timezone_id) -> void
 
+  # @rbs locale: String? -- Locale to emulate, or nil to disable emulation
+  # @rbs return: void -- No return value
+  def emulate_locale: (?String? locale) -> void
+
   VISION_DEFICIENCY_TYPES: untyped
 
   # @rbs vision_deficiency_type: String? -- Vision deficiency type
@@ -405,6 +425,31 @@ class Puppeteer::Page
   def viewport=: (Puppeteer::Viewport? viewport) -> void
 
   attr_reader viewport: untyped
+
+  # @rbs path: String? -- Output file path
+  # @rbs overwrite: bool -- Overwrite an existing output file
+  # @rbs format: String? -- webm, gif, or mp4
+  # @rbs crop: Hash[Symbol, Numeric]? -- Viewport crop rectangle
+  # @rbs scale: Numeric? -- Output scale
+  # @rbs speed: Numeric? -- Playback speed
+  # @rbs fps: Numeric? -- Output frame rate
+  # @rbs loop: Numeric? -- GIF loop count
+  # @rbs delay: Numeric? -- GIF loop delay
+  # @rbs quality: Numeric? -- VP9 CRF value
+  # @rbs colors: Numeric? -- GIF palette size
+  # @rbs ffmpeg_path: String? -- FFmpeg executable path
+  # @rbs return: Puppeteer::ScreenRecorder -- Active recorder
+  def screencast: (?path: String?, ?overwrite: bool, ?format: String?, ?crop: Hash[Symbol, Numeric]?, ?scale: Numeric?, ?speed: Numeric?, ?fps: Numeric?, ?loop: Numeric?, ?delay: Numeric?, ?quality: Numeric?, ?colors: Numeric?, ?ffmpeg_path: String?) -> Puppeteer::ScreenRecorder
+
+  # @rbs return: void -- Start a shared CDP screencast session
+  def _start_screencast: () -> void
+
+  # @rbs return: void -- Stop a shared CDP screencast session
+  def _stop_screencast: () -> void
+
+  private def native_pixel_dimensions: () -> untyped
+
+  private def normalize_screencast_crop: (untyped crop, untyped width, untyped height, untyped device_pixel_ratio) -> untyped
 
   # @rbs page_function: String -- page_function parameter
   # @rbs args: Array[untyped] -- args parameter
@@ -486,10 +531,9 @@ class Puppeteer::Page
   # @rbs selector: String -- CSS selector
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
   # @rbs count: Integer? -- Number of clicks to perform
   # @rbs return: void -- No return value
-  def click: (String selector, ?delay: Numeric?, ?button: String?, ?click_count: Integer?, ?count: Integer?) -> void
+  def click: (String selector, ?delay: Numeric?, ?button: String?, ?count: Integer?) -> void
 
   # @rbs selector: String -- CSS selector
   # @rbs return: void -- No return value

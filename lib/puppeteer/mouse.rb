@@ -108,47 +108,29 @@ class Puppeteer::Mouse
   # @rbs y: Numeric -- Y coordinate
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
   # @rbs count: Integer? -- Number of click repetitions
   # @rbs return: void -- No return value
-  def click(x, y, delay: nil, button: nil, click_count: nil, count: nil)
-    warn_deprecated_click_count if !click_count.nil?
+  def click(x, y, delay: nil, button: nil, count: nil)
     count ||= 1
-    click_count ||= count
     if count < 1
       raise Puppeteer::Error.new('Click must occur a positive number of times.')
     end
     # Serialize click sequences to keep event ordering stable under thread-based concurrency.
     @dispatch_mutex.synchronize do
       move(x, y)
-      if click_count == count
-        1.upto(count - 1) do |i|
-          down(button: button, click_count: i)
-          up(button: button, click_count: i)
-        end
+      1.upto(count - 1) do |i|
+        down(button: button, click_count: i)
+        up(button: button, click_count: i)
       end
-      down(button: button, click_count: click_count)
+      down(button: button, click_count: count)
       if !delay.nil?
         Puppeteer::AsyncUtils.sleep_seconds(delay / 1000.0)
       end
-      up(button: button, click_count: click_count)
+      up(button: button, click_count: count)
     end
   end
 
   define_async_method :async_click
-
-  private def warn_deprecated_click_count
-    return if self.class.deprecated_click_count_warned
-
-    self.class.deprecated_click_count_warned = true
-    warn('DEPRECATED: `click_count` is deprecated; use `count` instead.')
-  end
-
-  class << self
-    attr_accessor :deprecated_click_count_warned
-  end
-
-  self.deprecated_click_count_warned = false
 
   # @rbs button: String? -- Mouse button
   # @rbs click_count: Integer? -- Click count to report

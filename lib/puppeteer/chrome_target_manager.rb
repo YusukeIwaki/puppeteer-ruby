@@ -13,17 +13,17 @@ class Puppeteer::ChromeTargetManager
     @connection = connection
     @target_filter_callback = target_filter_callback
     @target_factory = target_factory
-    @block_list = block_list
-    @allow_list = allow_list
-    if @block_list && @allow_list
+    if block_list && allow_list
       raise ArgumentError.new('Cannot specify both blocklist and allowlist')
     end
-    if @block_list && !@block_list.is_a?(Array)
+    if block_list && !block_list.is_a?(Array)
       raise ArgumentError.new('block_list must be an Array of URL patterns')
     end
-    if @allow_list && !@allow_list.is_a?(Array)
+    if allow_list && !allow_list.is_a?(Array)
       raise ArgumentError.new('allow_list must be an Array of URL patterns')
     end
+    @block_list = map_patterns(block_list)
+    @allow_list = map_patterns(allow_list)
     @target_interceptors = {}
     @initialize_promise = Async::Promise.new
     @initial_attach_done = false
@@ -378,40 +378,43 @@ class Puppeteer::ChromeTargetManager
     return true if block_list.empty? && allow_list.empty?
     return true if url.nil? || url.empty? || url == 'about:blank'
 
-    blocked = block_list.any? do |pattern|
-      File.fnmatch?(pattern, url, File::FNM_EXTGLOB)
-    rescue ArgumentError
-      false
-    end
+    blocked = block_list.any? { |item| item[:pattern].test?(url) }
     return false if blocked
 
     return true if allow_list.empty?
 
-    allow_list.any? do |pattern|
-      File.fnmatch?(pattern, url, File::FNM_EXTGLOB)
-    rescue ArgumentError
-      false
-    end
+    allow_list.any? { |item| item[:pattern].test?(url) }
   end
   public :url_allowed?
+
+  private def map_patterns(rules)
+    return nil if rules.nil?
+
+    rules.map do |rule|
+      {
+        pattern: URLPattern::URLPattern.new(rule),
+        rule: rule,
+      }
+    end
+  end
 
   private def maybe_setup_network_conditions(session, target_info)
     block_list = @block_list || []
     allow_list = @allow_list || []
     return if block_list.empty? && allow_list.empty?
 
-    matched_network_conditions = block_list.map do |pattern|
+    matched_network_conditions = block_list.map do |item|
       {
-        urlPattern: pattern,
+        urlPattern: item[:rule],
         offline: true,
         latency: 0,
         downloadThroughput: -1,
         uploadThroughput: -1,
       }
     end
-    allow_list.each do |pattern|
+    allow_list.each do |item|
       matched_network_conditions << {
-        urlPattern: pattern,
+        urlPattern: item[:rule],
         offline: false,
         latency: 0,
         downloadThroughput: -1,

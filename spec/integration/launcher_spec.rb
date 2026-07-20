@@ -336,12 +336,6 @@ RSpec.describe Puppeteer::Launcher do
     end
   end
 
-  describe '#product', puppeteer: :browser do
-    subject { Puppeteer.product }
-
-    it { is_expected.to eq('chrome') }
-  end
-
   #   describe('Puppeteer.launch', function () {
   #     let productName;
 

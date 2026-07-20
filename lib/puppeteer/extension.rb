@@ -38,11 +38,14 @@ class Puppeteer::Extension
     extension_targets = @browser.targets.select do |target|
       target.type == 'service_worker' && target.url.start_with?(extension_prefix)
     end
-    extension_targets.filter_map do |target|
-      target.worker
-    rescue
-      nil
+    tasks = extension_targets.map do |target|
+      proc do
+        target.worker
+      rescue
+        nil
+      end
     end
+    Puppeteer::AsyncUtils.await_promise_all(*tasks).compact
   end
 
   # @rbs return: Array[Puppeteer::Page] -- Extension pages

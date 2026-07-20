@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'tmpdir'
 
 RSpec.describe 'Prerender' do
   it 'can navigate to a prerendered page via input' do
@@ -94,7 +95,31 @@ RSpec.describe 'Prerender' do
   end
 
   it 'can screencast' do
-    skip('Page#screencast is not implemented in puppeteer-ruby.')
+    Dir.mktmpdir('puppeteer-prerender-screencast-') do |directory|
+      with_test_state do |page:, server:, **|
+        path = File.join(directory, 'recording.webm')
+        recorder = page.screencast(
+          path: path,
+          scale: 0.5,
+          crop: { width: 100, height: 100, x: 0, y: 0 },
+          speed: 0.5,
+        )
+
+        page.goto("#{server.prefix}/prerender/index.html")
+        button = page.wait_for_selector('button')
+        button.click
+        button.dispose
+        link = page.locator('a').wait_handle
+        page.wait_for_navigation { link.click }
+        link.dispose
+        input = page.locator('input').wait_handle
+        input.type_text('ab', delay: 100)
+        input.dispose
+        recorder.stop
+
+        expect(File.size(path)).to be > 0
+      end
+    end
   end
 
   describe 'with network requests' do

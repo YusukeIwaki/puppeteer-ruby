@@ -197,18 +197,17 @@ class Puppeteer::Locator
 
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated click count
   # @rbs count: Integer? -- Number of clicks
   # @rbs offset: Hash[Symbol, Numeric]? -- Click offset
   # @rbs return: void -- No return value
-  def click(delay: nil, button: nil, click_count: nil, count: nil, offset: nil)
+  def click(delay: nil, button: nil, count: nil, offset: nil)
     perform_action('Locator.click',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
         method(:wait_for_enabled_if_needed),
       ]) do |handle, _options|
-      handle.click(delay: delay, button: button, click_count: click_count, count: count, offset: offset)
+      handle.click(delay: delay, button: button, count: count, offset: offset)
     end
   end
 
