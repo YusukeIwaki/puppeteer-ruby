@@ -38,6 +38,7 @@ class Puppeteer::Page
   # @rbs return: void -- No return value
   def initialize(client, target, ignore_https_errors, network_enabled: true)
     @closed = false
+    @crashed = false
     @client = client
     @target = target
     @tab_session = client.parent_session || client
@@ -439,6 +440,9 @@ class Puppeteer::Page
   class TargetCrashedError < Puppeteer::Error; end
 
   private def handle_target_crashed
+    return if @crashed
+
+    @crashed = true
     emit_event(PageEmittedEvents::Error, TargetCrashedError.new('Page crashed!'))
   end
 
@@ -1699,6 +1703,11 @@ class Puppeteer::Page
   # @rbs return: bool -- Whether the page is closed
   def closed?
     @closed
+  end
+
+  # @rbs return: bool -- Whether the page renderer has crashed
+  def crashed?
+    @crashed
   end
 
   attr_reader :mouse

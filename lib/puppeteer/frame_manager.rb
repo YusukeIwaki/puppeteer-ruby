@@ -141,7 +141,7 @@ class Puppeteer::FrameManager
     return unless frame
     return unless @client == client
 
-    unless @page.browser.connected? && !@page.closed?
+    unless @page.browser.connected? && !@page.closed? && !@page.crashed?
       remove_frame_recursively(frame)
       return
     end
