@@ -143,6 +143,9 @@ class Puppeteer::Page
     client.on_event('Inspector.targetCrashed') do |event|
       handle_target_crashed
     end
+    client.on_event('Inspector.detached') do |event|
+      handle_target_crashed if event['reason'] == 'Render process gone.'
+    end
     client.on_event('Performance.metrics') do |event|
       emit_event(PageEmittedEvents::Metrics, MetricsEvent.new(event))
     end
