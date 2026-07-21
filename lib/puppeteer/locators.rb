@@ -197,22 +197,21 @@ class Puppeteer::Locator
 
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated click count
   # @rbs count: Integer? -- Number of clicks
   # @rbs offset: Hash[Symbol, Numeric]? -- Click offset
   # @rbs return: void -- No return value
-  def click(delay: nil, button: nil, click_count: nil, count: nil, offset: nil)
+  def click(delay: nil, button: nil, count: nil, offset: nil)
     perform_action('Locator.click',
       conditions: [
         method(:ensure_element_is_in_viewport_if_needed),
         method(:wait_for_stable_bounding_box_if_needed),
         method(:wait_for_enabled_if_needed),
       ]) do |handle, _options|
-      handle.click(delay: delay, button: button, click_count: click_count, count: count, offset: offset)
+      handle.click(delay: delay, button: button, count: count, offset: offset)
     end
   end
 
-  # @rbs value: String -- Value to fill
+  # @rbs value: String | bool -- Value to fill
   # @rbs typing_threshold: Integer -- Minimum length to switch to direct assignment
   # @rbs return: void -- No return value
   def fill(value, typing_threshold: 100)
@@ -433,21 +432,28 @@ class Puppeteer::Locator
           return 'typeable-input';
         }
         if (el instanceof HTMLInputElement) {
-          if (
-            new Set([
-              'textarea',
-              'text',
-              'url',
-              'tel',
-              'search',
-              'password',
-              'number',
-              'email',
-            ]).has(el.type)
-          ) {
-            return 'typeable-input';
+          switch (el.type) {
+            case 'checkbox':
+            case 'radio':
+              return 'checkable-input';
+            case 'text':
+            case 'url':
+            case 'tel':
+            case 'search':
+            case 'password':
+            case 'number':
+            case 'email':
+              return 'typeable-input';
+            default:
+              return 'other-input';
           }
-          return 'other-input';
+        }
+
+        switch (el.getAttribute('role')) {
+          case 'checkbox':
+          case 'radio':
+          case 'switch':
+            return 'checkable-input';
         }
 
         if (el.isContentEditable) {
@@ -459,26 +465,47 @@ class Puppeteer::Locator
     JAVASCRIPT
 
     case input_type
+    when 'checkable-input'
+      current_state = handle.evaluate(<<~JAVASCRIPT)
+        toggleEl => {
+          if (
+            toggleEl.indeterminate ||
+            toggleEl.getAttribute('aria-checked') === 'mixed'
+          ) {
+            return 'mixed';
+          }
+          return (
+            toggleEl.checked ||
+            toggleEl.getAttribute('aria-checked') === 'true'
+          );
+        }
+      JAVASCRIPT
+      handle.click if current_state == 'mixed' || current_state != !!value
     when 'select'
       handle.select(value)
     when 'contenteditable', 'typeable-input'
-      if value.length < typing_threshold
+      if value.is_a?(String) && value.length < typing_threshold
         text_to_type = handle.evaluate(<<~JAVASCRIPT, value)
           (input, newValue) => {
+            const valString = String(newValue);
             const currentValue = input.isContentEditable
               ? input.innerText
               : input.value;
 
+            if (currentValue === valString) {
+              return '';
+            }
+
             if (
-              newValue.length <= currentValue.length ||
-              !newValue.startsWith(input.value)
+              !valString.startsWith(currentValue) ||
+              !currentValue
             ) {
               if (input.isContentEditable) {
                 input.innerText = '';
               } else {
                 input.value = '';
               }
-              return newValue;
+              return valString;
             }
             const originalValue = input.isContentEditable
               ? input.innerText
@@ -491,7 +518,7 @@ class Puppeteer::Locator
               input.value = '';
               input.value = originalValue;
             }
-            return newValue.substring(originalValue.length);
+            return valString.substring(originalValue.length);
           }
         JAVASCRIPT
         text_to_type = text_to_type.to_s
@@ -510,16 +537,17 @@ class Puppeteer::Locator
     handle.focus
     handle.evaluate(<<~JAVASCRIPT, value)
       (input, newValue) => {
+        const valString = String(newValue);
         const currentValue = input.isContentEditable
           ? input.innerText
           : input.value;
-        if (currentValue === newValue) {
+        if (currentValue === valString) {
           return;
         }
         if (input.isContentEditable) {
-          input.innerText = newValue;
+          input.innerText = valString;
         } else {
-          input.value = newValue;
+          input.value = valString;
         }
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));

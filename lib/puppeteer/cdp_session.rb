@@ -66,8 +66,13 @@ class Puppeteer::CDPSession
   # @rbs return: Async::Promise[Hash[String, untyped]] -- Async CDP response
   def async_send_message(method, params = {})
     if !@connection
-      raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
+      raise Puppeteer::TargetCloseError.new(
+        method: method,
+        error_message: "Session closed. Most likely the #{@target_type} has been closed.",
+      )
     end
+
+    @connection.ensure_command_allowed!(method)
 
     promise = Async::Promise.new
 
@@ -79,6 +84,12 @@ class Puppeteer::CDPSession
     end
 
     promise
+  end
+
+  # @rbs id: Integer -- CDP command id
+  # @rbs return: bool -- True when the session owns the callback
+  def callback?(id)
+    @callbacks_mutex.synchronize { @callbacks.key?(id) }
   end
 
   # @rbs message: Hash[String, untyped] -- Raw CDP message
@@ -97,11 +108,21 @@ class Puppeteer::CDPSession
 
   private def callback_with_message(callback, message)
     if message['error']
-      callback.reject(
-        Puppeteer::Connection::ProtocolError.new(
-          method: callback.method,
-          error_message: message['error']['message'],
-          error_data: message['error']['data']))
+      if message['error']['message'].include?('Session with given id not found')
+        handle_closed
+        callback.reject(
+          Puppeteer::TargetCloseError.new(
+            method: callback.method,
+            error_message: 'Session with given id not found.',
+          ),
+        )
+      else
+        callback.reject(
+          Puppeteer::Connection::ProtocolError.new(
+            method: callback.method,
+            error_message: message['error']['message'],
+            error_data: message['error']['data']))
+      end
     else
       callback.resolve(message['result'])
     end
@@ -122,9 +143,9 @@ class Puppeteer::CDPSession
     end
     callbacks.each do |callback|
       callback.reject(
-        Puppeteer::Connection::ProtocolError.new(
+        Puppeteer::TargetCloseError.new(
           method: callback.method,
-          error_message: 'Target Closed.'))
+          error_message: 'Target closed'))
     end
     @ready_promise.reject(Error.new("Session closed")) unless @ready_promise.resolved?
     @connection = nil

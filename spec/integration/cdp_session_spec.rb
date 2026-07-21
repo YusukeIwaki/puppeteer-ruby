@@ -14,13 +14,18 @@ RSpec.describe Puppeteer::CDPSession do
 
   it 'should not report created targets for custom CDP sessions', puppeteer: :browser do
     called = false
-    browser.browser_contexts.first.on('targetcreated') do |target|
+    context = browser.browser_contexts.first
+    listener_id = context.on('targetcreated') do |target|
       raise 'Too many targets created' if called
       called = true
 
       target.create_cdp_session
     end
-    browser.new_page
+    begin
+      browser.new_page
+    ensure
+      context.remove_event_listener(listener_id)
+    end
   end
 
   it 'should send events', sinatra: true do
@@ -67,7 +72,7 @@ RSpec.describe Puppeteer::CDPSession do
 
     expect {
       client.send_message('Runtime.evaluate', expression: '3 + 1', returnByValue: true)
-    }.to raise_error(/Session closed./)
+    }.to raise_error(Puppeteer::TargetCloseError, /Session closed./)
   end
 
   it 'should throw nice errors' do
@@ -76,5 +81,23 @@ RSpec.describe Puppeteer::CDPSession do
     expect {
       client.send_message('ThisCommand.DoesNotExist')
     }.to raise_error(/ThisCommand.DoesNotExist/)
+  end
+
+  it 'should handle session callbacks when Chrome sends error without sessionId' do
+    connection = page.target.create_cdp_session.connection.__getobj__
+
+    fake_session = Puppeteer::CDPSession.new(
+      connection,
+      'other',
+      'fake-session-id',
+    )
+    connection.instance_variable_get(:@sessions)['fake-session-id'] = fake_session
+
+    expect {
+      fake_session.send_message('Runtime.evaluate', expression: '1 + 1')
+    }.to raise_error(
+      Puppeteer::TargetCloseError,
+      'Protocol error (Runtime.evaluate): Session with given id not found.',
+    )
   end
 end

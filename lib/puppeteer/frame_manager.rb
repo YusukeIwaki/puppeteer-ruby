@@ -40,6 +40,7 @@ class Puppeteer::FrameManager
     @frame_tree_mutex = Mutex.new
 
     setup_listeners(@client)
+    setup_client_disconnect_listener(@client)
   end
 
   private def setup_listeners(client)
@@ -97,6 +98,69 @@ class Puppeteer::FrameManager
 
   attr_reader :client, :timeout_settings
 
+  # When the main frame is replaced by another main frame, preserve the
+  # existing Frame object while replacing its ID, client, and frame tree.
+  def swap_frame_tree(client)
+    @client = client
+    frame = @main_frame
+    if frame
+      target_id = client.target.target_id
+      @frame_naviigated_received << target_id
+      @frames.delete(frame.id)
+      frame.id = target_id
+      @frames[target_id] = frame
+      frame.send(:update_client, client)
+    end
+
+    setup_listeners(client)
+    setup_client_disconnect_listener(client)
+    init(client.target.target_id, client)
+    @network_manager.add_client(client)
+    emit_event(FrameManagerEmittedEvents::FrameSwappedByActivation, frame) if frame
+  end
+
+  def register_speculative_session(client)
+    @network_manager.add_client(client)
+  end
+
+  private def setup_client_disconnect_listener(client)
+    client.once(CDPSessionEmittedEvents::Disconnected) do
+      Async do
+        handle_client_disconnect(client)
+      rescue => err
+        debug_puts(err)
+      end
+    end
+  end
+
+  # A disconnected primary client can mean either that the page closed or
+  # that a prerendered target is about to replace it. Wait for one of those
+  # events instead of guessing with a timer.
+  private def handle_client_disconnect(client)
+    frame = @main_frame
+    return unless frame
+    return unless @client == client
+
+    unless @page.browser.connected? && !@page.closed?
+      remove_frame_recursively(frame)
+      return
+    end
+
+    frame.child_frames.each { |child| remove_frame_recursively(child) }
+    swapped = Async::Promise.new
+    swap_listener_id = add_event_listener(FrameManagerEmittedEvents::FrameSwappedByActivation) do |swapped_frame|
+      swapped.resolve(true) if swapped_frame == frame && !swapped.resolved?
+    end
+    close_listener_id = @page.add_event_listener(PageEmittedEvents::Close) do
+      swapped.resolve(false) unless swapped.resolved?
+    end
+
+    remove_frame_recursively(frame) unless swapped.wait
+  ensure
+    remove_event_listener(swap_listener_id) if swap_listener_id
+    @page.remove_event_listener(close_listener_id) if close_listener_id
+  end
+
   private def init(target_id, cdp_session = nil)
     @frames_pending_target_init[target_id] ||= Async::Promise.new
     client = cdp_session || @client
@@ -115,7 +179,6 @@ class Puppeteer::FrameManager
       client.async_send_message('Runtime.enable'),
       @page.browser.issues_enabled? ? client.async_send_message('Audits.enable') : nil,
     )
-    maybe_setup_block_list(client)
     ensure_isolated_world(client, UTILITY_WORLD_NAME)
     @network_manager.init unless cdp_session
   rescue => err
@@ -143,6 +206,11 @@ class Puppeteer::FrameManager
   # @return [Puppeteer::HTTPResponse]
   def navigate_frame(frame, url, referer: nil, referrer_policy: nil, timeout: nil, wait_until: nil)
     assert_no_legacy_navigation_options(wait_until: wait_until)
+    unless @page.browser.url_allowed?(url)
+      raise Puppeteer::Error.new(
+        "Navigation to #{url} is blocked by blocklist/allowlist rules",
+      )
+    end
 
     referrer_policy ||= @network_manager.extra_http_headers['referer-policy']
     protocol_referrer_policy = referrer_policy_to_protocol(referrer_policy)
@@ -565,6 +633,7 @@ class Puppeteer::FrameManager
     context = @context_id_to_context[key]
     return unless context
     @context_id_to_context.delete(key)
+    context.dispose
     context.world&.delete_context(context)
   end
 
@@ -578,6 +647,7 @@ class Puppeteer::FrameManager
       if key_session_id != session_id
         true # keep
       else
+        context.dispose
         context.world&.delete_context(context)
         false # remove
       end
@@ -587,31 +657,6 @@ class Puppeteer::FrameManager
   def execution_context_by_id(context_id, session)
     key = "#{session.id}:#{context_id}"
     @context_id_to_context[key] or raise "INTERNAL ERROR: missing context with id = #{context_id}"
-  end
-
-  private def maybe_setup_block_list(client)
-    block_list = @page.browser.block_list
-    return if block_list.nil? || block_list.empty?
-
-    client.send_message('Network.enable')
-    matched_network_conditions = block_list.map do |pattern|
-      {
-        urlPattern: pattern,
-        latency: 0,
-        downloadThroughput: -1,
-        uploadThroughput: -1,
-      }
-    end
-    client.send_message('Network.emulateNetworkConditionsByRule', {
-      matchedNetworkConditions: matched_network_conditions,
-      offline: true,
-    })
-  rescue Puppeteer::Connection::ProtocolError => err
-    if err.message.include?('Method not available') || err.message.include?("wasn't found")
-      client.send_message('Network.setBlockedURLs', urls: block_list)
-    else
-      raise
-    end
   end
 
   # @param {!Frame} frame

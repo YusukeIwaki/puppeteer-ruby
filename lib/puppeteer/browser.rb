@@ -16,6 +16,7 @@ class Puppeteer::Browser
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs issues_enabled: bool -- Whether issues events are enabled
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -29,6 +30,7 @@ class Puppeteer::Browser
                   network_enabled: true,
                   issues_enabled: true,
                   block_list: nil,
+                  allow_list: nil,
                   process:,
                   close_callback:,
                   target_filter_callback:,
@@ -42,11 +44,13 @@ class Puppeteer::Browser
       network_enabled: network_enabled,
       issues_enabled: issues_enabled,
       block_list: block_list,
+      allow_list: allow_list,
       process: process,
       close_callback: close_callback,
       target_filter_callback: target_filter_callback,
       is_page_target_callback: is_page_target_callback,
     )
+    browser.send(:validate_allow_list_version)
     browser.send(:attach)
     browser
   end
@@ -59,6 +63,7 @@ class Puppeteer::Browser
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs issues_enabled: bool -- Whether issues events are enabled
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
@@ -72,6 +77,7 @@ class Puppeteer::Browser
                  network_enabled: true,
                  issues_enabled: true,
                  block_list: nil,
+                 allow_list: nil,
                  process:,
                  close_callback:,
                  target_filter_callback:,
@@ -85,6 +91,7 @@ class Puppeteer::Browser
     @network_enabled = network_enabled
     @issues_enabled = issues_enabled
     @block_list = block_list
+    @allow_list = allow_list
     @process = process
     @connection = connection
     @close_callback = close_callback
@@ -102,12 +109,26 @@ class Puppeteer::Browser
       target_factory: method(:create_target),
       target_filter_callback: @target_filter_callback,
       block_list: block_list,
+      allow_list: allow_list,
     )
+    @connection.reject_emulate_network_conditions_calls =
+      [block_list, allow_list].any? { |list| list && !list.empty? }
     @extensions = {}
+    @version_promise = nil
   end
 
   private def default_target_filter_callback(target_info)
     true
+  end
+
+  private def validate_allow_list_version
+    return unless @allow_list
+
+    product = version_info.product
+    major_version = product[/\d+/].to_i
+    if major_version < 149
+      raise Puppeteer::Error.new('The allow_list option requires Chrome 149 or greater.')
+    end
   end
 
   private def default_is_page_target_callback(target_info)
@@ -261,7 +282,7 @@ class Puppeteer::Browser
   end
 
   private def handle_attached_to_target(target)
-    if target.initialized_promise.wait
+    if target.exposed? && target.initialized_promise.wait
       emit_event(BrowserEmittedEvents::TargetCreated, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetCreated, target)
     end
@@ -270,7 +291,7 @@ class Puppeteer::Browser
   private def handle_detached_from_target(target)
     target.ignore_initialize_callback_promise
     target.closed_callback
-    if target.initialized_promise.wait
+    if target.exposed? && target.initialized_promise.wait
       emit_event(BrowserEmittedEvents::TargetDestroyed, target)
       target.browser_context.emit_event(BrowserContextEmittedEvents::TargetDestroyed, target)
     end
@@ -312,7 +333,7 @@ class Puppeteer::Browser
     }.compact
     result = @connection.send_message('Target.createTarget', **create_target_params)
     target_id = result['targetId']
-    target = @target_manager.available_targets[target_id]
+    target = wait_for_available_target(target_id)
     unless target
       raise MissingTargetError.new("Missing target for page (id = #{target_id})")
     end
@@ -326,11 +347,31 @@ class Puppeteer::Browser
     page
   end
 
+  private def wait_for_available_target(target_id)
+    target = @target_manager.available_targets[target_id]
+    return target if target
+
+    promise = Async::Promise.new
+    listener_id = @target_manager.add_event_listener(TargetManagerEmittedEvents::TargetAvailable) do |available_target|
+      if available_target.target_id == target_id && !promise.resolved?
+        promise.resolve(available_target)
+      end
+    end
+    target = @target_manager.available_targets[target_id]
+    return target if target
+
+    Puppeteer::AsyncUtils.async_timeout(30_000, promise).wait
+  rescue Async::TimeoutError
+    nil
+  ensure
+    @target_manager.remove_event_listener(listener_id) if listener_id
+  end
+
   # All active targets inside the Browser. In case of multiple browser contexts, returns
   # an array with all the targets in all browser contexts.
   # @rbs return: Array[Puppeteer::Target] -- Active targets
   def targets
-    @target_manager.available_targets.values.select { |target| target.initialized? }
+    @target_manager.available_targets.values.select { |target| target.exposed? && target.initialized? }
   end
 
 
@@ -386,12 +427,24 @@ class Puppeteer::Browser
 
   # @rbs return: String -- Browser version string
   def version
-    Version.fetch(@connection).product
+    version_info.product
   end
 
   # @rbs return: String -- Browser user agent string
   def user_agent
-    Version.fetch(@connection).user_agent
+    version_info.user_agent
+  end
+
+  private def version_info
+    unless @version_promise
+      @version_promise = Async::Promise.new
+      begin
+        @version_promise.resolve(Version.new(@connection.send_message('Browser.getVersion')))
+      rescue => error
+        @version_promise.reject(error)
+      end
+    end
+    @version_promise.wait
   end
 
   # @rbs page_target_id: String -- Page target id
@@ -401,10 +454,44 @@ class Puppeteer::Browser
     result['targetId']
   end
 
+  # @rbs page_target_id: String -- Inspected page target id
+  # @rbs return: Puppeteer::Page -- DevTools page
+  def _create_devtools_page(page_target_id)
+    result = @connection.send_message('Target.openDevTools', targetId: page_target_id)
+    _get_devtools_target_page(result['targetId'])
+  end
+
+  # @rbs devtools_target_id: String -- DevTools target id
+  # @rbs return: Puppeteer::Page -- DevTools page
+  def _get_devtools_target_page(devtools_target_id)
+    target = wait_for_available_target(devtools_target_id)
+    unless target
+      raise MissingTargetError.new(
+        "Missing target for DevTools page (id = #{devtools_target_id})",
+      )
+    end
+    unless target.initialized_promise.wait
+      raise CreatePageError.new(
+        "Failed to create target for DevTools page (id = #{devtools_target_id})",
+      )
+    end
+    page = target.as_page
+    unless page
+      raise CreatePageError.new(
+        "Failed to create a DevTools Page for target (id = #{devtools_target_id})",
+      )
+    end
+    page
+  end
+
   # @rbs path: String -- Extension path
+  # @rbs enabled_in_incognito: bool -- Enable in Incognito and OTR profiles
   # @rbs return: String -- Installed extension id
-  def install_extension(path)
-    result = @connection.send_message('Extensions.loadUnpacked', path: path)
+  def install_extension(path, enabled_in_incognito: false)
+    result = @connection.send_message('Extensions.loadUnpacked', {
+      path: path,
+      enableInIncognito: enabled_in_incognito,
+    })
     extension_id = result['id']
     @extensions.delete(extension_id)
     extension_id
@@ -414,6 +501,7 @@ class Puppeteer::Browser
   # @rbs return: void -- No return value
   def uninstall_extension(extension_id)
     @connection.send_message('Extensions.uninstall', id: extension_id)
+    @target_manager.remove_extension_service_workers(extension_id)
     @extensions.delete(extension_id)
   end
 
@@ -449,6 +537,17 @@ class Puppeteer::Browser
   # @rbs return: Array[String]? -- URL block list patterns
   def block_list
     @block_list
+  end
+
+  # @rbs return: Array[String]? -- URL allow list patterns
+  def allow_list
+    @allow_list
+  end
+
+  # @rbs url: String -- URL to validate against network restriction rules
+  # @rbs return: bool -- Whether the URL is allowed
+  def url_allowed?(url)
+    @target_manager.url_allowed?(url)
   end
 
   # @rbs return: void -- No return value

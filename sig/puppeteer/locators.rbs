@@ -87,16 +87,15 @@ class Puppeteer::Locator
 
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated click count
   # @rbs count: Integer? -- Number of clicks
   # @rbs offset: Hash[Symbol, Numeric]? -- Click offset
   # @rbs return: void -- No return value
-  def click: (?delay: Numeric?, ?button: String?, ?click_count: Integer?, ?count: Integer?, ?offset: Hash[Symbol, Numeric]?) -> void
+  def click: (?delay: Numeric?, ?button: String?, ?count: Integer?, ?offset: Hash[Symbol, Numeric]?) -> void
 
-  # @rbs value: String -- Value to fill
+  # @rbs value: String | bool -- Value to fill
   # @rbs typing_threshold: Integer -- Minimum length to switch to direct assignment
   # @rbs return: void -- No return value
-  def fill: (String value, ?typing_threshold: Integer) -> void
+  def fill: (String | bool value, ?typing_threshold: Integer) -> void
 
   # @rbs return: void -- No return value
   def hover: () -> void

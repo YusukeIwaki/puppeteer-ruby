@@ -99,6 +99,7 @@ class Puppeteer::NetworkManager
     @extra_http_headers = {}
     @user_agent = nil
     @user_agent_metadata = nil
+    @accept_language = nil
 
     @attempted_authentications = Set.new
     @user_request_interception_enabled = false
@@ -146,12 +147,12 @@ class Puppeteer::NetworkManager
   end
 
   private def ignore_client_error?(error)
+    return true if error.is_a?(Puppeteer::TargetCloseError)
+
     message = error&.message
     return false unless message
 
     lowered = message.downcase
-    return true if lowered.include?('target closed')
-    return true if lowered.include?('session closed')
     return true if lowered.include?('not supported')
     return true if lowered.include?("wasn't found")
 
@@ -175,10 +176,12 @@ class Puppeteer::NetworkManager
   end
 
   private def apply_user_agent(client)
-    return unless @user_agent
+    user_agent = @user_agent || @frame_manager.page.browser.user_agent
+    return unless user_agent
 
     safe_send_message(client, 'Network.setUserAgentOverride', {
-      userAgent: @user_agent,
+      userAgent: user_agent,
+      acceptLanguage: @accept_language,
       userAgentMetadata: @user_agent_metadata,
     }.compact)
   end
@@ -212,6 +215,8 @@ class Puppeteer::NetworkManager
     if @internal_network_condition.active?
       safe_send_message(client, 'Network.emulateNetworkConditions', @internal_network_condition.params)
     end
+  rescue => err
+    raise unless ignore_client_error?(err)
   end
 
   # @param username [String|NilClass]
@@ -280,6 +285,13 @@ class Puppeteer::NetworkManager
     apply_to_clients { |client| apply_user_agent(client) }
   end
   alias_method :user_agent=, :set_user_agent
+
+  # @rbs accept_language: String? -- Accept-Language override
+  # @rbs return: void -- No return value
+  def set_accept_language(accept_language)
+    @accept_language = accept_language
+    apply_to_clients { |client| apply_user_agent(client) }
+  end
 
   def cache_enabled=(enabled)
     @user_cache_disabled = !enabled

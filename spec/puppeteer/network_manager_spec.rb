@@ -149,4 +149,20 @@ RSpec.describe Puppeteer::NetworkManager do
       end.wait
     end
   end
+
+  describe 'client configuration' do
+    it 'should not throw if page().browser().userAgent() throws' do
+      browser = double(Puppeteer::Browser)
+      page = double(Puppeteer::Page, browser: browser)
+      manager_frame_manager = double(Puppeteer::FrameManager, page: page)
+      manager = described_class.new(client, false, manager_frame_manager)
+      error = Puppeteer::TargetCloseError.new(
+        method: 'Browser.getVersion',
+        error_message: 'Target closed',
+      )
+      allow(browser).to receive(:user_agent).and_raise(error)
+
+      expect { manager.init }.not_to raise_error
+    end
+  end
 end

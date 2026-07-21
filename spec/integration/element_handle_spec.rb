@@ -259,6 +259,14 @@ RSpec.describe Puppeteer::ElementHandle do
       expect(element.visible?).to eq(true)
       expect(element.hidden?).to eq(false)
     end
+
+    it 'should not throw for a detached text node with no parent element' do
+      page.content = '<div>x</div>'
+      handle = page.evaluate_handle("() => document.createTextNode('orphan')")
+      text_handle = handle.as_element
+      expect(text_handle.hidden?).to eq(true)
+      expect(text_handle.visible?).to eq(false)
+    end
   end
 
   describe '#click' do

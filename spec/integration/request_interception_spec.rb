@@ -904,7 +904,7 @@ RSpec.describe 'request interception' do
 
         expect(response.status).to eq(200)
         expect(response.headers['foo']).to eq('bar')
-        expect(response.headers['arr']).to eq("1\n2")
+        expect(response.headers['arr']).to eq('1, 2')
         expect(first_cookie['value']).to eq('1')
         expect(second_cookie['value']).to eq('2')
       end

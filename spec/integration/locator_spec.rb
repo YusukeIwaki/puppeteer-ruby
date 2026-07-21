@@ -381,6 +381,142 @@ RSpec.describe 'Locator' do
         expect(page.evaluate('() => document.querySelector("input")?.value')).to eq(text)
       end
     end
+
+    it 'should work for checkboxes' do
+      with_test_state do |page:, **|
+        page.content = '<input type="checkbox" />'
+
+        page.locator('input').fill(true)
+        expect(page.evaluate('() => document.querySelector("input")?.checked === true')).to eq(true)
+
+        page.locator('input').fill(false)
+        expect(page.evaluate('() => document.querySelector("input")?.checked === true')).to eq(false)
+      end
+    end
+
+    it 'should work for radio buttons' do
+      with_test_state do |page:, **|
+        page.content = '<input type="radio" />'
+
+        page.locator('input').fill(true)
+        expect(page.evaluate('() => document.querySelector("input")?.checked === true')).to eq(true)
+      end
+    end
+
+    it 'should work for custom ARIA checkboxes' do
+      with_test_state do |page:, **|
+        page.content = <<~HTML
+          <div
+            role="checkbox"
+            style="width: 100px; height: 100px;"
+            onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') !== 'true')"
+            aria-checked="false"
+          ></div>
+        HTML
+
+        page.locator('[role="checkbox"]').fill(true)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="checkbox"]')
+              ?.getAttribute('aria-checked') === 'true'
+          JAVASCRIPT
+        ).to eq(true)
+
+        page.locator('[role="checkbox"]').fill(false)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="checkbox"]')
+              ?.getAttribute('aria-checked') === 'false'
+          JAVASCRIPT
+        ).to eq(true)
+      end
+    end
+
+    it 'should work for custom ARIA radio buttons' do
+      with_test_state do |page:, **|
+        page.content = <<~HTML
+          <div
+            role="radio"
+            style="width: 100px; height: 100px;"
+            onclick="this.setAttribute('aria-checked', 'true')"
+            aria-checked="false"
+          ></div>
+        HTML
+
+        page.locator('[role="radio"]').fill(true)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="radio"]')
+              ?.getAttribute('aria-checked') === 'true'
+          JAVASCRIPT
+        ).to eq(true)
+      end
+    end
+
+    it 'should work for custom ARIA switches' do
+      with_test_state do |page:, **|
+        page.content = <<~HTML
+          <div
+            role="switch"
+            style="width: 100px; height: 100px;"
+            onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') !== 'true')"
+            aria-checked="false"
+          ></div>
+        HTML
+
+        page.locator('[role="switch"]').fill(true)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="switch"]')
+              ?.getAttribute('aria-checked') === 'true'
+          JAVASCRIPT
+        ).to eq(true)
+
+        page.locator('[role="switch"]').fill(false)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="switch"]')
+              ?.getAttribute('aria-checked') === 'false'
+          JAVASCRIPT
+        ).to eq(true)
+      end
+    end
+
+    it 'should work for custom ARIA mixed checkboxes' do
+      with_test_state do |page:, **|
+        page.content = <<~HTML
+          <div
+            role="checkbox"
+            style="width: 100px; height: 100px;"
+            onclick="const next = {'mixed': 'true', 'true': 'false', 'false': 'true'}; this.setAttribute('aria-checked', next[this.getAttribute('aria-checked')])"
+            aria-checked="mixed"
+          ></div>
+        HTML
+
+        page.locator('[role="checkbox"]').fill(true)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="checkbox"]')
+              ?.getAttribute('aria-checked') === 'true'
+          JAVASCRIPT
+        ).to eq(true)
+
+        page.locator('[role="checkbox"]').fill(false)
+        expect(
+          page.evaluate(<<~JAVASCRIPT),
+            () => document
+              .querySelector('[role="checkbox"]')
+              ?.getAttribute('aria-checked') === 'false'
+          JAVASCRIPT
+        ).to eq(true)
+      end
+    end
   end
 
   describe 'Locator.race' do

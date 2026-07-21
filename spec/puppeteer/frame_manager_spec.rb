@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 class FakeCdpSession
+  include Puppeteer::EventCallbackable
+
   def initialize
     @handlers = {}
     @get_frame_tree_called = Async::Promise.new

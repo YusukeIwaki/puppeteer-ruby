@@ -38,11 +38,16 @@ class Puppeteer::Extension
     extension_targets = @browser.targets.select do |target|
       target.type == 'service_worker' && target.url.start_with?(extension_prefix)
     end
-    extension_targets.filter_map do |target|
-      target.worker
-    rescue
-      nil
+    tasks = extension_targets.map do |target|
+      proc do
+        target.worker
+      rescue => error
+        raise unless can_ignore_error?(error)
+
+        nil
+      end
     end
+    Puppeteer::AsyncUtils.await_promise_all(*tasks).compact
   end
 
   # @rbs return: Array[Puppeteer::Page] -- Extension pages
@@ -54,15 +59,24 @@ class Puppeteer::Extension
     end
     extension_targets.filter_map do |target|
       target.as_page
-    rescue
+    rescue => error
+      raise unless can_ignore_error?(error)
+
       nil
     end
+  end
+
+  # @rbs error: StandardError -- Error raised while resolving an extension target
+  # @rbs return: bool -- Whether the target resolution error can be ignored
+  private def can_ignore_error?(error)
+    error.is_a?(Puppeteer::TargetCloseError) ||
+      error.message.include?('No target with given id found')
   end
 
   # @rbs page: Puppeteer::Page -- Target page
   # @rbs return: void -- No return value
   def trigger_action(page)
-    page.browser.send(:connection).send_message('Extensions.triggerAction', {
+    @browser.send(:connection).send_message('Extensions.triggerAction', {
       id: @id,
       targetId: page._tab_id,
     })

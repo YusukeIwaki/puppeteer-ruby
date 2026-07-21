@@ -2,6 +2,7 @@
 
 class Puppeteer::ExecutionContext
   include Puppeteer::IfPresent
+  include Puppeteer::EventCallbackable
   using Puppeteer::DefineAsyncMethod
 
   EVALUATION_SCRIPT_URL = 'pprt://__puppeteer_evaluation_script__'
@@ -18,6 +19,11 @@ class Puppeteer::ExecutionContext
   end
 
   attr_reader :client, :world
+
+  # @rbs return: void -- Notify consumers that this context was destroyed
+  def dispose
+    emit_event('disposed')
+  end
 
   # only used in IsolaatedWorld
   private def _context_id
@@ -353,6 +359,7 @@ class Puppeteer::ExecutionContext
     message = error.message
     if message.end_with?('Cannot find context with specified id') ||
        message.end_with?('Inspected target navigated or closed')
+
       return Puppeteer::Error.new('Execution context was destroyed, most likely because of a navigation.')
     end
 

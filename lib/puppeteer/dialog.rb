@@ -16,6 +16,11 @@ class Puppeteer::Dialog
   attr_reader :message #: String
   attr_reader :default_value #: String
 
+  # @rbs return: bool -- Whether the dialog has already been handled
+  def handled?
+    @handled
+  end
+
   # @rbs prompt_text: String? -- Text entered into the prompt
   # @rbs return: void -- No return value
   def accept(prompt_text = nil)

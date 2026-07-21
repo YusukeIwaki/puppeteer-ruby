@@ -1,6 +1,6 @@
 # API coverages
-- Puppeteer version: v24.42.0
-- puppeteer-ruby version: 0.51.0
+- Puppeteer version: v25.3.0
+- puppeteer-ruby version: 0.52.1
 
 ## Puppeteer
 
@@ -10,9 +10,9 @@
 * launch
 * ~~puppeteer~~
 
-## ~~Accessibility~~
+## Accessibility
 
-* ~~snapshot~~
+* snapshot
 
 ## Browser
 
@@ -28,7 +28,6 @@
 * extensions
 * ~~getWindowBounds~~
 * installExtension => `#install_extension`
-* isConnected => `#connected?`
 * newPage => `#new_page`
 * pages
 * process
@@ -343,6 +342,7 @@
 * emulateCPUThrottling => `#emulate_cpu_throttling`
 * ~~emulateFocusedPage~~
 * emulateIdleState => `#emulate_idle_state`
+* emulateLocale => `#emulate_locale`
 * emulateMediaFeatures => `#emulate_media_features`
 * emulateMediaType => `#emulate_media_type`
 * emulateNetworkConditions => `#emulate_network_conditions`
@@ -360,7 +360,7 @@
 * goBack => `#go_back`
 * goForward => `#go_forward`
 * goto
-* ~~hasDevTools~~
+* hasDevTools => `#has_dev_tools`
 * hover
 * isClosed => `#closed?`
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
@@ -369,14 +369,14 @@
 * locator
 * mainFrame => `#main_frame`
 * metrics
-* ~~openDevTools~~
+* openDevTools => `#open_dev_tools`
 * pdf
 * queryObjects => `#query_objects`
 * reload
 * removeExposedFunction => `#remove_exposed_function`
 * removeScriptToEvaluateOnNewDocument => `#remove_script_to_evaluate_on_new_document`
 * ~~resize~~
-* ~~screencast~~
+* screencast
 * screenshot
 * select
 * setBypassCSP => `#bypass_csp=`
@@ -423,9 +423,9 @@
 * ~~extension~~
 * ~~waitForFunction~~
 
-## ~~ScreenRecorder~~
+## ScreenRecorder
 
-* ~~stop~~
+* stop
 
 ## ~~SecurityDetails~~
 
@@ -469,15 +469,15 @@
 ## ~~UnsupportedOperation~~
 
 
-## ~~WebMCP~~
+## WebMCP
 
-* ~~tools~~
+* tools
 
-## ~~WebMCPTool~~
+## WebMCPTool
 
-* ~~execute~~
+* execute
 
-## ~~WebMCPToolCall~~
+## WebMCPToolCall
 
 
 ## WebWorker
@@ -486,3 +486,4 @@
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * url
+* waitForFunction => `#wait_for_function`

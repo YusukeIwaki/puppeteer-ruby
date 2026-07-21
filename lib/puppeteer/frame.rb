@@ -52,6 +52,11 @@ class Puppeteer::Frame
     @frame_manager.page
   end
 
+  # @rbs return: Puppeteer::Accessibility -- Accessibility tree for this frame
+  def accessibility
+    @accessibility ||= Puppeteer::Accessibility.new(self)
+  end
+
   # @rbs return: Numeric -- Default timeout in milliseconds
   def default_timeout
     @frame_manager.timeout_settings.timeout
@@ -284,11 +289,10 @@ class Puppeteer::Frame
   # @rbs selector: String -- CSS selector
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
   # @rbs count: Integer? -- Number of clicks to perform
   # @rbs return: void -- No return value
-  def click(selector, delay: nil, button: nil, click_count: nil, count: nil)
-    @puppeteer_world.click(selector, delay: delay, button: button, click_count: click_count, count: count)
+  def click(selector, delay: nil, button: nil, count: nil)
+    @puppeteer_world.click(selector, delay: delay, button: button, count: count)
   end
 
   define_async_method :async_click

@@ -12,6 +12,7 @@ RSpec.describe Puppeteer::CDPSession do
         block.call(SecureRandom.hex(16))
       end
       # rubocop:enable RSpec/Yield
+      allow(connection).to receive(:ensure_command_allowed!)
       allow(connection).to receive(:raw_send) do |kwargs|
         id = kwargs[:id]
 
@@ -40,6 +41,18 @@ RSpec.describe Puppeteer::CDPSession do
         'result' => "pong",
       }
       expect { cdp_session.handle_message(resp) }.to raise_error(/unknown id: -123/)
+    end
+
+    it 'rejects pending commands with a target close error' do
+      allow(connection).to receive(:raw_send)
+      promise = cdp_session.async_send_message('Runtime.evaluate')
+
+      cdp_session.handle_closed
+
+      expect { promise.wait }.to raise_error(
+        Puppeteer::TargetCloseError,
+        'Protocol error (Runtime.evaluate): Target closed',
+      )
     end
   end
 end

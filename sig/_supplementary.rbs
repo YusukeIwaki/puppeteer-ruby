@@ -175,10 +175,14 @@ class Puppeteer::FrameManager
   def handle_execution_context_destroyed: (Integer execution_context_id, Puppeteer::CDPSession session) -> void
   def handle_execution_contexts_cleared: (Puppeteer::CDPSession session) -> void
   def execution_context_by_id: (Integer context_id, Puppeteer::CDPSession session) -> Puppeteer::ExecutionContext
+  def swap_frame_tree: (Puppeteer::CDPSession client) -> void
+  def register_speculative_session: (Puppeteer::CDPSession client) -> void
 
   private
 
   def setup_listeners: (Puppeteer::CDPSession client) -> void
+  def setup_client_disconnect_listener: (Puppeteer::CDPSession client) -> void
+  def handle_client_disconnect: (Puppeteer::CDPSession client) -> void
   def init: (String target_id, ?Puppeteer::CDPSession cdp_session) -> void
   def with_frame_tree_handled: () { () -> void } -> void
   def prepare_frame_tree_handling: () -> void
@@ -191,7 +195,6 @@ class Puppeteer::FrameManager
   def assert_no_legacy_navigation_options: (wait_until: (String | Array[String] | nil)) -> void
   def extension_origin?: (untyped origin) -> bool
   def extract_extension_id: (untyped origin) -> String?
-  def maybe_setup_block_list: (Puppeteer::CDPSession client) -> void
   def blocked_url?: (String? url) -> bool
 end
 
@@ -219,6 +222,7 @@ class Puppeteer::Target
   def closed_callback: () -> void
   def ignore_initialize_callback_promise: () -> void
   def initialized?: () -> bool
+  def exposed?: () -> bool
   def session: () -> Puppeteer::CDPSession?
   def create_cdp_session: () -> Puppeteer::CDPSession
   def target_manager: () -> untyped
@@ -277,6 +281,10 @@ class Puppeteer::Connection
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
+  class ProtocolError < Puppeteer::Error
+    def initialize: (method: String, error_message: String, ?error_data: untyped) -> void
+  end
+
   def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
   def closed?: () -> bool
   def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
@@ -291,6 +299,7 @@ class Puppeteer::Connection
   def dispose: () -> void
   def auto_attached?: (String target_id) -> bool
   def create_session: (untyped target_info, ?auto_attach_emulated: bool) -> Puppeteer::CDPSession
+  def ensure_command_allowed!: (String method) -> void
 
   private
 
@@ -303,6 +312,29 @@ class Puppeteer::Connection
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void
   def handle_close: () -> void
+end
+
+class Puppeteer::TargetCloseError < Puppeteer::Connection::ProtocolError
+end
+
+module Puppeteer::Launcher
+  def new: (project_root: untyped, preferred_revision: untyped, is_puppeteer_core: untyped, product: untyped) -> Puppeteer::Launcher::Chrome
+  def self.new: (project_root: untyped, preferred_revision: untyped, is_puppeteer_core: untyped, product: untyped) -> Puppeteer::Launcher::Chrome
+end
+
+class Puppeteer::Launcher::Chrome
+  def self.get_features: (String flag, ?Array[String] options) -> Array[String]
+  def self.remove_matching_flags: (Array[String] array, String flag) -> Array[String]
+  def initialize: (project_root: untyped, preferred_revision: untyped, is_puppeteer_core: untyped) -> void
+  def launch: (?Hash[Symbol, untyped] options) -> Puppeteer::Browser
+  def default_args: (?Hash[Symbol, untyped]? options) -> untyped
+  def executable_path: (?channel: (String | Symbol)?) -> String
+  def product: () -> String
+
+  private
+
+  def fallback_executable_path: () -> String
+  def executable_path_for_channel: (String channel) -> String
 end
 
 class Puppeteer::BrowserRunner

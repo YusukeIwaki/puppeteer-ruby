@@ -2,7 +2,7 @@ class Puppeteer::ChromeTargetManager
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
-  def initialize(connection:, target_factory:, target_filter_callback:, block_list: nil)
+  def initialize(connection:, target_factory:, target_filter_callback:, block_list: nil, allow_list: nil)
     @discovered_targets_by_target_id = {}
     @attached_targets_by_target_id = {}
     @attached_targets_by_session_id = {}
@@ -13,10 +13,17 @@ class Puppeteer::ChromeTargetManager
     @connection = connection
     @target_filter_callback = target_filter_callback
     @target_factory = target_factory
-    @block_list = block_list
-    if @block_list && !@block_list.is_a?(Array)
+    if block_list && allow_list
+      raise ArgumentError.new('Cannot specify both blocklist and allowlist')
+    end
+    if block_list && !block_list.is_a?(Array)
       raise ArgumentError.new('block_list must be an Array of URL patterns')
     end
+    if allow_list && !allow_list.is_a?(Array)
+      raise ArgumentError.new('allow_list must be an Array of URL patterns')
+    end
+    @block_list = map_patterns(block_list)
+    @allow_list = map_patterns(allow_list)
     @target_interceptors = {}
     @initialize_promise = Async::Promise.new
     @initial_attach_done = false
@@ -44,10 +51,7 @@ class Puppeteer::ChromeTargetManager
     Async do
       @connection.async_send_message('Target.setDiscoverTargets', {
         discover: true,
-        filter: [
-          { type: 'tab', exclude: true },
-          {},
-        ],
+        filter: [{}],
       }).wait
       store_existing_targets_for_init
     rescue => err
@@ -57,7 +61,7 @@ class Puppeteer::ChromeTargetManager
 
   private def store_existing_targets_for_init
     @discovered_targets_by_target_id.each do |target_id, target_info|
-      if @target_filter_callback.call(target_info) && target_info.type != 'browser' && url_allowed?(target_info.url)
+      if @target_filter_callback.call(target_info) && target_info.type == 'tab' && url_allowed?(target_info.url)
         @target_ids_for_init << target_id
       end
     end
@@ -68,6 +72,10 @@ class Puppeteer::ChromeTargetManager
       waitForDebuggerOnStart: true,
       flatten: true,
       autoAttach: true,
+      filter: [
+        { type: 'page', exclude: true },
+        {},
+      ],
     })
     @initial_attach_done = true
     finish_initialization_if_ready
@@ -81,6 +89,19 @@ class Puppeteer::ChromeTargetManager
 
   def available_targets
     @attached_targets_by_target_id
+  end
+
+  def remove_extension_service_workers(extension_id)
+    extension_url = "chrome-extension://#{extension_id}/"
+    target_ids = @discovered_targets_by_target_id.filter_map do |target_id, target_info|
+      if target_info.type == 'service_worker' && target_info.url.start_with?(extension_url)
+        target_id
+      end
+    end
+    target_ids.each do |target_id|
+      @ignored_targets << target_id
+      handle_target_destroyed('targetId' => target_id)
+    end
   end
 
   def wait_for_service_worker_detach(target_id)
@@ -171,6 +192,10 @@ class Puppeteer::ChromeTargetManager
       return
     end
     original_target = @attached_targets_by_target_id[target_info.target_id]
+    if original_target&.target_info&.subtype && !target_info.subtype
+      session = original_target.session
+      session&.parent_session&.emit_event(CDPSessionEmittedEvents::Swapped, session)
+    end
     emit_event(TargetManagerEmittedEvents::TargetChanged, original_target, target_info) if original_target
   end
 
@@ -189,7 +214,7 @@ class Puppeteer::ChromeTargetManager
         begin
           Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
         rescue => err
-          Logger.new($stderr).warn(err)
+          debug_puts(err)
         end
 
         # We don't use `session.detach()` because that dispatches all commands on
@@ -199,7 +224,7 @@ class Puppeteer::ChromeTargetManager
             sessionId: session.id,
           }))
         rescue => err
-          Logger.new($stderr).warn(err)
+          debug_puts(err)
         ensure
           if detached_promise && !detached_promise.resolved?
             detached_promise.resolve(true)
@@ -208,7 +233,16 @@ class Puppeteer::ChromeTargetManager
       end
     }
 
-    return unless @connection.auto_attached?(target_info.target_id)
+    unless @connection.auto_attached?(target_info.target_id)
+      Async do
+        maybe_setup_network_conditions(session, target_info)
+      rescue => err
+        debug_puts(err)
+      ensure
+        session.mark_ready
+      end
+      return
+    end
 
     if !@initial_attach_done && !url_allowed?(target_info.url)
       finish_initialization_if_ready(target_info.target_id)
@@ -225,6 +259,23 @@ class Puppeteer::ChromeTargetManager
     # CDP.
     if target_info.type == 'service_worker' && @connection.auto_attached?(target_info.target_id)
       finish_initialization_if_ready(target_info.target_id)
+      unless url_allowed?(target_info.url)
+        Async do
+          setup_task = Async do
+            maybe_setup_network_conditions(session, target_info)
+          rescue => err
+            debug_puts(err)
+          end
+          run_promise = session.async_send_message('Runtime.runIfWaitingForDebugger')
+          Puppeteer::AsyncUtils.await(run_promise)
+          Puppeteer::AsyncUtils.await(setup_task)
+        rescue => err
+          debug_puts(err)
+        ensure
+          session.mark_ready
+        end
+        return
+      end
       @service_worker_detach_promises[target_info.target_id] ||= Async::Promise.new
       silent_detach.call(@service_worker_detach_promises[target_info.target_id])
       return if @attached_targets_by_target_id.has_key?(target_info.target_id)
@@ -238,7 +289,8 @@ class Puppeteer::ChromeTargetManager
 
     unless @target_filter_callback.call(target_info)
       @ignored_targets << target_info.target_id
-      finish_initialization_if_ready(target_info.target_id)
+      parent_target = parent_session.is_a?(Puppeteer::CDPSession) ? parent_session.target : nil
+      finish_initialization_if_ready(parent_target.target_id) if parent_target&.raw_type == 'tab'
       silent_detach.call
 
       return
@@ -267,25 +319,39 @@ class Puppeteer::ChromeTargetManager
       end
     end
 
-    @target_ids_for_init.delete(target.target_id)
     unless is_existing_target
       Async do
         Puppeteer::AsyncUtils.future_with_logging { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }.call
       end
     end
+    parent_target = parent_session.is_a?(Puppeteer::CDPSession) ? parent_session.target : nil
+    finish_initialization_if_ready(parent_target.target_id) if parent_target&.raw_type == 'tab'
     finish_initialization_if_ready
     parent_session.emit_event(CDPSessionEmittedEvents::Ready, session)
 
     Async do
-      Puppeteer::AsyncUtils.await(session.async_send_message('Target.setAutoAttach', {
-        waitForDebuggerOnStart: true,
-        flatten: true,
-        autoAttach: true,
-      }))
-      maybe_setup_network_conditions(session)
-      Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
+      setup_task = Async do
+        maybe_setup_network_conditions(session, target_info)
+      rescue => err
+        debug_puts(err)
+      end
+      promises = [
+        session.async_send_message('Target.setAutoAttach', {
+          waitForDebuggerOnStart: true,
+          flatten: true,
+          autoAttach: true,
+          filter: [{}],
+        }),
+        session.async_send_message('Runtime.runIfWaitingForDebugger'),
+        setup_task,
+      ]
+      promises.each do |promise|
+        Puppeteer::AsyncUtils.await(promise)
+      rescue => err
+        debug_puts(err)
+      end
     rescue => err
-      Logger.new($stderr).warn(err)
+      debug_puts(err)
     ensure
       session.mark_ready
     end
@@ -307,32 +373,77 @@ class Puppeteer::ChromeTargetManager
   end
 
   private def url_allowed?(url)
-    return true if @block_list.nil? || @block_list.empty?
+    block_list = @block_list || []
+    allow_list = @allow_list || []
+    return true if block_list.empty? && allow_list.empty?
     return true if url.nil? || url.empty? || url == 'about:blank'
 
-    @block_list.none? do |pattern|
-      File.fnmatch?(pattern, url, File::FNM_EXTGLOB)
-    rescue ArgumentError
-      false
+    blocked = block_list.any? { |item| item[:pattern].test?(url) }
+    return false if blocked
+
+    return true if allow_list.empty?
+
+    allow_list.any? { |item| item[:pattern].test?(url) }
+  end
+  public :url_allowed?
+
+  private def map_patterns(rules)
+    return nil if rules.nil?
+
+    rules.map do |rule|
+      {
+        pattern: URLPattern::URLPattern.new(rule),
+        rule: rule,
+      }
     end
   end
 
-  private def maybe_setup_network_conditions(session)
-    return if @block_list.nil? || @block_list.empty?
+  private def maybe_setup_network_conditions(session, target_info)
+    block_list = @block_list || []
+    allow_list = @allow_list || []
+    return if block_list.empty? && allow_list.empty?
 
-    matched_network_conditions = @block_list.map do |pattern|
+    matched_network_conditions = block_list.map do |item|
       {
-        urlPattern: pattern,
+        urlPattern: item[:rule],
+        offline: true,
         latency: 0,
         downloadThroughput: -1,
         uploadThroughput: -1,
       }
     end
-    Puppeteer::AsyncUtils.await(session.async_send_message('Network.enable'))
-    Puppeteer::AsyncUtils.await(session.async_send_message('Network.emulateNetworkConditionsByRule', {
+    allow_list.each do |item|
+      matched_network_conditions << {
+        urlPattern: item[:rule],
+        offline: false,
+        latency: 0,
+        downloadThroughput: -1,
+        uploadThroughput: -1,
+      }
+    end
+    unless allow_list.empty?
+      matched_network_conditions << {
+        urlPattern: '',
+        offline: true,
+        latency: 0,
+        downloadThroughput: -1,
+        uploadThroughput: -1,
+      }
+    end
+
+    promises = []
+    worker_types = ['worker', 'service_worker', 'shared_worker']
+    promises << session.async_send_message('Network.enable') if worker_types.include?(target_info.type)
+    params = {
+      offline: block_list.empty? ? nil : true,
       matchedNetworkConditions: matched_network_conditions,
-      offline: true,
-    }))
+    }.compact
+    promises << session.async_send_message('Network.emulateNetworkConditionsByRule', params)
+    promises.each do |promise|
+      Puppeteer::AsyncUtils.await(promise)
+    rescue => err
+      debug_puts(err)
+    end
   rescue => err
     message = err.message.to_s.downcase
     return if message.include?('target closed') || message.include?('session closed') || message.include?('not found')

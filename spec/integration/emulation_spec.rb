@@ -212,6 +212,26 @@ RSpec.describe 'Emulation' do
     end
   end
 
+  describe 'Page.emulateLocale' do
+    it 'should work' do
+      default_locale = page.evaluate('() => Intl.NumberFormat().resolvedOptions().locale')
+      default_language = page.evaluate('() => navigator.language')
+
+      page.emulate_locale('de-DE')
+      expect(page.evaluate('() => Intl.NumberFormat().resolvedOptions().locale')).to eq('de-DE')
+      expect(page.evaluate('() => new Intl.NumberFormat().format(123456.78)')).to eq('123.456,78')
+      expect(page.evaluate('() => navigator.language')).to eq('de-DE')
+      expect(page.evaluate('() => navigator.languages[0]')).to eq('de-DE')
+
+      page.emulate_locale('fr-FR')
+      expect(page.evaluate('() => Intl.DateTimeFormat().resolvedOptions().locale')).to eq('fr-FR')
+
+      page.emulate_locale
+      expect(page.evaluate('() => Intl.NumberFormat().resolvedOptions().locale')).to eq(default_locale)
+      expect(page.evaluate('() => navigator.language')).to eq(default_language)
+    end
+  end
+
   describe 'Page.emulateVisionDeficiency' do
     it 'should work', sinatra: true do
       page.viewport = Puppeteer::Viewport.new(width: 500, height: 500)

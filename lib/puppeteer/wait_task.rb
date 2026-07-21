@@ -174,7 +174,6 @@ class Puppeteer::WaitTask
   WAIT_FOR_PREDICATE_PAGE_FUNCTION = <<~JAVASCRIPT
   function _(root, predicateBody, polling, ...args) {
       const predicate = new Function('...args', predicateBody);
-      const observedRoot = root || document;
       if (polling === 'mutation' && typeof MutationObserver === 'undefined') {
           polling = 'raf';
       }
@@ -346,7 +345,7 @@ class Puppeteer::WaitTask
       if (polling === 'raf') {
           poller = new RAFPoller(runner);
       } else if (polling === 'mutation') {
-          poller = new MutationPoller(runner, observedRoot);
+          poller = new MutationPoller(runner, root || document);
       } else if (typeof polling === 'number') {
           poller = new IntervalPoller(runner, polling);
       } else {

@@ -15,12 +15,13 @@ class Puppeteer::Browser
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs issues_enabled: bool -- Whether issues events are enabled
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
   # @rbs is_page_target_callback: Proc? -- Page target predicate
   # @rbs return: Puppeteer::Browser -- Browser instance
-  def self.create: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?) -> Puppeteer::Browser
+  def self.create: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?, ?allow_list: Array[String]?) -> Puppeteer::Browser
 
   # @rbs product: String? -- Browser product (chrome only)
   # @rbs connection: Puppeteer::Connection -- CDP connection
@@ -30,14 +31,17 @@ class Puppeteer::Browser
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs issues_enabled: bool -- Whether issues events are enabled
   # @rbs block_list: Array[String]? -- URL block list patterns
+  # @rbs allow_list: Array[String]? -- URL allow list patterns
   # @rbs process: Puppeteer::BrowserRunner::BrowserProcess? -- Browser process handle
   # @rbs close_callback: Proc -- Close callback
   # @rbs target_filter_callback: Proc? -- Target filter callback
   # @rbs is_page_target_callback: Proc? -- Page target predicate
   # @rbs return: void -- No return value
-  def initialize: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?) -> void
+  def initialize: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?, ?allow_list: Array[String]?) -> void
 
   private def default_target_filter_callback: (untyped target_info) -> untyped
+
+  private def validate_allow_list_version: () -> untyped
 
   private def default_is_page_target_callback: (untyped target_info) -> untyped
 
@@ -120,6 +124,8 @@ class Puppeteer::Browser
   # @rbs return: Puppeteer::Page -- Created page
   def create_page_in_context: (String? context_id) -> Puppeteer::Page
 
+  private def wait_for_available_target: (untyped target_id) -> untyped
+
   # All active targets inside the Browser. In case of multiple browser contexts, returns
   # an array with all the targets in all browser contexts.
   # @rbs return: Array[Puppeteer::Target] -- Active targets
@@ -146,13 +152,24 @@ class Puppeteer::Browser
   # @rbs return: String -- Browser user agent string
   def user_agent: () -> String
 
+  private def version_info: () -> untyped
+
   # @rbs page_target_id: String -- Page target id
   # @rbs return: String? -- DevTools target id for page
   def _has_devtools_target: (String page_target_id) -> String?
 
+  # @rbs page_target_id: String -- Inspected page target id
+  # @rbs return: Puppeteer::Page -- DevTools page
+  def _create_devtools_page: (String page_target_id) -> Puppeteer::Page
+
+  # @rbs devtools_target_id: String -- DevTools target id
+  # @rbs return: Puppeteer::Page -- DevTools page
+  def _get_devtools_target_page: (String devtools_target_id) -> Puppeteer::Page
+
   # @rbs path: String -- Extension path
+  # @rbs enabled_in_incognito: bool -- Enable in Incognito and OTR profiles
   # @rbs return: String -- Installed extension id
-  def install_extension: (String path) -> String
+  def install_extension: (String path, ?enabled_in_incognito: bool) -> String
 
   # @rbs extension_id: String -- Extension id
   # @rbs return: void -- No return value
@@ -166,6 +183,13 @@ class Puppeteer::Browser
 
   # @rbs return: Array[String]? -- URL block list patterns
   def block_list: () -> Array[String]?
+
+  # @rbs return: Array[String]? -- URL allow list patterns
+  def allow_list: () -> Array[String]?
+
+  # @rbs url: String -- URL to validate against network restriction rules
+  # @rbs return: bool -- Whether the URL is allowed
+  def url_allowed?: (String url) -> bool
 
   # @rbs return: void -- No return value
   def close: () -> void

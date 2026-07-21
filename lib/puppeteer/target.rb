@@ -6,11 +6,12 @@ class Puppeteer::Target
       @type = options['type']
       @title = options['title']
       @url = options['url']
+      @subtype = options['subtype']
       @attached = options['attached']
       @browser_context_id = options['browserContextId']
       @opener_id = options['openerId']
     end
-    attr_reader :target_id, :type, :title, :url, :attached, :browser_context_id, :opener_id
+    attr_reader :target_id, :type, :title, :url, :subtype, :attached, :browser_context_id, :opener_id
   end
 
   # @param {!Protocol.Target.TargetInfo} targetInfo
@@ -112,6 +113,10 @@ class Puppeteer::Target
     @is_initialized
   end
 
+  def exposed?
+    raw_type != 'tab' && !@target_info.subtype
+  end
+
   # @return [CDPSession|nil]
   def session
     @session
@@ -144,8 +149,7 @@ class Puppeteer::Target
 
   # @return [Puppeteer::Page]
   def as_page
-    existing_page = page
-    return existing_page if existing_page
+    return @page if @page
     return @as_page if @as_page
 
     client = @session || @session_factory.call(false)

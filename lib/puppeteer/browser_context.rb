@@ -241,7 +241,6 @@ class Puppeteer::BrowserContext
       if partition_key
         normalized['partitionKey'] = convert_partition_key_from_cdp(partition_key)
       end
-      normalized['sameParty'] = cookie['sameParty'] || false
       normalized
     end
   end

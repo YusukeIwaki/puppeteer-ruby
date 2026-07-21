@@ -5,6 +5,10 @@ class Puppeteer::Tracing
     @recording = false
   end
 
+  def update_client(client)
+    @client = client
+  end
+
   DEFAULT_CATEGORIES = [
     '-*',
     'devtools.timeline',

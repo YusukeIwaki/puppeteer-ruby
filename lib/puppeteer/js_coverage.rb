@@ -29,6 +29,10 @@ class Puppeteer::JSCoverage
     @script_parsed_tasks = []
   end
 
+  def update_client(client)
+    @client = client
+  end
+
   def start(
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,

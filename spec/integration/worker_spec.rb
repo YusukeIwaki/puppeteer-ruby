@@ -18,15 +18,7 @@ RSpec.describe 'Workers' do
       worker = page.workers.first
       expect(worker.url).to include('worker.js')
 
-      result = nil
-      5.times do
-        begin
-          result = worker.evaluate('() => globalThis.workerFunction()')
-          break
-        rescue
-          Puppeteer::AsyncUtils.sleep_seconds(0.2)
-        end
-      end
+      result = worker.evaluate('() => globalThis.workerFunction()')
       expect(result).to eq('worker function result')
 
       page.goto(server.empty_page)
@@ -169,6 +161,81 @@ RSpec.describe 'Workers' do
 
       expect(test_response).not_to be_nil
       expect(test_response.text).to include('hello from the worker')
+    end
+  end
+
+  describe 'waitForFunction' do
+    it 'should wait for a condition' do
+      with_test_state do |page:, **|
+        worker_created = wait_for_event(page, 'workercreated')
+        page.evaluate(<<~JAVASCRIPT)
+          () => new Worker(`data:text/javascript,
+            setTimeout(() => {
+              self.foo = true;
+            }, 500);
+          `)
+        JAVASCRIPT
+        worker = worker_created.wait
+
+        worker.wait_for_function('() => self.foo === true')
+      end
+    end
+
+    it 'should timeout if condition is not met' do
+      with_test_state do |page:, **|
+        worker_created = wait_for_event(page, 'workercreated')
+        page.evaluate('() => new Worker("data:text/javascript,1")')
+        worker = worker_created.wait
+
+        expect do
+          worker.wait_for_function('() => false', timeout: 50)
+        end.to raise_error(/Waiting failed/)
+      end
+    end
+
+    it 'should return a JSHandle to a string and parse it' do
+      with_test_state do |page:, **|
+        worker_created = wait_for_event(page, 'workercreated')
+        page.evaluate(<<~JAVASCRIPT)
+          () => new Worker(`data:text/javascript,
+            setTimeout(() => {
+              self.status = 'ready';
+            }, 500);
+          `)
+        JAVASCRIPT
+        worker = worker_created.wait
+
+        handle = worker.wait_for_function(<<~JAVASCRIPT)
+          () => self.status === 'ready' ? 'Operation Success' : false
+        JAVASCRIPT
+        begin
+          expect(handle.json_value).to eq('Operation Success')
+        ensure
+          handle.dispose
+        end
+      end
+    end
+
+    it 'should work with JSHandle as an argument' do
+      with_test_state do |page:, **|
+        worker_created = wait_for_event(page, 'workercreated')
+        page.evaluate(<<~JAVASCRIPT)
+          () => new Worker(`data:text/javascript,
+            self.targetValue = 42;
+          `)
+        JAVASCRIPT
+        worker = worker_created.wait
+
+        argument_handle = worker.evaluate_handle('() => 42')
+        begin
+          worker.wait_for_function(
+            '(expected) => self.targetValue === expected',
+            args: [argument_handle],
+          )
+        ensure
+          argument_handle.dispose
+        end
+      end
     end
   end
 end

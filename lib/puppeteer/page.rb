@@ -40,32 +40,46 @@ class Puppeteer::Page
     @closed = false
     @client = client
     @target = target
-    @tab_id = nil
+    @tab_session = client.parent_session || client
+    @tab_target = @tab_session.target || target
+    @tab_id = @tab_target.target_id
     @keyboard = Puppeteer::Keyboard.new(client)
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
-    # @accessibility = Accessibility.new(client)
     @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled)
     @emulation_manager = Puppeteer::EmulationManager.new(client)
     @tracing = Puppeteer::Tracing.new(client)
+    @webmcp = Puppeteer::WebMCP.new(client, @frame_manager)
     @page_bindings = {}
     @page_binding_ids = {}
     @coverage = Puppeteer::Coverage.new(client)
     @javascript_enabled = true
     @screenshot_task_queue = ScreenshotTaskQueue.new
+    @screencast_session_count = 0
+    @screencast_start_promise = nil
+    @screencast_mutex = Mutex.new
     @inflight_requests = Set.new
     @request_intercepted_listener_map = ObjectSpace::WeakMap.new
     @attached_sessions = Set.new
+    @primary_session_listener_ids = []
 
     @workers = {}
     @user_drag_interception_enabled = false
     @service_worker_bypassed = false
 
-    @attached_session_listener_id = @client.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
-      handle_attached_to_session(session)
+    @swapped_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Swapped) do |session|
+      Async do
+        handle_activation(session)
+      rescue => err
+        debug_puts(err)
+      end
     end
-    @target_gone_listener_id = @target.target_manager.add_event_listener(
+    @secondary_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
+      handle_secondary_target(session)
+    end
+    @target_manager = @target.target_manager
+    @target_gone_listener_id = @target_manager.add_event_listener(
       TargetManagerEmittedEvents::TargetGone,
       &method(:handle_detached_from_target)
     )
@@ -102,47 +116,95 @@ class Puppeteer::Page
     @file_chooser_interception_is_disabled = false
     @file_chooser_interceptors = Set.new
 
-    @client.on_event('Page.domContentEventFired') do |event|
+    setup_primary_target_listeners(@client)
+  end
+
+  private def setup_primary_target_listeners(client)
+    listener_id = client.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
+      handle_attached_to_session(session)
+    end
+    @primary_session_listener_ids << [client, listener_id]
+
+    client.on_event('Page.domContentEventFired') do |event|
       emit_event(PageEmittedEvents::DOMContentLoaded)
     end
-    @client.on_event('Page.loadEventFired') do |event|
+    client.on_event('Page.loadEventFired') do |event|
       emit_event(PageEmittedEvents::Load)
     end
-    @client.add_event_listener('Runtime.consoleAPICalled') do |event|
+    client.add_event_listener('Runtime.consoleAPICalled') do |event|
       handle_console_api(event)
     end
-    @client.add_event_listener('Runtime.bindingCalled') do |event|
+    client.add_event_listener('Runtime.bindingCalled') do |event|
       handle_binding_called(event)
     end
-    @client.on_event('Page.javascriptDialogOpening') do |event|
+    client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
     end
-    @client.on_event('Runtime.exceptionThrown') do |exception|
+    client.on_event('Runtime.exceptionThrown') do |exception|
       handle_exception(exception['exceptionDetails'])
     end
-    @client.on_event('Inspector.targetCrashed') do |event|
+    client.on_event('Inspector.targetCrashed') do |event|
       handle_target_crashed
     end
-    @client.on_event('Performance.metrics') do |event|
+    client.on_event('Performance.metrics') do |event|
       emit_event(PageEmittedEvents::Metrics, MetricsEvent.new(event))
     end
-    @client.on_event('Log.entryAdded') do |event|
+    client.on_event('Log.entryAdded') do |event|
       handle_log_entry_added(event)
     end
-    @client.on_event('Page.fileChooserOpened') do |event|
+    client.on_event('Page.fileChooserOpened') do |event|
       handle_file_chooser(event)
-    end
-    Async do
-      @target.is_closed_promise.wait
-      @client.remove_event_listener(@attached_session_listener_id)
-      @target.target_manager.remove_event_listener(@target_gone_listener_id)
-
-      emit_event(PageEmittedEvents::Close)
-      @closed = true
     end
   end
 
+  private def handle_activation(session)
+    @client = session
+    @target = session.target
+    @target.instance_variable_set(:@page, self)
+    @keyboard.update_client(session)
+    @mouse.update_client(session)
+    @touchscreen.update_client(session)
+    @emulation_manager.update_client(session)
+    @tracing.update_client(session)
+    @webmcp.update_client(session)
+    @coverage.update_client(session)
+    @frame_manager.swap_frame_tree(session)
+    setup_primary_target_listeners(session)
+  end
+
+  private def handle_secondary_target(session)
+    target = session.target
+    return unless target&.target_info&.subtype == 'prerender'
+
+    @frame_manager.register_speculative_session(session)
+    @emulation_manager.register_speculative_session(session)
+  end
+
+  private def mark_closed
+    return if @closed
+
+    cleanup_page_listeners
+    @closed = true
+    emit_event(PageEmittedEvents::Close)
+  end
+
+  private def cleanup_page_listeners
+    return if @page_listeners_cleaned
+
+    @page_listeners_cleaned = true
+    @primary_session_listener_ids.each do |session, listener_id|
+      session.remove_event_listener(listener_id)
+    end
+    @tab_session.remove_event_listener(@swapped_session_listener_id, @secondary_session_listener_id)
+    @target_manager.remove_event_listener(@target_gone_listener_id)
+  end
+
   private def handle_detached_from_target(target)
+    if target == @tab_target
+      mark_closed
+      return
+    end
+
     session_id = target.session&.id
     @frame_manager.handle_detached_from_target(target)
     return unless session_id
@@ -201,6 +263,7 @@ class Puppeteer::Page
       @frame_manager.async_init(@target.target_id),
       @client.async_send_message('Performance.enable'),
       @client.async_send_message('Log.enable'),
+      @webmcp.async_initialize_domain,
     )
   end
 
@@ -360,9 +423,22 @@ class Puppeteer::Page
   end
 
   # @rbs return: bool -- Whether DevTools is attached to this page
-  def has_devtools
+  def has_dev_tools
     !!browser._has_devtools_target(@target.target_id)
   end
+
+  # @rbs return: Puppeteer::Page -- Existing or newly opened DevTools page
+  def open_dev_tools
+    page_target_id = @target.target_id
+    devtools_target_id = browser._has_devtools_target(page_target_id)
+    if devtools_target_id
+      return browser._get_devtools_target_page(devtools_target_id)
+    end
+
+    browser._create_devtools_page(page_target_id)
+  end
+
+  define_async_method :async_open_dev_tools
 
   # @rbs extension: Puppeteer::Extension -- Extension to trigger
   # @rbs return: void -- No return value
@@ -409,8 +485,13 @@ class Puppeteer::Page
     @frame_manager.main_frame
   end
 
-  attr_reader :touchscreen, :coverage, :tracing, :accessibility
+  attr_reader :touchscreen, :coverage, :tracing, :webmcp
   alias_method :touch_screen, :touchscreen
+
+  # @rbs return: Puppeteer::Accessibility -- Main-frame accessibility tree
+  def accessibility
+    main_frame.accessibility
+  end
 
   # @rbs block: Proc? -- Optional block for instance_eval
   # @rbs return: Puppeteer::Keyboard -- Keyboard instance
@@ -1324,6 +1405,13 @@ class Puppeteer::Page
     end
   end
 
+  # @rbs locale: String? -- Locale to emulate, or nil to disable emulation
+  # @rbs return: void -- No return value
+  def emulate_locale(locale = nil)
+    @emulation_manager.emulate_locale(locale)
+    @frame_manager.network_manager.set_accept_language(locale)
+  end
+
   VISION_DEFICIENCY_TYPES = %w[
     none
     achromatopsia
@@ -1368,6 +1456,151 @@ class Puppeteer::Page
   end
 
   attr_reader :viewport
+
+  # @rbs path: String? -- Output file path
+  # @rbs overwrite: bool -- Overwrite an existing output file
+  # @rbs format: String? -- webm, gif, or mp4
+  # @rbs crop: Hash[Symbol, Numeric]? -- Viewport crop rectangle
+  # @rbs scale: Numeric? -- Output scale
+  # @rbs speed: Numeric? -- Playback speed
+  # @rbs fps: Numeric? -- Output frame rate
+  # @rbs loop: Numeric? -- GIF loop count
+  # @rbs delay: Numeric? -- GIF loop delay
+  # @rbs quality: Numeric? -- VP9 CRF value
+  # @rbs colors: Numeric? -- GIF palette size
+  # @rbs ffmpeg_path: String? -- FFmpeg executable path
+  # @rbs return: Puppeteer::ScreenRecorder -- Active recorder
+  def screencast(
+    path: nil,
+    overwrite: true,
+    format: nil,
+    crop: nil,
+    scale: nil,
+    speed: nil,
+    fps: nil,
+    loop: nil,
+    delay: nil,
+    quality: nil,
+    colors: nil,
+    ffmpeg_path: nil
+  )
+    raise ArgumentError.new('`speed` must be greater than 0.') if speed && speed <= 0
+    raise ArgumentError.new('`scale` must be greater than 0.') if scale && scale <= 0
+    width, height, device_pixel_ratio = native_pixel_dimensions
+    normalized_crop = normalize_screencast_crop(crop, width, height, device_pixel_ratio)
+    options = {
+      path: path,
+      overwrite: overwrite,
+      format: format,
+      crop: normalized_crop,
+      scale: scale,
+      speed: speed,
+      fps: fps,
+      loop: loop,
+      delay: delay,
+      quality: quality,
+      colors: colors,
+      ffmpeg_path: ffmpeg_path,
+    }.compact
+    recorder = Puppeteer::ScreenRecorder.new(self, width, height, options)
+    begin
+      _start_screencast
+    rescue
+      recorder.stop
+      raise
+    end
+    recorder
+  end
+
+  # @rbs return: void -- Start a shared CDP screencast session
+  def _start_screencast
+    start_promise, first_session = @screencast_mutex.synchronize do
+      @screencast_session_count += 1
+      next [@screencast_start_promise, false] if @screencast_start_promise
+
+      @screencast_start_promise = Async::Promise.new
+      [@screencast_start_promise, true]
+    end
+    if first_session
+      first_frame = Async::Promise.new
+      client = main_frame.client
+      listener_id = client.once('Page.screencastFrame') do
+        first_frame.resolve(nil) unless first_frame.resolved?
+      end
+      begin
+        client.send_message('Page.startScreencast', format: 'png')
+        first_frame.wait
+        start_promise.resolve(nil)
+      rescue => error
+        start_promise.reject(error) unless start_promise.resolved?
+      ensure
+        client.remove_event_listener(listener_id) if listener_id
+      end
+    end
+    start_promise.wait
+  end
+
+  # @rbs return: void -- Stop a shared CDP screencast session
+  def _stop_screencast
+    should_stop = @screencast_mutex.synchronize do
+      @screencast_session_count -= 1 if @screencast_session_count.positive?
+      next false unless @screencast_start_promise
+
+      @screencast_start_promise = nil
+      @screencast_session_count.zero?
+    end
+    main_frame.client.send_message('Page.stopScreencast') if should_stop
+  end
+
+  private def native_pixel_dimensions
+    original_viewport = @viewport
+    if original_viewport && original_viewport.device_scale_factor != 0
+      self.viewport = original_viewport.merge(device_scale_factor: 0)
+    end
+    main_frame.puppeteer_world.evaluate(<<~JAVASCRIPT)
+      () => [
+        window.visualViewport.width * window.devicePixelRatio,
+        window.visualViewport.height * window.devicePixelRatio,
+        window.devicePixelRatio,
+      ]
+    JAVASCRIPT
+  ensure
+    self.viewport = original_viewport if original_viewport && @viewport != original_viewport
+  end
+
+  private def normalize_screencast_crop(crop, width, height, device_pixel_ratio)
+    return nil unless crop
+
+    value = ->(name) do
+      crop.respond_to?(name) ? crop.public_send(name) : crop[name] || crop[name.to_s]
+    end
+    x = value.call(:x).floor
+    y = value.call(:y).floor
+    crop_width = value.call(:width).ceil
+    crop_height = value.call(:height).ceil
+    if x.negative? || y.negative?
+      raise ArgumentError.new('`crop.x` and `crop.y` must be greater than or equal to 0.')
+    end
+    if crop_width <= 0 || crop_height <= 0
+      raise ArgumentError.new(
+        '`crop.height` and `crop.width` must be greater than or equal to 0.',
+      )
+    end
+    viewport_width = width / device_pixel_ratio
+    viewport_height = height / device_pixel_ratio
+    if x + crop_width > viewport_width
+      raise ArgumentError.new("`crop.width` cannot be larger than the viewport width (#{viewport_width}).")
+    end
+    if y + crop_height > viewport_height
+      raise ArgumentError.new("`crop.height` cannot be larger than the viewport height (#{viewport_height}).")
+    end
+    {
+      x: x * device_pixel_ratio,
+      y: y * device_pixel_ratio,
+      width: crop_width * device_pixel_ratio,
+      height: crop_height * device_pixel_ratio,
+    }
+  end
 
   # @rbs page_function: String -- page_function parameter
   # @rbs args: Array[untyped] -- args parameter
@@ -1619,13 +1852,7 @@ class Puppeteer::Page
         @client.send_message('Page.close')
       else
         @client.connection.send_message('Target.closeTarget', targetId: @target.target_id)
-        @target.is_closed_promise.wait
-
-        # @closed sometimes remains false, so wait for @closed = true with 100ms timeout.
-        25.times do
-          break if @closed
-          Puppeteer::AsyncUtils.sleep_seconds(0.004)
-        end
+        @tab_target.is_closed_promise.wait
       end
     rescue Puppeteer::Connection::ProtocolError => err
       raise unless err.message.match?(/Target closed/i)
@@ -1644,11 +1871,10 @@ class Puppeteer::Page
   # @rbs selector: String -- CSS selector
   # @rbs delay: Numeric? -- Delay between down and up (ms)
   # @rbs button: String? -- Mouse button
-  # @rbs click_count: Integer? -- Deprecated: use count (click_count only sets clickCount)
   # @rbs count: Integer? -- Number of clicks to perform
   # @rbs return: void -- No return value
-  def click(selector, delay: nil, button: nil, click_count: nil, count: nil)
-    main_frame.click(selector, delay: delay, button: button, click_count: click_count, count: count)
+  def click(selector, delay: nil, button: nil, count: nil)
+    main_frame.click(selector, delay: delay, button: button, count: count)
   end
 
   define_async_method :async_click

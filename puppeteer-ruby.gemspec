@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "async-websocket", ">= 0.27", "< 1.0"
   spec.add_dependency 'base64'
   spec.add_dependency 'mime-types', '>= 3.0'
+  spec.add_dependency 'urlpattern', '~> 0.1.1'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'chunky_png'
   spec.add_development_dependency 'dry-inflector'

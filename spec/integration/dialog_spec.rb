@@ -49,4 +49,18 @@ RSpec.describe 'Page.Events.Dialog' do
       expect(result).to be_nil
     end
   end
+
+  it 'should expose whether the dialog has been handled' do
+    with_test_state do |page:, **|
+      handled_states = []
+      page.on('dialog') do |dialog|
+        handled_states << dialog.handled?
+        dialog.dismiss
+        handled_states << dialog.handled?
+      end
+
+      page.evaluate("() => alert('yo')")
+      expect(handled_states).to eq([false, true])
+    end
+  end
 end
