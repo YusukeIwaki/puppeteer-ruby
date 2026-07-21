@@ -72,7 +72,7 @@ RSpec.describe Puppeteer::CDPSession do
 
     expect {
       client.send_message('Runtime.evaluate', expression: '3 + 1', returnByValue: true)
-    }.to raise_error(/Session closed./)
+    }.to raise_error(Puppeteer::TargetCloseError, /Session closed./)
   end
 
   it 'should throw nice errors' do
@@ -96,7 +96,7 @@ RSpec.describe Puppeteer::CDPSession do
     expect {
       fake_session.send_message('Runtime.evaluate', expression: '1 + 1')
     }.to raise_error(
-      Puppeteer::CDPSession::Error,
+      Puppeteer::TargetCloseError,
       'Protocol error (Runtime.evaluate): Session with given id not found.',
     )
   end

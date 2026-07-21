@@ -156,7 +156,11 @@ RSpec.describe Puppeteer::NetworkManager do
       page = double(Puppeteer::Page, browser: browser)
       manager_frame_manager = double(Puppeteer::FrameManager, page: page)
       manager = described_class.new(client, false, manager_frame_manager)
-      allow(browser).to receive(:user_agent).and_raise(Puppeteer::Error, 'Target closed')
+      error = Puppeteer::TargetCloseError.new(
+        method: 'Browser.getVersion',
+        error_message: 'Target closed',
+      )
+      allow(browser).to receive(:user_agent).and_raise(error)
 
       expect { manager.init }.not_to raise_error
     end

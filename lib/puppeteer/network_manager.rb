@@ -147,12 +147,12 @@ class Puppeteer::NetworkManager
   end
 
   private def ignore_client_error?(error)
+    return true if error.is_a?(Puppeteer::TargetCloseError)
+
     message = error&.message
     return false unless message
 
     lowered = message.downcase
-    return true if lowered.include?('target closed')
-    return true if lowered.include?('session closed')
     return true if lowered.include?('not supported')
     return true if lowered.include?("wasn't found")
 

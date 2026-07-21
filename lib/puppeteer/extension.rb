@@ -41,7 +41,9 @@ class Puppeteer::Extension
     tasks = extension_targets.map do |target|
       proc do
         target.worker
-      rescue
+      rescue => error
+        raise unless can_ignore_error?(error)
+
         nil
       end
     end
@@ -57,9 +59,18 @@ class Puppeteer::Extension
     end
     extension_targets.filter_map do |target|
       target.as_page
-    rescue
+    rescue => error
+      raise unless can_ignore_error?(error)
+
       nil
     end
+  end
+
+  # @rbs error: StandardError -- Error raised while resolving an extension target
+  # @rbs return: bool -- Whether the target resolution error can be ignored
+  private def can_ignore_error?(error)
+    error.is_a?(Puppeteer::TargetCloseError) ||
+      error.message.include?('No target with given id found')
   end
 
   # @rbs page: Puppeteer::Page -- Target page

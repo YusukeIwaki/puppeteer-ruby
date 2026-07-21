@@ -412,3 +412,6 @@ class Puppeteer::Connection
     @sessions_mutex.synchronize { @sessions[session_id] }.tap { |session| session&.mark_ready }
   end
 end
+
+# ref: https://github.com/puppeteer/puppeteer/blob/main/packages/puppeteer-core/src/common/Errors.ts
+class Puppeteer::TargetCloseError < Puppeteer::Connection::ProtocolError; end

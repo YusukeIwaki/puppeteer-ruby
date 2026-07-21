@@ -195,7 +195,6 @@ class Puppeteer::FrameManager
   def assert_no_legacy_navigation_options: (wait_until: (String | Array[String] | nil)) -> void
   def extension_origin?: (untyped origin) -> bool
   def extract_extension_id: (untyped origin) -> String?
-  def maybe_setup_block_list: (Puppeteer::CDPSession client) -> void
   def blocked_url?: (String? url) -> bool
 end
 
@@ -282,6 +281,10 @@ class Puppeteer::Connection
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
+  class ProtocolError < Puppeteer::Error
+    def initialize: (method: String, error_message: String, ?error_data: untyped) -> void
+  end
+
   def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
   def closed?: () -> bool
   def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
@@ -309,6 +312,9 @@ class Puppeteer::Connection
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void
   def handle_close: () -> void
+end
+
+class Puppeteer::TargetCloseError < Puppeteer::Connection::ProtocolError
 end
 
 module Puppeteer::Launcher

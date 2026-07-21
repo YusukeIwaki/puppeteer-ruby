@@ -66,7 +66,10 @@ class Puppeteer::CDPSession
   # @rbs return: Async::Promise[Hash[String, untyped]] -- Async CDP response
   def async_send_message(method, params = {})
     if !@connection
-      raise Error.new("Protocol error (#{method}): Session closed. Most likely the #{@target_type} has been closed.")
+      raise Puppeteer::TargetCloseError.new(
+        method: method,
+        error_message: "Session closed. Most likely the #{@target_type} has been closed.",
+      )
     end
 
     @connection.ensure_command_allowed!(method)
@@ -108,7 +111,10 @@ class Puppeteer::CDPSession
       if message['error']['message'].include?('Session with given id not found')
         handle_closed
         callback.reject(
-          Error.new("Protocol error (#{callback.method}): Session with given id not found."),
+          Puppeteer::TargetCloseError.new(
+            method: callback.method,
+            error_message: 'Session with given id not found.',
+          ),
         )
       else
         callback.reject(
@@ -137,9 +143,9 @@ class Puppeteer::CDPSession
     end
     callbacks.each do |callback|
       callback.reject(
-        Puppeteer::Connection::ProtocolError.new(
+        Puppeteer::TargetCloseError.new(
           method: callback.method,
-          error_message: 'Target Closed.'))
+          error_message: 'Target closed'))
     end
     @ready_promise.reject(Error.new("Session closed")) unless @ready_promise.resolved?
     @connection = nil
