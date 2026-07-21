@@ -17,6 +17,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -40,7 +45,7 @@ jobs:
       image: ruby:${{ matrix.ruby }}
     steps:
       - name: Install system dependencies
-        run: apk add --no-cache build-base chromium gcompat git openssl-dev
+        run: apk add --no-cache build-base chromium ffmpeg gcompat git openssl-dev
 
       - name: Check out code
         uses: actions/checkout@v3
