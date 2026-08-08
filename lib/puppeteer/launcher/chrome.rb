@@ -163,6 +163,8 @@ module Puppeteer::Launcher
           'IPH_ReadingModePageActionLabel',
           'ReadAnythingOmniboxChip',
           'WebUIReloadButton',
+          'WebUIOmniboxPopup',
+          'WebUIOmniboxAimPopup',
           *user_disabled_features,
         ].reject(&:empty?).reject { |feature| enabled_features.include?(feature) }
 
