@@ -33,4 +33,31 @@ RSpec.describe Puppeteer::Browser do
       )
     end
   end
+
+  describe '#launch_pwa' do
+    it 'should apply the timeout while waiting for the page target' do
+      connection = double(Puppeteer::Connection)
+      browser = described_class.allocate
+      browser.instance_variable_set(:@connection, connection)
+      browser.instance_variable_set(:@has_network_restrictions, false)
+      page = double(Puppeteer::Page)
+      target = double(Puppeteer::Target, page: page)
+
+      expect(connection).to receive(:send_message).with(
+        'PWA.launch',
+        { manifestId: 'https://example.com/' },
+      ).and_return('targetId' => 'tab')
+      expect(browser).to receive(:wait_for_target).with(
+        predicate: kind_of(Proc),
+        timeout: 123,
+      ).and_return(target)
+
+      result = browser.launch_pwa(
+        manifest_id: 'https://example.com/',
+        timeout: 123,
+      )
+
+      expect(result).to eq(page)
+    end
+  end
 end

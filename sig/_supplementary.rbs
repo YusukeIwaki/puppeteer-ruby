@@ -242,6 +242,9 @@ class Puppeteer::Target
   def ignore_initialize_callback_promise: () -> void
   def initialized?: () -> bool
   def exposed?: () -> bool
+  def _add_child_target: (Puppeteer::Target target) -> untyped
+  def _remove_child_target: (Puppeteer::Target target) -> untyped
+  def _child_targets: () -> Set[Puppeteer::Target]
   def session: () -> Puppeteer::CDPSession?
   def create_cdp_session: () -> Puppeteer::CDPSession
   def target_manager: () -> untyped
@@ -304,7 +307,7 @@ class Puppeteer::Connection
     def initialize: (method: String, error_message: String, ?error_data: untyped) -> void
   end
 
-  def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
+  def initialize: (String url, (Puppeteer::WebSocketTransport | Puppeteer::PipeTransport) transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
   def closed?: () -> bool
   def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
   def session: (String session_id) -> Puppeteer::CDPSession?
@@ -368,11 +371,13 @@ class Puppeteer::BrowserRunner
   def wait_for_ws_endpoint: (Puppeteer::BrowserRunner::BrowserProcess browser_process, Numeric? timeout, String? preferred_revision) -> String
 
   class BrowserProcess
-    def initialize: (Hash[String, String] env, String executable_path, Array[String]? args) -> void
+    def initialize: (Hash[String, String] env, String executable_path, Array[String]? args, ?pipe: bool) -> void
     def kill: () -> void
     def dispose: () -> void
     attr_reader stdout: untyped
     attr_reader stderr: untyped
     attr_reader spawnargs: Array[String]
+    attr_reader pipe_write: IO?
+    attr_reader pipe_read: IO?
   end
 end

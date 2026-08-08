@@ -40,6 +40,7 @@ class Puppeteer::Target
     @network_enabled = network_enabled
     @is_page_target_callback = is_page_target_callback
     @worker = nil
+    @child_targets = Set.new
 
     #    /** @type {?Promise<!Puppeteer.Page>} */
     #    this._pagePromise = null;
@@ -63,6 +64,18 @@ class Puppeteer::Target
   end
 
   attr_reader :target_id, :target_info, :initialized_promise, :is_closed_promise
+
+  def _add_child_target(target)
+    @child_targets.add(target)
+  end
+
+  def _remove_child_target(target)
+    @child_targets.delete(target)
+  end
+
+  def _child_targets
+    @child_targets
+  end
 
   def ==(other)
     other = other.__getobj__ if other.is_a?(Puppeteer::ReactorRunner::Proxy)

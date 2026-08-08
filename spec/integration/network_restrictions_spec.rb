@@ -417,6 +417,72 @@ RSpec.describe 'Network Restrictions' do
     end
   end
 
+  describe 'PWA validation' do
+    describe 'blocklist' do
+      it 'should throw when calling PWA APIs' do
+        with_network_restrictions(
+          block_list: ['*://*:*/empty.html'],
+          pipe: true,
+        ) do |browser:, server:, **|
+          manifest_id = "#{server.prefix}/pwa/"
+
+          expect do
+            browser.install_pwa(
+              manifest_id: manifest_id,
+              install_url_or_bundle_url: "#{server.prefix}/pwa/index.html",
+            )
+          end.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+
+          expect { browser.launch_pwa(manifest_id: manifest_id) }.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+
+          expect { browser.uninstall_pwa(manifest_id: manifest_id) }.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+
+          expect { browser.get_pwa_state(manifest_id: manifest_id) }.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+        end
+      end
+    end
+
+    describe 'allowlist' do
+      it 'should throw when calling PWA APIs' do
+        with_network_restrictions(
+          allow_list: ['*://*:*/empty.html'],
+          pipe: true,
+        ) do |browser:, server:, **|
+          manifest_id = "#{server.prefix}/pwa/"
+
+          expect do
+            browser.install_pwa(
+              manifest_id: manifest_id,
+              install_url_or_bundle_url: "#{server.prefix}/pwa/index.html",
+            )
+          end.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+
+          expect { browser.launch_pwa(manifest_id: manifest_id) }.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+
+          expect { browser.uninstall_pwa(manifest_id: manifest_id) }.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+
+          expect { browser.get_pwa_state(manifest_id: manifest_id) }.to raise_error(
+            'PWA APIs are not supported when network restrictions are configured.',
+          )
+        end
+      end
+    end
+  end
+
   it 'should detach from targets violating blocklist when connecting to a running browser', sinatra: true do
     with_test_state(create_page: false) do |browser:, server:, **|
       page = browser.new_page

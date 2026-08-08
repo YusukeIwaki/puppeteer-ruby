@@ -175,6 +175,28 @@ class Puppeteer::Browser
   # @rbs return: void -- No return value
   def uninstall_extension: (String extension_id) -> void
 
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs install_url_or_bundle_url: String -- URL used to install the app or its signed bundle
+  # @rbs display_mode: ("standalone" | "browser")? -- Preferred app display mode
+  # @rbs return: String -- Installed manifest ID
+  def install_pwa: (manifest_id: String, install_url_or_bundle_url: String, ?display_mode: ("standalone" | "browser")?) -> String
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs return: void -- No return value
+  def uninstall_pwa: (manifest_id: String) -> void
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs url: String? -- Optional URL within the app scope to launch
+  # @rbs timeout: Numeric? -- Maximum time to wait for the page target in milliseconds
+  # @rbs return: Puppeteer::Page -- Page backing the launched app window
+  def launch_pwa: (manifest_id: String, ?url: String?, ?timeout: Numeric?) -> Puppeteer::Page
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs return: Hash[String, untyped] -- OS integration state for the app
+  def get_pwa_state: (manifest_id: String) -> Hash[String, untyped]
+
+  private def ensure_pwa_api_supported!: () -> untyped
+
   # @rbs return: Hash[String, Puppeteer::Extension] -- Installed extensions
   def extensions: () -> Hash[String, Puppeteer::Extension]
 

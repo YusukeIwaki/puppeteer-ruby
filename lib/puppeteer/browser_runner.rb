@@ -1,5 +1,7 @@
 require 'fileutils'
+require 'fcntl'
 require 'open3'
+require 'socket'
 # https://github.com/puppeteer/puppeteer/blob/master/lib/Launcher.js
 class Puppeteer::BrowserRunner
   include Puppeteer::DebugPrint
@@ -20,7 +22,7 @@ class Puppeteer::BrowserRunner
   attr_reader :proc, :connection
 
   class BrowserProcess
-    def initialize(env, executable_path, args)
+    def initialize(env, executable_path, args, pipe: false)
       @spawnargs =
         if args && !args.empty?
           [executable_path] + args
@@ -28,11 +30,41 @@ class Puppeteer::BrowserRunner
           [executable_path]
         end
 
-      popen3_args = args || []
-      popen3_args << { pgroup: true } unless Puppeteer.env.windows?
-      stdin, @stdout, @stderr, @thread = Open3.popen3(env, executable_path, *popen3_args)
-      stdin.close
-      @pid = @thread.pid
+      if pipe
+        browser_stdin, @stdin = IO.pipe
+        @stdout, browser_stdout = IO.pipe
+        @stderr, browser_stderr = IO.pipe
+        if Puppeteer.env.windows?
+          browser_pipe_read, @pipe_write = IO.pipe
+          @pipe_read, browser_pipe_write = IO.pipe
+        else
+          browser_pipe_read, @pipe_write = UNIXSocket.pair
+          browser_pipe_write, @pipe_read = UNIXSocket.pair
+        end
+        [browser_pipe_read, browser_pipe_write].each do |browser_pipe|
+          flags = browser_pipe.fcntl(Fcntl::F_GETFL)
+          browser_pipe.fcntl(Fcntl::F_SETFL, flags & ~Fcntl::O_NONBLOCK)
+        end
+        spawn_options = {
+          in: browser_stdin,
+          out: browser_stdout,
+          err: browser_stderr,
+          3 => browser_pipe_read,
+          4 => browser_pipe_write,
+        }
+        spawn_options[:pgroup] = true unless Puppeteer.env.windows?
+        @pid = Process.spawn(env, executable_path, *(args || []), spawn_options)
+        @thread = Process.detach(@pid)
+        [browser_stdin, browser_stdout, browser_stderr, browser_pipe_read, browser_pipe_write].each(&:close)
+      else
+        popen3_args = (args || []).dup
+        spawn_options = {}
+        spawn_options[:pgroup] = true unless Puppeteer.env.windows?
+        popen3_args << spawn_options unless spawn_options.empty?
+        stdin, @stdout, @stderr, @thread = Open3.popen3(env, executable_path, *popen3_args)
+        stdin.close
+        @pid = @thread.pid
+      end
     rescue Errno::ENOENT => err
       raise LaunchError.new(err.message)
     end
@@ -44,11 +76,13 @@ class Puppeteer::BrowserRunner
     end
 
     def dispose
-      [@stdout, @stderr].each { |io| io.close unless io.closed? }
+      [@stdin, @stdout, @stderr, @pipe_write, @pipe_read].compact.each do |io|
+        io.close unless io.closed?
+      end
       @thread.join
     end
 
-    attr_reader :stdout, :stderr, :spawnargs
+    attr_reader :stdout, :stderr, :spawnargs, :pipe_write, :pipe_read
   end
 
   class LaunchError < Puppeteer::Error
@@ -84,6 +118,7 @@ class Puppeteer::BrowserRunner
       @launch_options.env,
       @executable_path,
       @process_arguments,
+      pipe: @launch_options.pipe?,
     )
     # if (dumpio) {
     #   this.proc.stderr.pipe(process.stderr);
@@ -169,7 +204,13 @@ class Puppeteer::BrowserRunner
         protocol_timeout: protocol_timeout,
       )
     else
-      raise NotImplementedError.new('PipeTransport is not yet implemented')
+      transport = Puppeteer::PipeTransport.new(@proc.pipe_write, @proc.pipe_read)
+      @connection = Puppeteer::Connection.new(
+        '',
+        transport,
+        slow_mo,
+        protocol_timeout: protocol_timeout,
+      )
     end
 
     @connection
