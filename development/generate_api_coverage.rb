@@ -30,7 +30,7 @@ class Member
   end
 
   def property?
-    @kind == 'Variable' && @name =~ /^[a-z]/
+    (@kind == 'Variable' || @kind == 'Property') && @name =~ /^[a-z]/
   end
 
   def members
@@ -99,7 +99,11 @@ class RubyMethodName
     '$$eval' => :eval_on_selector_all,
     '$x' => :Sx,
     'type' => :type_text,
+    'closed' => :closed?,
+    'connected' => :connected?,
+    'detached' => :detached?,
     'getProperty' => :[],
+    'handled' => :handled?,
     'toString' => :to_s,
   }.freeze
 
