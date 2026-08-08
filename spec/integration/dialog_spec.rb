@@ -50,6 +50,40 @@ RSpec.describe 'Page.Events.Dialog' do
     end
   end
 
+  it 'should see dialogs handled by other connections' do
+    with_test_state do |page:, server:, browser:, **|
+      page.goto(server.empty_page)
+
+      Puppeteer.connect(browser_ws_endpoint: browser.ws_endpoint) do |browser2|
+        page2 = browser2.pages.find { |candidate| candidate.url == server.empty_page }
+        raise 'Could not find page2' unless page2
+
+        dialog1_promise = Async::Promise.new
+        page.once('dialog') { |dialog| dialog1_promise.resolve(dialog) }
+        dialog2_promise = Async::Promise.new
+        page2.once('dialog') { |dialog| dialog2_promise.resolve(dialog) }
+
+        evaluate_promise = async_promise do
+          page2.evaluate("() => prompt('question?', 'yes.')")
+        end
+
+        dialog1 = dialog1_promise.wait
+        dialog2 = dialog2_promise.wait
+
+        dialog2.accept('answer!')
+
+        result = evaluate_promise.wait
+        expect(result).to eq('answer!')
+
+        # Wait for the event to be processed by the first connection.
+        page.evaluate('() => 1')
+
+        expect(dialog1.handled?).to eq(true)
+        expect(dialog2.handled?).to eq(true)
+      end
+    end
+  end
+
   it 'should expose whether the dialog has been handled' do
     with_test_state do |page:, **|
       handled_states = []
