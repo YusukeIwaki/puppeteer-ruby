@@ -225,6 +225,33 @@ RSpec.describe 'OOPIF', **metadata do
     expect(page.frames.map { |frame| frame.has_started_loading? }).to eq([true, true, false])
   end
 
+  it 'should exposeFunction when an OOP iframe goes away mid-call' do
+    frame_count = 8
+
+    page.goto(server_empty_page)
+    frame_count.times do |index|
+      attach_frame(
+        page,
+        "oopif#{index}",
+        "#{server_cross_process_prefix}/empty.html",
+      )
+    end
+    expect(page.frames).to have_attributes(length: frame_count + 1)
+
+    # Start the teardown first so it lands while the per-frame calls run.
+    detached = page.async_evaluate(<<~JAVASCRIPT)
+      () => {
+        for (const frame of document.querySelectorAll('iframe')) {
+          frame.remove();
+        }
+      }
+    JAVASCRIPT
+    page.expose_function('doubleIt', ->(value) { value * 2 })
+    detached.wait
+
+    expect(page.evaluate('() => doubleIt(21)')).to eq(42)
+  end
+
   it 'should resolve immediately if the frame already exists' do
     page.goto(server_empty_page)
     attach_frame(page, 'frame2', "#{server_cross_process_prefix}/empty.html")

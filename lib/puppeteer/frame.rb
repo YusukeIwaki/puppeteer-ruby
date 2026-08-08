@@ -151,6 +151,54 @@ class Puppeteer::Frame
 
   define_async_method :async_evaluate
 
+  # @rbs preload_script: Puppeteer::FrameManager::PreloadScript -- Script to install for new documents
+  # @rbs return: void -- No return value
+  def add_preload_script(preload_script)
+    return if parent_frame && @client == parent_frame.client
+    return if preload_script.id_for_frame(self)
+
+    result = @client.send_message(
+      'Page.addScriptToEvaluateOnNewDocument',
+      source: preload_script.source,
+    )
+    preload_script.set_id_for_frame(self, result['identifier'])
+    nil
+  end
+
+  # @rbs binding: Puppeteer::FrameManager::ExposedFunctionBinding -- Binding to install
+  # @rbs return: void -- No return value
+  def add_exposed_function_binding(binding)
+    return if self != @frame_manager.main_frame && !has_started_loading?
+
+    @client.send_message(
+      'Runtime.addBinding',
+      name: "#{Puppeteer::FrameManager::CDP_BINDING_PREFIX}#{binding.name}",
+    )
+    begin
+      evaluate("() => #{binding.source}")
+    rescue StandardError
+      nil
+    end
+    nil
+  end
+
+  # @rbs binding: Puppeteer::FrameManager::ExposedFunctionBinding -- Binding to remove
+  # @rbs return: void -- No return value
+  def remove_exposed_function_binding(binding)
+    return if self != @frame_manager.main_frame && !has_started_loading?
+
+    @client.send_message(
+      'Runtime.removeBinding',
+      name: "#{Puppeteer::FrameManager::CDP_BINDING_PREFIX}#{binding.name}",
+    )
+    begin
+      evaluate('(name) => { delete window[name]; }', binding.name)
+    rescue StandardError
+      nil
+    end
+    nil
+  end
+
   # `$()` in JavaScript.
   # @rbs selector: String -- CSS selector
   # @rbs return: Puppeteer::ElementHandle? -- Matching element or nil

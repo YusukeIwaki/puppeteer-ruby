@@ -53,6 +53,7 @@ class Puppeteer::Page
     @webmcp = Puppeteer::WebMCP.new(client, @frame_manager)
     @page_bindings = {}
     @page_binding_ids = {}
+    @exposed_function_bindings = {}
     @coverage = Puppeteer::Coverage.new(client)
     @javascript_enabled = true
     @screenshot_task_queue = ScreenshotTaskQueue.new
@@ -133,9 +134,6 @@ class Puppeteer::Page
     end
     client.add_event_listener('Runtime.consoleAPICalled') do |event|
       handle_console_api(event)
-    end
-    client.add_event_listener('Runtime.bindingCalled') do |event|
-      handle_binding_called(event)
     end
     client.on_event('Page.javascriptDialogOpening') do |event|
       handle_dialog_opening(event)
@@ -745,15 +743,13 @@ class Puppeteer::Page
     @page_bindings[name] = puppeteer_function
 
     add_page_binding = <<~JAVASCRIPT
-    function (type, bindingName) {
-      /* Cast window to any here as we're about to add properties to it
-      * via win[bindingName] which TypeScript doesn't like.
-      */
-      const win = window;
-      const binding = win[bindingName];
+    function (type, bindingName, prefix) {
+      if (globalThis[bindingName]) {
+        return;
+      }
 
-      win[bindingName] = (...args) => {
-        const me = window[bindingName];
+      globalThis[bindingName] = (...args) => {
+        const me = globalThis[bindingName];
         let callbacks = me.callbacks;
         if (!callbacks) {
           callbacks = new Map();
@@ -764,21 +760,25 @@ class Puppeteer::Page
         const promise = new Promise((resolve, reject) =>
           callbacks.set(seq, { resolve, reject })
         );
-        binding(JSON.stringify({ type, name: bindingName, seq, args }));
+        globalThis[prefix + bindingName](
+          JSON.stringify({ type, name: bindingName, seq, args })
+        );
         return promise;
       };
     }
     JAVASCRIPT
 
-    source = JavaScriptFunction.new(add_page_binding, ['exposedFun', name]).source
-    @client.send_message('Runtime.addBinding', name: name)
-    script = @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
+    source = JavaScriptFunction.new(
+      add_page_binding,
+      ['exposedFun', name, Puppeteer::FrameManager::CDP_BINDING_PREFIX],
+    ).source
+    binding = Puppeteer::FrameManager::ExposedFunctionBinding.new(name, source)
+    @exposed_function_bindings[name] = binding
+    script, = Puppeteer::AsyncUtils.await_promise_all(
+      Async { @frame_manager.evaluate_on_new_document(source) },
+      Async { @frame_manager.add_exposed_function_binding(binding) },
+    )
     @page_binding_ids[name] = script['identifier']
-
-    promises = @frame_manager.frames.map do |frame|
-      frame.async_evaluate("() => #{source}")
-    end
-    Puppeteer::AsyncUtils.await_promise_all(*promises)
 
     nil
   end
@@ -793,16 +793,12 @@ class Puppeteer::Page
 
     @page_binding_ids.delete(name)
     @page_bindings.delete(name)
+    binding = @exposed_function_bindings.delete(name)
 
-    @client.send_message('Runtime.removeBinding', name: name)
-    @client.send_message('Page.removeScriptToEvaluateOnNewDocument', identifier: identifier)
-
-    remove_script = '(name) => { delete window[name]; }'
-    @frame_manager.frames.each do |frame|
-      frame.evaluate(remove_script, name)
-    rescue StandardError
-      nil
-    end
+    Puppeteer::AsyncUtils.await_promise_all(
+      Async { @frame_manager.remove_script_to_evaluate_on_new_document(identifier) },
+      Async { @frame_manager.remove_exposed_function_binding(binding) },
+    )
     nil
   end
 
@@ -901,8 +897,9 @@ class Puppeteer::Page
   end
 
   # @rbs event: Hash[String, untyped] -- Binding called payload
+  # @rbs client: Puppeteer::CDPSession -- Session that emitted the binding call
   # @rbs return: void -- No return value
-  def handle_binding_called(event)
+  def handle_binding_called(event, client = @client)
     execution_context_id = event['executionContextId']
     payload =
       begin
@@ -944,7 +941,7 @@ class Puppeteer::Page
       end
 
     Async do
-      @client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+      client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
     rescue => error
       debug_puts(error)
     end
@@ -1654,13 +1651,13 @@ class Puppeteer::Page
         JavaScriptExpression.new(page_function).source
       end
 
-    @client.send_message('Page.addScriptToEvaluateOnNewDocument', source: source)
+    @frame_manager.evaluate_on_new_document(source)
   end
 
   # @rbs identifier: String -- Script identifier to remove
   # @rbs return: void
   def remove_script_to_evaluate_on_new_document(identifier)
-    @client.send_message('Page.removeScriptToEvaluateOnNewDocument', identifier: identifier)
+    @frame_manager.remove_script_to_evaluate_on_new_document(identifier)
   end
 
   # @rbs enabled: bool -- Enable cache usage

@@ -279,8 +279,9 @@ class Puppeteer::Page
   private def handle_console_api: (untyped event) -> untyped
 
   # @rbs event: Hash[String, untyped] -- Binding called payload
+  # @rbs client: Puppeteer::CDPSession -- Session that emitted the binding call
   # @rbs return: void -- No return value
-  def handle_binding_called: (Hash[String, untyped] event) -> void
+  def handle_binding_called: (Hash[String, untyped] event, ?Puppeteer::CDPSession client) -> void
 
   private def add_console_message: (untyped type, untyped args, untyped stack_trace) -> untyped
 
