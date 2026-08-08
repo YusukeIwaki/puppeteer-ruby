@@ -262,8 +262,8 @@ class Puppeteer::WebSocketTransport
   class ClosedError < Puppeteer::Error
   end
 
-  def self.create: (String url) -> Puppeteer::WebSocketTransport
-  def initialize: (String url) -> void
+  def self.create: (String url, ?headers: Hash[String, String]?) -> Puppeteer::WebSocketTransport
+  def initialize: (String url, ?headers: Hash[String, String]?) -> void
   def connect: () -> untyped
   def send_text: (String message) -> void
   def close: () -> void
