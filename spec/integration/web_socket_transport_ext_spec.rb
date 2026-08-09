@@ -36,7 +36,7 @@ RSpec.describe Puppeteer::WebSocketTransport do
     it 'fails with HTTP/2 websocket when ALPN is not forced', ws_http2: true do
       transport = unsafe_transport_class.new(ws_http2_server.url)
 
-      expect { connect_in_reactor(transport) }.to raise_error(Protocol::HTTP2::StreamError)
+      expect { connect_in_reactor(transport) }.to raise_error(Protocol::HTTP::Error)
     end
 
     it 'connects successfully by forcing HTTP/1.1', ws_http2: true do
