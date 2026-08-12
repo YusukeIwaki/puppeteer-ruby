@@ -100,6 +100,7 @@ class Puppeteer::NetworkManager
     @user_agent = nil
     @user_agent_metadata = nil
     @accept_language = nil
+    @user_agent_override_applied = false
 
     @attempted_authentications = Set.new
     @user_request_interception_enabled = false
@@ -175,15 +176,30 @@ class Puppeteer::NetworkManager
     safe_send_message(client, 'Network.setExtraHTTPHeaders', headers: @extra_http_headers)
   end
 
-  private def apply_user_agent(client)
+  private def apply_user_agent(client, user_agent_override_applied: @user_agent_override_applied)
+    nothing_to_emulate = @user_agent.nil? &&
+      @user_agent_metadata.nil? &&
+      @accept_language.nil?
+    return if nothing_to_emulate && !user_agent_override_applied
+
     user_agent = @user_agent || @frame_manager.page.browser.user_agent
     return unless user_agent
 
-    safe_send_message(client, 'Network.setUserAgentOverride', {
+    client.send_message('Network.setUserAgentOverride', {
       userAgent: user_agent,
       acceptLanguage: @accept_language,
       userAgentMetadata: @user_agent_metadata,
     }.compact)
+    @user_agent_override_applied = !nothing_to_emulate
+  rescue => err
+    raise unless ignore_client_error?(err)
+  end
+
+  private def apply_user_agent_to_clients
+    user_agent_override_applied = @user_agent_override_applied
+    apply_to_clients do |client|
+      apply_user_agent(client, user_agent_override_applied: user_agent_override_applied)
+    end
   end
 
   private def apply_protocol_cache_disabled(client)
@@ -282,7 +298,7 @@ class Puppeteer::NetworkManager
   def set_user_agent(user_agent, user_agent_metadata = nil)
     @user_agent = user_agent
     @user_agent_metadata = user_agent_metadata
-    apply_to_clients { |client| apply_user_agent(client) }
+    apply_user_agent_to_clients
   end
   alias_method :user_agent=, :set_user_agent
 
@@ -290,7 +306,7 @@ class Puppeteer::NetworkManager
   # @rbs return: void -- No return value
   def set_accept_language(accept_language)
     @accept_language = accept_language
-    apply_to_clients { |client| apply_user_agent(client) }
+    apply_user_agent_to_clients
   end
 
   def cache_enabled=(enabled)

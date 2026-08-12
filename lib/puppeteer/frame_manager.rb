@@ -6,6 +6,49 @@ class Puppeteer::FrameManager
 
   UTILITY_WORLD_NAME = '__puppeteer_utility_world__'
   CHROME_EXTENSION_PREFIX = 'chrome-extension://'
+  CDP_BINDING_PREFIX = 'puppeteer_'
+
+  class ExposedFunctionBinding
+    # @rbs name: String -- Exposed function name
+    # @rbs source: String -- Binding initialization source
+    # @rbs return: void -- No return value
+    def initialize(name, source)
+      @name = name
+      @source = source
+    end
+
+    attr_reader :name #: String
+    attr_reader :source #: String
+  end
+
+  class PreloadScript
+    # @rbs main_frame: Puppeteer::Frame -- Main frame owning the public identifier
+    # @rbs identifier: String -- Public preload script identifier
+    # @rbs source: String -- Preload script source
+    # @rbs return: void -- No return value
+    def initialize(main_frame, identifier, source)
+      @identifier = identifier
+      @source = source
+      @frame_to_id = ObjectSpace::WeakMap.new
+      @frame_to_id[main_frame] = identifier
+    end
+
+    attr_reader :identifier #: String
+    attr_reader :source #: String
+
+    # @rbs frame: Puppeteer::Frame -- Frame whose session identifier is requested
+    # @rbs return: String? -- Per-session preload script identifier
+    def id_for_frame(frame)
+      @frame_to_id[frame]
+    end
+
+    # @rbs frame: Puppeteer::Frame -- Frame whose session owns the identifier
+    # @rbs identifier: String -- Per-session preload script identifier
+    # @rbs return: void -- No return value
+    def set_id_for_frame(frame, identifier)
+      @frame_to_id[frame] = identifier
+    end
+  end
 
   # @param {!Puppeteer.CDPSession} client
   # @param {!Puppeteer.Page} page
@@ -28,6 +71,8 @@ class Puppeteer::FrameManager
 
     # @type {!Set<string>}
     @isolated_worlds = Set.new
+    @bindings = Set.new
+    @scripts_to_evaluate_on_new_document = {}
 
     # Keeps track of OOPIF targets/frames (target ID == frame ID for OOPIFs)
     # that are being initialized.
@@ -79,6 +124,9 @@ class Puppeteer::FrameManager
       with_frame_tree_handled do
         handle_execution_context_created(event['context'], client)
       end
+    end
+    client.add_event_listener('Runtime.bindingCalled') do |event|
+      @page.send(:handle_binding_called, event, client)
     end
     client.on_event('Runtime.executionContextDestroyed') do |event|
       handle_execution_context_destroyed(event['executionContextId'], client)
@@ -180,6 +228,14 @@ class Puppeteer::FrameManager
       @page.browser.issues_enabled? ? client.async_send_message('Audits.enable') : nil,
     )
     ensure_isolated_world(client, UTILITY_WORLD_NAME)
+    if cdp_session && (frame = @frames[target_id])
+      @scripts_to_evaluate_on_new_document.each_value do |script|
+        frame.add_preload_script(script)
+      end
+      @bindings.each do |binding|
+        frame.add_exposed_function_binding(binding)
+      end
+    end
     @network_manager.init unless cdp_session
   rescue => err
     # The target might have been closed before the initialization finished.
@@ -413,6 +469,82 @@ class Puppeteer::FrameManager
   # @return {?Frame}
   def frame(frame_id)
     @frames[frame_id]
+  end
+
+  # @rbs binding: Puppeteer::FrameManager::ExposedFunctionBinding -- Binding to install
+  # @rbs return: void -- No return value
+  def add_exposed_function_binding(binding)
+    @bindings.add(binding)
+    for_each_frame do |frame|
+      frame.add_exposed_function_binding(binding)
+    end
+  end
+
+  # @rbs binding: Puppeteer::FrameManager::ExposedFunctionBinding -- Binding to remove
+  # @rbs return: void -- No return value
+  def remove_exposed_function_binding(binding)
+    @bindings.delete(binding)
+    for_each_frame do |frame|
+      frame.remove_exposed_function_binding(binding)
+    end
+  end
+
+  # @rbs source: String -- Script source to evaluate in every new document
+  # @rbs return: Hash[String, String] -- Public preload script identifier
+  def evaluate_on_new_document(source)
+    result = main_frame._client.send_message(
+      'Page.addScriptToEvaluateOnNewDocument',
+      source: source,
+    )
+    identifier = result['identifier']
+    preload_script = PreloadScript.new(main_frame, identifier, source)
+    @scripts_to_evaluate_on_new_document[identifier] = preload_script
+
+    for_each_frame do |frame|
+      frame.add_preload_script(preload_script)
+    end
+
+    { 'identifier' => identifier }
+  end
+
+  # @rbs identifier: String -- Public preload script identifier to remove
+  # @rbs return: void -- No return value
+  def remove_script_to_evaluate_on_new_document(identifier)
+    preload_script = @scripts_to_evaluate_on_new_document.delete(identifier)
+    unless preload_script
+      raise Puppeteer::Error.new("Script to evaluate on new document with id #{identifier} not found")
+    end
+
+    tasks = frames.filter_map do |frame|
+      frame_identifier = preload_script.id_for_frame(frame)
+      next unless frame_identifier
+
+      Async do
+        frame._client.send_message(
+          'Page.removeScriptToEvaluateOnNewDocument',
+          identifier: frame_identifier,
+        )
+      rescue => err
+        debug_puts(err)
+      end
+    end
+    Puppeteer::AsyncUtils.await_promise_all(*tasks)
+    nil
+  end
+
+  private def for_each_frame(&action)
+    tasks = frames.map do |frame|
+      Async do
+        action.call(frame)
+      rescue => err
+        # Only an out-of-process frame has a session of its own to lose.
+        if frame._client == @client || !err.is_a?(Puppeteer::TargetCloseError)
+          raise err
+        end
+      end
+    end
+    Puppeteer::AsyncUtils.await_promise_all(*tasks)
+    nil
   end
 
   # @param session [Puppeteer::CDPSession]

@@ -1,11 +1,13 @@
 # API coverages
-- Puppeteer version: v25.3.0
+- Puppeteer version: v25.5.0
 - puppeteer-ruby version: 0.53.0
 
 ## Puppeteer
 
+* ~~asyncDisposeSymbol~~
 * connect
 * defaultArgs => `#default_args`
+* ~~disposeSymbol~~
 * executablePath => `#executable_path`
 * launch
 * ~~puppeteer~~
@@ -16,18 +18,25 @@
 
 ## Browser
 
+* ~~[asyncDisposeSymbol]~~
+* ~~[disposeSymbol]~~
 * ~~addScreen~~
 * browserContexts => `#browser_contexts`
 * close
+* connected => `#connected?`
 * ~~cookies~~
 * createBrowserContext => `#create_browser_context`
+* ~~debugInfo~~
 * defaultBrowserContext => `#default_browser_context`
 * ~~deleteCookie~~
 * ~~deleteMatchingCookies~~
 * disconnect
 * extensions
+* getPWAState => `#get_pwa_state`
 * ~~getWindowBounds~~
 * installExtension => `#install_extension`
+* installPWA => `#install_pwa`
+* launchPWA => `#launch_pwa`
 * newPage => `#new_page`
 * pages
 * process
@@ -39,6 +48,7 @@
 * target
 * targets
 * uninstallExtension => `#uninstall_extension`
+* uninstallPWA => `#uninstall_pwa`
 * userAgent => `#user_agent`
 * version
 * waitForTarget => `#wait_for_target`
@@ -46,12 +56,16 @@
 
 ## BrowserContext
 
+* ~~[asyncDisposeSymbol]~~
+* ~~[disposeSymbol]~~
 * browser
 * clearPermissionOverrides => `#clear_permission_overrides`
 * close
+* closed => `#closed?`
 * cookies
 * deleteCookie => `#delete_cookie`
 * deleteMatchingCookies => `#delete_matching_cookies`
+* id
 * newPage => `#new_page`
 * overridePermissions => `#override_permissions`
 * pages
@@ -62,6 +76,7 @@
 
 ## ~~BrowserLauncher~~
 
+* ~~browser~~
 * ~~defaultArgs~~
 * ~~executablePath~~
 * ~~launch~~
@@ -70,6 +85,7 @@
 
 * connection
 * detach
+* ~~detached~~
 * id
 * send
 
@@ -80,6 +96,7 @@
 * ~~fromSession~~
 * send
 * session
+* ~~timeout~~
 * url
 
 ## ~~ConnectionClosedError~~
@@ -108,6 +125,7 @@
 ## ~~DeviceRequestPrompt~~
 
 * ~~cancel~~
+* ~~devices~~
 * ~~select~~
 * ~~waitForDevice~~
 
@@ -116,6 +134,7 @@
 * accept
 * defaultValue => `#default_value`
 * dismiss
+* handled => `#handled?`
 * message
 * type
 
@@ -139,6 +158,7 @@
 * dragOver => `#drag_over`
 * drop
 * focus
+* frame
 * hover
 * isHidden => `#hidden?`
 * isIntersectingViewport => `#intersecting_viewport?`
@@ -158,6 +178,8 @@
 
 ## ~~EventEmitter~~
 
+* ~~[asyncDisposeSymbol]~~
+* ~~[disposeSymbol]~~
 * ~~emit~~
 * ~~listenerCount~~
 * ~~off~~
@@ -167,14 +189,21 @@
 
 ## Extension
 
+* enabled
+* id
+* name
 * pages
+* path
 * triggerAction => `#trigger_action`
+* version
 * workers
 
 ## ~~ExtensionTransport~~
 
 * ~~close~~
 * ~~connectTab~~
+* ~~onclose~~
+* ~~onmessage~~
 * ~~send~~
 
 ## FileChooser
@@ -194,6 +223,7 @@
 * childFrames => `#child_frames`
 * click
 * content
+* detached => `#detached?`
 * evaluate
 * evaluateHandle => `#evaluate_handle`
 * extensionRealms => `#extension_realms`
@@ -220,6 +250,7 @@
 
 * abort
 * abortErrorReason => `#abort_error_reason`
+* client
 * continue
 * continueRequestOverrides => `#continue_request_overrides`
 * enqueueInterceptAction => `#enqueue_intercept_action`
@@ -268,6 +299,8 @@
 
 ## JSHandle
 
+* ~~[asyncDisposeSymbol]~~
+* ~~[disposeSymbol]~~
 * asElement => `#as_element`
 * dispose
 * evaluate
@@ -275,6 +308,7 @@
 * getProperties => `#properties`
 * getProperty => `#[]`
 * jsonValue => `#json_value`
+* move
 * remoteObject => `#remote_object`
 * toString => `#to_s`
 
@@ -301,6 +335,7 @@
 * setVisibility => `#set_visibility`
 * setWaitForEnabled => `#set_wait_for_enabled`
 * setWaitForStableBoundingBox => `#set_wait_for_stable_bounding_box`
+* timeout
 * wait
 * waitHandle => `#wait_handle`
 
@@ -320,13 +355,17 @@
 
 ## Page
 
+* ~~[asyncDisposeSymbol]~~
+* ~~[disposeSymbol]~~
 * $ => `#query_selector`
 * $$ => `#query_selector_all`
 * $$eval => `#eval_on_selector_all`
 * $eval => `#eval_on_selector`
+* accessibility
 * addScriptTag => `#add_script_tag`
 * addStyleTag => `#add_style_tag`
 * authenticate
+* ~~bluetooth~~
 * bringToFront => `#bring_to_front`
 * browser
 * browserContext => `#browser_context`
@@ -335,6 +374,7 @@
 * close
 * content
 * cookies
+* coverage
 * ~~createCDPSession~~
 * createPDFStream => `#create_pdf_stream`
 * deleteCookie => `#delete_cookie`
@@ -366,9 +406,11 @@
 * isDragInterceptionEnabled => `#drag_interception_enabled?`
 * isJavaScriptEnabled => `#javascript_enabled?`
 * isServiceWorkerBypassed => `#service_worker_bypassed?`
+* keyboard
 * locator
 * mainFrame => `#main_frame`
 * metrics
+* mouse
 * openDevTools => `#open_dev_tools`
 * pdf
 * queryObjects => `#query_objects`
@@ -397,6 +439,8 @@
 * tap
 * target
 * title
+* touchscreen
+* tracing
 * triggerExtensionAction => `#trigger_extension_action`
 * type => `#type_text`
 * url
@@ -410,21 +454,27 @@
 * waitForRequest => `#wait_for_request`
 * waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`
+* webmcp
 * ~~windowId~~
 * workers
 
 ## ~~ProtocolError~~
 
+* ~~code~~
+* ~~originalMessage~~
 
 ## ~~Realm~~
 
+* ~~[disposeSymbol]~~
 * ~~evaluate~~
 * ~~evaluateHandle~~
 * ~~extension~~
+* ~~origin~~
 * ~~waitForFunction~~
 
 ## ScreenRecorder
 
+* ~~[asyncDisposeSymbol]~~
 * stop
 
 ## ~~SecurityDetails~~
@@ -475,13 +525,24 @@
 
 ## WebMCPTool
 
+* annotations
+* description
 * execute
+* formElement => `#form_element`
+* frame
+* inputSchema => `#input_schema`
+* location
+* name
 
 ## WebMCPToolCall
 
+* id
+* input
+* tool
 
 ## WebWorker
 
+* client
 * close
 * evaluate
 * evaluateHandle => `#evaluate_handle`

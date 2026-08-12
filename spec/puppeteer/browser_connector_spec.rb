@@ -13,6 +13,7 @@ RSpec.describe Puppeteer::BrowserConnector do
 
         expect(Puppeteer::WebSocketTransport).to receive(:create).with(
           'ws://localhost:9222/devtools/browser/abc123',
+          headers: nil,
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).with(
           'ws://localhost:9222/devtools/browser/abc123',
@@ -37,6 +38,7 @@ RSpec.describe Puppeteer::BrowserConnector do
         allow(Puppeteer::ChromeUserDataDir).to receive(:resolve_default).with('chrome-beta').and_return(user_data_dir)
         allow(Puppeteer::WebSocketTransport).to receive(:create).with(
           'ws://localhost:9223/devtools/browser/def456',
+          headers: nil,
         ).and_return(transport)
         allow(Puppeteer::Connection).to receive(:new).and_return(connection)
 
@@ -76,6 +78,31 @@ RSpec.describe Puppeteer::BrowserConnector do
         ArgumentError,
         'Exactly one of browserWSEndpoint, browserURL, transport or channel must be passed to puppeteer.connect',
       )
+    end
+
+    describe 'getWSEndpoint via browserURL' do
+      it 'should forward headers to the /json/version HTTP request' do
+        headers = { 'Authorization' => 'Bearer test-token' }
+        browser_url = 'http://localhost:1234'
+        websocket_url = 'ws://localhost:1234/devtools/browser/1'
+        expected_uri = URI('http://localhost:1234/json/version')
+
+        expect(Net::HTTP).to receive(:get).with(expected_uri, headers).and_return(
+          JSON.generate('webSocketDebuggerUrl' => websocket_url),
+        )
+        expect(Puppeteer::WebSocketTransport).to receive(:create).with(
+          websocket_url,
+          headers: headers,
+        ).and_return(transport)
+        expect(Puppeteer::Connection).to receive(:new).and_return(connection)
+
+        result = described_class.new(
+          browser_url: browser_url,
+          headers: headers,
+        ).send(:connection)
+
+        expect(result).to eq(connection)
+      end
     end
   end
 end

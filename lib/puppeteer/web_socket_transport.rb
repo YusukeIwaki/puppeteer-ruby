@@ -9,14 +9,15 @@ class Puppeteer::WebSocketTransport
 
   # @param {string} url
   # @return [Puppeteer::WebSocketTransport]
-  def self.create(url)
-    transport = new(url)
+  def self.create(url, headers: nil)
+    transport = new(url, headers: headers)
     transport.connect.wait
     transport
   end
 
-  def initialize(url)
+  def initialize(url, headers: nil)
     @url = url
+    @headers = headers
     # Force HTTP/1.1 for WebSocket connections.
     # Some servers (e.g., Google Cloud Run) advertise HTTP/2 via ALPN but don't
     # properly support WebSocket over HTTP/2 (RFC 8441), causing stream errors.
@@ -36,7 +37,7 @@ class Puppeteer::WebSocketTransport
 
     @connect_promise = Async::Promise.new
     @task = Async do |task|
-      Async::WebSocket::Client.connect(@endpoint) do |connection|
+      Async::WebSocket::Client.connect(@endpoint, headers: @headers) do |connection|
         @connection = connection
         @connected = true
         @connect_promise.resolve(true) unless @connect_promise.resolved?

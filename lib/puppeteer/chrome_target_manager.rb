@@ -304,6 +304,8 @@ class Puppeteer::ChromeTargetManager
 
     @attached_targets_by_target_id[target_info.target_id] ||= target
     @attached_targets_by_session_id[session.id] = target
+    parent_target = parent_session.is_a?(Puppeteer::CDPSession) ? parent_session.target : nil
+    parent_target&._add_child_target(target)
 
     @target_interceptors[parent_session]&.each do |interceptor|
       if parent_session.is_a?(Puppeteer::Connection)
@@ -324,7 +326,6 @@ class Puppeteer::ChromeTargetManager
         Puppeteer::AsyncUtils.future_with_logging { emit_event(TargetManagerEmittedEvents::TargetAvailable, target) }.call
       end
     end
-    parent_target = parent_session.is_a?(Puppeteer::CDPSession) ? parent_session.target : nil
     finish_initialization_if_ready(parent_target.target_id) if parent_target&.raw_type == 'tab'
     finish_initialization_if_ready
     parent_session.emit_event(CDPSessionEmittedEvents::Ready, session)
@@ -368,6 +369,9 @@ class Puppeteer::ChromeTargetManager
     session_id = event['sessionId']
     target = @attached_targets_by_session_id.delete(session_id)
     return unless target
+    if parent_session.is_a?(Puppeteer::CDPSession)
+      parent_session.target&._remove_child_target(target)
+    end
     @attached_targets_by_target_id.delete(target.target_id)
     emit_event(TargetManagerEmittedEvents::TargetGone, target)
   end

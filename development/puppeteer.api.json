@@ -663,6 +663,34 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "asyncDisposeSymbol: "
+            },
+            {
+              "kind": "Content",
+              "text": "typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "Symbol.asyncDispose",
+              "canonicalReference": "!SymbolConstructor#asyncDispose:member"
+            }
+          ],
+          "fileUrlPath": "src/util/disposable.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "asyncDisposeSymbol",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          }
+        },
+        {
           "kind": "Enum",
           "canonicalReference": "puppeteer-core!AutofillAddressField:enum",
           "docComment": "/**\n * Supported autofill address field names.\n *\n * @public\n */\n",
@@ -1795,6 +1823,91 @@
           "members": [
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#[disposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "disposeSymbol",
+                  "canonicalReference": "puppeteer-core!disposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[disposeSymbol]"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Browser#addScreen:member(1)",
               "docComment": "/**\n * Adds a new screen, returns the added {@link ScreenInfo | screen information object}.\n *\n * @remarks\n *\n * Only supported in headless mode.\n */\n",
               "excerptTokens": [
@@ -2337,6 +2450,69 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#getPWAState:member(1)",
+              "docComment": "/**\n * Returns the OS-integration state of an installed Progressive Web App (PWA), such as its badge count and registered file handlers.\n *\n * @remarks\n *\n * Only available over a pipe connection. See {@link Browser.installPWA}. Meaningful only for an app that is currently installed; querying an unknown manifest id rejects.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract getPWAState(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "GetPWAStateOptions",
+                  "canonicalReference": "puppeteer-core!GetPWAStateOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PWAState",
+                  "canonicalReference": "puppeteer-core!PWAState:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 7
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "getPWAState"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Browser#getWindowBounds:member(1)",
               "docComment": "/**\n * Gets the specified window {@link WindowBounds | bounds}.\n */\n",
               "excerptTokens": [
@@ -2467,6 +2643,123 @@
               "isOptional": false,
               "isAbstract": true,
               "name": "installExtension"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#installPWA:member(1)",
+              "docComment": "/**\n * Installs a Progressive Web App (PWA) and returns its manifest id.\n *\n * @remarks\n *\n * Only available when connected to the browser over a pipe connection. Set `pipe: true` in {@link PuppeteerNode.launch | puppeteer.launch}; the launch option defaults to `false`. The underlying `PWA` CDP domain is not exposed over a WebSocket connection.\n *\n * The returned manifest id echoes {@link InstallPWAOptions.manifestId}, so it can be passed directly to {@link Browser.launchPWA}, {@link Browser.getPWAState}, or {@link Browser.uninstallPWA}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract installPWA(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "InstallPWAOptions",
+                  "canonicalReference": "puppeteer-core!InstallPWAOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "installPWA"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#launchPWA:member(1)",
+              "docComment": "/**\n * Launches an installed Progressive Web App (PWA) and resolves with the {@link Page | page} backing the app window.\n *\n * @remarks\n *\n * Only available over a pipe connection. See {@link Browser.installPWA}.\n *\n * `PWA.launch` resolves with the id of the launched _tab_ target. Puppeteer does not expose tab targets through {@link Browser.targets}; this method instead resolves with the tab's child page target (the app's web contents). If Chromium focuses an existing app window, this returns that window's existing page.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract launchPWA(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "LaunchPWAOptions",
+                  "canonicalReference": "puppeteer-core!LaunchPWAOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Page",
+                  "canonicalReference": "puppeteer-core!Page:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 7
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "launchPWA"
             },
             {
               "kind": "Method",
@@ -3071,6 +3364,60 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Browser#uninstallPWA:member(1)",
+              "docComment": "/**\n * Uninstalls a previously installed Progressive Web App (PWA).\n *\n * @remarks\n *\n * Only available over a pipe connection. See {@link Browser.installPWA}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract uninstallPWA(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "UninstallPWAOptions",
+                  "canonicalReference": "puppeteer-core!UninstallPWAOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "uninstallPWA"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Browser#userAgent:member(1)",
               "docComment": "/**\n * Gets this {@link Browser | browser's} original user agent.\n *\n * {@link Page | Pages} can override the user agent with {@link Page.(setUserAgent:2)}.\n */\n",
               "excerptTokens": [
@@ -3314,6 +3661,91 @@
           "name": "BrowserContext",
           "preserveMemberOrder": false,
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!BrowserContext#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!BrowserContext#[disposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "disposeSymbol",
+                  "canonicalReference": "puppeteer-core!disposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[disposeSymbol]"
+            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!BrowserContext#browser:member(1)",
@@ -6724,7 +7156,7 @@
         {
           "kind": "Class",
           "canonicalReference": "puppeteer-core!Connection:class",
-          "docComment": "/**\n * @public\n */\n",
+          "docComment": "/**\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `Connection` class.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6759,119 +7191,6 @@
           "name": "Connection",
           "preserveMemberOrder": false,
           "members": [
-            {
-              "kind": "Constructor",
-              "canonicalReference": "puppeteer-core!Connection:constructor(1)",
-              "docComment": "/**\n * Constructs a new instance of the `Connection` class\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "constructor(url: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", transport: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ConnectionTransport",
-                  "canonicalReference": "puppeteer-core!ConnectionTransport:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", delay?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "number"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", timeout?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "number"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", rawErrors?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", idGenerator?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "() => number"
-                },
-                {
-                  "kind": "Content",
-                  "text": ");"
-                }
-              ],
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "url",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "transport",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 4
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "delay",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 5,
-                    "endIndex": 6
-                  },
-                  "isOptional": true
-                },
-                {
-                  "parameterName": "timeout",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 7,
-                    "endIndex": 8
-                  },
-                  "isOptional": true
-                },
-                {
-                  "parameterName": "rawErrors",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 9,
-                    "endIndex": 10
-                  },
-                  "isOptional": true
-                },
-                {
-                  "parameterName": "idGenerator",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 11,
-                    "endIndex": 12
-                  },
-                  "isOptional": true
-                }
-              ]
-            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Connection#createSession:member(1)",
@@ -10958,6 +11277,36 @@
               "name": "dismiss"
             },
             {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Dialog#handled:member",
+              "docComment": "/**\n * A boolean value indicating whether the dialog has been handled.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get handled(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n\nprotected set handled(handled: boolean);"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "handled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Dialog#message:member(1)",
               "docComment": "/**\n * The message displayed in the dialog.\n */\n",
@@ -11022,6 +11371,34 @@
             }
           ],
           "implementsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "puppeteer-core!disposeSymbol:var",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "disposeSymbol: "
+            },
+            {
+              "kind": "Content",
+              "text": "typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "Symbol.dispose",
+              "canonicalReference": "!SymbolConstructor#dispose:member"
+            }
+          ],
+          "fileUrlPath": "src/util/disposable.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "disposeSymbol",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          }
         },
         {
           "kind": "Interface",
@@ -14634,6 +15011,91 @@
           "name": "EventEmitter",
           "preserveMemberOrder": false,
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!EventEmitter#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!EventEmitter#[disposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "disposeSymbol",
+                  "canonicalReference": "puppeteer-core!disposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[disposeSymbol]"
+            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!EventEmitter#emit:member(1)",
@@ -19386,6 +19848,51 @@
         },
         {
           "kind": "Interface",
+          "canonicalReference": "puppeteer-core!GetPWAStateOptions:interface",
+          "docComment": "/**\n * Options for {@link Browser.getPWAState}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface GetPWAStateOptions "
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "GetPWAStateOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!GetPWAStateOptions#manifestId:member",
+              "docComment": "/**\n * The id from the web app's manifest file.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "manifestId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "manifestId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
           "canonicalReference": "puppeteer-core!GoToOptions:interface",
           "docComment": "/**\n * @public\n */\n",
           "excerptTokens": [
@@ -21315,6 +21822,106 @@
           }
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!InstallPWAOptions:interface",
+          "docComment": "/**\n * Options for {@link Browser.installPWA}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface InstallPWAOptions "
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "InstallPWAOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!InstallPWAOptions#displayMode:member",
+              "docComment": "/**\n * Whether the app should open in a standalone window or a browser tab.\n *\n * @remarks\n *\n * `PWA.install` alone leaves the app at Chromium's default display mode (`browser`); setting this chains a `PWA.changeAppUserSettings` call to apply the preference.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "displayMode?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PWADisplayMode",
+                  "canonicalReference": "puppeteer-core!PWADisplayMode:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "displayMode",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!InstallPWAOptions#installUrlOrBundleUrl:member",
+              "docComment": "/**\n * The URL used to install the app, or the URL of its signed web bundle.\n *\n * This is required because the browser-scoped CDP session has no associated page from which Chromium could derive an install URL.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "installUrlOrBundleUrl: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "installUrlOrBundleUrl",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!InstallPWAOptions#manifestId:member",
+              "docComment": "/**\n * The id from the web app's manifest file, commonly the URL of the site installing the web app. See {@link https://web.dev/learn/pwa/web-app-manifest | Web app manifest}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "manifestId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "manifestId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Enum",
           "canonicalReference": "puppeteer-core!InterceptResolutionAction:enum",
           "docComment": "/**\n * @public\n */\n",
@@ -22031,6 +22638,91 @@
               "isStatic": false,
               "isProtected": false,
               "isAbstract": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!JSHandle#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!JSHandle#[disposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "disposeSymbol",
+                  "canonicalReference": "puppeteer-core!disposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[disposeSymbol]"
             },
             {
               "kind": "Method",
@@ -24019,6 +24711,105 @@
           ]
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!LaunchPWAOptions:interface",
+          "docComment": "/**\n * Options for {@link Browser.launchPWA}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface LaunchPWAOptions "
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "LaunchPWAOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!LaunchPWAOptions#manifestId:member",
+              "docComment": "/**\n * The id from the web app's manifest file.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "manifestId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "manifestId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!LaunchPWAOptions#timeout:member",
+              "docComment": "/**\n * Maximum time in milliseconds to wait for the app's page target to appear. Defaults to 30 seconds. Pass `0` to disable the timeout.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "timeout?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "timeout",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!LaunchPWAOptions#url:member",
+              "docComment": "/**\n * An optional URL within the app's scope to launch. Defaults to the app's start URL.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "url?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "url",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Class",
           "canonicalReference": "puppeteer-core!Locator:class",
           "docComment": "/**\n * Locators describe a strategy of locating objects and performing an action on them. If the action fails because the object is not ready for the action, the whole operation is retried. Various preconditions for a successful action are checked automatically.\n *\n * See {@link https://pptr.dev/guides/page-interactions#locators} for details.\n *\n * @public\n */\n",
@@ -25744,6 +26535,67 @@
         },
         {
           "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!Logger:type",
+          "docComment": "/**\n * @public @experimental\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type Logger = "
+            },
+            {
+              "kind": "Content",
+              "text": "(prefix: string) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "LoggerFunction",
+              "canonicalReference": "puppeteer-core!LoggerFunction:type"
+            },
+            {
+              "kind": "Content",
+              "text": " | undefined"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/common/Debug.ts",
+          "releaseTag": "Public",
+          "name": "Logger",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!LoggerFunction:type",
+          "docComment": "/**\n * @public @experimental\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type LoggerFunction = "
+            },
+            {
+              "kind": "Content",
+              "text": "(...args: unknown[]) => void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/common/Debug.ts",
+          "releaseTag": "Public",
+          "name": "LoggerFunction",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
           "canonicalReference": "puppeteer-core!LowerCasePaperFormat:type",
           "docComment": "/**\n * @public\n */\n",
           "excerptTokens": [
@@ -25917,7 +26769,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#Documents:member",
-              "docComment": "",
+              "docComment": "/**\n * Number of documents in the page.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -25944,7 +26796,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#Frames:member",
-              "docComment": "",
+              "docComment": "/**\n * Number of frames in the page.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -25971,7 +26823,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#JSEventListeners:member",
-              "docComment": "",
+              "docComment": "/**\n * Number of events in the page.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -25998,7 +26850,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#JSHeapTotalSize:member",
-              "docComment": "",
+              "docComment": "/**\n * Total JavaScript heap size, in bytes.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26025,7 +26877,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#JSHeapUsedSize:member",
-              "docComment": "",
+              "docComment": "/**\n * Used JavaScript heap size, in bytes.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26052,7 +26904,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#LayoutCount:member",
-              "docComment": "",
+              "docComment": "/**\n * Total number of full or partial page layouts.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26079,7 +26931,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#LayoutDuration:member",
-              "docComment": "",
+              "docComment": "/**\n * Combined duration of all page layouts, in seconds.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26106,7 +26958,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#Nodes:member",
-              "docComment": "",
+              "docComment": "/**\n * Number of DOM nodes in the page.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26133,7 +26985,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#RecalcStyleCount:member",
-              "docComment": "",
+              "docComment": "/**\n * Total number of page style recalculations.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26160,7 +27012,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#RecalcStyleDuration:member",
-              "docComment": "",
+              "docComment": "/**\n * Combined duration of all page style recalculations, in seconds.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26187,7 +27039,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#ScriptDuration:member",
-              "docComment": "",
+              "docComment": "/**\n * Combined duration of JavaScript execution, in seconds.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26214,7 +27066,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#TaskDuration:member",
-              "docComment": "",
+              "docComment": "/**\n * Combined duration of all tasks performed by the browser, in seconds.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -26241,7 +27093,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!Metrics#Timestamp:member",
-              "docComment": "",
+              "docComment": "/**\n * The timestamp when the metrics sample was taken, in monotonic time (seconds since an arbitrary point in the past).\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -27802,6 +28654,91 @@
           "name": "Page",
           "preserveMemberOrder": false,
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#[disposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "disposeSymbol",
+                  "canonicalReference": "puppeteer-core!disposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[disposeSymbol]"
+            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#$:member(1)",
@@ -31252,7 +32189,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#metrics:member(1)",
-              "docComment": "/**\n * Object containing metrics as key/value pairs.\n *\n * @remarks\n *\n * All timestamps are in monotonic time: monotonically increasing time in seconds since an arbitrary point in the past.\n *\n * @returns - `Timestamp` : The timestamp when the metrics sample was taken.\n *\n * - `Documents` : Number of documents in the page.\n *\n * - `Frames` : Number of frames in the page.\n *\n * - `JSEventListeners` : Number of events in the page.\n *\n * - `Nodes` : Number of DOM nodes in the page.\n *\n * - `LayoutCount` : Total number of full or partial page layout.\n *\n * - `RecalcStyleCount` : Total number of page style recalculations.\n *\n * - `LayoutDuration` : Combined durations of all page layouts.\n *\n * - `RecalcStyleDuration` : Combined duration of all page style recalculations.\n *\n * - `ScriptDuration` : Combined duration of JavaScript execution.\n *\n * - `TaskDuration` : Combined duration of all tasks performed by the browser.\n *\n * - `JSHeapUsedSize` : Used JavaScript heap size.\n *\n * - `JSHeapTotalSize` : Total JavaScript heap size.\n */\n",
+              "docComment": "/**\n * Object containing metrics as key/value pairs.\n *\n * @remarks\n *\n * All timestamps are in monotonic time: monotonically increasing time in seconds since an arbitrary point in the past.\n *\n * @returns - `Timestamp` : The timestamp when the metrics sample was taken, in monotonic time (seconds).\n *\n * - `Documents` : Number of documents in the page.\n *\n * - `Frames` : Number of frames in the page.\n *\n * - `JSEventListeners` : Number of events in the page.\n *\n * - `Nodes` : Number of DOM nodes in the page.\n *\n * - `LayoutCount` : Total number of full or partial page layout.\n *\n * - `RecalcStyleCount` : Total number of page style recalculations.\n *\n * - `LayoutDuration` : Combined durations of all page layouts, in seconds.\n *\n * - `RecalcStyleDuration` : Combined duration of all page style recalculations, in seconds.\n *\n * - `ScriptDuration` : Combined duration of JavaScript execution, in seconds.\n *\n * - `TaskDuration` : Combined duration of all tasks performed by the browser, in seconds.\n *\n * - `JSHeapUsedSize` : Used JavaScript heap size, in bytes.\n *\n * - `JSHeapTotalSize` : Total JavaScript heap size, in bytes.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -34140,7 +35077,7 @@
             {
               "kind": "Property",
               "canonicalReference": "puppeteer-core!Page#webmcp:member",
-              "docComment": "/**\n * Experimental API for {@link https://github.com/webmachinelearning/webmcp | WebMCP}. Requires Chrome 150+ with the `--enable-features=WebMCP` flag enabled.\n *\n * @experimental\n */\n",
+              "docComment": "/**\n * Experimental API for {@link https://github.com/webmachinelearning/webmcp | WebMCP}. Requires Chrome 151+ with the `--enable-features=WebMCP` flag enabled.\n *\n * @experimental\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -37756,6 +38693,109 @@
         },
         {
           "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!PWADisplayMode:type",
+          "docComment": "/**\n * If the user prefers opening an installed web app in a standalone window or in a browser tab.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type PWADisplayMode = "
+            },
+            {
+              "kind": "Content",
+              "text": "'standalone' | 'browser'"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "PWADisplayMode",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!PWAState:interface",
+          "docComment": "/**\n * The OS-integration state of an installed web app, returned by {@link Browser.getPWAState}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface PWAState "
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "PWAState",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PWAState#badgeCount:member",
+              "docComment": "/**\n * The current badge count shown on the app icon.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "badgeCount: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "badgeCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!PWAState#fileHandlers:member",
+              "docComment": "/**\n * The file handlers registered by the app with the OS.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "fileHandlers: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Protocol.PWA.FileHandler",
+                  "canonicalReference": "devtools-protocol!Protocol.PWA.FileHandler:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "fileHandlers",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
           "canonicalReference": "puppeteer-core!Quad:type",
           "docComment": "/**\n * @public\n */\n",
           "excerptTokens": [
@@ -37877,6 +38917,46 @@
           "name": "Realm",
           "preserveMemberOrder": false,
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!Realm#[disposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "disposeSymbol",
+                  "canonicalReference": "puppeteer-core!disposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[disposeSymbol]"
+            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Realm#evaluate:member(1)",
@@ -39659,6 +40739,51 @@
           "name": "ScreenRecorder",
           "preserveMemberOrder": false,
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!ScreenRecorder#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!ScreenRecorder#stop:member(1)",
@@ -42789,6 +43914,51 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "screenshots",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!UninstallPWAOptions:interface",
+          "docComment": "/**\n * Options for {@link Browser.uninstallPWA}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface UninstallPWAOptions "
+            }
+          ],
+          "fileUrlPath": "src/api/Browser.ts",
+          "releaseTag": "Public",
+          "name": "UninstallPWAOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!UninstallPWAOptions#manifestId:member",
+              "docComment": "/**\n * The id from the web app's manifest file.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "manifestId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "manifestId",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

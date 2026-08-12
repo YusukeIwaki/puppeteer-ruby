@@ -57,6 +57,9 @@ class Puppeteer::CdpDialog < Puppeteer::Dialog
   def initialize(client, type:, message:, default_value:)
     super(type: type, message: message, default_value: default_value)
     @client = client
+    @dialog_closed_listener_id = @client.once('Page.javascriptDialogClosed') do
+      @handled = true
+    end
   end
 
   # @rbs accept: bool -- Whether to accept the dialog
@@ -67,6 +70,7 @@ class Puppeteer::CdpDialog < Puppeteer::Dialog
       accept: accept,
       promptText: text,
     }.compact)
+    @client.remove_event_listener(@dialog_closed_listener_id)
     nil
   end
 end

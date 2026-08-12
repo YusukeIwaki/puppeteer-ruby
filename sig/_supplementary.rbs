@@ -150,6 +150,20 @@ end
 class Puppeteer::FrameManager
   include Puppeteer::EventCallbackable
 
+  class ExposedFunctionBinding
+    def initialize: (String name, String source) -> void
+    attr_reader name: String
+    attr_reader source: String
+  end
+
+  class PreloadScript
+    def initialize: (Puppeteer::Frame main_frame, String identifier, String source) -> void
+    attr_reader identifier: String
+    attr_reader source: String
+    def id_for_frame: (Puppeteer::Frame frame) -> String?
+    def set_id_for_frame: (Puppeteer::Frame frame, String identifier) -> void
+  end
+
   def initialize: (Puppeteer::CDPSession client, Puppeteer::Page page, bool ignore_https_errors, untyped timeout_settings, ?network_enabled: bool) -> void
   attr_reader client: Puppeteer::CDPSession
   attr_reader timeout_settings: untyped
@@ -177,6 +191,10 @@ class Puppeteer::FrameManager
   def execution_context_by_id: (Integer context_id, Puppeteer::CDPSession session) -> Puppeteer::ExecutionContext
   def swap_frame_tree: (Puppeteer::CDPSession client) -> void
   def register_speculative_session: (Puppeteer::CDPSession client) -> void
+  def add_exposed_function_binding: (Puppeteer::FrameManager::ExposedFunctionBinding binding) -> void
+  def remove_exposed_function_binding: (Puppeteer::FrameManager::ExposedFunctionBinding binding) -> void
+  def evaluate_on_new_document: (String source) -> Hash[String, String]
+  def remove_script_to_evaluate_on_new_document: (String identifier) -> void
 
   private
 
@@ -193,6 +211,7 @@ class Puppeteer::FrameManager
   def remove_frame_recursively: (Puppeteer::Frame frame) -> void
   def referrer_policy_to_protocol: (String? referrer_policy) -> String?
   def assert_no_legacy_navigation_options: (wait_until: (String | Array[String] | nil)) -> void
+  def for_each_frame: () { (Puppeteer::Frame) -> void } -> void
   def extension_origin?: (untyped origin) -> bool
   def extract_extension_id: (untyped origin) -> String?
   def blocked_url?: (String? url) -> bool
@@ -223,6 +242,9 @@ class Puppeteer::Target
   def ignore_initialize_callback_promise: () -> void
   def initialized?: () -> bool
   def exposed?: () -> bool
+  def _add_child_target: (Puppeteer::Target target) -> untyped
+  def _remove_child_target: (Puppeteer::Target target) -> untyped
+  def _child_targets: () -> Set[Puppeteer::Target]
   def session: () -> Puppeteer::CDPSession?
   def create_cdp_session: () -> Puppeteer::CDPSession
   def target_manager: () -> untyped
@@ -262,8 +284,8 @@ class Puppeteer::WebSocketTransport
   class ClosedError < Puppeteer::Error
   end
 
-  def self.create: (String url) -> Puppeteer::WebSocketTransport
-  def initialize: (String url) -> void
+  def self.create: (String url, ?headers: Hash[String, String]?) -> Puppeteer::WebSocketTransport
+  def initialize: (String url, ?headers: Hash[String, String]?) -> void
   def connect: () -> untyped
   def send_text: (String message) -> void
   def close: () -> void
@@ -285,7 +307,7 @@ class Puppeteer::Connection
     def initialize: (method: String, error_message: String, ?error_data: untyped) -> void
   end
 
-  def initialize: (String url, Puppeteer::WebSocketTransport transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
+  def initialize: (String url, (Puppeteer::WebSocketTransport | Puppeteer::PipeTransport) transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
   def closed?: () -> bool
   def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
   def session: (String session_id) -> Puppeteer::CDPSession?
@@ -349,11 +371,13 @@ class Puppeteer::BrowserRunner
   def wait_for_ws_endpoint: (Puppeteer::BrowserRunner::BrowserProcess browser_process, Numeric? timeout, String? preferred_revision) -> String
 
   class BrowserProcess
-    def initialize: (Hash[String, String] env, String executable_path, Array[String]? args) -> void
+    def initialize: (Hash[String, String] env, String executable_path, Array[String]? args, ?pipe: bool) -> void
     def kill: () -> void
     def dispose: () -> void
     attr_reader stdout: untyped
     attr_reader stderr: untyped
     attr_reader spawnargs: Array[String]
+    attr_reader pipe_write: IO?
+    attr_reader pipe_read: IO?
   end
 end

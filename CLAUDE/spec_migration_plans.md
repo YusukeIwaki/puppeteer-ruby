@@ -94,6 +94,7 @@ Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 | network.spec.ts | network_spec.rb | [x] Ported |
 | oopif.spec.ts | oopif_spec.rb | [x] Ported |
 | page.spec.ts | page_spec.rb | [x] Ported |
+| pwa.test.ts | pwa_spec.rb | [x] Ported |
 | proxy.spec.ts | - | **[MISSING]** Not ported |
 | queryhandler.spec.ts | query_handler_spec.rb | [x] Ported |
 | queryselector.spec.ts | query_selector_spec.rb | [x] Ported |
@@ -984,6 +985,21 @@ Most OOPIF tests are ported including:
 | Chromium web test queries | [MISSING IN RUBY] |
 
 ---
+
+## 28. pwa.test.ts vs pwa_spec.rb
+
+### Ported Tests
+
+| Node.js Test | Ruby Test | Status |
+|--------------|-----------|--------|
+| installs and uninstalls a PWA | installs and uninstalls a PWA | [PORTED] |
+| launches an installed PWA and returns its Page | launches an installed PWA and returns its Page | [PORTED] |
+| launches an installed PWA at an explicit url | launches an installed PWA at an explicit url | [PORTED] |
+| installs a PWA with a standalone display mode | installs a PWA with a standalone display mode | [PORTED] |
+
+The `PWA` CDP domain is tested over `pipe: true`, matching upstream. The
+blocklist and allowlist rejection cases are ported in
+`network_restrictions_spec.rb`.
 
 ## Summary
 

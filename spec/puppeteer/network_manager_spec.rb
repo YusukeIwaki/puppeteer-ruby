@@ -150,6 +150,42 @@ RSpec.describe Puppeteer::NetworkManager do
     end
   end
 
+  it 'should not override the user agent when nothing is emulated' do
+    commands = []
+    allow(client).to receive(:send_message) do |method, *|
+      commands << method
+    end
+    manager = described_class.new(client, false, frame_manager)
+
+    manager.init
+    expect(commands).not_to include('Network.setUserAgentOverride')
+
+    manager.set_user_agent('custom-user-agent')
+    expect(commands).to include('Network.setUserAgentOverride')
+  end
+
+  it 'should reset the override when the emulated accept-language is cleared' do
+    commands = []
+    allow(client).to receive(:send_message) do |method, *|
+      commands << method
+    end
+    browser = double(Puppeteer::Browser, user_agent: 'browser-user-agent')
+    page = double(Puppeteer::Page, browser: browser)
+    allow(frame_manager).to receive(:page).and_return(page)
+    manager = described_class.new(client, false, frame_manager)
+
+    manager.init
+    expect(commands).not_to include('Network.setUserAgentOverride')
+
+    manager.set_accept_language('fr-FR')
+    expect(commands.count('Network.setUserAgentOverride')).to eq(1)
+
+    # Clearing the emulated accept-language must still send an override so the
+    # browser is reset back to its defaults instead of keeping the stale value.
+    manager.set_accept_language(nil)
+    expect(commands.count('Network.setUserAgentOverride')).to eq(2)
+  end
+
   describe 'client configuration' do
     it 'should not throw if page().browser().userAgent() throws' do
       browser = double(Puppeteer::Browser)

@@ -111,8 +111,9 @@ class Puppeteer::Browser
       block_list: block_list,
       allow_list: allow_list,
     )
-    @connection.reject_emulate_network_conditions_calls =
+    @has_network_restrictions =
       [block_list, allow_list].any? { |list| list && !list.empty? }
+    @connection.reject_emulate_network_conditions_calls = @has_network_restrictions
     @extensions = {}
     @version_promise = nil
   end
@@ -503,6 +504,78 @@ class Puppeteer::Browser
     @connection.send_message('Extensions.uninstall', id: extension_id)
     @target_manager.remove_extension_service_workers(extension_id)
     @extensions.delete(extension_id)
+  end
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs install_url_or_bundle_url: String -- URL used to install the app or its signed bundle
+  # @rbs display_mode: ("standalone" | "browser")? -- Preferred app display mode
+  # @rbs return: String -- Installed manifest ID
+  def install_pwa(manifest_id:, install_url_or_bundle_url:, display_mode: nil)
+    ensure_pwa_api_supported!
+    @connection.send_message('PWA.install', {
+      manifestId: manifest_id,
+      installUrlOrBundleUrl: install_url_or_bundle_url,
+    })
+    if display_mode
+      @connection.send_message('PWA.changeAppUserSettings', {
+        manifestId: manifest_id,
+        displayMode: display_mode,
+      })
+    end
+    manifest_id
+  end
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs return: void -- No return value
+  def uninstall_pwa(manifest_id:)
+    ensure_pwa_api_supported!
+    @connection.send_message('PWA.uninstall', manifestId: manifest_id)
+  end
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs url: String? -- Optional URL within the app scope to launch
+  # @rbs timeout: Numeric? -- Maximum time to wait for the page target in milliseconds
+  # @rbs return: Puppeteer::Page -- Page backing the launched app window
+  def launch_pwa(manifest_id:, url: nil, timeout: nil)
+    ensure_pwa_api_supported!
+    result = @connection.send_message('PWA.launch', {
+      manifestId: manifest_id,
+      url: url,
+    }.compact)
+    tab_target_id = result['targetId']
+    launched_target = wait_for_target(
+      predicate: lambda do |candidate|
+        tab = @target_manager.available_targets[tab_target_id]
+        tab&.type == 'tab' && tab._child_targets.include?(candidate)
+      end,
+      timeout: timeout,
+    )
+    page = launched_target.page
+    unless page
+      raise Puppeteer::Error.new(
+        "Failed to create a page for the launched PWA (manifestId = #{manifest_id})",
+      )
+    end
+    page
+  end
+
+  # @rbs manifest_id: String -- ID from the web app manifest
+  # @rbs return: Hash[String, untyped] -- OS integration state for the app
+  def get_pwa_state(manifest_id:)
+    ensure_pwa_api_supported!
+    result = @connection.send_message('PWA.getOsAppState', manifestId: manifest_id)
+    {
+      'badgeCount' => result['badgeCount'],
+      'fileHandlers' => result['fileHandlers'],
+    }
+  end
+
+  private def ensure_pwa_api_supported!
+    return unless @has_network_restrictions
+
+    raise Puppeteer::Error.new(
+      'PWA APIs are not supported when network restrictions are configured.',
+    )
   end
 
   # @rbs return: Hash[String, Puppeteer::Extension] -- Installed extensions

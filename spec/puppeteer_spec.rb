@@ -4,19 +4,24 @@ RSpec.describe Puppeteer do
   end
 
   describe '.connect' do
-    it 'accepts channel and preserves nil default_viewport' do
+    it 'accepts channel and headers and preserves nil default_viewport' do
       browser = instance_double(Puppeteer::Browser)
       connector = instance_double(Puppeteer::BrowserConnector, connect_to_browser: browser)
 
       expect(Puppeteer::BrowserConnector).to receive(:new).with(
         hash_including(
           channel: 'chrome',
+          headers: { 'Authorization' => 'Bearer test-token' },
           default_viewport: nil,
         ),
       ).and_return(connector)
 
       Async do
-        expect(Puppeteer.connect(channel: :chrome, default_viewport: nil)).to eq(browser)
+        expect(Puppeteer.connect(
+                 channel: :chrome,
+                 headers: { 'Authorization' => 'Bearer test-token' },
+                 default_viewport: nil,
+        )).to eq(browser)
       end.wait
     end
   end

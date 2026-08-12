@@ -21,8 +21,8 @@ RSpec.describe 'Page.webmcp' do
 
   def register_imperative_tool(page, execute: '() => {}')
     page.evaluate(<<~JAVASCRIPT)
-      () => {
-        void document.modelContext.registerTool({
+      async () => {
+        await document.modelContext.registerTool({
           name: 'test-tool-1',
           description: 'A test tool 1',
           inputSchema: {
@@ -70,8 +70,8 @@ RSpec.describe 'Page.webmcp' do
       end
 
       page.evaluate(<<~JAVASCRIPT)
-        () => {
-          void document.modelContext.registerTool({
+        async () => {
+          await document.modelContext.registerTool({
             name: 'test-tool-1',
             description: 'A test tool 1',
             inputSchema: {
@@ -155,9 +155,9 @@ RSpec.describe 'Page.webmcp' do
     with_webmcp_test_state do |page:, **|
       tool_added = event_promise(page.webmcp, 'toolsadded')
       controller = page.evaluate_handle(<<~JAVASCRIPT)
-        () => {
+        async () => {
           const controller = new AbortController();
-          void document.modelContext.registerTool({
+          await document.modelContext.registerTool({
             name: 'test-tool-1',
             description: 'A test tool 1',
             inputSchema: {
@@ -268,8 +268,8 @@ RSpec.describe 'Page.webmcp' do
 
       page.evaluate(<<~JAVASCRIPT)
         async () => {
-          const [tool] = await navigator.modelContext.getTools();
-          navigator.modelContext.executeTool(tool, JSON.stringify({text: 'test'}));
+          const [tool] = await document.modelContext.getTools();
+          document.modelContext.executeTool(tool, JSON.stringify({text: 'test'}));
         }
       JAVASCRIPT
       tool_call = tool_called.wait
@@ -308,8 +308,8 @@ RSpec.describe 'Page.webmcp' do
   it 'should fire toolresponded event with exception' do
     with_webmcp_test_state do |page:, **|
       page.evaluate(<<~JAVASCRIPT)
-        () => {
-          void document.modelContext.registerTool({
+        async () => {
+          await document.modelContext.registerTool({
             name: 'raise-exception-tool',
             description: 'A tool that raises JS exception',
             execute: () => { throw new Error('sorry!'); },
@@ -382,8 +382,8 @@ RSpec.describe 'Page.webmcp' do
   def execute_page_tool(page, input)
     page.evaluate(<<~JAVASCRIPT, input)
       async input => {
-        const [tool] = await navigator.modelContext.getTools();
-        navigator.modelContext.executeTool(tool, input);
+        const [tool] = await document.modelContext.getTools();
+        document.modelContext.executeTool(tool, input);
       }
     JAVASCRIPT
   end

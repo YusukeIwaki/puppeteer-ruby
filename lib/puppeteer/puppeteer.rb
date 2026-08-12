@@ -143,6 +143,7 @@ class Puppeteer::Puppeteer
   # @rbs browser_ws_endpoint: String? -- Browser WebSocket endpoint
   # @rbs browser_url: String? -- Browser HTTP URL for WebSocket discovery
   # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
+  # @rbs headers: Hash[String, String]? -- HTTP headers for browser connection requests
   # @rbs channel: (String | Symbol)? -- Browser channel
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs network_enabled: bool? -- Enable network domain
@@ -158,6 +159,7 @@ class Puppeteer::Puppeteer
     browser_ws_endpoint: nil,
     browser_url: nil,
     transport: nil,
+    headers: nil,
     channel: nil,
     ignore_https_errors: nil,
     network_enabled: true,
@@ -173,6 +175,7 @@ class Puppeteer::Puppeteer
       browser_ws_endpoint: browser_ws_endpoint,
       browser_url: browser_url,
       transport: transport,
+      headers: headers,
       channel: channel&.to_s,
       ignore_https_errors: ignore_https_errors,
       network_enabled: network_enabled,
