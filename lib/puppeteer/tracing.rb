@@ -24,7 +24,7 @@ class Puppeteer::Tracing
     'disabled-by-default-v8.cpu_profiler.hires',
   ].freeze
 
-  def start(path: nil, screenshots: nil, categories: nil)
+  def start(path: nil, screenshots: nil, categories: nil, buffer_size: nil)
     option_categories = categories || DEFAULT_CATEGORIES.dup
 
     if screenshots
@@ -35,12 +35,14 @@ class Puppeteer::Tracing
     in_cat = option_categories.reject { |cat| cat.start_with?('-') }
     @path = path
     @recording = true
+    trace_config = {
+      excludedCategories: ex_cat,
+      includedCategories: in_cat,
+    }
+    trace_config[:traceBufferSizeInKb] = buffer_size unless buffer_size.nil?
     @client.send_message('Tracing.start',
       transferMode: 'ReturnAsStream',
-      traceConfig: {
-        excludedCategories: ex_cat,
-        includedCategories: in_cat,
-      },
+      traceConfig: trace_config,
     )
   end
 
