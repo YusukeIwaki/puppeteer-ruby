@@ -8,6 +8,14 @@ RSpec.describe 'waittask specs' do
     "(tag) => document.body.appendChild(document.createElement(tag))"
   end
 
+  def add_shadow_host_js
+    "(tag) => document.body.appendChild(document.createElement(tag)).attachShadow({mode: 'open'})"
+  end
+
+  def add_element_to_shadow_root_js
+    "(selector, tag) => { const element = document.createElement(tag); element.textContent = 'inside'; document.querySelector(selector).shadowRoot.appendChild(element); }"
+  end
+
   def sleep_ms(milliseconds)
     Puppeteer::AsyncUtils.sleep_seconds(milliseconds / 1000.0)
   end
@@ -289,6 +297,61 @@ RSpec.describe 'waittask specs' do
       with_test_state do |page:, server:, **|
         page.goto(server.empty_page)
         watcher = page.async_wait_for_selector('div >>> h1')
+        page.evaluate(add_shadow_host_js, 'div')
+        sleep_ms(40)
+        expect(watcher.completed?).to eq(false)
+        page.evaluate(add_element_to_shadow_root_js, 'div', 'h1')
+        element = watcher.wait
+        expect(element.evaluate('el => el.textContent')).to eq('inside')
+      end
+    end
+
+    it 'should work when node is added in a shadow root that predates the wait' do
+      with_test_state do |page:, server:, **|
+        page.goto(server.empty_page)
+        page.evaluate(add_shadow_host_js, 'div')
+        watcher = page.async_wait_for_selector('div >>> h1')
+        sleep_ms(40)
+        expect(watcher.completed?).to eq(false)
+        page.evaluate(add_element_to_shadow_root_js, 'div', 'h1')
+        element = watcher.wait
+        expect(element.evaluate('el => el.textContent')).to eq('inside')
+      end
+    end
+
+    it 'should work when node is added in a nested shadow root' do
+      with_test_state do |page:, server:, **|
+        page.goto(server.empty_page)
+        watcher = page.async_wait_for_selector('div >>> h1')
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          const host = document.body.appendChild(document.createElement('div'));
+          const inner = document.createElement('section');
+          inner.attachShadow({mode: 'open'});
+          host.attachShadow({mode: 'open'}).appendChild(inner);
+        }
+        JAVASCRIPT
+        sleep_ms(40)
+        expect(watcher.completed?).to eq(false)
+        page.evaluate(<<~JAVASCRIPT)
+        () => {
+          const h1 = document.createElement('h1');
+          h1.textContent = 'inside';
+          document.querySelector('div').shadowRoot.querySelector('section').shadowRoot.appendChild(h1);
+        }
+        JAVASCRIPT
+        element = watcher.wait
+        expect(element.evaluate('el => el.textContent')).to eq('inside')
+      end
+    end
+
+    # Attaching a shadow root to a node that is already in the DOM does not
+    # produce a mutation, so MutationPoller has nothing to react to.
+    # See https://github.com/whatwg/dom/issues/1287.
+    it 'should work when a shadow root is attached to an existing node', skip: 'shadow root attachment produces no mutation (https://github.com/whatwg/dom/issues/1287)' do
+      with_test_state do |page:, server:, **|
+        page.goto(server.empty_page)
+        watcher = page.async_wait_for_selector('div >>> h1')
         page.evaluate(add_element_js, 'div')
         sleep_ms(40)
         expect(watcher.completed?).to eq(false)
@@ -357,7 +420,7 @@ RSpec.describe 'waittask specs' do
 
     it 'should survive cross-process navigation' do
       with_test_state do |page:, server:, **|
-        box_found = false
+        false
         wait_for_selector = page.async_wait_for_selector('.box')
         page.goto(server.empty_page)
         expect(wait_for_selector.completed?).to eq(false)
