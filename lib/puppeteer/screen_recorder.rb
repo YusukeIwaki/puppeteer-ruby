@@ -57,6 +57,7 @@ class Puppeteer::ScreenRecorder
     @disconnect_listener_id = @client.once(CDPSessionEmittedEvents::Disconnected) do
       stop
     rescue StandardError => error
+      @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
       warn(error.message) if ENV['DEBUG']
     end
   end
@@ -252,7 +253,10 @@ class Puppeteer::ScreenRecorder
 
   private def read_stderr
     @ffmpeg_error = @stderr.read.to_s
-    warn(@ffmpeg_error) if ENV['DEBUG'] && !@ffmpeg_error.empty?
+    unless @ffmpeg_error.empty?
+      @page.logger&.call(Puppeteer::DebugPrefixes::FFMPEG)&.call(@ffmpeg_error)
+      warn(@ffmpeg_error) if ENV['DEBUG']
+    end
   rescue IOError
     nil
   end

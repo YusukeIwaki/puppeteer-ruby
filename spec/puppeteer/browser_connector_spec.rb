@@ -21,6 +21,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           transport,
           25,
           protocol_timeout: 12,
+          logger: nil,
         ).and_return(connection)
 
         result = described_class.new(
@@ -100,6 +101,31 @@ RSpec.describe Puppeteer::BrowserConnector do
           browser_ws_endpoint: websocket_url,
           headers: top_headers,
           ws_options: ws_options,
+        ).send(:connection)
+
+        expect(result).to eq(connection)
+      end
+
+      it 'forwards the logger to the connection' do
+        websocket_url = 'ws://localhost:9222/devtools/browser/test'
+        logger = ->(_prefix) { }
+
+        expect(Puppeteer::WebSocketTransport).to receive(:create).with(
+          websocket_url,
+          headers: nil,
+          ws_options: {},
+        ).and_return(transport)
+        expect(Puppeteer::Connection).to receive(:new).with(
+          websocket_url,
+          transport,
+          0,
+          protocol_timeout: nil,
+          logger: logger,
+        ).and_return(connection)
+
+        result = described_class.new(
+          browser_ws_endpoint: websocket_url,
+          logger: logger,
         ).send(:connection)
 
         expect(result).to eq(connection)

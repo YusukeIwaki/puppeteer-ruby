@@ -23,8 +23,8 @@ class Puppeteer::Page
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport for new pages
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: Puppeteer::Page -- Created page instance
-  def self.create(client, target, ignore_https_errors, default_viewport, network_enabled: true)
-    page = Puppeteer::Page.new(client, target, ignore_https_errors, network_enabled: network_enabled)
+  def self.create(client, target, ignore_https_errors, default_viewport, network_enabled: true, logger: nil)
+    page = Puppeteer::Page.new(client, target, ignore_https_errors, network_enabled: network_enabled, logger: logger)
     page.init
     if default_viewport
       page.viewport = default_viewport
@@ -37,8 +37,9 @@ class Puppeteer::Page
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: void -- No return value
-  def initialize(client, target, ignore_https_errors, network_enabled: true)
+  def initialize(client, target, ignore_https_errors, network_enabled: true, logger: nil)
     @closed = false
+    @logger = logger
     @client = client
     @target = target
     @tab_session = client.parent_session || client
@@ -48,7 +49,7 @@ class Puppeteer::Page
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
-    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled)
+    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled, logger: logger)
     @emulation_manager = Puppeteer::EmulationManager.new(client)
     @tracing = Puppeteer::Tracing.new(client)
     @webmcp = Puppeteer::WebMCP.new(client, @frame_manager)
@@ -388,7 +389,7 @@ class Puppeteer::Page
     @client.send_message('Emulation.setGeolocationOverride', geolocation.to_h)
   end
 
-  attr_reader :javascript_enabled, :service_worker_bypassed, :target, :client
+  attr_reader :javascript_enabled, :service_worker_bypassed, :target, :client, :logger
 
   # @rbs return: String -- Tab target id
   def _tab_id

@@ -34,7 +34,8 @@ class Puppeteer::Browser
                   process:,
                   close_callback:,
                   target_filter_callback:,
-                  is_page_target_callback:)
+                  is_page_target_callback:,
+                  logger: nil)
     browser = Puppeteer::Browser.new(
       product: product,
       connection: connection,
@@ -49,6 +50,7 @@ class Puppeteer::Browser
       close_callback: close_callback,
       target_filter_callback: target_filter_callback,
       is_page_target_callback: is_page_target_callback,
+      logger: logger,
     )
     browser.send(:validate_allow_list_version)
     browser.send(:attach)
@@ -81,8 +83,10 @@ class Puppeteer::Browser
                  process:,
                  close_callback:,
                  target_filter_callback:,
-                 is_page_target_callback:)
+                 is_page_target_callback:,
+                 logger: nil)
     @product = product ? product.to_s : 'chrome'
+    @logger = logger
     if @product != 'chrome'
       raise ArgumentError.new("Unsupported product: #{@product}. Only 'chrome' is supported.")
     end
@@ -136,7 +140,7 @@ class Puppeteer::Browser
     ['page', 'background_page', 'webview'].include?(target_info.type)
   end
 
-  attr_reader :is_page_target_callback
+  attr_reader :is_page_target_callback, :logger
 
   # @rbs event_name: (String | Symbol) -- Browser event name
   # @rbs &block: ^(untyped) -> void -- Event handler
@@ -279,6 +283,7 @@ class Puppeteer::Browser
       default_viewport: @default_viewport,
       network_enabled: @network_enabled,
       is_page_target_callback: @is_page_target_callback,
+      logger: @logger,
     )
   end
 

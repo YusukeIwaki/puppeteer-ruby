@@ -28,7 +28,9 @@ class Puppeteer::Target
                  ignore_https_errors:,
                  default_viewport:,
                  network_enabled:,
-                 is_page_target_callback:)
+                 is_page_target_callback:,
+                 logger: nil)
+    @logger = logger
     @session = session
     @target_manager = target_manager
     @target_info = target_info
@@ -155,6 +157,7 @@ class Puppeteer::Target
         @ignore_https_errors,
         @default_viewport,
         network_enabled: @network_enabled,
+        logger: @logger,
       )
     end
     @page
@@ -173,6 +176,7 @@ class Puppeteer::Target
       @ignore_https_errors,
       nil,
       network_enabled: @network_enabled,
+      logger: @logger,
     )
   end
 

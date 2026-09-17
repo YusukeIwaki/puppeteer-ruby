@@ -25,7 +25,7 @@ class Puppeteer::ScreenRecording
     @disconnect_listener_id = client.once(CDPSessionEmittedEvents::Disconnected) do
       stop
     rescue StandardError => error
-      warn(error.message) if ENV['DEBUG']
+      log_error(error)
     end
   end
 
@@ -79,7 +79,7 @@ class Puppeteer::ScreenRecording
       begin
         client.send_message('Page.stopScreenRecording')
       rescue StandardError => error
-        warn(error.message) if ENV['DEBUG']
+        log_error(error)
       end
       unless @stream_handle
         raise Puppeteer::Error.new('Screen recording stream handle is missing.')
@@ -130,7 +130,7 @@ class Puppeteer::ScreenRecording
     begin
       client.send_message('IO.close', handle: @stream_handle)
     rescue StandardError => error
-      warn(error.message) if ENV['DEBUG']
+      log_error(error)
     end
   end
 
@@ -146,5 +146,10 @@ class Puppeteer::ScreenRecording
     rescue StandardError
       # Ignore errors while closing destinations.
     end
+  end
+
+  private def log_error(error)
+    @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    warn(error.message) if ENV['DEBUG']
   end
 end

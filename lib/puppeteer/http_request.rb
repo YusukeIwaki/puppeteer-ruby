@@ -91,7 +91,8 @@ class Puppeteer::HTTPRequest
   # @param allow_interception [boolean]
   # @param event [Hash]
   # @param redirect_chain Array<Request>
-  def initialize(client, frame, interception_id, allow_interception, event, redirect_chain)
+  def initialize(client, frame, interception_id, allow_interception, event, redirect_chain, logger: nil)
+    @logger = logger
     @client = client
     @request_id = event['requestId']
     @is_navigation_request = event['requestId'] == event['loaderId'] && event['type'] == 'Document'
@@ -524,6 +525,7 @@ class Puppeteer::HTTPRequest
     if message.match?(/Invalid header|Unsafe header|Expected "header"|invalid argument/i)
       raise error
     end
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
     debug_puts(error)
   end
 

@@ -87,8 +87,9 @@ class Puppeteer::NetworkManager
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.FrameManager} frameManager
   # @param {boolean} network_enabled
-  def initialize(client, ignore_https_errors, frame_manager, network_enabled: true)
+  def initialize(client, ignore_https_errors, frame_manager, network_enabled: true, logger: nil)
     @client = client
+    @logger = logger
     @ignore_https_errors = ignore_https_errors
     @frame_manager = frame_manager
     @network_enabled = network_enabled
@@ -512,7 +513,7 @@ class Puppeteer::NetworkManager
 
   private def handle_request_without_network_instrumentation(event, client)
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::HTTPRequest.new(client, frame, event['requestId'], @user_request_interception_enabled, event, [])
+    request = Puppeteer::HTTPRequest.new(client, frame, event['requestId'], @user_request_interception_enabled, event, [], logger: @logger)
     emit_event(NetworkManagerEmittedEvents::Request, request)
     begin
       with_interception_lock { request.finalize_interceptions }
@@ -561,7 +562,7 @@ class Puppeteer::NetworkManager
   private def handle_request_from_paused(event, fetch_request_id, redirect_chain, client:)
     network_request_id = event['requestId']
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain)
+    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain, logger: @logger)
     if_present(@network_event_manager.request_extra_info(network_request_id).shift) do |extra_info|
       request.update_headers(extra_info['headers'])
     end
@@ -609,7 +610,7 @@ class Puppeteer::NetworkManager
       end
     end
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain)
+    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain, logger: @logger)
     if_present(@network_event_manager.request_extra_info(network_request_id).shift) do |extra_info|
       request.update_headers(extra_info['headers'])
     end

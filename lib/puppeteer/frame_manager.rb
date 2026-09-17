@@ -55,10 +55,11 @@ class Puppeteer::FrameManager
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.TimeoutSettings} timeoutSettings
   # @param {boolean} network_enabled
-  def initialize(client, page, ignore_https_errors, timeout_settings, network_enabled: true)
+  def initialize(client, page, ignore_https_errors, timeout_settings, network_enabled: true, logger: nil)
     @client = client
     @page = page
-    @network_manager = Puppeteer::NetworkManager.new(client, ignore_https_errors, self, network_enabled: network_enabled)
+    @logger = logger
+    @network_manager = Puppeteer::NetworkManager.new(client, ignore_https_errors, self, network_enabled: network_enabled, logger: logger)
     @timeout_settings = timeout_settings
 
     # @type {!Map<string, !Frame>}
@@ -587,7 +588,7 @@ class Puppeteer::FrameManager
       raise FrameNotFoundError.new("Parent frame #{parent_frame_id} not found.")
     end
 
-    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session)
+    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session, logger: @logger)
     @frames[frame.id] = frame
     emit_event(FrameManagerEmittedEvents::FrameAttached, frame)
     frame
@@ -634,7 +635,7 @@ class Puppeteer::FrameManager
         end
       else
         # Initial main frame navigation.
-        frame = Puppeteer::Frame.new(self, nil, frame_id, @client)
+        frame = Puppeteer::Frame.new(self, nil, frame_id, @client, logger: @logger)
       end
       @frames[frame_id] = frame
       @main_frame = frame

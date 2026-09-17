@@ -11,6 +11,7 @@ class Puppeteer::BrowserConnector
     @transport = options[:transport]
     @headers = options[:headers]
     @ws_options = options[:ws_options] || {}
+    @logger = options[:logger]
     @channel = options[:channel]
   end
 
@@ -36,6 +37,7 @@ class Puppeteer::BrowserConnector
       issues_enabled: @browser_options.issues_enabled,
       block_list: @browser_options.block_list,
       allow_list: @browser_options.allow_list,
+      logger: @logger,
       process: nil,
       close_callback: -> { connection.send_message('Browser.close') },
       target_filter_callback: @browser_options.target_filter,
@@ -77,6 +79,7 @@ class Puppeteer::BrowserConnector
       transport,
       @browser_options.slow_mo,
       protocol_timeout: @browser_options.protocol_timeout,
+      logger: @logger,
     )
   end
 
@@ -122,6 +125,7 @@ class Puppeteer::BrowserConnector
       transport,
       @browser_options.slow_mo,
       protocol_timeout: @browser_options.protocol_timeout,
+      logger: @logger,
     )
   end
 end

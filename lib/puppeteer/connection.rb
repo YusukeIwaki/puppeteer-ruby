@@ -37,13 +37,15 @@ class Puppeteer::Connection
     attr_reader :method
   end
 
-  def initialize(url, transport, delay = 0, protocol_timeout: nil)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(url, transport, delay = 0, protocol_timeout: nil, logger: nil)
     @url = url
     @last_id = 0
     @callbacks = {}
     @callbacks_mutex = Mutex.new
     @delay = delay
     @protocol_timeout = protocol_timeout
+    @logger = logger
     @reject_emulate_network_conditions_calls = false
 
     @network_message_queue = Async::Queue.new
@@ -71,7 +73,7 @@ class Puppeteer::Connection
     @manually_attached = Set.new
   end
 
-  attr_reader :protocol_timeout
+  attr_reader :protocol_timeout, :logger
   attr_writer :reject_emulate_network_conditions_calls
 
   def ensure_command_allowed!(method)
@@ -229,6 +231,7 @@ class Puppeteer::Connection
       sessionId: message[:sessionId],
     }.compact)
     @transport.send_text(payload)
+    @logger&.call(Puppeteer::DebugPrefixes::CDP_SEND)&.call(payload)
     request_debug_printer.handle_payload(payload)
   end
 
@@ -302,6 +305,7 @@ class Puppeteer::Connection
       Puppeteer::AsyncUtils.sleep_seconds(@delay / 1000.0)
     end
 
+    @logger&.call(Puppeteer::DebugPrefixes::CDP_RECEIVE)&.call(message)
     response_debug_printer.handle_message(message)
 
     case message['method']

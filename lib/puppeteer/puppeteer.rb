@@ -39,6 +39,7 @@ class Puppeteer::Puppeteer
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
   # @rbs ws_options: Hash[Symbol, untyped]? -- WebSocket options (headers:, keep_alive:, keep_alive_interval_ms:)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
   # @rbs wait_for_initial_page: bool? -- Wait for initial page to load
   # @rbs block: Proc? -- Optional block receiving the browser
   # @rbs return: Puppeteer::Browser -- Browser instance
@@ -69,6 +70,7 @@ class Puppeteer::Puppeteer
     slow_mo: nil,
     protocol_timeout: nil,
     ws_options: nil,
+    logger: nil,
     wait_for_initial_page: nil,
     &block
   )
@@ -103,6 +105,7 @@ class Puppeteer::Puppeteer
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,
       ws_options: ws_options,
+      logger: logger,
       wait_for_initial_page: wait_for_initial_page,
     }
     if default_viewport.is_a?(NoViewport)
@@ -148,6 +151,7 @@ class Puppeteer::Puppeteer
   # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
   # @rbs headers: Hash[String, String]? -- Deprecated: use ws_options[:headers] instead
   # @rbs ws_options: Hash[Symbol, untyped]? -- WebSocket options (headers:, keep_alive:, keep_alive_interval_ms:)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
   # @rbs channel: (String | Symbol)? -- Browser channel
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs network_enabled: bool? -- Enable network domain
@@ -174,6 +178,7 @@ class Puppeteer::Puppeteer
     default_viewport: NoViewport.new,
     slow_mo: nil,
     protocol_timeout: nil,
+    logger: nil,
     &block
   )
     options = {
@@ -190,6 +195,7 @@ class Puppeteer::Puppeteer
       allow_list: allow_list,
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,
+      logger: logger,
     }.compact
     unless default_viewport.is_a?(NoViewport)
       options[:default_viewport] = default_viewport

@@ -8,7 +8,8 @@ class Puppeteer::Frame
   # @rbs frame_id: String -- Frame ID
   # @rbs client: Puppeteer::CDPSession -- CDP session
   # @rbs return: void -- No return value
-  def initialize(frame_manager, parent_frame, frame_id, client)
+  def initialize(frame_manager, parent_frame, frame_id, client, logger: nil)
+    @logger = logger
     @frame_manager = frame_manager
     @parent_frame = parent_frame
     @id = frame_id
@@ -78,7 +79,7 @@ class Puppeteer::Frame
   end
 
   attr_accessor :frame_manager, :id, :loader_id, :lifecycle_events, :main_world, :puppeteer_world, :extension_worlds
-  attr_reader :client
+  attr_reader :client, :logger
 
   # @rbs other: Object -- Other object to compare
   # @rbs return: bool -- Equality result

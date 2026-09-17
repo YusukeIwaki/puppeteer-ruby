@@ -34,6 +34,7 @@ module Puppeteer::Launcher
       @launch_options = LaunchOptions.new(options)
       @browser_options = BrowserOptions.new(options)
       @ws_options = options[:ws_options]
+      @logger = options[:logger]
 
       chrome_arguments =
         if !@launch_options.ignore_default_args
@@ -98,6 +99,7 @@ module Puppeteer::Launcher
             preferred_revision: @preferred_revision,
             protocol_timeout: @browser_options.protocol_timeout,
             ws_options: @ws_options,
+            logger: @logger,
           )
 
           Puppeteer::Browser.create(
@@ -110,6 +112,7 @@ module Puppeteer::Launcher
             issues_enabled: @browser_options.issues_enabled,
             block_list: @browser_options.block_list,
             allow_list: @browser_options.allow_list,
+            logger: @logger,
             process: runner.proc,
             close_callback: -> { runner.close },
             target_filter_callback: nil,

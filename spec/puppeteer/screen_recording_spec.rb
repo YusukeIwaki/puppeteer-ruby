@@ -46,7 +46,7 @@ class FakeRecordingSession
 end
 
 FakeRecordingFrame = Struct.new(:client)
-FakeRecordingPage = Struct.new(:main_frame)
+FakeRecordingPage = Struct.new(:main_frame, :logger)
 
 RSpec.describe Puppeteer::ScreenRecording do
   def build_recording(client, options = {})

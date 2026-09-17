@@ -32,6 +32,14 @@ class Puppeteer::CDPSession
   attr_reader :parent_session #: Puppeteer::CDPSession?
   attr_accessor :target #: Puppeteer::Target?
 
+  # Experimental logger factory propagated from the owning connection.
+  #
+  # @rbs return: Proc? -- Logger factory or nil
+  def logger
+    connection = @connection
+    connection.logger if connection.respond_to?(:logger)
+  end
+
   # @rbs return: void -- Resolve session readiness
   def mark_ready
     @ready_promise.resolve(true) unless @ready_promise.resolved?
