@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
-require 'fileutils'
 require 'open3'
 require 'etc'
 
@@ -29,7 +28,7 @@ class Puppeteer::ScreenRecorder
     @page = page
     @fps = options.fetch(:fps, DEFAULT_FPS)
     @format = (options[:format] || 'webm').to_s
-    @path = options[:path]
+    @output_io = options[:output]
     @stopped = false
     @stop_mutex = Mutex.new
     @finished = false
@@ -42,7 +41,6 @@ class Puppeteer::ScreenRecorder
     @previous_timestamp = nil
     @previous_buffer = nil
 
-    ensure_output_directory
     command = build_command(width, height, options)
     @stdin, @stdout, @stderr, @wait_thread = Open3.popen3(*command)
     @stdin.binmode
@@ -90,12 +88,6 @@ class Puppeteer::ScreenRecorder
     finish_process
   end
 
-  private def ensure_output_directory
-    return unless @path
-
-    FileUtils.mkdir_p(File.dirname(File.expand_path(@path)))
-  end
-
   private def build_command(width, height, options)
     ffmpeg_path = options[:ffmpeg_path] || 'ffmpeg'
     speed = options[:speed]
@@ -140,7 +132,6 @@ class Puppeteer::ScreenRecorder
       '-b:v', '0',
       *format_args,
       '-vf', filters.join(','),
-      options.fetch(:overwrite, true) ? '-y' : '-n',
       'pipe:1'
     ]
   end
@@ -224,7 +215,10 @@ class Puppeteer::ScreenRecorder
         @wait_thread&.join
         @stdout_thread&.join
         @stderr_thread&.join
-        File.binwrite(@path, @output) if @path
+        if @output_io && !@output_io.closed?
+          @output_io.write(@output)
+          @output_io.close
+        end
         unless @wait_thread&.value&.success?
           raise Puppeteer::Error.new("ffmpeg exited unsuccessfully: #{@ffmpeg_error}")
         end

@@ -1,6 +1,7 @@
 # rbs_inline: enabled
 
 require 'base64'
+require 'fileutils'
 require 'json'
 require 'objspace'
 require "stringio"
@@ -1485,9 +1486,9 @@ class Puppeteer::Page
     raise ArgumentError.new('`scale` must be greater than 0.') if scale && scale <= 0
     width, height, device_pixel_ratio = native_pixel_dimensions
     normalized_crop = normalize_screencast_crop(crop, width, height, device_pixel_ratio)
+    output = open_screencast_output(path, overwrite: overwrite) if path
     options = {
-      path: path,
-      overwrite: overwrite,
+      output: output,
       format: format,
       crop: normalized_crop,
       scale: scale,
@@ -1499,7 +1500,12 @@ class Puppeteer::Page
       colors: colors,
       ffmpeg_path: ffmpeg_path,
     }.compact
-    recorder = Puppeteer::ScreenRecorder.new(self, width, height, options)
+    begin
+      recorder = Puppeteer::ScreenRecorder.new(self, width, height, options)
+    rescue
+      output&.close unless output&.closed?
+      raise
+    end
     begin
       _start_screencast
     rescue
@@ -1507,6 +1513,18 @@ class Puppeteer::Page
       raise
     end
     recorder
+  end
+
+  # Opens the screencast destination outside FFmpeg, creating parent
+  # directories. With overwrite: false the file is created exclusively so an
+  # existing destination raises Errno::EEXIST instead of being truncated.
+  private def open_screencast_output(path, overwrite:)
+    FileUtils.mkdir_p(File.dirname(File.expand_path(path)))
+    if overwrite
+      File.open(path, 'wb')
+    else
+      File.open(path, File::WRONLY | File::CREAT | File::EXCL | File::BINARY)
+    end
   end
 
   # @rbs return: void -- Start a shared CDP screencast session

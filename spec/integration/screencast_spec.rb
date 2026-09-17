@@ -49,6 +49,19 @@ RSpec.describe 'Screencasts' do
       end
     end
 
+    it 'should reject screencast when overwrite is false and file exists' do
+      Dir.mktmpdir('puppeteer-screencast-') do |directory|
+        with_test_state do |page:, **|
+          path = File.join(directory, 'recording.webm')
+          File.write(path, 'placeholder')
+
+          expect do
+            page.screencast(path: path, overwrite: false)
+          end.to raise_error(Errno::EEXIST)
+        end
+      end
+    end
+
     it 'should validate options' do
       with_test_state do |page:, **|
         expect { page.screencast(scale: 0) }.to raise_error(ArgumentError)
