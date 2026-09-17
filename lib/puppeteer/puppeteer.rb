@@ -335,6 +335,20 @@ class Puppeteer::Puppeteer
     Puppeteer::NetworkConditions
   end
 
+  # Defines whether Puppeteer follows symlinks for file operations such as
+  # screenshots, PDFs, and script/style injection. Defaults to true.
+  #
+  # @rbs value: bool -- Whether file operations should follow symlinks
+  # @rbs return: bool -- The new value
+  def set_follow_symlinks(value)
+    Puppeteer::FileSystem.follow_symlinks = value
+  end
+
+  # @rbs return: bool -- Whether file operations follow symlinks
+  def follow_symlinks
+    Puppeteer::FileSystem.follow_symlinks
+  end
+
   # @rbs args: Array[String]? -- Additional arguments
   # @rbs user_data_dir: String? -- Path to user data directory
   # @rbs devtools: bool? -- Enable DevTools

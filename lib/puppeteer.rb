@@ -38,6 +38,7 @@ require "puppeteer/async_utils"
 require 'puppeteer/define_async_method'
 require 'puppeteer/debug_print'
 require 'puppeteer/event_callbackable'
+require 'puppeteer/file_system'
 require 'puppeteer/if_present'
 require "puppeteer/reactor_runner"
 

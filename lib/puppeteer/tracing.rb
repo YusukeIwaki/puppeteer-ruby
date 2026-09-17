@@ -60,11 +60,14 @@ class Puppeteer::Tracing
 
     StringIO.open do |stringio|
       if @path
-        File.open(@path, 'wb') do |f|
+        file = Puppeteer::FileSystem.open_for_writing(@path, mode: 'wb')
+        begin
           chunks.each do |chunk|
-            f.write(chunk)
+            file.write(chunk)
             stringio.write(chunk)
           end
+        ensure
+          file.close
         end
       else
         chunks.each do |chunk|

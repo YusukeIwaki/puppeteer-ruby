@@ -838,7 +838,8 @@ class Puppeteer::Page
     @client.send_message('HeapProfiler.collectGarbage')
 
     begin
-      File.open(path, 'w') do |file|
+      file = Puppeteer::FileSystem.open_for_writing(path, mode: 'w')
+      begin
         listener_id = @client.add_event_listener('HeapProfiler.addHeapSnapshotChunk') do |event|
           file.write(event['chunk'])
         end
@@ -848,6 +849,8 @@ class Puppeteer::Page
         ensure
           @client.remove_event_listener(listener_id)
         end
+      ensure
+        file.close
       end
     ensure
       @client.send_message('HeapProfiler.disable')
@@ -1547,9 +1550,9 @@ class Puppeteer::Page
   private def open_recording_output(path, overwrite:)
     FileUtils.mkdir_p(File.dirname(File.expand_path(path)))
     if overwrite
-      File.open(path, 'wb')
+      Puppeteer::FileSystem.open_for_writing(path, mode: 'wb')
     else
-      File.open(path, File::WRONLY | File::CREAT | File::EXCL | File::BINARY)
+      Puppeteer::FileSystem.open_exclusive(path)
     end
   end
 
@@ -1863,7 +1866,7 @@ class Puppeteer::Page
       end
 
     if screenshot_options.path
-      File.binwrite(screenshot_options.path, buffer)
+      Puppeteer::FileSystem.write_file(screenshot_options.path, buffer)
     end
 
     buffer
@@ -1907,11 +1910,14 @@ class Puppeteer::Page
 
     StringIO.open do |stringio|
       if options[:path]
-        File.open(options[:path], 'wb') do |f|
+        file = Puppeteer::FileSystem.open_for_writing(options[:path], mode: 'wb')
+        begin
           chunks.each do |chunk|
-            f.write(chunk)
+            file.write(chunk)
             stringio.write(chunk)
           end
+        ensure
+          file.close
         end
       else
         chunks.each do |chunk|

@@ -101,7 +101,7 @@ class Puppeteer::BrowserConnector
     )
 
     begin
-      file_content = File.read(port_path, mode: 'r:ASCII')
+      file_content = Puppeteer::FileSystem.read_file(port_path, encoding: Encoding::US_ASCII)
       raw_port, raw_path = file_content.lines.map(&:strip).reject(&:empty?)
       unless raw_port && raw_path
         raise Puppeteer::Error.new("Invalid DevToolsActivePort '#{file_content}' found")

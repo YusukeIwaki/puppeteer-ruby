@@ -294,7 +294,7 @@ class Puppeteer::IsolaatedWorld
     end
 
     if path
-      contents = File.read(path)
+      contents = Puppeteer::FileSystem.read_file(path)
       contents += "//# sourceURL=#{path.gsub(/\n/, '')}"
       return execution_context.
         evaluate_handle(ADD_SCRIPT_CONTENT, contents, id, type || 'text/javascript').
@@ -354,7 +354,7 @@ class Puppeteer::IsolaatedWorld
     end
 
     if path
-      contents = File.read(path)
+      contents = Puppeteer::FileSystem.read_file(path)
       contents += "/*# sourceURL=#{path.gsub(/\n/, '')}*/"
       return execution_context.evaluate_handle(ADD_STYLE_CONTENT, contents).as_element
     end
