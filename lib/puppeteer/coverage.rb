@@ -10,6 +10,11 @@ class Puppeteer::Coverage
     @css.update_client(client)
   end
 
+  # Note: setting reset_on_navigation to false does not guarantee that coverage
+  # survives a navigation. Chrome may discard the previous page's JavaScript
+  # execution environment, including its coverage data, when navigating.
+  # To preserve coverage, call stop_js_coverage before navigating away, then
+  # start a new collection for the next page and merge the reports.
   def start_js_coverage(
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,
@@ -27,6 +32,8 @@ class Puppeteer::Coverage
     @js.stop
   end
 
+  # See start_js_coverage for a caveat on reset_on_navigation: false not
+  # guaranteeing coverage preservation across navigations.
   def js_coverage(
         reset_on_navigation: nil,
         report_anonymous_scripts: nil,
