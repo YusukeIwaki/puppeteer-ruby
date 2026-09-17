@@ -1455,6 +1455,27 @@ class Puppeteer::Page
 
   attr_reader :viewport
 
+  # Resizes the browser window of this page so that the content area
+  # (excluding browser UI) has the specified width and height.
+  #
+  # @rbs content_width: Numeric -- Content area width
+  # @rbs content_height: Numeric -- Content area height
+  # @rbs return: void -- No return value
+  def resize(content_width:, content_height:)
+    window_id = self.window_id
+    @client.send_message('Browser.setContentsSize',
+      windowId: window_id.to_i,
+      width: content_width,
+      height: content_height,
+    )
+    nil
+  end
+
+  # @rbs return: String -- Page window id
+  def window_id
+    @client.send_message('Browser.getWindowForTarget')['windowId'].to_s
+  end
+
   # @rbs path: String? -- Output file path
   # @rbs overwrite: bool -- Overwrite an existing output file
   # @rbs format: String? -- webm, gif, or mp4

@@ -436,6 +436,20 @@ class Puppeteer::Browser
     version_info.user_agent
   end
 
+  # @rbs window_id: String | Integer -- Target window id
+  # @rbs return: Hash[String, untyped] -- Window bounds (windowState, left, top, width, height)
+  def get_window_bounds(window_id)
+    @connection.send_message('Browser.getWindowBounds', windowId: window_id.to_i)['bounds']
+  end
+
+  # @rbs window_id: String | Integer -- Target window id
+  # @rbs bounds: Hash[Symbol, untyped] -- Window bounds (e.g. windowState:, width:, height:, left:, top:)
+  # @rbs return: void -- No return value
+  def set_window_bounds(window_id, bounds)
+    @connection.send_message('Browser.setWindowBounds', windowId: window_id.to_i, bounds: bounds)
+    nil
+  end
+
   private def version_info
     unless @version_promise
       @version_promise = Async::Promise.new

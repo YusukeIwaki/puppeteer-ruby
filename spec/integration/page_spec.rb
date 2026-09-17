@@ -1833,8 +1833,60 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.resize' do
+    # NOTE: upstream uses 500x400, but headless Chrome 152 clamps narrow
+    # windows to ~570px wide (see upstream TestExpectations for b/549573183),
+    # so 600x400 is used to assert exact dimensions reliably.
     it 'should resize the browser window to fit page content' do
-      skip('Not implemented')
+      options = default_launch_options.merge(
+        args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
+        default_viewport: nil,
+      )
+      Puppeteer.launch(**options) do |browser|
+        page = browser.new_page
+
+        resized = async_promise do
+          page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
+        end
+        page.resize(content_width: 600, content_height: 400)
+        resized.wait
+
+        inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
+        expect(inner_size['width']).to eq(600)
+        expect(inner_size['height']).to eq(400)
+      end
+    end
+
+    it 'should resize the browser window to fit page content when fullscreen' do
+      # Headless Chrome 152 leaves the window unresizable after fullscreen
+      # (b/549573183); upstream expects FAIL for darwin headless as well.
+      skip('broken in headless Chrome after fullscreen (b/549573183)') if headless? && Puppeteer.env.darwin?
+
+      options = default_launch_options.merge(
+        args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
+        default_viewport: nil,
+      )
+      Puppeteer.launch(**options) do |browser|
+        page = browser.new_page
+
+        window_id = page.window_id
+        browser.set_window_bounds(window_id, { windowState: 'fullscreen' })
+
+        window_state = browser.get_window_bounds(window_id)
+        expect(window_state['windowState']).to eq('fullscreen')
+
+        browser.set_window_bounds(window_id, { windowState: 'normal' })
+        browser.set_window_bounds(window_id, { windowState: 'normal' })
+
+        resized = async_promise do
+          page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
+        end
+        page.resize(content_width: 600, content_height: 400)
+        resized.wait
+
+        inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
+        expect(inner_size['width']).to eq(600)
+        expect(inner_size['height']).to eq(400)
+      end
     end
   end
 end
