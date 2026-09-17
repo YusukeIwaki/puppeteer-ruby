@@ -478,6 +478,12 @@
 * ~~[asyncDisposeSymbol]~~
 * stop
 
+## ScreenRecording
+
+* data
+* pipe
+* stop
+
 ## ~~SecurityDetails~~
 
 * ~~issuer~~
