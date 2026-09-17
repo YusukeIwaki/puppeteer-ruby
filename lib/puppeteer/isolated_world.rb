@@ -241,6 +241,13 @@ class Puppeteer::IsolaatedWorld
     JAVASCRIPT
   end
 
+  # Writing the content from the page would go through document.write, which
+  # makes Chrome treat parser-blocking cross-site scripts in it as an
+  # intervention candidate and may block them outright.
+  private def set_frame_content(html)
+    @client.send_message('Page.setDocumentContent', frameId: @frame.id, html: html)
+  end
+
   # @param html [String]
   # @param timeout [Integer]
   # @param wait_until [String|Array<String>]
@@ -255,16 +262,9 @@ class Puppeteer::IsolaatedWorld
     end
     option_timeout = timeout || @timeout_settings.navigation_timeout
 
-    # We rely upon the fact that document.open() will reset frame lifecycle with "init"
-    # lifecycle event. @see https://crrev.com/608658
-    js = <<-JAVASCRIPT
-    (html) => {
-      document.open();
-      document.write(html);
-      document.close();
-    }
-    JAVASCRIPT
-    evaluate(js, html)
+    # We rely upon the fact that the document is reopened, which resets the
+    # frame lifecycle with an "init" lifecycle event. @see https://crrev.com/608658
+    set_frame_content(html)
 
     watcher = Puppeteer::LifecycleWatcher.new(@frame_manager, @frame, option_wait_until, option_timeout)
     begin

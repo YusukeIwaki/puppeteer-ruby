@@ -1241,6 +1241,22 @@ RSpec.describe Puppeteer::Page do
       page.content = "#{comment}<div>hello</div>"
       expect(page.content).to eq("#{comment}<html><head></head><body><div>hello</div></body></html>")
     end
+
+    it 'should not run a cross-origin script through document.write', sinatra: true do
+      page.goto(server_empty_page)
+      warnings = []
+      page.on('console') do |message|
+        warnings << message.text if message.log_type == 'warning'
+      end
+
+      page.set_content(
+        "<script src=\"#{server.cross_process_prefix}/injectedfile.js\"></script>",
+        wait_until: 'load',
+      )
+
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+      expect(warnings.select { |warning| warning.include?('document.write') }).to be_empty
+    end
   end
 
   describe '#bypass_csp=' do
