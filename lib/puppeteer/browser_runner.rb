@@ -216,6 +216,14 @@ class Puppeteer::BrowserRunner
     @connection
   end
 
+  # Whether the profile directory exists and the current process can write to
+  # it. A missing directory counts as writable: the browser creates it on
+  # launch.
+  private def writable_directory?(directory)
+    return true if File.writable?(directory)
+    !File.exist?(directory)
+  end
+
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
     lines = []
     wait_for_endpoint = lambda do
@@ -238,7 +246,21 @@ class Puppeteer::BrowserRunner
       wait_for_endpoint.call
     end
   rescue EOFError
-    raise LaunchError.new("\n#{lines.join("\n")}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
+    logs = lines.join("\n")
+    if logs.include?('Failed to create a ProcessSingleton for your profile directory') ||
+        (Puppeteer.env.windows? && File.exist?(File.join(@user_data_dir, 'lockfile')))
+
+      # The browser reports the same ProcessSingleton failure whether another
+      # instance holds the lock or it simply cannot write to the profile
+      # directory, so check for the latter before blaming a running browser.
+      unless writable_directory?(@user_data_dir)
+        raise Puppeteer::Error.new("The browser cannot write to #{@user_data_dir}. Make the `user_data_dir` writable or use a different one.")
+      end
+      raise Puppeteer::Error.new("The browser is already running for #{@user_data_dir}. Use a different `user_data_dir` or stop the running browser first.")
+    end
+
+
+    raise LaunchError.new("\n#{logs}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
   rescue Async::TimeoutError
     raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
   end

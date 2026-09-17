@@ -174,6 +174,24 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
+    it 'should report a permission error when the user_data_dir is not writable' do
+      # Windows ignores the read-only bit for the directory owner, and root
+      # bypasses the write check entirely, so neither can observe the failure.
+      skip('Not observable on Windows or as root') if Puppeteer.env.windows? || Process.uid == 0
+
+      Dir.mktmpdir do |user_data_dir|
+        File.chmod(0o555, user_data_dir)
+        begin
+          options = default_launch_options.merge(
+            user_data_dir: user_data_dir,
+          )
+          expect { Puppeteer.launch(**options) }.to raise_error(Puppeteer::Error, /\AThe browser cannot write to/)
+        ensure
+          File.chmod(0o755, user_data_dir)
+        end
+      end
+    end
+
     it 'should work with no default arguments' do
       options = default_launch_options.merge(
         ignore_default_args: true,
