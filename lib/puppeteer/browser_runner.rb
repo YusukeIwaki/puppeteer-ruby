@@ -193,10 +193,10 @@ class Puppeteer::BrowserRunner
 
   # @param {!({usePipe?: boolean, timeout: number, slowMo: number, preferredRevision: string, protocolTimeout: number?})} options
   # @return {!Promise<!Connection>}
-  def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:, protocol_timeout: nil)
+  def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:, protocol_timeout: nil, ws_options: nil)
     if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
-      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
+      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, ws_options: ws_options)
       @connection = Puppeteer::Connection.new(
         browser_ws_endpoint,
         transport,

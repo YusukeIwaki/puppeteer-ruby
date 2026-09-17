@@ -38,6 +38,7 @@ class Puppeteer::Puppeteer
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport
   # @rbs slow_mo: Integer? -- Delay between operations (ms)
   # @rbs protocol_timeout: Integer? -- CDP protocol timeout in milliseconds
+  # @rbs ws_options: Hash[Symbol, untyped]? -- WebSocket options (headers:, keep_alive:, keep_alive_interval_ms:)
   # @rbs wait_for_initial_page: bool? -- Wait for initial page to load
   # @rbs block: Proc? -- Optional block receiving the browser
   # @rbs return: Puppeteer::Browser -- Browser instance
@@ -67,6 +68,7 @@ class Puppeteer::Puppeteer
     default_viewport: NoViewport.new,
     slow_mo: nil,
     protocol_timeout: nil,
+    ws_options: nil,
     wait_for_initial_page: nil,
     &block
   )
@@ -100,6 +102,7 @@ class Puppeteer::Puppeteer
       default_viewport: default_viewport,
       slow_mo: slow_mo,
       protocol_timeout: protocol_timeout,
+      ws_options: ws_options,
       wait_for_initial_page: wait_for_initial_page,
     }
     if default_viewport.is_a?(NoViewport)
@@ -143,7 +146,8 @@ class Puppeteer::Puppeteer
   # @rbs browser_ws_endpoint: String? -- Browser WebSocket endpoint
   # @rbs browser_url: String? -- Browser HTTP URL for WebSocket discovery
   # @rbs transport: Puppeteer::WebSocketTransport? -- Pre-connected transport
-  # @rbs headers: Hash[String, String]? -- HTTP headers for browser connection requests
+  # @rbs headers: Hash[String, String]? -- Deprecated: use ws_options[:headers] instead
+  # @rbs ws_options: Hash[Symbol, untyped]? -- WebSocket options (headers:, keep_alive:, keep_alive_interval_ms:)
   # @rbs channel: (String | Symbol)? -- Browser channel
   # @rbs ignore_https_errors: bool? -- Ignore HTTPS errors
   # @rbs network_enabled: bool? -- Enable network domain
@@ -160,6 +164,7 @@ class Puppeteer::Puppeteer
     browser_url: nil,
     transport: nil,
     headers: nil,
+    ws_options: nil,
     channel: nil,
     ignore_https_errors: nil,
     network_enabled: true,
@@ -176,6 +181,7 @@ class Puppeteer::Puppeteer
       browser_url: browser_url,
       transport: transport,
       headers: headers,
+      ws_options: ws_options,
       channel: channel&.to_s,
       ignore_https_errors: ignore_https_errors,
       network_enabled: network_enabled,

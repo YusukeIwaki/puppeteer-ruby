@@ -10,6 +10,7 @@ class Puppeteer::BrowserConnector
     @browser_url = options[:browser_url]
     @transport = options[:transport]
     @headers = options[:headers]
+    @ws_options = options[:ws_options] || {}
     @channel = options[:channel]
   end
 
@@ -63,9 +64,14 @@ class Puppeteer::BrowserConnector
     end
   end
 
+  # `ws_options[:headers]` supersedes the deprecated top-level `headers`.
+  private def ws_headers
+    @ws_options[:headers] || @headers
+  end
+
   # @return [Puppeteer::Connection]
   private def connect_with_browser_ws_endpoint(browser_ws_endpoint)
-    transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, headers: @headers)
+    transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, headers: ws_headers, ws_options: @ws_options)
     Puppeteer::Connection.new(
       browser_ws_endpoint,
       transport,
@@ -78,7 +84,7 @@ class Puppeteer::BrowserConnector
   private def connect_with_browser_url(browser_url)
     uri = URI(browser_url)
     uri.path = '/json/version'
-    response_body = Net::HTTP.get(uri, @headers || {})
+    response_body = Net::HTTP.get(uri, ws_headers || {})
     json = JSON.parse(response_body)
     connection_url = json['webSocketDebuggerUrl']
     connect_with_browser_ws_endpoint(connection_url)

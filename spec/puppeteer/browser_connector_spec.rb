@@ -14,6 +14,7 @@ RSpec.describe Puppeteer::BrowserConnector do
         expect(Puppeteer::WebSocketTransport).to receive(:create).with(
           'ws://localhost:9222/devtools/browser/abc123',
           headers: nil,
+          ws_options: {},
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).with(
           'ws://localhost:9222/devtools/browser/abc123',
@@ -39,6 +40,7 @@ RSpec.describe Puppeteer::BrowserConnector do
         allow(Puppeteer::WebSocketTransport).to receive(:create).with(
           'ws://localhost:9223/devtools/browser/def456',
           headers: nil,
+          ws_options: {},
         ).and_return(transport)
         allow(Puppeteer::Connection).to receive(:new).and_return(connection)
 
@@ -80,6 +82,49 @@ RSpec.describe Puppeteer::BrowserConnector do
       )
     end
 
+    describe 'ws_options' do
+      it 'prefers ws_options headers over top-level headers' do
+        ws_headers = { 'Authorization' => 'Bearer ws' }
+        top_headers = { 'Authorization' => 'Bearer top' }
+        websocket_url = 'ws://localhost:9222/devtools/browser/test'
+        ws_options = { headers: ws_headers, keep_alive: true, keep_alive_interval_ms: 5000 }
+
+        expect(Puppeteer::WebSocketTransport).to receive(:create).with(
+          websocket_url,
+          headers: ws_headers,
+          ws_options: ws_options,
+        ).and_return(transport)
+        expect(Puppeteer::Connection).to receive(:new).and_return(connection)
+
+        result = described_class.new(
+          browser_ws_endpoint: websocket_url,
+          headers: top_headers,
+          ws_options: ws_options,
+        ).send(:connection)
+
+        expect(result).to eq(connection)
+      end
+
+      it 'forwards keep-alive options without headers' do
+        websocket_url = 'ws://localhost:9222/devtools/browser/test'
+        ws_options = { keep_alive: true }
+
+        expect(Puppeteer::WebSocketTransport).to receive(:create).with(
+          websocket_url,
+          headers: nil,
+          ws_options: ws_options,
+        ).and_return(transport)
+        expect(Puppeteer::Connection).to receive(:new).and_return(connection)
+
+        result = described_class.new(
+          browser_ws_endpoint: websocket_url,
+          ws_options: ws_options,
+        ).send(:connection)
+
+        expect(result).to eq(connection)
+      end
+    end
+
     describe 'getWSEndpoint via browserURL' do
       it 'should forward headers to the /json/version HTTP request' do
         headers = { 'Authorization' => 'Bearer test-token' }
@@ -93,6 +138,7 @@ RSpec.describe Puppeteer::BrowserConnector do
         expect(Puppeteer::WebSocketTransport).to receive(:create).with(
           websocket_url,
           headers: headers,
+          ws_options: {},
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).and_return(connection)
 
