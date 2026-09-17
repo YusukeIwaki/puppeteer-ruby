@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'thread'
+require 'tmpdir'
 
 RSpec.describe Puppeteer::Page do
   include_context 'with test state'
@@ -1886,6 +1887,28 @@ RSpec.describe Puppeteer::Page do
         inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
         expect(inner_size['width']).to eq(600)
         expect(inner_size['height']).to eq(400)
+      end
+    end
+  end
+
+  describe 'Page.record' do
+    # Page.startScreenRecording is available starting from Chrome 153.
+    it 'should record page' do
+      Dir.mktmpdir('puppeteer-record-') do |directory|
+        with_test_state do |page:, **|
+          skip('Page.record requires Chrome 153+') if page.browser.version[/\d+/].to_i < 153
+
+          path = File.join(directory, 'recording.mp4')
+          recording = page.record(path: path)
+
+          page.goto('data:text/html,<input>')
+          input = page.locator('input').wait_handle
+          input.type_text('ab', delay: 100)
+          input.dispose
+          recording.stop
+
+          expect(File.size(path)).to be > 0
+        end
       end
     end
   end

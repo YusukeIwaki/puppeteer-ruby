@@ -1476,6 +1476,10 @@ class Puppeteer::Page
     @client.send_message('Browser.getWindowForTarget')['windowId'].to_s
   end
 
+  # Captures a screencast of this page using FFmpeg.
+  #
+  # Deprecated: Use #record instead.
+  #
   # @rbs path: String? -- Output file path
   # @rbs overwrite: bool -- Overwrite an existing output file
   # @rbs format: String? -- webm, gif, or mp4
@@ -1507,7 +1511,7 @@ class Puppeteer::Page
     raise ArgumentError.new('`scale` must be greater than 0.') if scale && scale <= 0
     width, height, device_pixel_ratio = native_pixel_dimensions
     normalized_crop = normalize_screencast_crop(crop, width, height, device_pixel_ratio)
-    output = open_screencast_output(path, overwrite: overwrite) if path
+    output = open_recording_output(path, overwrite: overwrite) if path
     options = {
       output: output,
       format: format,
@@ -1536,16 +1540,65 @@ class Puppeteer::Page
     recorder
   end
 
-  # Opens the screencast destination outside FFmpeg, creating parent
-  # directories. With overwrite: false the file is created exclusively so an
-  # existing destination raises Errno::EEXIST instead of being truncated.
-  private def open_screencast_output(path, overwrite:)
+  # Opens a recording destination, creating parent directories. With
+  # overwrite: false the file is created exclusively so an existing
+  # destination raises Errno::EEXIST instead of being truncated.
+  private def open_recording_output(path, overwrite:)
     FileUtils.mkdir_p(File.dirname(File.expand_path(path)))
     if overwrite
       File.open(path, 'wb')
     else
       File.open(path, File::WRONLY | File::CREAT | File::EXCL | File::BINARY)
     end
+  end
+
+  # Records this page using the CDP Page.startScreenRecording API (Chrome
+  # 153+). Outputs MP4 video stream.
+  #
+  # @rbs path: String? -- File path to save the recording to
+  # @rbs overwrite: bool -- Overwrite an existing output file
+  # @rbs audio: bool? -- Whether to record audio
+  # @rbs max_width: Numeric? -- Maximum frame width in pixels
+  # @rbs max_height: Numeric? -- Maximum frame height in pixels
+  # @rbs frame_rate: Numeric? -- Maximum frame rate in frames per second
+  # @rbs fps: Numeric? -- Frame rate alias for frame_rate
+  # @rbs return: Puppeteer::ScreenRecording -- Active recording
+  def record(
+    path: nil,
+    overwrite: true,
+    audio: nil,
+    max_width: nil,
+    max_height: nil,
+    frame_rate: nil,
+    fps: nil
+  )
+    output = open_recording_output(path, overwrite: overwrite) if path
+    options = {
+      audio: audio,
+      max_width: max_width,
+      max_height: max_height,
+      frame_rate: frame_rate,
+      fps: fps,
+    }.compact
+    begin
+      recording = Puppeteer::ScreenRecording.new(self, options)
+    rescue
+      output&.close unless output&.closed?
+      raise
+    end
+    begin
+      recording.start
+    rescue
+      output&.close unless output&.closed?
+      begin
+        recording.stop
+      rescue StandardError
+        # Ignore stop errors while handling the start failure.
+      end
+      raise
+    end
+    recording.pipe(output) if output
+    recording
   end
 
   # @rbs return: void -- Start a shared CDP screencast session

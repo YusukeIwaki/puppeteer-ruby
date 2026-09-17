@@ -62,6 +62,20 @@ RSpec.describe 'Screencasts' do
       end
     end
 
+    # The one-shot Page.screencastFrame listener must be registered before
+    # Page.startScreencast is sent; otherwise the first frame can arrive
+    # unobserved and startup hangs. See upstream puppeteer/puppeteer#15389.
+    it 'does not miss the first screencast frame on startup' do
+      with_test_state do |page:, **|
+        Timeout.timeout(15) do
+          recorder = page.screencast
+          page.goto('data:text/html,hello')
+          sleep 1 # let frames arrive so ffmpeg has input
+          recorder.stop
+        end
+      end
+    end
+
     it 'should validate options' do
       with_test_state do |page:, **|
         expect { page.screencast(scale: 0) }.to raise_error(ArgumentError)

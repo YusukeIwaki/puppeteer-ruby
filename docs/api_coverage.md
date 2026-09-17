@@ -414,6 +414,7 @@
 * openDevTools => `#open_dev_tools`
 * pdf
 * queryObjects => `#query_objects`
+* record
 * reload
 * removeExposedFunction => `#remove_exposed_function`
 * removeScriptToEvaluateOnNewDocument => `#remove_script_to_evaluate_on_new_document`
