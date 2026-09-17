@@ -13,14 +13,14 @@ class Puppeteer::Page
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport for new pages
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: Puppeteer::Page -- Created page instance
-  def self.create: (Puppeteer::CDPSession client, Puppeteer::Target target, bool ignore_https_errors, Puppeteer::Viewport? default_viewport, ?network_enabled: bool) -> Puppeteer::Page
+  def self.create: (Puppeteer::CDPSession client, Puppeteer::Target target, bool ignore_https_errors, Puppeteer::Viewport? default_viewport, ?network_enabled: bool, ?logger: untyped) -> Puppeteer::Page
 
   # @rbs client: Puppeteer::CDPSession -- CDP session for the page
   # @rbs target: Puppeteer::Target -- Target associated with the page
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: void -- No return value
-  def initialize: (Puppeteer::CDPSession client, Puppeteer::Target target, bool ignore_https_errors, ?network_enabled: bool) -> void
+  def initialize: (Puppeteer::CDPSession client, Puppeteer::Target target, bool ignore_https_errors, ?network_enabled: bool, ?logger: untyped) -> void
 
   private def setup_primary_target_listeners: (untyped client) -> untyped
 
@@ -78,6 +78,8 @@ class Puppeteer::Page
   attr_reader target: untyped
 
   attr_reader client: untyped
+
+  attr_reader logger: untyped
 
   # @rbs return: String -- Tab target id
   def _tab_id: () -> String
@@ -427,6 +429,21 @@ class Puppeteer::Page
 
   attr_reader viewport: untyped
 
+  # Resizes the browser window of this page so that the content area
+  # (excluding browser UI) has the specified width and height.
+  #
+  # @rbs content_width: Numeric -- Content area width
+  # @rbs content_height: Numeric -- Content area height
+  # @rbs return: void -- No return value
+  def resize: (content_width: Numeric, content_height: Numeric) -> void
+
+  # @rbs return: String -- Page window id
+  def window_id: () -> String
+
+  # Captures a screencast of this page using FFmpeg.
+  #
+  # Deprecated: Use #record instead.
+  #
   # @rbs path: String? -- Output file path
   # @rbs overwrite: bool -- Overwrite an existing output file
   # @rbs format: String? -- webm, gif, or mp4
@@ -441,6 +458,24 @@ class Puppeteer::Page
   # @rbs ffmpeg_path: String? -- FFmpeg executable path
   # @rbs return: Puppeteer::ScreenRecorder -- Active recorder
   def screencast: (?path: String?, ?overwrite: bool, ?format: String?, ?crop: Hash[Symbol, Numeric]?, ?scale: Numeric?, ?speed: Numeric?, ?fps: Numeric?, ?loop: Numeric?, ?delay: Numeric?, ?quality: Numeric?, ?colors: Numeric?, ?ffmpeg_path: String?) -> Puppeteer::ScreenRecorder
+
+  # Opens a recording destination, creating parent directories. With
+  # overwrite: false the file is created exclusively so an existing
+  # destination raises Errno::EEXIST instead of being truncated.
+  private def open_recording_output: (untyped path, overwrite: untyped) -> untyped
+
+  # Records this page using the CDP Page.startScreenRecording API (Chrome
+  # 153+). Outputs MP4 video stream.
+  #
+  # @rbs path: String? -- File path to save the recording to
+  # @rbs overwrite: bool -- Overwrite an existing output file
+  # @rbs audio: bool? -- Whether to record audio
+  # @rbs max_width: Numeric? -- Maximum frame width in pixels
+  # @rbs max_height: Numeric? -- Maximum frame height in pixels
+  # @rbs frame_rate: Numeric? -- Maximum frame rate in frames per second
+  # @rbs fps: Numeric? -- Frame rate alias for frame_rate
+  # @rbs return: Puppeteer::ScreenRecording -- Active recording
+  def record: (?path: String?, ?overwrite: bool, ?audio: bool?, ?max_width: Numeric?, ?max_height: Numeric?, ?frame_rate: Numeric?, ?fps: Numeric?) -> Puppeteer::ScreenRecording
 
   # @rbs return: void -- Start a shared CDP screencast session
   def _start_screencast: () -> void

@@ -57,7 +57,7 @@ class Puppeteer::HTTPRequest
   # @param allow_interception [boolean]
   # @param event [Hash]
   # @param redirect_chain Array<Request>
-  def initialize: (untyped client, untyped frame, untyped interception_id, untyped allow_interception, untyped event, untyped redirect_chain) -> untyped
+  def initialize: (untyped client, untyped frame, untyped interception_id, untyped allow_interception, untyped event, untyped redirect_chain, ?logger: untyped) -> untyped
 
   attr_reader internal: untyped
 
