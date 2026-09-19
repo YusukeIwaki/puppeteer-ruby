@@ -3,8 +3,9 @@ class Puppeteer::EmulationManager
   using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
-  def initialize(client)
+  def initialize(client, logger: nil)
     @client = client
+    @logger = logger
     @emulating_mobile = false
     @has_touch = false
     @viewport = nil
@@ -40,9 +41,21 @@ class Puppeteer::EmulationManager
     end
   end
 
-  # @param viewport [Puppeteer::Viewport]
+  # @param viewport [Puppeteer::Viewport, nil] -- Viewport settings, or nil to clear emulation
   # @return [true|false]
   def emulate_viewport(viewport)
+    unless viewport
+      return false if @viewport.nil?
+
+      clear_viewport(@client)
+      @viewport = nil
+
+      reload_needed = @emulating_mobile != false || @has_touch != false
+      @emulating_mobile = false
+      @has_touch = false
+      return reload_needed
+    end
+
     mobile = viewport.mobile?
     has_touch = viewport.has_touch?
 
@@ -53,6 +66,19 @@ class Puppeteer::EmulationManager
     @emulating_mobile = mobile
     @has_touch = has_touch
     reload_needed
+  end
+
+  private def clear_viewport(client)
+    Puppeteer::AsyncUtils.await_promise_all(
+      client.async_send_message('Emulation.clearDeviceMetricsOverride'),
+      client.async_send_message('Emulation.setTouchEmulationEnabled', enabled: false),
+    )
+  rescue => err
+    log_error(err)
+  end
+
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
   end
 
   private def apply_viewport(client, viewport)

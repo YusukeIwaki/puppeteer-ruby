@@ -1834,16 +1834,18 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.resize' do
-    # NOTE: upstream uses 500x400, but headless Chrome clamps narrow windows
-    # to ~570px wide (verified still on 153.0.8010.53; got 570 for 500),
-    # so 600x400 is used to assert exact dimensions reliably.
     it 'should resize the browser window to fit page content' do
+      # NOTE: upstream asserts 500x400, but headless Chrome on this
+      # environment clamps narrow windows to ~577px even under upstream
+      # conditions (separate browser, setViewport(null)), so 600x400 is
+      # used to assert exact dimensions reliably.
       options = default_launch_options.merge(
         args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
-        default_viewport: nil,
       )
       Puppeteer.launch(**options) do |browser|
         page = browser.new_page
+        # Default viewport restricts window to 800x600, so remove it.
+        page.viewport = nil
 
         resized = async_promise do
           page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
@@ -1858,17 +1860,17 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should resize the browser window to fit page content when fullscreen' do
-      # Still broken on headless Chrome 153 (verified 153.0.8010.53): after
-      # fullscreen the window keeps fullscreen dimensions (b/549573183);
-      # upstream expects FAIL for darwin headless as well.
-      skip('broken in headless Chrome after fullscreen (b/549573183)') if headless? && Puppeteer.env.darwin?
+      # Upstream allows FAIL or PASS on darwin headless (b/549573183), so a
+      # failure here is recorded as expected rather than skipped outright.
+      pending('broken in headless Chrome after fullscreen (b/549573183)') if headless? && Puppeteer.env.darwin?
 
       options = default_launch_options.merge(
         args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
-        default_viewport: nil,
       )
       Puppeteer.launch(**options) do |browser|
         page = browser.new_page
+        # Default viewport restricts window to 800x600, so remove it.
+        page.viewport = nil
 
         window_id = page.window_id
         browser.set_window_bounds(window_id, { windowState: 'fullscreen' })
@@ -1882,11 +1884,11 @@ RSpec.describe Puppeteer::Page do
         resized = async_promise do
           page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
         end
-        page.resize(content_width: 600, content_height: 400)
+        page.resize(content_width: 500, content_height: 400)
         resized.wait
 
         inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
-        expect(inner_size['width']).to eq(600)
+        expect(inner_size['width']).to eq(500)
         expect(inner_size['height']).to eq(400)
       end
     end

@@ -50,7 +50,7 @@ class Puppeteer::Page
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
     @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled, logger: logger)
-    @emulation_manager = Puppeteer::EmulationManager.new(client)
+    @emulation_manager = Puppeteer::EmulationManager.new(client, logger: logger)
     @tracing = Puppeteer::Tracing.new(client)
     @webmcp = Puppeteer::WebMCP.new(client, @frame_manager)
     @page_bindings = {}
