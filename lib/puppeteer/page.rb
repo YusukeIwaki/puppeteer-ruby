@@ -69,6 +69,7 @@ class Puppeteer::Page
 
     @workers = {}
     @user_drag_interception_enabled = false
+    @dragging = false
     @service_worker_bypassed = false
 
     @swapped_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Swapped) do |session|
@@ -272,6 +273,22 @@ class Puppeteer::Page
     @user_drag_interception_enabled
   end
   alias_method :drag_interception_enabled, :drag_interception_enabled?
+
+  # @internal Whether a non-intercepted drag is in progress (mirrors
+  # upstream Page._isDragging; managed by ElementHandle#drag/#drop).
+  #
+  # @rbs return: bool -- Whether a drag is in progress
+  def dragging?
+    @dragging
+  end
+
+  # @internal
+  #
+  # @rbs value: bool -- New dragging state
+  # @rbs return: void -- No return value
+  def dragging=(value)
+    @dragging = value
+  end
 
   # @rbs event_name: (String | Symbol) -- Page event name
   # @rbs &block: ^(untyped) -> void -- Event handler

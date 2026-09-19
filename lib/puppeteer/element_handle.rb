@@ -423,46 +423,99 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
   end
 
-  # @rbs x: Numeric -- Drag end X coordinate
-  # @rbs y: Numeric -- Drag end Y coordinate
-  # @rbs return: void -- No return value
-  def drag(x:, y:)
-    unless @page.drag_interception_enabled?
-      raise DragInterceptionNotEnabledError.new
+  # Drags this element over the given element or point. When drag
+  # interception is enabled, returns the intercepted drag payload.
+  #
+  # @rbs target: (Puppeteer::ElementHandle::Point | Puppeteer::ElementHandle) -- Drag target point or element
+  # @rbs return: Hash[String, untyped]? -- Intercepted drag payload, if any
+  def drag(target)
+    if @page.drag_interception_enabled?
+      scroll_into_view_if_needed
+      source = clickable_point
+      if target.is_a?(Puppeteer::ElementHandle)
+        target = target.clickable_point
+      end
+      return @page.mouse.drag(source, target)
     end
-    scroll_into_view_if_needed
-    start = clickable_point
-    @page.mouse.drag(start, Point.new(x: x, y: y))
+    # The button is down either because an earlier `drag` pressed it, or
+    # because this call is about to.
+    mouse_down = @page.dragging?
+    begin
+      scroll_into_view_if_needed
+      unless @page.dragging?
+        @page.dragging = true
+        hover
+        @page.mouse.down
+        mouse_down = true
+      end
+      if target.is_a?(Puppeteer::ElementHandle)
+        target.hover
+      else
+        @page.mouse.move(target.x, target.y)
+      end
+    rescue => error
+      @page.dragging = false
+      if mouse_down
+        # `drop` is the only thing that releases the button and it will never
+        # run now, so without this the button stays pressed for the rest of the
+        # session. It must not mask the error that got us here.
+        begin
+          @page.mouse.up
+        rescue StandardError => release_error
+          @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(release_error)
+        end
+      end
+      raise error
+    end
+    nil
   end
 
+  # Deprecated: `dragenter` is performed automatically during dragging.
+  #
   # @rbs data: Hash[String, untyped] -- Drag data payload
   # @rbs return: void -- No return value
-  def drag_enter(data)
+  def drag_enter(data = { 'items' => [], 'dragOperationsMask' => 1 })
     scroll_into_view_if_needed
     target = clickable_point
     @page.mouse.drag_enter(target, data)
   end
 
+  # Deprecated: `dragover` is performed automatically during dragging.
+  #
   # @rbs data: Hash[String, untyped] -- Drag data payload
   # @rbs return: void -- No return value
-  def drag_over(data)
+  def drag_over(data = { 'items' => [], 'dragOperationsMask' => 1 })
     scroll_into_view_if_needed
     target = clickable_point
     @page.mouse.drag_over(target, data)
   end
 
-  # @rbs data: Hash[String, untyped] -- Drag data payload
+  # Drops the given element onto the current one, or performs an intercepted
+  # drop with the given drag payload.
+  #
+  # @rbs data_or_element: (Hash[String, untyped] | Puppeteer::ElementHandle) -- Drag payload or dragged element
   # @rbs return: void -- No return value
-  def drop(data)
-    scroll_into_view_if_needed
-    target = clickable_point
-    @page.mouse.drop(target, data)
+  def drop(data_or_element = { 'items' => [], 'dragOperationsMask' => 1 })
+    unless data_or_element.is_a?(Puppeteer::ElementHandle)
+      scroll_into_view_if_needed
+      destination = clickable_point
+      @page.mouse.drop(destination, data_or_element)
+      return
+    end
+    # Note if the rest errors, we still want dragging off because the error
+    # is most likely something implying the mouse is no longer dragging.
+    data_or_element.drag(self)
+    @page.dragging = false
+    @page.mouse.up
   end
 
   # @rbs target: Puppeteer::ElementHandle -- Drop target element
   # @rbs delay: Numeric? -- Delay before dropping (ms)
   # @rbs return: void -- No return value
   def drag_and_drop(target, delay: nil)
+    unless @page.drag_interception_enabled?
+      raise DragInterceptionNotEnabledError.new
+    end
     scroll_into_view_if_needed
     start_point = clickable_point
     target_point = target.clickable_point
