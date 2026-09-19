@@ -29,6 +29,9 @@ class Puppeteer::ScreenRecorder
     @fps = options.fetch(:fps, DEFAULT_FPS)
     @format = (options[:format] || 'webm').to_s
     @output_io = options[:output]
+    # Flush every chunk so the file grows while recording (upstream pipes
+    # FFmpeg stdout to the file continuously).
+    @output_io&.sync = true
     @stopped = false
     @stop_mutex = Mutex.new
     @finished = false
@@ -218,7 +221,6 @@ class Puppeteer::ScreenRecorder
         @stdout_thread&.join
         @stderr_thread&.join
         if @output_io && !@output_io.closed?
-          @output_io.write(@output)
           @output_io.close
         end
         unless @wait_thread&.value&.success?
@@ -247,6 +249,9 @@ class Puppeteer::ScreenRecorder
   private def read_output
     while (chunk = @stdout.read(16 * 1024)) && !chunk.empty?
       @output << chunk
+      # Stream encoded output to the destination while recording, like
+      # upstream piping FFmpeg stdout through the recorder.
+      @output_io&.write(chunk)
     end
   rescue IOError
     nil
