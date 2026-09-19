@@ -54,7 +54,12 @@ class Puppeteer::ScreenRecording
 
     loop do
       chunk = @chunk_queue.dequeue
-      break if chunk.equal?(END_OF_STREAM)
+      if chunk.equal?(END_OF_STREAM)
+        # Retain the terminator so re-iterating a consumed recording ends
+        # immediately like upstream's closed ReadableStream.
+        @chunk_queue.enqueue(END_OF_STREAM)
+        break
+      end
 
       yield(chunk)
     end
@@ -190,9 +195,15 @@ class Puppeteer::ScreenRecording
 
   private def close_destinations
     destinations.each do |destination|
-      destination.close unless destination.closed?
-    rescue StandardError
-      # Ignore errors while closing destinations.
+      # Upstream always ends every destination; the closed/destroyed flags
+      # only skip waiting for completion, which IO#close does synchronously.
+      next if destination.respond_to?(:closed?) && destination.closed?
+
+      begin
+        destination.close
+      rescue StandardError
+        # Ignore errors while closing destinations.
+      end
     end
   end
 
