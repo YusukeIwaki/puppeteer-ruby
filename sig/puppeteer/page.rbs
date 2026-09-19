@@ -285,6 +285,10 @@ class Puppeteer::Page
   # @rbs return: void -- No return value
   def handle_binding_called: (Hash[String, untyped] event, ?Puppeteer::CDPSession client) -> void
 
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error: (untyped error) -> untyped
+
   private def add_console_message: (untyped type, untyped args, untyped stack_trace) -> untyped
 
   private def console_value_from_js_handle: (untyped handle) -> untyped
