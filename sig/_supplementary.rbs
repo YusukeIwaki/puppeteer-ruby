@@ -351,6 +351,7 @@ class Puppeteer::Connection
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void
   def handle_close: () -> void
+  def log_error: (untyped error) -> void
 end
 
 class Puppeteer::TargetCloseError < Puppeteer::Connection::ProtocolError
