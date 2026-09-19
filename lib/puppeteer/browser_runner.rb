@@ -21,6 +21,68 @@ class Puppeteer::BrowserRunner
 
   attr_reader :proc, :connection
 
+  # Shared synchronous removal of temporary profiles when the host process
+  # exits. Mirrors upstream registerProcessExitCleanup: one exit listener is
+  # shared per emitter, and unregistering the last entry drops the listener.
+  class ProcessExitCleanup
+    # @param emitter [Object, nil] -- Exit emitter responding to once/off, or nil for Kernel.at_exit
+    def initialize(emitter = nil)
+      @emitter = emitter
+      @mutex = Mutex.new
+      @entries = {}
+      @on_exit = nil
+    end
+
+    # @param user_data_dir [String] -- Temporary profile directory
+    # @param logger [Proc, nil] -- Experimental logger factory
+    # @return [Proc] -- Unregister callable
+    def register(user_data_dir, logger = nil)
+      @mutex.synchronize do
+        @entries[user_data_dir] = logger
+        install_listener_unlocked unless @on_exit
+      end
+      -> { unregister(user_data_dir) }
+    end
+
+    private def install_listener_unlocked
+      @on_exit = -> { run }
+      if @emitter
+        @emitter.once('exit', @on_exit)
+      else
+        at_exit(&@on_exit)
+      end
+    end
+
+    private def run
+      snapshot = @mutex.synchronize { @entries.dup }
+      snapshot.each do |user_data_dir, logger|
+        begin
+          FileUtils.rm_rf(user_data_dir)
+        rescue => error
+          logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+        end
+      end
+    end
+
+    private def unregister(user_data_dir)
+      @mutex.synchronize do
+        return false unless @entries.delete(user_data_dir)
+        if @entries.empty? && @on_exit
+          @emitter&.off('exit', @on_exit)
+          @on_exit = nil
+        end
+        true
+      end
+    end
+  end
+
+  class << self
+    # @return [ProcessExitCleanup] -- Shared registry for temporary profiles
+    def process_exit_cleanup
+      @process_exit_cleanup ||= ProcessExitCleanup.new
+    end
+  end
+
   class BrowserProcess
     def initialize(env, executable_path, args, pipe: false)
       @spawnargs =
@@ -152,6 +214,9 @@ class Puppeteer::BrowserRunner
         FileUtils.rm_rf(@user_data_dir)
       end
     }
+    if @using_temp_user_data_dir
+      @exit_cleanup_unregister = Puppeteer::BrowserRunner.process_exit_cleanup.register(@user_data_dir)
+    end
     at_exit do
       kill
     end
@@ -207,6 +272,10 @@ class Puppeteer::BrowserRunner
       end
     rescue => err
       debug_puts(err)
+    end
+    if @using_temp_user_data_dir
+      @exit_cleanup_unregister&.call
+      @exit_cleanup_unregister = nil
     end
   end
 
