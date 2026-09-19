@@ -247,13 +247,16 @@ class Puppeteer::ScreenRecorder
   end
 
   private def read_output
-    while (chunk = @stdout.read(16 * 1024)) && !chunk.empty?
+    loop do
+      chunk = @stdout.readpartial(16 * 1024)
+      next if chunk.empty?
+
       @output << chunk
-      # Stream encoded output to the destination while recording, like
+      # Stream encoded output to the destination as it arrives, like
       # upstream piping FFmpeg stdout through the recorder.
       @output_io&.write(chunk)
     end
-  rescue IOError
+  rescue EOFError, IOError
     nil
   end
 

@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'stringio'
 
 RSpec.describe Puppeteer::ScreenRecorder do
   describe '.count_frames' do
@@ -38,6 +39,31 @@ RSpec.describe Puppeteer::ScreenRecorder do
     it 'returns zero for non-increasing timestamps' do
       expect(described_class.count_frames(0, 1, 1, fps)).to eq(0)
       expect(described_class.count_frames(0, 1, 0.5, fps)).to eq(0)
+    end
+  end
+
+  describe '#read_output' do
+    it 'forwards an available chunk without waiting for a full buffer or EOF' do
+      reader, writer = IO.pipe
+      reader.binmode
+      output = StringIO.new.binmode
+      recorder = described_class.allocate
+      recorder.instance_variable_set(:@stdout, reader)
+      recorder.instance_variable_set(:@output_io, output)
+      recorder.instance_variable_set(:@output, +''.b)
+      worker = Thread.new { recorder.send(:read_output) }
+      begin
+        writer.write('small encoded frame')
+        writer.flush
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+        sleep 0.01 while output.string.empty? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+
+        expect(output.string).to eq('small encoded frame')
+      ensure
+        writer.close unless writer.closed?
+        worker.join(5)
+        reader.close unless reader.closed?
+      end
     end
   end
 end
