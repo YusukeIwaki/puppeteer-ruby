@@ -1834,8 +1834,8 @@ RSpec.describe Puppeteer::Page do
   end
 
   describe 'Page.resize' do
-    # NOTE: upstream uses 500x400, but headless Chrome 152 clamps narrow
-    # windows to ~570px wide (see upstream TestExpectations for b/549573183),
+    # NOTE: upstream uses 500x400, but headless Chrome clamps narrow windows
+    # to ~570px wide (verified still on 153.0.8010.53; got 570 for 500),
     # so 600x400 is used to assert exact dimensions reliably.
     it 'should resize the browser window to fit page content' do
       options = default_launch_options.merge(
@@ -1858,8 +1858,9 @@ RSpec.describe Puppeteer::Page do
     end
 
     it 'should resize the browser window to fit page content when fullscreen' do
-      # Headless Chrome 152 leaves the window unresizable after fullscreen
-      # (b/549573183); upstream expects FAIL for darwin headless as well.
+      # Still broken on headless Chrome 153 (verified 153.0.8010.53): after
+      # fullscreen the window keeps fullscreen dimensions (b/549573183);
+      # upstream expects FAIL for darwin headless as well.
       skip('broken in headless Chrome after fullscreen (b/549573183)') if headless? && Puppeteer.env.darwin?
 
       options = default_launch_options.merge(
