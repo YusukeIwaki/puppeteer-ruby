@@ -14,8 +14,9 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   # @rbs client: Puppeteer::CDPSession -- CDP session
   # @rbs remote_object: Puppeteer::RemoteObject -- Remote object handle
   # @rbs frame: Puppeteer::Frame -- Owning frame
-  def initialize(context:, client:, remote_object:, frame:)
-    super(context: context, client: client, remote_object: remote_object)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(context:, client:, remote_object:, frame:, logger: nil)
+    super(context: context, client: client, remote_object: remote_object, logger: logger)
     @frame = frame
     @page = frame.page
     @frame_manager = frame.frame_manager

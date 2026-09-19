@@ -725,7 +725,7 @@ class Puppeteer::FrameManager
         if extension_id
           world = frame.extension_worlds[extension_id]
           unless world
-            world = Puppeteer::IsolaatedWorld.new(frame._client || @client, self, frame, @timeout_settings)
+            world = Puppeteer::IsolaatedWorld.new(frame._client || @client, self, frame, @timeout_settings, logger: @logger)
             frame.extension_worlds[extension_id] = world
           end
           world.origin = origin
@@ -738,7 +738,7 @@ class Puppeteer::FrameManager
       @isolated_worlds << context_payload['name']
     end
 
-    context = Puppeteer::ExecutionContext.new(frame&._client || @client, context_payload, world)
+    context = Puppeteer::ExecutionContext.new(frame&._client || @client, context_payload, world, logger: world&.logger)
     if world
       world.context = context
     end

@@ -5,14 +5,16 @@ class Puppeteer::WorkerWorld
   using Puppeteer::DefineAsyncMethod
 
   # @rbs client: Puppeteer::CDPSession -- CDP session
-  def initialize(client)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(client, logger: nil)
     @client = client
+    @logger = logger
     @context_promise = Async::Promise.new
     @task_manager = Puppeteer::TaskManager.new
     @disposed = false
   end
 
-  attr_reader :task_manager
+  attr_reader :task_manager, :logger
 
   # @rbs context: Puppeteer::ExecutionContext -- Execution context to bind
   # @rbs return: void -- No return value
@@ -181,7 +183,7 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
     @worker_loaded_promise = Async::Promise.new
 
     @client.once('Runtime.executionContextCreated') do |event|
-      @world.set_context(Puppeteer::ExecutionContext.new(@client, event['context'], @world))
+      @world.set_context(Puppeteer::ExecutionContext.new(@client, event['context'], @world, logger: @world.logger))
     end
     @client.once('Inspector.workerScriptLoaded') do
       @worker_loaded_promise.resolve(nil) unless @worker_loaded_promise.resolved?

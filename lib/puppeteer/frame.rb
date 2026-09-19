@@ -44,8 +44,8 @@ class Puppeteer::Frame
 
   private def update_client(client)
     @client = client
-    @main_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
-    @puppeteer_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings)
+    @main_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings, logger: @logger)
+    @puppeteer_world = Puppeteer::IsolaatedWorld.new(@client, @frame_manager, self, @frame_manager.timeout_settings, logger: @logger)
   end
 
   # @rbs return: Puppeteer::Page -- Owning page

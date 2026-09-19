@@ -467,7 +467,7 @@ class Puppeteer::Page
 
     if_present(entry['args']) do |args|
       args.map do |arg|
-        Puppeteer::RemoteObject.new(arg).async_release(@client)
+        Puppeteer::RemoteObject.new(arg).async_release(@client, @logger)
       end
     end
     if source != 'worker'

@@ -49,13 +49,14 @@ class Puppeteer::IsolaatedWorld
   # @param frame_manager [Puppeteer::FrameManager]
   # @param frame [Puppeteer::Frame]
   # @param timeout_settings [Puppeteer::TimeoutSettings]
-  def initialize(client, frame_manager, frame, timeout_settings)
+  def initialize(client, frame_manager, frame, timeout_settings, logger: nil)
     # Keep own reference to client because it might differ from the FrameManager's
     # client for OOP iframes.
     @client = client
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
+    @logger = logger
     @context_promise = Async::Promise.new
     @task_manager = Puppeteer::TaskManager.new
     @bound_functions = {}
@@ -68,7 +69,7 @@ class Puppeteer::IsolaatedWorld
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
-  attr_reader :frame, :task_manager, :origin, :world_id, :context
+  attr_reader :frame, :task_manager, :origin, :world_id, :context, :logger
 
   # only used in Puppeteer::WaitTask#initialize
   private def _bound_functions

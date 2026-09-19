@@ -36,4 +36,24 @@ RSpec.describe 'Launcher custom logger', sinatra: true do
     expect(receives.flatten.map(&:class).uniq).to eq([String])
     expect(sends.flatten.map(&:class).uniq).to eq([String])
   end
+
+  it 'forwards handle disposal failures to the error logger' do
+    errors = []
+    mutex = Mutex.new
+    logger = lambda do |prefix|
+      if prefix == Puppeteer::DebugPrefixes::ERROR
+        lambda { |error| mutex.synchronize { errors << error } }
+      end
+    end
+
+    options = default_launch_options.merge(logger: logger)
+    Puppeteer.launch(**options) do |browser|
+      page = browser.new_page
+      handle = page.evaluate_handle('() => ({foo: 42})')
+      page.close
+      mutex.synchronize { errors.clear }
+      handle.dispose
+      expect(errors.map(&:message).join).to include('Runtime.releaseObject')
+    end
+  end
 end
