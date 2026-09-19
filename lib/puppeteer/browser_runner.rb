@@ -75,6 +75,26 @@ class Puppeteer::BrowserRunner
       # already killed
     end
 
+    # Non-blocking read of buffered stderr output, for launch diagnostics.
+    def recent_logs
+      output = +''
+      return output unless @stderr && !@stderr.closed?
+
+      loop do
+        result = @stderr.read_nonblock(65_536, exception: false)
+        if result.is_a?(String)
+          output << result
+        elsif result == :wait_readable
+          break unless IO.select([@stderr], nil, nil, 1)
+        else
+          break
+        end
+      end
+      output
+    rescue IOError
+      output
+    end
+
     def dispose
       [@stdin, @stdout, @stderr, @pipe_write, @pipe_read].compact.each do |io|
         io.close unless io.closed?
