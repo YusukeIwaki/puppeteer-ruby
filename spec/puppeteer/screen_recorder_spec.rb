@@ -1,6 +1,46 @@
 require 'spec_helper'
 require 'stringio'
 
+class FakeScreencastSession
+  def add_event_listener(*_args)
+    1
+  end
+
+  def once(*_args)
+    2
+  end
+
+  def remove_event_listener(*_args)
+    nil
+  end
+end
+
+FakeScreencastFrame = Struct.new(:client)
+
+class FakeScreencastPage
+  attr_writer :stop_gate
+
+  def initialize
+    @main_frame = FakeScreencastFrame.new(FakeScreencastSession.new)
+    @stop_gate = nil
+  end
+
+  attr_reader :main_frame
+
+  def logger
+    nil
+  end
+
+  def _stop_screencast
+    if @stop_gate
+      entered, release = @stop_gate
+      entered << true
+      release.pop
+    end
+    nil
+  end
+end
+
 RSpec.describe Puppeteer::ScreenRecorder do
   describe '.count_frames' do
     fps = 30
@@ -63,6 +103,49 @@ RSpec.describe Puppeteer::ScreenRecorder do
         writer.close unless writer.closed?
         worker.join(5)
         reader.close unless reader.closed?
+      end
+    end
+  end
+
+  describe '#stop' do
+    it 'waits for the in-flight stop before a concurrent stop finishes' do
+      page = FakeScreencastPage.new
+      entered = Queue.new
+      release = Queue.new
+      page.stop_gate = [entered, release]
+      recorder = described_class.new(page, 800, 600)
+      finished = []
+      recorder.define_singleton_method(:finish_process) do
+        finished << :started
+        super()
+      ensure
+        finished << :done
+      end
+
+      first = Thread.new do
+        recorder.stop
+      rescue StandardError
+        # No frames were fed, so FFmpeg exits unsuccessfully; the stop
+        # serialization under test is unaffected.
+      end
+      entered.pop
+      second_done = Queue.new
+      second = Thread.new do
+        recorder.stop
+        second_done << true
+      rescue StandardError
+        second_done << true
+      end
+      sleep 0.3
+      # With proper serialization the second stop must still be waiting and
+      # process finalization must not have started while gated.
+      expect(finished).to eq([])
+      expect(second_done.empty?).to eq(true)
+      release << true
+      Timeout.timeout(20) do
+        first.join
+        second.join
+        expect(second_done.pop).to eq(true)
       end
     end
   end

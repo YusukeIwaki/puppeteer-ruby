@@ -72,25 +72,25 @@ class Puppeteer::ScreenRecorder
 
   # @rbs return: void -- Stop recording and flush FFmpeg
   def stop
-    should_stop = @stop_mutex.synchronize do
-      next false if @stopped
+    # Serialize the whole stop so a concurrent second call waits for the
+    # first to finish instead of finalizing the process early.
+    @stop_mutex.synchronize do
+      if @stopped
+        finish_process
+        return
+      end
 
       @stopped = true
-      true
-    end
-    unless should_stop
+      begin
+        @page._stop_screencast
+      rescue StandardError => error
+        # The page or its CDP session may already be gone.
+        @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+      end
+      enqueue_last_frame
       finish_process
-      return
     end
-
-    begin
-      @page._stop_screencast
-    rescue StandardError => error
-      # The page or its CDP session may already be gone.
-      @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
-    end
-    enqueue_last_frame
-    finish_process
+    nil
   end
 
   private def build_command(width, height, options)
