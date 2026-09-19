@@ -79,6 +79,15 @@ end
 
 ## Agent Notes (Porting/Review)
 
+### Required Fidelity Checks
+
+- Follow the [porting and review contract](CLAUDE/porting_puppeteer.md#porting-and-review-contract). Missing documentation, a missing Ruby API, or a failing local test is not permission to omit behavior, add a stub, or weaken a regression test.
+- Pin the upstream revision and account for every requested change and its tests, including prerequisites and fixes already present in the base. Explicit exclusions (Chrome/CDP only, no AbortSignal) remain in force; do not invent additional exclusions.
+- Preserve public API call paths, setup/options, assertions, ordering, and completion/cleanup guarantees. Internal mocks and passing example counts do not establish equivalent coverage.
+- Every new skip, pending case, or platform/version guard needs a specific source or reproduced limitation, narrowly scoped conditions, and a reported disposition; it is not executed verification. Do not convert an upstream expected failure into a silent skip merely to make a run green.
+- Check relevant failure paths and option combinations, especially validation before side effects, concurrent shutdown, file permissions, transport variants, and logger propagation. Use evidence from the pinned upstream to distinguish porting defects from shared upstream behavior.
+- Generate API coverage from its versioned inputs; do not hand-edit generated entries. Report actual checks, skips, deviations, and unresolved items before claiming parity or closing an issue.
+
 ### Source Code Porting
 
 - When porting from upstream, use `packages/puppeteer-core/src/cdp/` as the primary source.
@@ -87,13 +96,13 @@ end
 
 ### Test Porting Guidelines
 
-When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spec.rb`:
+When porting tests from upstream `test/src/**/*.test.ts` (or `*.spec.ts` at older revisions) and colocated unit tests to Ruby specs:
 
 **Structure & Order**
 - Keep `it` blocks in the **exact same order** as upstream
 - Use the **same test names** (translated to Ruby style, e.g., `'should type into a textarea'`)
 - Do NOT add extra `context`/`describe` wrappers unless upstream has them
-- Do NOT add Ruby-specific tests in the middle; add them at the end if needed
+- Put Ruby-specific tests in `*_ext_spec.rb`, not among upstream cases
 
 **Ruby-Specific Tests → `*_ext_spec.rb`**
 - When porting, separate Ruby-only features into `*_ext_spec.rb` files (e.g., `keyboard_ext_spec.rb`)
@@ -117,7 +126,7 @@ When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spe
 
 **Asset Files**
 - `spec/assets/` files must be **identical** to upstream `test/assets/`
-- Fetch assets directly: `wget https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/assets/xxx`
+- Fetch assets directly from the pinned upstream revision: `https://raw.githubusercontent.com/puppeteer/puppeteer/<upstream-sha>/test/assets/xxx`
 - Do NOT hand-edit asset files; if upstream changes, re-fetch
 
 **Code Translation**
@@ -139,7 +148,7 @@ When porting tests from upstream `test/src/*.spec.ts` to `spec/integration/*_spe
 - Assets: `https://github.com/puppeteer/puppeteer/tree/main/test/assets`
 
 See `CLAUDE/porting_puppeteer.md` for detailed examples.
-- Update `docs/api_coverage.md` when new APIs are added.
+- Regenerate `docs/api_coverage.md` when new APIs are added; update the versioned source metadata first if the API is absent from it (see the porting guide).
 - `CHANGELOG.md` is being retired; do not update it for new changes.
 - Porting plan (CDP + async):
   - Aim for Node.js Puppeteer fidelity, but use `socketry/async` (like puppeteer-bidi) instead of JS async/await.
