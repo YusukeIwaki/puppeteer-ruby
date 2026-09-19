@@ -4,11 +4,76 @@ This guide explains how to port features from the TypeScript Puppeteer to puppet
 
 ## Workflow Overview
 
-1. **Find the TypeScript source** in [puppeteer/puppeteer](https://github.com/puppeteer/puppeteer)
-2. **Understand the CDP calls** being made
-3. **Implement in Ruby** following existing patterns
-4. **Port the tests** from Puppeteer's test suite
-5. **Update API coverage** in `docs/api_coverage.md`
+1. **Pin the upstream revision and scope** in [puppeteer/puppeteer](https://github.com/puppeteer/puppeteer)
+2. **Trace the public API through its implementation**, dependencies, and tests
+3. **Implement in Ruby** while preserving observable behavior
+4. **Port the tests and challenge the changed behavior** using the guidance below
+5. **Regenerate API coverage and report verified and unresolved scope**
+
+## Porting and Review Contract
+
+This contract applies to both implementation and review. Local guides and migration
+tables are navigation aids, not an exhaustive specification of supported behavior.
+Silence in a document, a missing Ruby method, a difficult test, or a missing local
+dependency does not authorize omitting behavior, adding a no-op implementation,
+or replacing a regression with a stubbed success. Follow the user's requested scope
+and explicit repository exclusions (Chrome/CDP only; no AbortSignal).
+
+### Establish the scope before claiming completion
+
+- Use the revision/range specified by the task. If the task says latest/main,
+  resolve it to a SHA and record that SHA. Compare implementation, tests, assets,
+  and test expectations at the same revision.
+- For a multi-feature port, keep a mapping in the PR description or review notes:
+  upstream change and regression cases, Ruby implementation/specs, disposition,
+  and evidence. Include colocated unit tests under `packages/puppeteer-core/src/`,
+  not just browser tests under `test/src/`.
+- Distinguish **implemented and verified**, **already in the base**, **explicitly
+  excluded**, and **unresolved**. Existing coverage needs a matching scenario and
+  assertions, not just a similar test title. Skipped or unrun tests are not verified.
+- Trace prerequisites and follow-up fixes across `api/`, `cdp/`, `common/`,
+  `node/`, and `injected/`. A missing prerequisite API is work to account for,
+  not evidence that an applicable regression is TypeScript-only.
+- Ruby adaptations may replace language mechanisms, but must retain their
+  observable contract. For example, document and test the Ruby stream/iteration
+  or resource-lifetime equivalent instead of silently dropping it with a JS type.
+  Record intentional deviations and their rationale; do not claim full parity
+  or close the tracking issue while applicable requested items remain unresolved.
+
+### Preserve behavior, not only CDP command names
+
+Review the dimensions relevant to the changed feature; this is not a requirement
+to add unrelated tests or exhaustively multiply every option in the library.
+
+| Dimension | What to preserve and challenge |
+| --- | --- |
+| Validation and side effects | Validate before opening/truncating files or starting processes when upstream does. Invalid inputs must preserve existing data and state. |
+| Completion and cleanup | Match the whole guarded operation, not just a flag assignment. A second concurrent stop/close must wait for completion when upstream does. Exercise failure/disconnect paths without masking the original error. |
+| Collections and streams | Preserve Set deduplication, destination removal, chunk delivery, iteration, and close semantics. An Array or an all-data buffer is not automatically equivalent. |
+| Option combinations | Preserve omission, defaults, and precedence. Exercise branches such as launch/connect, WebSocket/pipe, and follow-symlinks/overwrite when touched. |
+| File operations | Compare flags, creation permissions, exclusive creation, and resource ownership in each changed branch. A rejected symlink alone does not establish file-policy parity. |
+| Logger propagation | Trace factories and sinks through all affected constructors and error paths, including disabled channels, argument types, and factory lifetime. A successful SEND log does not cover error logging. |
+| Static API data | Compare every added descriptor field with the pinned source, rather than checking only a few representative values. |
+
+Use the pinned upstream as the control: do not report a behavior shared with
+upstream as a Ruby porting regression. Separate newly introduced defects from
+pre-existing gaps that the requested port is meant to resolve.
+
+### Completion evidence
+
+Run the relevant regression and boundary tests, plus the repository checks
+appropriate to the change. Record the commands, Ruby/browser versions, actual
+results, pending/skipped cases, and limitations. Where a regression could pass
+without the fix, use a targeted negative control (the pre-fix implementation or a
+temporarily disabled fix in an isolated checkout) and confirm it fails for the
+intended reason. A green suite or matching example count alone does not prove
+fidelity.
+
+Check CI on the PR's actual head. Call a failure pre-existing only with evidence
+such as the same reproduction on the base under matching conditions; otherwise
+report its attribution as unresolved. For documentation-only changes, check
+links, examples, and consistency with the current code; state that runtime tests
+were not run instead of implying behavioral validation.
 
 ## Step 1: Find the TypeScript Source
 
@@ -28,7 +93,8 @@ packages/puppeteer-core/src/
 └── common/                 # Shared utilities
 ```
 
-For CDP-based puppeteer-ruby, focus on the `cdp/` directory.
+For CDP-based puppeteer-ruby, use `cdp/` as the primary implementation source,
+and trace the public API and shared helpers that determine its behavior.
 
 ### Example: Finding waitForSelector
 
@@ -112,7 +178,7 @@ end
 def click(x, y, delay: nil, button: nil, click_count: nil, count: nil)
   move(x, y)
   down(button: button, click_count: click_count)
-  sleep(delay / 1000.0) if delay
+  Puppeteer::AsyncUtils.sleep_seconds(delay / 1000.0) if delay
   up(button: button, click_count: click_count)
 end
 ```
@@ -135,8 +201,8 @@ The `button` parameter accepts these values (defined in `Puppeteer::Mouse::Butto
 
 | TypeScript | Ruby |
 |------------|------|
-| `async/await` | Direct method calls (current), `.wait` (after migration) |
-| `Promise.all([...])` | Execute in sequence or use `Concurrent::Promises.zip` |
+| `async/await` | Direct calls inside the reactor; `.wait` for Async tasks/promises |
+| `Promise.all([...])` | Start concurrent Async tasks and join with `Puppeteer::AsyncUtils.await_promise_all`; do not serialize operations whose overlap matters |
 | `options: {...}` | Keyword arguments `(key: value)` |
 | `options?.key` | `options&.[](:key)` or explicit nil check |
 | `throw new Error()` | `raise ErrorClass, 'message'` |
@@ -164,19 +230,48 @@ test/assets/                 # Test fixtures (HTML, JS, CSS)
 
 To verify test alignment between TypeScript and Ruby:
 
-1. **Fetch TypeScript test structure:**
+1. **Fetch TypeScript test structure at the pinned SHA:**
    ```
-   https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/src/page.spec.ts
+   https://raw.githubusercontent.com/puppeteer/puppeteer/<upstream-sha>/test/src/page.test.ts
    ```
+   Use the filenames present at that revision; older releases use `*.spec.ts`.
 
 2. **Compare describe/it block titles** between files, checking:
    - Order matches
    - Names match (accounting for Ruby naming conventions)
    - No missing tests
+   - Same public API entry point, setup, options, action sequence, and assertions
+   - Same surrounding hooks and platform/browser expectations
 
 3. **Handle differences:**
-   - **TypeScript-only tests**: Add to Ruby spec with `skip('Not implemented')` or implement
+   - **Language-specific mechanisms**: Test the equivalent Ruby behavior; explicitly excluded features such as AbortSignal must be marked with that specific reason
+   - **Applicable missing behavior**: Implement it and its prerequisites; if still incomplete, record it as unresolved, not ported
    - **Ruby-only tests**: Move to `*_ext_spec.rb` file
+
+### Skips, expected failures, and test substitutions
+
+- Preserve upstream inputs and preconditions. Do not change dimensions, timeouts,
+  fixtures, assertions, or an option's enclosing context just to pass locally.
+  Moving a test out of a `followSymlinks: false` group, for example, changes the
+  branch exercised even when its body and title remain the same.
+- A new skip/pending/platform/version guard must cite an explicit repository
+  exclusion, the pinned upstream expectation, or a reproduced environment/browser
+  limitation with a tracking reference. Record the affected conditions and what
+  enables the test to run again. Scope it to those conditions, retain the test
+  body, and expose it in the completion report. `Not implemented` alone is not a
+  justification for treating a requested port as complete.
+- Distinguish upstream **SKIP** from **FAIL** or **FAIL/PASS**. Preserve execution
+  where upstream executes the test. If the Ruby harness cannot represent that
+  expectation, document the limitation and retain an executable reproducer;
+  a blanket skip must not silently replace expected-failure coverage.
+- Preserve the tested API layer. If upstream tests `page.record` through a mock
+  Page, do not substitute direct construction of its internal recorder and claim
+  equivalent validation of the public method. Keep real-browser regression tests
+  as real-browser tests. Payload spies and protocol fakes can supplement them.
+- Fakes must preserve the failure/timing behavior being tested. Use deferred
+  responses to hold an operation in flight when testing concurrent stop or
+  disconnect; an immediately completed fake proves only sequential behavior.
+  See [test-double guidance](testing.md#test-doubles-and-regression-evidence).
 
 ### Key Test File Pairs
 
@@ -405,12 +500,13 @@ frame = page.wait_for_frame(predicate: ->(frame) { frame.name == 'test' })
 Assets in `spec/assets/` must be **identical** to upstream `test/assets/`:
 
 ```bash
-# Fetch asset from upstream
+# Use the SHA recorded for this port, not moving main.
+UPSTREAM_SHA='replace-with-the-recorded-upstream-sha'
 wget -O spec/assets/input/keyboard.html \
-  https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/assets/input/keyboard.html
+  "https://raw.githubusercontent.com/puppeteer/puppeteer/${UPSTREAM_SHA}/test/assets/input/keyboard.html"
 
 # Verify content matches
-diff spec/assets/input/keyboard.html <(curl -s https://raw.githubusercontent.com/puppeteer/puppeteer/main/test/assets/input/keyboard.html)
+diff spec/assets/input/keyboard.html <(curl -fsSL "https://raw.githubusercontent.com/puppeteer/puppeteer/${UPSTREAM_SHA}/test/assets/input/keyboard.html")
 ```
 
 **Never hand-edit asset files.** If a test needs different HTML:
@@ -491,6 +587,13 @@ bundle exec ruby development/generate_api_coverage.rb
 ```
 
 This script reads `development/puppeteer.api.json` and compares it with the Ruby implementation to generate the coverage report.
+
+If an added upstream API is absent from that input, update the versioned metadata
+first using the build procedure in [the Check workflow](../.github/workflows/check.yml).
+Keep `development/DOCS_VERSION` and `Puppeteer::REF_PUPPETEER_VERSION` aligned;
+do not bump the gem release version unless the task calls for a release. Never
+hand-add coverage entries that the generator will remove. Review and include the
+generated diff, then verify a second generation produces no additional changes.
 
 ### How the Coverage Report Works
 

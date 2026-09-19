@@ -196,10 +196,33 @@ bundle exec rspec spec/integration/screenshot_spec.rb
 
 ### Guidelines
 
-1. **One assertion per test when possible** - Easier to identify failures
+1. **Preserve all upstream assertions and conditions** - Keep the complete regression scenario, including side effects and cleanup
 2. **Use descriptive test names** - Should read like documentation
 3. **Clean up resources** - Close pages, restore state in `after` blocks
 4. **Minimize flakiness** - Use explicit waits, not sleeps
+
+### Test Doubles and Regression Evidence
+
+Apply the [porting and review contract](porting_puppeteer.md#porting-and-review-contract)
+when deciding whether to skip, adapt, or replace an upstream test.
+
+- Mock the external boundary needed for a unit test, not the behavior it is
+  supposed to verify. Preserve upstream's public call path and keep filesystem
+  or lifecycle effects real when those effects are the assertion's subject.
+- Do not replace a browser regression with a canned CDP result, direct internal
+  constructor, or expectation that merely repeats the implementation's payload.
+  Such tests can be useful additions but do not replace the original coverage.
+- A concurrency regression must force the critical interleaving with a promise
+  or event gate. Assert that the second caller is still waiting before releasing
+  the first, then check output and cleanup. Sleeping briefly or counting one stop
+  command does not establish completion semantics.
+- For error-path tests, cause the specific failure and assert the public error,
+  preserved state, resource cleanup, or logger notification required by upstream.
+  Ensure a broad rescue, unrelated exception, or disabled channel cannot make
+  the test pass accidentally.
+- Keep Ruby-only cases in `*_ext_spec.rb`. Report unavailable browser/platform
+  coverage separately; local environment limitations do not make a feature
+  unsupported or justify changing its expected behavior.
 
 ### Example Test Pattern
 
@@ -253,7 +276,9 @@ See `.github/workflows/ci.yml` for details.
 ```bash
 # Run with visible browser
 DEBUG=1 bundle exec rspec spec/integration/page_spec.rb
+```
 
+```ruby
 # Add screenshots for debugging
 page.screenshot(path: 'debug.png')
 

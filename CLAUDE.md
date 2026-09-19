@@ -149,13 +149,19 @@ The `type: :puppeteer` metadata automatically:
 
 ## Porting from Puppeteer
 
+The [porting and review contract](CLAUDE/porting_puppeteer.md#porting-and-review-contract)
+applies to implementation and review. Undocumented or missing Ruby behavior is
+not an exclusion: do not silently skip it, stub it, or change its tests to pass.
+Account for the requested scope against a pinned upstream revision and preserve
+the observable behavior through the public API, including failures and cleanup.
+
 When implementing new features, reference the TypeScript Puppeteer source:
 
 1. Find the corresponding TypeScript file in [puppeteer/puppeteer](https://github.com/puppeteer/puppeteer)
 2. Understand the CDP calls being made
 3. Implement in Ruby following existing patterns
 4. Port the relevant tests
-5. Update `docs/api_coverage.md`
+5. Update the API metadata when needed and regenerate `docs/api_coverage.md`
 
 ### CDP Command Pattern
 

@@ -6,6 +6,14 @@ This report compares test files between [puppeteer/puppeteer](https://github.com
 
 ## Migration Rules
 
+Apply the [porting and review contract](porting_puppeteer.md#porting-and-review-contract)
+before interpreting the status tables below. These historical entries are not
+permission to omit behavior or evidence of parity with a newer upstream revision.
+Verify the requested cases against the pinned source and current Ruby specs.
+Placeholders, omitted assertions, or stubbed behavior under test must not be
+marked `[PORTED]`. Record skip reasons separately from executed verification;
+legitimate boundary mocks in upstream-equivalent unit tests are not omissions.
+
 ### 1. Faithful Porting Principle
 Tests must be **faithfully ported** from Node.js Puppeteer to Ruby RSpec:
 - `describe` blocks in Node.js should correspond to `describe` or `context` blocks in Ruby

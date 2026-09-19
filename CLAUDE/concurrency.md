@@ -187,6 +187,21 @@ element = task.wait
 - Ignore promise rejections
 - Use `sleep` directly (use `AsyncUtils.sleep_seconds`)
 
+### Preserve Upstream Completion Guarantees
+
+When porting a guarded async operation, preserve the scope of the guard. A Mutex
+around an `@stopped` flag only prevents duplicate starts; it does not make another
+caller wait for stream draining, destination closure, or other cleanup. Use an
+Async-compatible guard (such as `Async::Semaphore`) or a shared completion promise
+where upstream serializes the entire operation, including failure completion.
+Keep Ruby Mutex critical sections short and free of waits that must allow another
+fiber to progress.
+
+Register event listeners before triggering operations that can emit immediately.
+Preserve concurrent start/join behavior rather than translating Promise.all into
+sequential calls. Verify these guarantees with deferred responses or event gates,
+as described in [the testing guide](testing.md#test-doubles-and-regression-evidence).
+
 ### Example: Async-Ready Code
 
 ```ruby
