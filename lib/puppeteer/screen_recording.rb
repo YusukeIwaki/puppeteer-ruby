@@ -56,7 +56,7 @@ class Puppeteer::ScreenRecording
       chunk = @chunk_queue.dequeue
       break if chunk.equal?(END_OF_STREAM)
 
-      yield chunk
+      yield(chunk)
     end
     nil
   end

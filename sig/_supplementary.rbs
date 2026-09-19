@@ -228,6 +228,7 @@ class Puppeteer::FrameManager
   def extension_origin?: (untyped origin) -> bool
   def extract_extension_id: (untyped origin) -> String?
   def blocked_url?: (String? url) -> bool
+  def log_error: (StandardError error) -> void
 end
 
 class Puppeteer::NetworkCondition
@@ -372,9 +373,12 @@ class Puppeteer::Launcher::Chrome
 
   def fallback_executable_path: () -> String
   def executable_path_for_channel: (String channel) -> String
+  def with_profile_access_diagnostic: (Puppeteer::BrowserRunner runner, String user_data_dir, StandardError error) -> StandardError
+  def writable_directory?: (String directory) -> bool
 end
 
 class Puppeteer::BrowserRunner
+  def self.process_exit_cleanup: () -> Puppeteer::BrowserRunner::ProcessExitCleanup
   def initialize: (String executable_path, Array[String] process_arguments, String user_data_dir, bool using_temp_user_data_dir) -> void
   def start: (?executable_path: String?, ?ignore_default_args: Array[String]?, ?handle_SIGINT: bool?, ?handle_SIGTERM: bool?, ?handle_SIGHUP: bool?, ?timeout: Integer?, ?dumpio: bool?, ?env: Hash[String, String]?, ?pipe: bool?) -> void
   def close: () -> void
@@ -390,10 +394,23 @@ class Puppeteer::BrowserRunner
     def initialize: (Hash[String, String] env, String executable_path, Array[String]? args, ?pipe: bool) -> void
     def kill: () -> void
     def dispose: () -> void
+    def recent_logs: () -> String
     attr_reader stdout: untyped
     attr_reader stderr: untyped
     attr_reader spawnargs: Array[String]
     attr_reader pipe_write: IO?
     attr_reader pipe_read: IO?
+  end
+
+  class ProcessExitCleanup
+    def initialize: (?untyped emitter) -> void
+    def register: (String user_data_dir, ?untyped logger) -> Proc
+
+    private
+
+    def install_listener_unlocked: () -> void
+    def run: () -> void
+    def remove_entry: (String user_data_dir, untyped logger) -> void
+    def unregister: (String user_data_dir) -> bool
   end
 end

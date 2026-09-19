@@ -33,5 +33,4 @@ RSpec.describe Puppeteer::FileSystem do
       end
     end
   end
-
 end

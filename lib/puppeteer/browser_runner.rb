@@ -56,12 +56,14 @@ class Puppeteer::BrowserRunner
     private def run
       snapshot = @mutex.synchronize { @entries.dup }
       snapshot.each do |user_data_dir, logger|
-        begin
-          FileUtils.rm_rf(user_data_dir)
-        rescue => error
-          logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
-        end
+        remove_entry(user_data_dir, logger)
       end
+    end
+
+    private def remove_entry(user_data_dir, logger)
+      FileUtils.rm_rf(user_data_dir)
+    rescue => error
+      logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
     end
 
     private def unregister(user_data_dir)
@@ -76,11 +78,9 @@ class Puppeteer::BrowserRunner
     end
   end
 
-  class << self
-    # @return [ProcessExitCleanup] -- Shared registry for temporary profiles
-    def process_exit_cleanup
-      @process_exit_cleanup ||= ProcessExitCleanup.new
-    end
+  # @return [ProcessExitCleanup] -- Shared registry for temporary profiles
+  def self.process_exit_cleanup
+    @process_exit_cleanup ||= ProcessExitCleanup.new
   end
 
   class BrowserProcess
@@ -140,20 +140,22 @@ class Puppeteer::BrowserRunner
     # Non-blocking read of buffered stderr output, for launch diagnostics.
     def recent_logs
       output = +''
-      return output unless @stderr && !@stderr.closed?
-
-      loop do
-        result = @stderr.read_nonblock(65_536, exception: false)
-        if result.is_a?(String)
-          output << result
-        elsif result == :wait_readable
-          break unless IO.select([@stderr], nil, nil, 1)
-        else
-          break
+      begin
+        if @stderr && !@stderr.closed?
+          loop do
+            result = @stderr.read_nonblock(65_536, exception: false)
+            if result.is_a?(String)
+              output << result
+            elsif result != :wait_readable
+              break
+            elsif IO.select([@stderr], nil, nil, 1).nil?
+              break
+            end
+          end
         end
+      rescue IOError
+        # Return whatever was collected before the stream went away.
       end
-      output
-    rescue IOError
       output
     end
 

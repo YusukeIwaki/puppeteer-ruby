@@ -145,8 +145,10 @@ module Puppeteer::Launcher
     # the directory is writable.
     private def with_profile_access_diagnostic(runner, user_data_dir, error)
       logs = "#{runner.proc&.recent_logs}\n#{error.message}"
-      if logs.include?('Failed to create a ProcessSingleton for your profile directory') ||
-          (Puppeteer.env.windows? && File.exist?(File.join(user_data_dir, 'lockfile')))
+      singleton_failure = logs.include?('Failed to create a ProcessSingleton for your profile directory') ||
+        (Puppeteer.env.windows? && File.exist?(File.join(user_data_dir, 'lockfile')))
+
+      if singleton_failure
         unless writable_directory?(user_data_dir)
           return Puppeteer::Error.new("The browser cannot write to #{user_data_dir}. Make the `user_data_dir` writable or use a different one.")
         end
