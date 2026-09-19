@@ -78,9 +78,13 @@ module Puppeteer::FileSystem
   # @rbs path: String -- File path
   # @rbs return: File -- Open file handle
   def self.open_exclusive(path)
-    flags = File::WRONLY | File::CREAT | File::EXCL | File::BINARY
-    flags |= File::NOFOLLOW if protected?
-    File.open(path, flags)
+    if protected?
+      flags = File::WRONLY | File::CREAT | File::EXCL | File::BINARY | File::NOFOLLOW
+      File.open(path, flags, WRITE_NOFOLLOW_MODE)
+    else
+      flags = File::WRONLY | File::CREAT | File::EXCL | File::BINARY
+      File.open(path, flags)
+    end
   end
 
   self.follow_symlinks = true
