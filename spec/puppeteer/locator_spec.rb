@@ -68,6 +68,12 @@ RSpec.describe Puppeteer::Locator do
     expect(first.set_timeout(500).logger).to be(logger)
   end
 
+  it 'constructs an empty race with a disabled logger like upstream' do
+    race = nil
+    expect { race = Puppeteer::Locator.race([]) }.not_to raise_error
+    expect(race.logger.call(Puppeteer::DebugPrefixes::ERROR)).to be_nil
+  end
+
   it 'forwards handle disposal errors to the error logger' do
     errors = []
     error_logger = lambda do |prefix|

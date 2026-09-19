@@ -1835,26 +1835,23 @@ RSpec.describe Puppeteer::Page do
 
   describe 'Page.resize' do
     it 'should resize the browser window to fit page content' do
-      # NOTE: upstream asserts 500x400, but headless Chrome on this
-      # environment clamps narrow windows to ~577px even under upstream
-      # conditions (separate browser, setViewport(null)), so 600x400 is
-      # used to assert exact dimensions reliably.
       options = default_launch_options.merge(
         args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
       )
       Puppeteer.launch(**options) do |browser|
-        page = browser.new_page
+        context = browser.create_browser_context
+        page = context.new_page
         # Default viewport restricts window to 800x600, so remove it.
         page.viewport = nil
 
         resized = async_promise do
           page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
         end
-        page.resize(content_width: 600, content_height: 400)
+        page.resize(content_width: 500, content_height: 400)
         resized.wait
 
         inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
-        expect(inner_size['width']).to eq(600)
+        expect(inner_size['width']).to eq(500)
         expect(inner_size['height']).to eq(400)
       end
     end
@@ -1868,7 +1865,8 @@ RSpec.describe Puppeteer::Page do
         args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
       )
       Puppeteer.launch(**options) do |browser|
-        page = browser.new_page
+        context = browser.create_browser_context
+        page = context.new_page
         # Default viewport restricts window to 800x600, so remove it.
         page.viewport = nil
 

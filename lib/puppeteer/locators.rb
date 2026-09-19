@@ -756,9 +756,13 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
 end
 
 class Puppeteer::RaceLocator < Puppeteer::Locator
+  # Disabled logger factory for empty races (mirrors upstream's fallback).
+  DISABLED_LOGGER = ->(_prefix) { nil }.freeze
+  private_constant :DISABLED_LOGGER
+
   def self.create(locators)
     array = check_locator_array(locators)
-    new(array, logger: array.first.logger)
+    new(array, logger: array.first&.logger || DISABLED_LOGGER)
   end
 
   def initialize(locators, logger: nil)
