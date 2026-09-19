@@ -133,6 +133,21 @@ RSpec.describe 'followSymlinks' do
         end
       end
     end
+
+    it 'should reject screencast when overwrite is false and file exists', sinatra: true do
+      with_symlink_fixtures(follow_symlinks: false) do |tmp_dir:, **|
+        with_test_state do |page:, server:, **|
+          page.goto(server.empty_page)
+
+          target_file = File.join(tmp_dir, 'output.webm')
+          File.write(target_file, 'placeholder')
+
+          expect {
+            page.screencast(path: target_file, overwrite: false)
+          }.to raise_error(Errno::EEXIST)
+        end
+      end
+    end
   end
 
   describe 'when follow_symlinks is true (default)' do
