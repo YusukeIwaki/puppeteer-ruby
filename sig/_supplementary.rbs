@@ -298,8 +298,8 @@ class Puppeteer::WebSocketTransport
   class ClosedError < Puppeteer::Error
   end
 
-  def self.create: (String url, ?headers: Hash[String, String]?, ?ws_options: Hash[Symbol, untyped]?) -> Puppeteer::WebSocketTransport
-  def initialize: (String url, ?headers: Hash[String, String]?, ?ws_options: Hash[Symbol, untyped]?) -> void
+  def self.create: (String url, ?headers: Hash[String, String]?, ?ws_options: Hash[Symbol, untyped]?, ?logger: untyped) -> Puppeteer::WebSocketTransport
+  def initialize: (String url, ?headers: Hash[String, String]?, ?ws_options: Hash[Symbol, untyped]?, ?logger: untyped) -> void
   def connect: () -> untyped
   def send_text: (String message) -> void
   def close: () -> void
@@ -313,6 +313,7 @@ class Puppeteer::WebSocketTransport
   def receive_loop: (untyped connection) -> void
   def start_keep_alive: (untyped connection) -> void
   def stop_keep_alive: () -> void
+  def log_error: (untyped error) -> void
 end
 
 class Puppeteer::Connection
@@ -379,7 +380,7 @@ end
 
 class Puppeteer::BrowserRunner
   def self.process_exit_cleanup: () -> Puppeteer::BrowserRunner::ProcessExitCleanup
-  def initialize: (String executable_path, Array[String] process_arguments, String user_data_dir, bool using_temp_user_data_dir) -> void
+  def initialize: (String executable_path, Array[String] process_arguments, String user_data_dir, bool using_temp_user_data_dir, ?logger: untyped) -> void
   def start: (?executable_path: String?, ?ignore_default_args: Array[String]?, ?handle_SIGINT: bool?, ?handle_SIGTERM: bool?, ?handle_SIGHUP: bool?, ?timeout: Integer?, ?dumpio: bool?, ?env: Hash[String, String]?, ?pipe: bool?) -> void
   def close: () -> void
   def kill: () -> void
@@ -389,6 +390,7 @@ class Puppeteer::BrowserRunner
 
   def wait_for_ws_endpoint: (Puppeteer::BrowserRunner::BrowserProcess browser_process, Numeric? timeout, String? preferred_revision) -> String
   def writable_directory?: (String directory) -> bool
+  def log_error: (untyped error) -> void
 
   class BrowserProcess
     def initialize: (Hash[String, String] env, String executable_path, Array[String]? args, ?pipe: bool) -> void

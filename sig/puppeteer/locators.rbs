@@ -9,6 +9,8 @@ end
 class Puppeteer::Locator
   include Puppeteer::EventCallbackable
 
+  include Puppeteer::DebugPrint
+
   RETRY_DELAY_SECONDS: ::Float
 
   class TimeoutController
@@ -127,6 +129,8 @@ class Puppeteer::Locator
 
   private def build_action_options: (untyped timeout_controller) -> untyped
 
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
   private def log_error: (untyped error) -> untyped
 
   private def run_conditions: (untyped handle, untyped options, untyped conditions) -> untyped
@@ -216,6 +220,9 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
 end
 
 class Puppeteer::RaceLocator < Puppeteer::Locator
+  # Disabled logger factory for empty races (mirrors upstream's fallback).
+  DISABLED_LOGGER: untyped
+
   def self.create: (untyped locators) -> untyped
 
   def initialize: (untyped locators, ?logger: untyped) -> untyped

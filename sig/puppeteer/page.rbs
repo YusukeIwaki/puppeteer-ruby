@@ -44,6 +44,18 @@ class Puppeteer::Page
   # @rbs return: bool -- Whether drag interception is enabled
   def drag_interception_enabled?: () -> bool
 
+  # @internal Whether a non-intercepted drag is in progress (mirrors
+  # upstream Page._isDragging; managed by ElementHandle#drag/#drop).
+  #
+  # @rbs return: bool -- Whether a drag is in progress
+  def dragging?: () -> bool
+
+  # @internal
+  #
+  # @rbs value: bool -- New dragging state
+  # @rbs return: void -- No return value
+  def dragging=: (bool value) -> void
+
   # @rbs event_name: (String | Symbol) -- Page event name
   # @rbs &block: ^(untyped) -> void -- Event handler
   # @rbs return: String -- Listener ID

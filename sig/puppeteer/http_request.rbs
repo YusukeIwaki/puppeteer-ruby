@@ -209,6 +209,10 @@ class Puppeteer::HTTPRequest
 
   private def handle_interception_error: (untyped error) -> untyped
 
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error: (untyped error) -> untyped
+
   ERROR_REASONS: untyped
 
   # List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
