@@ -1799,7 +1799,7 @@ Puppeteer::DEVICES = Hash[
         ),
       ),
     ]
-  end
+  end,
 ]
 
 # Instead of Puppeteer::DEVICES["iPhone X"], Puppeteer::DEVICES["iPad Pro"],
