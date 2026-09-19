@@ -75,7 +75,7 @@ class Puppeteer::Page
       Async do
         handle_activation(session)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
     @secondary_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
@@ -948,8 +948,15 @@ class Puppeteer::Page
     Async do
       client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
     rescue => error
-      debug_puts(error)
+      log_error(error)
     end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 
   private def add_console_message(type, args, stack_trace)
@@ -1548,7 +1555,14 @@ class Puppeteer::Page
   # overwrite: false the file is created exclusively so an existing
   # destination raises Errno::EEXIST instead of being truncated.
   private def open_recording_output(path, overwrite:)
-    FileUtils.mkdir_p(File.dirname(File.expand_path(path)))
+    # Upstream creates the output directory recursively unless overwrite is
+    # disabled.
+    directory = File.dirname(File.expand_path(path))
+    if overwrite
+      FileUtils.mkdir_p(directory)
+    elsif !Dir.exist?(directory)
+      Dir.mkdir(directory)
+    end
     if overwrite
       Puppeteer::FileSystem.open_for_writing(path, mode: 'wb')
     else
@@ -1576,6 +1590,13 @@ class Puppeteer::Page
     frame_rate: nil,
     fps: nil
   )
+    # Upstream validates options before any directory or file operations so
+    # that invalid options never truncate an existing output file.
+    raise ArgumentError.new('`max_width` must be greater than 0.') if !max_width.nil? && max_width <= 0
+    raise ArgumentError.new('`max_height` must be greater than 0.') if !max_height.nil? && max_height <= 0
+    raise ArgumentError.new('`frame_rate` must be greater than 0.') if !frame_rate.nil? && frame_rate <= 0
+    raise ArgumentError.new('`fps` must be greater than 0.') if !fps.nil? && fps <= 0
+
     output = open_recording_output(path, overwrite: overwrite) if path
     options = {
       audio: audio,
