@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.58.9",
+    "toolVersion": "7.59.0",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -8058,7 +8058,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!ConnectOptions#headers:member",
-              "docComment": "/**\n * Headers to use for the web socket connection.\n *\n * @remarks\n *\n * Only works in the Node.js environment.\n */\n",
+              "docComment": "/**\n * Headers to use for the web socket connection.\n *\n * @remarks\n *\n * Only works in the Node.js environment.\n *\n * @deprecated\n *\n * Use {@link WsOptions.headers} via {@link ConnectOptions.wsOptions} instead. When both are set, `wsOptions.headers` wins.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -8109,6 +8109,34 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "issuesEnabled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!ConnectOptions#logger:member",
+              "docComment": "/**\n * When provided, Puppeteer calls the logger with a debug channel prefix {@link DebugPrefix}. If the logger returns a {@link LoggerFunction}, Puppeteer uses it to log details for that channel.\n *\n * @example\n * ```ts\n * const browser = await puppeteer.connect({\n *   browserWSEndpoint,\n *   logger: prefix => {\n *     return (...args) => console.log(`[${prefix}]`, ...args);\n *   },\n * });\n * ```\n *\n * The API may change in future releases.\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "logger?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Logger",
+                  "canonicalReference": "puppeteer-core!Logger:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "logger",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -8274,6 +8302,34 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "transport",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!ConnectOptions#wsOptions:member",
+              "docComment": "/**\n * Options for the WebSocket connection to the browser.\n *\n * @remarks\n *\n * Only used in the Node.js environment. The browser build has no ping frame API, so the keep-alive options are ignored there.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "wsOptions?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WsOptions",
+                  "canonicalReference": "puppeteer-core!WsOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "wsOptions",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -10201,6 +10257,15 @@
                 },
                 {
                   "kind": "Content",
+                  "text": ", logger?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Logger",
+                  "canonicalReference": "puppeteer-core!Logger:type"
+                },
+                {
+                  "kind": "Content",
                   "text": ");"
                 }
               ],
@@ -10215,6 +10280,14 @@
                     "endIndex": 2
                   },
                   "isOptional": false
+                },
+                {
+                  "parameterName": "logger",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": true
                 }
               ]
             },
@@ -10482,6 +10555,29 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "puppeteer-core!DEBUG_PREFIXES:var",
+          "docComment": "/**\n * @public @experimental\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "DEBUG_PREFIXES: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly cdpSend: \"puppeteer:protocol:SEND ►\";\n    readonly cdpReceive: \"puppeteer:protocol:RECV ◀\";\n    readonly bidiSend: \"puppeteer:webDriverBiDi:SEND ►\";\n    readonly bidiReceive: \"puppeteer:webDriverBiDi:RECV ◀\";\n    readonly error: \"puppeteer:error\";\n    readonly ffmpeg: \"puppeteer:ffmpeg\";\n}"
+            }
+          ],
+          "fileUrlPath": "src/common/Debug.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "DEBUG_PREFIXES",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Interface",
           "canonicalReference": "puppeteer-core!DebugInfo:interface",
           "docComment": "/**\n * @public @experimental\n */\n",
@@ -10530,6 +10626,50 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "puppeteer-core!DebugPrefix:type",
+          "docComment": "/**\n * @public @experimental\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type DebugPrefix = "
+            },
+            {
+              "kind": "Content",
+              "text": "(typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "DEBUG_PREFIXES",
+              "canonicalReference": "puppeteer-core!DEBUG_PREFIXES:var"
+            },
+            {
+              "kind": "Content",
+              "text": ")[keyof typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "DEBUG_PREFIXES",
+              "canonicalReference": "puppeteer-core!DEBUG_PREFIXES:var"
+            },
+            {
+              "kind": "Content",
+              "text": "]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/common/Debug.ts",
+          "releaseTag": "Public",
+          "name": "DebugPrefix",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 6
+          }
         },
         {
           "kind": "Variable",
@@ -22518,7 +22658,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!JSCoverageOptions#resetOnNavigation:member",
-              "docComment": "/**\n * Whether to reset coverage on every navigation.\n */\n",
+              "docComment": "/**\n * Whether to reset coverage on every navigation.\n *\n * Setting this to `false` does not guarantee that coverage survives a navigation. Chrome may discard the previous page's JavaScript execution environment, including its coverage data, when navigating. To preserve coverage, call {@link Coverage.stopJSCoverage} before navigating away, then start a new collection for the next page and merge the reports.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -23999,7 +24139,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "puppeteer-core!KnownDevices:var",
-          "docComment": "/**\n * A list of devices to be used with {@link Page.emulate}.\n *\n * @example\n * ```ts\n * import {KnownDevices} from 'puppeteer';\n * const iPhone = KnownDevices['iPhone 15 Pro'];\n *\n * const browser = await puppeteer.launch();\n * const page = await browser.newPage();\n * await page.emulate(iPhone);\n * await page.goto('https://www.google.com');\n * // other actions...\n * await browser.close();\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * A list of devices to be used with {@link Page.emulate}.\n *\n * @example\n * ```ts\n * import {KnownDevices} from 'puppeteer';\n * const iPhone = KnownDevices['iPhone 17 Pro'];\n *\n * const browser = await puppeteer.launch();\n * const page = await browser.newPage();\n * await page.emulate(iPhone);\n * await page.goto('https://www.google.com');\n * // other actions...\n * await browser.close();\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -24021,7 +24161,7 @@
             },
             {
               "kind": "Content",
-              "text": "<\"Blackberry PlayBook\" | \"Blackberry PlayBook landscape\" | \"BlackBerry Z30\" | \"BlackBerry Z30 landscape\" | \"Galaxy Note 3\" | \"Galaxy Note 3 landscape\" | \"Galaxy Note II\" | \"Galaxy Note II landscape\" | \"Galaxy S III\" | \"Galaxy S III landscape\" | \"Galaxy S5\" | \"Galaxy S5 landscape\" | \"Galaxy S8\" | \"Galaxy S8 landscape\" | \"Galaxy S9+\" | \"Galaxy S9+ landscape\" | \"Galaxy Tab S4\" | \"Galaxy Tab S4 landscape\" | \"iPad\" | \"iPad landscape\" | \"iPad (gen 6)\" | \"iPad (gen 6) landscape\" | \"iPad (gen 7)\" | \"iPad (gen 7) landscape\" | \"iPad Mini\" | \"iPad Mini landscape\" | \"iPad Pro\" | \"iPad Pro landscape\" | \"iPad Pro 11\" | \"iPad Pro 11 landscape\" | \"iPhone 4\" | \"iPhone 4 landscape\" | \"iPhone 5\" | \"iPhone 5 landscape\" | \"iPhone 6\" | \"iPhone 6 landscape\" | \"iPhone 6 Plus\" | \"iPhone 6 Plus landscape\" | \"iPhone 7\" | \"iPhone 7 landscape\" | \"iPhone 7 Plus\" | \"iPhone 7 Plus landscape\" | \"iPhone 8\" | \"iPhone 8 landscape\" | \"iPhone 8 Plus\" | \"iPhone 8 Plus landscape\" | \"iPhone SE\" | \"iPhone SE landscape\" | \"iPhone X\" | \"iPhone X landscape\" | \"iPhone XR\" | \"iPhone XR landscape\" | \"iPhone 11\" | \"iPhone 11 landscape\" | \"iPhone 11 Pro\" | \"iPhone 11 Pro landscape\" | \"iPhone 11 Pro Max\" | \"iPhone 11 Pro Max landscape\" | \"iPhone 12\" | \"iPhone 12 landscape\" | \"iPhone 12 Pro\" | \"iPhone 12 Pro landscape\" | \"iPhone 12 Pro Max\" | \"iPhone 12 Pro Max landscape\" | \"iPhone 12 Mini\" | \"iPhone 12 Mini landscape\" | \"iPhone 13\" | \"iPhone 13 landscape\" | \"iPhone 13 Pro\" | \"iPhone 13 Pro landscape\" | \"iPhone 13 Pro Max\" | \"iPhone 13 Pro Max landscape\" | \"iPhone 13 Mini\" | \"iPhone 13 Mini landscape\" | \"iPhone 14\" | \"iPhone 14 landscape\" | \"iPhone 14 Plus\" | \"iPhone 14 Plus landscape\" | \"iPhone 14 Pro\" | \"iPhone 14 Pro landscape\" | \"iPhone 14 Pro Max\" | \"iPhone 14 Pro Max landscape\" | \"iPhone 15\" | \"iPhone 15 landscape\" | \"iPhone 15 Plus\" | \"iPhone 15 Plus landscape\" | \"iPhone 15 Pro\" | \"iPhone 15 Pro landscape\" | \"iPhone 15 Pro Max\" | \"iPhone 15 Pro Max landscape\" | \"JioPhone 2\" | \"JioPhone 2 landscape\" | \"Kindle Fire HDX\" | \"Kindle Fire HDX landscape\" | \"LG Optimus L70\" | \"LG Optimus L70 landscape\" | \"Microsoft Lumia 550\" | \"Microsoft Lumia 950\" | \"Microsoft Lumia 950 landscape\" | \"Nexus 10\" | \"Nexus 10 landscape\" | \"Nexus 4\" | \"Nexus 4 landscape\" | \"Nexus 5\" | \"Nexus 5 landscape\" | \"Nexus 5X\" | \"Nexus 5X landscape\" | \"Nexus 6\" | \"Nexus 6 landscape\" | \"Nexus 6P\" | \"Nexus 6P landscape\" | \"Nexus 7\" | \"Nexus 7 landscape\" | \"Nokia Lumia 520\" | \"Nokia Lumia 520 landscape\" | \"Nokia N9\" | \"Nokia N9 landscape\" | \"Pixel 2\" | \"Pixel 2 landscape\" | \"Pixel 2 XL\" | \"Pixel 2 XL landscape\" | \"Pixel 3\" | \"Pixel 3 landscape\" | \"Pixel 4\" | \"Pixel 4 landscape\" | \"Pixel 4a (5G)\" | \"Pixel 4a (5G) landscape\" | \"Pixel 5\" | \"Pixel 5 landscape\" | \"Moto G4\" | \"Moto G4 landscape\", "
+              "text": "<\"Blackberry PlayBook\" | \"Blackberry PlayBook landscape\" | \"BlackBerry Z30\" | \"BlackBerry Z30 landscape\" | \"Galaxy Note 3\" | \"Galaxy Note 3 landscape\" | \"Galaxy Note II\" | \"Galaxy Note II landscape\" | \"Galaxy S III\" | \"Galaxy S III landscape\" | \"Galaxy S5\" | \"Galaxy S5 landscape\" | \"Galaxy S8\" | \"Galaxy S8 landscape\" | \"Galaxy S9+\" | \"Galaxy S9+ landscape\" | \"Galaxy Tab S4\" | \"Galaxy Tab S4 landscape\" | \"iPad\" | \"iPad landscape\" | \"iPad (gen 6)\" | \"iPad (gen 6) landscape\" | \"iPad (gen 7)\" | \"iPad (gen 7) landscape\" | \"iPad Mini\" | \"iPad Mini landscape\" | \"iPad Pro\" | \"iPad Pro landscape\" | \"iPad Pro 11\" | \"iPad Pro 11 landscape\" | \"iPhone 4\" | \"iPhone 4 landscape\" | \"iPhone 5\" | \"iPhone 5 landscape\" | \"iPhone 6\" | \"iPhone 6 landscape\" | \"iPhone 6 Plus\" | \"iPhone 6 Plus landscape\" | \"iPhone 7\" | \"iPhone 7 landscape\" | \"iPhone 7 Plus\" | \"iPhone 7 Plus landscape\" | \"iPhone 8\" | \"iPhone 8 landscape\" | \"iPhone 8 Plus\" | \"iPhone 8 Plus landscape\" | \"iPhone SE\" | \"iPhone SE landscape\" | \"iPhone SE (3rd gen)\" | \"iPhone SE (3rd gen) landscape\" | \"iPhone X\" | \"iPhone X landscape\" | \"iPhone XR\" | \"iPhone XR landscape\" | \"iPhone 11\" | \"iPhone 11 landscape\" | \"iPhone 11 Pro\" | \"iPhone 11 Pro landscape\" | \"iPhone 11 Pro Max\" | \"iPhone 11 Pro Max landscape\" | \"iPhone 12\" | \"iPhone 12 landscape\" | \"iPhone 12 Pro\" | \"iPhone 12 Pro landscape\" | \"iPhone 12 Pro Max\" | \"iPhone 12 Pro Max landscape\" | \"iPhone 12 Mini\" | \"iPhone 12 Mini landscape\" | \"iPhone 13\" | \"iPhone 13 landscape\" | \"iPhone 13 Pro\" | \"iPhone 13 Pro landscape\" | \"iPhone 13 Pro Max\" | \"iPhone 13 Pro Max landscape\" | \"iPhone 13 Mini\" | \"iPhone 13 Mini landscape\" | \"iPhone 14\" | \"iPhone 14 landscape\" | \"iPhone 14 Plus\" | \"iPhone 14 Plus landscape\" | \"iPhone 14 Pro\" | \"iPhone 14 Pro landscape\" | \"iPhone 14 Pro Max\" | \"iPhone 14 Pro Max landscape\" | \"iPhone 15\" | \"iPhone 15 landscape\" | \"iPhone 15 Plus\" | \"iPhone 15 Plus landscape\" | \"iPhone 15 Pro\" | \"iPhone 15 Pro landscape\" | \"iPhone 15 Pro Max\" | \"iPhone 15 Pro Max landscape\" | \"iPhone 16\" | \"iPhone 16 landscape\" | \"iPhone 16 Plus\" | \"iPhone 16 Plus landscape\" | \"iPhone 16 Pro\" | \"iPhone 16 Pro landscape\" | \"iPhone 16 Pro Max\" | \"iPhone 16 Pro Max landscape\" | \"iPhone 16e\" | \"iPhone 16e landscape\" | \"iPhone 17\" | \"iPhone 17 landscape\" | \"iPhone Air\" | \"iPhone Air landscape\" | \"iPhone 17 Pro\" | \"iPhone 17 Pro landscape\" | \"iPhone 17 Pro Max\" | \"iPhone 17 Pro Max landscape\" | \"iPhone 17e\" | \"iPhone 17e landscape\" | \"JioPhone 2\" | \"JioPhone 2 landscape\" | \"Kindle Fire HDX\" | \"Kindle Fire HDX landscape\" | \"LG Optimus L70\" | \"LG Optimus L70 landscape\" | \"Microsoft Lumia 550\" | \"Microsoft Lumia 950\" | \"Microsoft Lumia 950 landscape\" | \"Nexus 10\" | \"Nexus 10 landscape\" | \"Nexus 4\" | \"Nexus 4 landscape\" | \"Nexus 5\" | \"Nexus 5 landscape\" | \"Nexus 5X\" | \"Nexus 5X landscape\" | \"Nexus 6\" | \"Nexus 6 landscape\" | \"Nexus 6P\" | \"Nexus 6P landscape\" | \"Nexus 7\" | \"Nexus 7 landscape\" | \"Nokia Lumia 520\" | \"Nokia Lumia 520 landscape\" | \"Nokia N9\" | \"Nokia N9 landscape\" | \"Pixel 2\" | \"Pixel 2 landscape\" | \"Pixel 2 XL\" | \"Pixel 2 XL landscape\" | \"Pixel 3\" | \"Pixel 3 landscape\" | \"Pixel 4\" | \"Pixel 4 landscape\" | \"Pixel 4a (5G)\" | \"Pixel 4a (5G) landscape\" | \"Pixel 5\" | \"Pixel 5 landscape\" | \"Moto G4\" | \"Moto G4 landscape\", "
             },
             {
               "kind": "Reference",
@@ -24812,7 +24952,7 @@
         {
           "kind": "Class",
           "canonicalReference": "puppeteer-core!Locator:class",
-          "docComment": "/**\n * Locators describe a strategy of locating objects and performing an action on them. If the action fails because the object is not ready for the action, the whole operation is retried. Various preconditions for a successful action are checked automatically.\n *\n * See {@link https://pptr.dev/guides/page-interactions#locators} for details.\n *\n * @public\n */\n",
+          "docComment": "/**\n * Locators describe a strategy of locating objects and performing an action on them. If the action fails because the object is not ready for the action, the whole operation is retried. Various preconditions for a successful action are checked automatically.\n *\n * See {@link https://pptr.dev/guides/page-interactions#locators} for details.\n *\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `Locator` class.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -26536,7 +26676,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "puppeteer-core!Logger:type",
-          "docComment": "/**\n * @public @experimental\n */\n",
+          "docComment": "/**\n * A logger factory function that receives a debug channel prefix and returns a {@link LoggerFunction} to emit logs for that channel, or `undefined` if logging is disabled for that channel.\n *\n * @param prefix - A debug channel prefix, one of {@link DebugPrefix}.\n *\n * @returns A {@link LoggerFunction} to log messages for the channel, or `undefined` if logging is disabled.\n *\n * @example\n * ```ts\n * const customLogger: Logger = (prefix: string) => {\n *   if (prefix.includes('protocol')) {\n *     return (...args: unknown[]) =>\n *       console.log(`[DEBUG: ${prefix}]`, ...args);\n *   }\n *   return undefined;\n * };\n * ```\n *\n * @public @experimental\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -26571,7 +26711,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "puppeteer-core!LoggerFunction:type",
-          "docComment": "/**\n * @public @experimental\n */\n",
+          "docComment": "/**\n * A function called by Puppeteer to output debug messages.\n *\n * @param args - Arbitrary values to log for a debug event.\n *\n * @public @experimental\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -30309,7 +30449,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#emulate:member(1)",
-              "docComment": "/**\n * Emulates a given device's metrics and user agent.\n *\n * To aid emulation, Puppeteer provides a list of known devices that can be via {@link KnownDevices}.\n *\n * @remarks\n *\n * This method is a shortcut for calling two methods: {@link Page.(setUserAgent:2)} and {@link Page.setViewport}.\n *\n * This method will resize the page. A lot of websites don't expect phones to change size, so you should emulate before navigating to the page.\n *\n * @example\n * ```ts\n * import {KnownDevices} from 'puppeteer';\n * const iPhone = KnownDevices['iPhone 15 Pro'];\n *\n * const browser = await puppeteer.launch();\n * const page = await browser.newPage();\n * await page.emulate(iPhone);\n * await page.goto('https://www.google.com');\n * // other actions...\n * await browser.close();\n * ```\n *\n */\n",
+              "docComment": "/**\n * Emulates a given device's metrics and user agent.\n *\n * To aid emulation, Puppeteer provides a list of known devices that can be via {@link KnownDevices}.\n *\n * @remarks\n *\n * This method is a shortcut for calling two methods: {@link Page.(setUserAgent:2)} and {@link Page.setViewport}.\n *\n * This method will resize the page. A lot of websites don't expect phones to change size, so you should emulate before navigating to the page.\n *\n * @example\n * ```ts\n * import {KnownDevices} from 'puppeteer';\n * const iPhone = KnownDevices['iPhone 17 Pro'];\n *\n * const browser = await puppeteer.launch();\n * const page = await browser.newPage();\n * await page.emulate(iPhone);\n * await page.goto('https://www.google.com');\n * // other actions...\n * await browser.close();\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -32452,6 +32592,82 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!Page#record:member(1)",
+              "docComment": "/**\n * Records this {@link Page | page} using the Chrome DevTools Protocol {@link https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-startScreenRecording | Page.startScreenRecording} API.\n *\n * Outputs mp4 video stream.\n *\n * @param options - Configures recording behavior.\n *\n * @example\n *\n * Recording a {@link Page | page}:\n * ```ts\n * import puppeteer from 'puppeteer';\n *\n * // Launch a browser\n * const browser = await puppeteer.launch();\n *\n * // Create a new page\n * const page = await browser.newPage();\n *\n * // Go to your site.\n * await page.goto('https://www.example.com');\n *\n * // Start recording.\n * const recorder = await page.record({path: 'recording.mp4'});\n *\n * // Do something.\n *\n * // Stop recording.\n * await recorder.stop();\n *\n * await browser.close();\n * ```\n *\n * @experimental\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "record(options?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Readonly",
+                  "canonicalReference": "!Readonly:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RecordOptions",
+                  "canonicalReference": "puppeteer-core!RecordOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ScreenRecording",
+                  "canonicalReference": "puppeteer-core!ScreenRecording:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 10
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  },
+                  "isOptional": true
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "record"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#reload:member(1)",
               "docComment": "/**\n * Reloads the page.\n *\n * @param options - Options to configure waiting behavior.\n *\n * @returns A promise which resolves to the main resource response. In case of multiple redirects, the navigation will resolve with the response of the last redirect.\n */\n",
               "excerptTokens": [
@@ -32675,7 +32891,7 @@
             {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Page#screencast:member(1)",
-              "docComment": "/**\n * Captures a screencast of this {@link Page | page}.\n *\n * @remarks\n *\n * By default, all recordings will be {@link https://www.webmproject.org/ | WebM} format using the {@link https://www.webmproject.org/vp9/ | VP9} video codec, with a frame rate of 30 FPS.\n *\n * You must have {@link https://ffmpeg.org/ | ffmpeg} installed on your system.\n *\n * @param options - Configures screencast behavior.\n *\n * @example\n *\n * Recording a {@link Page | page}:\n * ```\n * import puppeteer from 'puppeteer';\n *\n * // Launch a browser\n * const browser = await puppeteer.launch();\n *\n * // Create a new page\n * const page = await browser.newPage();\n *\n * // Go to your site.\n * await page.goto(\"https://www.example.com\");\n *\n * // Start recording.\n * const recorder = await page.screencast({path: 'recording.webm'});\n *\n * // Do something.\n *\n * // Stop recording.\n * await recorder.stop();\n *\n * browser.close();\n * ```\n *\n * @experimental\n */\n",
+              "docComment": "/**\n * Captures a screencast of this {@link Page | page}. Works in Chrome 153+.\n *\n * @remarks\n *\n * By default, all recordings will be {@link https://www.webmproject.org/ | WebM} format using the {@link https://www.webmproject.org/vp9/ | VP9} video codec, with a frame rate of 30 FPS.\n *\n * You must have {@link https://ffmpeg.org/ | ffmpeg} installed on your system.\n *\n * @deprecated\n *\n * Use {@link Page.record} instead.\n *\n * @param options - Configures screencast behavior.\n *\n * @example\n *\n * Recording a {@link Page | page}:\n * ```\n * import puppeteer from 'puppeteer';\n *\n * // Launch a browser\n * const browser = await puppeteer.launch();\n *\n * // Create a new page\n * const page = await browser.newPage();\n *\n * // Go to your site.\n * await page.goto(\"https://www.example.com\");\n *\n * // Start recording.\n * const recorder = await page.screencast({path: 'recording.webm'});\n *\n * // Do something.\n *\n * // Stop recording.\n * await recorder.stop();\n *\n * browser.close();\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -38650,6 +38866,54 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "puppeteer-core!PuppeteerNode#setFollowSymlinks:member(1)",
+              "docComment": "/**\n * Defines whether Puppeteer should follow symlinks for file operations.\n *\n * @param followSymlinks - Whether Puppeteer should follow symlinks.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setFollowSymlinks(followSymlinks: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "followSymlinks",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "setFollowSymlinks"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "puppeteer-core!PuppeteerNode#trimCache:member(1)",
               "docComment": "/**\n * Removes all non-current Firefox and Chrome binaries in the cache directory identified by the provided Puppeteer configuration. The current browser version is determined by resolving PUPPETEER_REVISIONS from Puppeteer unless `configuration.browserRevision` is provided.\n *\n * @remarks\n *\n * Note that the method does not check if any other Puppeteer versions installed on the host that use the same cache directory require the non-current binaries.\n *\n * @public\n */\n",
               "excerptTokens": [
@@ -39530,6 +39794,213 @@
             }
           ],
           "implementsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!RecordOptions:interface",
+          "docComment": "/**\n * @public @experimental\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RecordOptions "
+            }
+          ],
+          "fileUrlPath": "src/api/Page.ts",
+          "releaseTag": "Public",
+          "name": "RecordOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#audio:member",
+              "docComment": "/**\n * Whether to record audio.\n *\n * @defaultValue `false`\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "audio?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "audio",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#fps:member",
+              "docComment": "/**\n * Frame rate in frames per second (alias for frameRate).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "fps?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "fps",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#frameRate:member",
+              "docComment": "/**\n * Maximum frame rate in frames per second.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "frameRate?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "frameRate",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#maxHeight:member",
+              "docComment": "/**\n * Maximum frame height in pixels.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxHeight?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxHeight",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#maxWidth:member",
+              "docComment": "/**\n * Maximum frame width in pixels.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxWidth?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxWidth",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#overwrite:member",
+              "docComment": "/**\n * Specifies whether to overwrite output file, or exit immediately if it already exists.\n *\n * @defaultValue `true`\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "overwrite?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "overwrite",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!RecordOptions#path:member",
+              "docComment": "/**\n * File path to save the recording to.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "path?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Interface",
@@ -40824,6 +41295,290 @@
           "extendsTokenRange": {
             "startIndex": 1,
             "endIndex": 2
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "puppeteer-core!ScreenRecording:class",
+          "docComment": "/**\n * @remarks\n *\n * The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `ScreenRecording` class.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare abstract class ScreenRecording extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ReadableStream",
+              "canonicalReference": "!ReadableStream:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Uint8Array",
+              "canonicalReference": "!Uint8Array:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/api/ScreenRecording.ts",
+          "releaseTag": "Public",
+          "isAbstract": true,
+          "name": "ScreenRecording",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!ScreenRecording#[asyncDisposeSymbol]:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "["
+                },
+                {
+                  "kind": "Reference",
+                  "text": "asyncDisposeSymbol",
+                  "canonicalReference": "puppeteer-core!asyncDisposeSymbol:var"
+                },
+                {
+                  "kind": "Content",
+                  "text": "](): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "[asyncDisposeSymbol]"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!ScreenRecording#pipe:member(1)",
+              "docComment": "/**\n * Pipes the recorded stream to a destination stream.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pipe<T extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WritableStream",
+                  "canonicalReference": "!WritableStream:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uint8Array",
+                  "canonicalReference": "!Uint8Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">(destination: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "T"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "T",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 8,
+                "endIndex": 10
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "destination",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 7
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "pipe"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!ScreenRecording#pipe:member(2)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pipe<T extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WritableDestination",
+                  "canonicalReference": "puppeteer-core!WritableDestination:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">(destination: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "T"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "T"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "T",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 2,
+              "parameters": [
+                {
+                  "parameterName": "destination",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": false
+                }
+              ],
+              "isOptional": false,
+              "isAbstract": false,
+              "name": "pipe"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "puppeteer-core!ScreenRecording#stop:member(1)",
+              "docComment": "/**\n * Stops the screen recording.\n *\n * @public\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "abstract stop(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [],
+              "isOptional": false,
+              "isAbstract": true,
+              "name": "stop"
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
           },
           "implementsTokenRanges": []
         },
@@ -42865,6 +43620,37 @@
               "name": "createCDPSession"
             },
             {
+              "kind": "Property",
+              "canonicalReference": "puppeteer-core!Target#logger:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "protected logger: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Logger",
+                  "canonicalReference": "puppeteer-core!Logger:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "logger",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": true,
+              "isAbstract": false
+            },
+            {
               "kind": "Method",
               "canonicalReference": "puppeteer-core!Target#opener:member(1)",
               "docComment": "/**\n * Get the target that opened this target. Top-level targets return `null`.\n */\n",
@@ -43840,8 +44626,35 @@
           "members": [
             {
               "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!TracingOptions#bufferSize:member",
+              "docComment": "/**\n * Size of the trace buffer in kilobytes. If not specified or zero is passed, the default value of 200 MB (200,000 KB) is used by Chromium.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "bufferSize?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "bufferSize",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!TracingOptions#categories:member",
-              "docComment": "",
+              "docComment": "/**\n * The tracing categories to include/exclude.\n *\n * To exclude a category, prefix it with `-` (e.g., `-toplevel`).\n *\n * @defaultValue Default categories listed in the implementation.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -43868,7 +44681,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!TracingOptions#path:member",
-              "docComment": "",
+              "docComment": "/**\n * The file path to write the trace to. If no path is specified, the trace will not be written to disk, but can still be retrieved as a `Uint8Array` from `tracing.stop()`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -43895,7 +44708,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "puppeteer-core!TracingOptions#screenshots:member",
-              "docComment": "",
+              "docComment": "/**\n * Whether to capture screenshots in the trace.\n *\n * @defaultValue `false`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -45037,6 +45850,15 @@
                 },
                 {
                   "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WebMCPToolExecuteOptions",
+                  "canonicalReference": "puppeteer-core!WebMCPToolExecuteOptions:interface"
+                },
+                {
+                  "kind": "Content",
                   "text": "): "
                 },
                 {
@@ -45064,8 +45886,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 7
+                "startIndex": 5,
+                "endIndex": 9
               },
               "releaseTag": "Public",
               "isProtected": false,
@@ -45076,6 +45898,14 @@
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
+                  },
+                  "isOptional": true
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
                   },
                   "isOptional": true
                 }
@@ -45579,6 +46409,52 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "status",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WebMCPToolExecuteOptions:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WebMCPToolExecuteOptions "
+            }
+          ],
+          "fileUrlPath": "src/cdp/WebMCP.ts",
+          "releaseTag": "Public",
+          "name": "WebMCPToolExecuteOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WebMCPToolExecuteOptions#signal:member",
+              "docComment": "/**\n * A signal object that allows you to cancel the tool execution.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "signal?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AbortSignal",
+                  "canonicalReference": "!AbortSignal:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "signal",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -46810,6 +47686,344 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "top",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WritableDestination:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WritableDestination "
+            }
+          ],
+          "fileUrlPath": "src/api/ScreenRecording.ts",
+          "releaseTag": "Public",
+          "name": "WritableDestination",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WritableDestination#closed:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "closed?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "closed",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WritableDestination#destroyed:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "destroyed?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "destroyed",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "puppeteer-core!WritableDestination#end:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "end(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "end"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "puppeteer-core!WritableDestination#once:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "once?(event: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", cb: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(arg?: unknown) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "event",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "cb",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "once"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WritableDestination#writableFinished:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "writableFinished?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "writableFinished",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "puppeteer-core!WritableDestination#write:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "write(chunk: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uint8Array",
+                  "canonicalReference": "!Uint8Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "chunk",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "write"
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "puppeteer-core!WsOptions:interface",
+          "docComment": "/**\n * Options for the WebSocket connection to the browser.\n *\n * @remarks\n *\n * Only used in the Node.js environment.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WsOptions "
+            }
+          ],
+          "fileUrlPath": "src/common/ConnectOptions.ts",
+          "releaseTag": "Public",
+          "name": "WsOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WsOptions#headers:member",
+              "docComment": "/**\n * Headers to use for the web socket connection.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "headers?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, string>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "headers",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WsOptions#keepAlive:member",
+              "docComment": "/**\n * Whether to send WebSocket pings and drop the connection when a pong does not come back within the same interval. Detects a connection that died without a close frame, which otherwise leaves calls hanging until `protocolTimeout`.\n *\n * @defaultValue `false`\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "keepAlive?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "keepAlive",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "puppeteer-core!WsOptions#keepAliveIntervalMs:member",
+              "docComment": "/**\n * Ping period in milliseconds. Only used when {@link WsOptions.keepAlive} is set.\n *\n * @defaultValue `30_000`\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "keepAliveIntervalMs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "keepAliveIntervalMs",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

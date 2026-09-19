@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v25.5.0
+- Puppeteer version: v25.11.0
 - puppeteer-ruby version: 0.53.0
 
 ## Puppeteer
@@ -18,7 +18,7 @@
 
 ## Browser
 
-* ~~[asyncDisposeSymbol]~~
+* [asyncDisposeSymbol] => `#close`
 * ~~[disposeSymbol]~~
 * ~~addScreen~~
 * browserContexts => `#browser_contexts`
@@ -56,7 +56,7 @@
 
 ## BrowserContext
 
-* ~~[asyncDisposeSymbol]~~
+* [asyncDisposeSymbol] => `#close`
 * ~~[disposeSymbol]~~
 * browser
 * clearPermissionOverrides => `#clear_permission_overrides`
@@ -355,7 +355,7 @@
 
 ## Page
 
-* ~~[asyncDisposeSymbol]~~
+* [asyncDisposeSymbol] => `#close`
 * ~~[disposeSymbol]~~
 * $ => `#query_selector`
 * $$ => `#query_selector_all`
@@ -480,7 +480,7 @@
 
 ## ScreenRecording
 
-* data
+* [asyncDisposeSymbol] => `#close`
 * pipe
 * stop
 
@@ -499,6 +499,7 @@
 * browser
 * browserContext => `#browser_context`
 * createCDPSession => `#create_cdp_session`
+* logger
 * opener
 * page
 * type
