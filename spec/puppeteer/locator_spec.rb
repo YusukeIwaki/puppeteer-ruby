@@ -2,10 +2,37 @@ require 'spec_helper'
 
 FakeLocatorOwner = Struct.new(:logger, :default_timeout)
 
+class FakeLocatorWaitHandle
+  def dispose
+    nil
+  end
+end
+
+class FakeLocatorFrame
+  def wait_for_function(*)
+    FakeLocatorWaitHandle.new
+  end
+end
+
 class FakeLocatorHandle
+  STABLE_RECT = { 'x' => 0, 'y' => 0, 'width' => 10, 'height' => 10 }.freeze
+
   def initialize(action_error, dispose_error)
     @action_error = action_error
     @dispose_error = dispose_error
+  end
+
+  # Readiness conditions pass so the only failure is the intended one.
+  def evaluate(*)
+    [STABLE_RECT, STABLE_RECT]
+  end
+
+  def frame
+    @frame ||= FakeLocatorFrame.new
+  end
+
+  def intersecting_viewport?(*)
+    true
   end
 
   def click(**)
@@ -14,14 +41,6 @@ class FakeLocatorHandle
 
   def dispose
     raise @dispose_error
-  end
-
-  def method_missing(*)
-    nil
-  end
-
-  def respond_to_missing?(*)
-    true
   end
 end
 
