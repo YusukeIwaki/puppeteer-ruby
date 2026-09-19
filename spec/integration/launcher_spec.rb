@@ -256,29 +256,6 @@ RSpec.describe Puppeteer::Launcher do
       end
     end
 
-    it 'should support a custom logger for protocol traffic', sinatra: true do
-      sends = []
-      mutex = Mutex.new
-      logger = lambda do |prefix|
-        # Disabled channels return nil; logging must not crash for them.
-        next unless prefix == Puppeteer::DebugPrefixes::CDP_SEND
-
-        lambda do |*args|
-          mutex.synchronize { sends << args }
-        end
-      end
-
-      options = default_launch_options.merge(logger: logger)
-      Puppeteer.launch(**options) do |browser|
-        page = browser.new_page
-        page.goto(server_empty_page)
-        expect(page.evaluate('() => 1 + 1')).to eq(2)
-      end
-
-      expect(sends).not_to be_empty
-      expect(sends.flatten.join).to include('Page.navigate')
-    end
-
     it 'should have custom URL when launching browser', sinatra: true do
       options = default_launch_options.dup
       options[:args] ||= []

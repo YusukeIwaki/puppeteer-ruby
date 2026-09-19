@@ -377,7 +377,7 @@ class Puppeteer::NetworkManager
       Async do
         handle_request(event, fetch_request_id, client: client)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     else
       handle_request(event, fetch_request_id, client: client)
@@ -442,7 +442,7 @@ class Puppeteer::NetworkManager
         },
       )
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -451,7 +451,7 @@ class Puppeteer::NetworkManager
       begin
         client.send_message('Fetch.continueRequest', requestId: event['requestId'])
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
 
@@ -518,7 +518,7 @@ class Puppeteer::NetworkManager
     begin
       with_interception_lock { request.finalize_interceptions }
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -571,7 +571,7 @@ class Puppeteer::NetworkManager
     begin
       with_interception_lock { request.finalize_interceptions }
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -620,7 +620,7 @@ class Puppeteer::NetworkManager
     begin
       with_interception_lock { request.finalize_interceptions }
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -635,7 +635,7 @@ class Puppeteer::NetworkManager
       request = @network_event_manager.get_request(network_request_id)
     end
     unless request
-      debug_puts("Request #{event['requestId']} was served from cache but we could not find the corresponding request object")
+      log_error(Puppeteer::Error.new("Request #{event['requestId']} was served from cache but we could not find the corresponding request object"))
       return
     end
     emit_event(NetworkManagerEmittedEvents::RequestServedFromCache, request)
@@ -659,7 +659,7 @@ class Puppeteer::NetworkManager
     return unless request
 
     unless @network_event_manager.response_extra_info(network_request_id).empty?
-      debug_puts("Unexpected extraInfo events for request #{response_received_event['requestId']}")
+      log_error(Puppeteer::Error.new("Unexpected extraInfo events for request #{response_received_event['requestId']}"))
     end
 
     # Chromium sends wrong extraInfo events for responses served from cache.
@@ -796,5 +796,12 @@ class Puppeteer::NetworkManager
     end
     forget_request(request, true)
     emit_event(NetworkManagerEmittedEvents::RequestFailed, request)
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

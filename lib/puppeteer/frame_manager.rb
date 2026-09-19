@@ -177,7 +177,7 @@ class Puppeteer::FrameManager
       Async do
         handle_client_disconnect(client)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
   end
@@ -358,7 +358,7 @@ class Puppeteer::FrameManager
     Async do
       async_init(target.target_info.target_id, session).wait
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -526,7 +526,7 @@ class Puppeteer::FrameManager
           identifier: frame_identifier,
         )
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
     Puppeteer::AsyncUtils.await_promise_all(*tasks)
@@ -667,7 +667,7 @@ class Puppeteer::FrameManager
             worldName: name,
           )
         rescue => err
-          debug_puts(err)
+          log_error(err)
         end
       end
     Puppeteer::AsyncUtils.await_promise_all(*create_isolated_worlds_promises)
@@ -812,5 +812,12 @@ class Puppeteer::FrameManager
     if wait_until == 'networkidle'
       raise ArgumentError.new('ERROR: "networkidle" option is no longer supported. Use "networkidle2" instead')
     end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

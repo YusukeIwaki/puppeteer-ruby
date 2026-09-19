@@ -47,6 +47,10 @@ class Puppeteer::Connection
     @protocol_timeout = protocol_timeout
     @logger = logger
     @reject_emulate_network_conditions_calls = false
+    # Like upstream, resolve the protocol logger sinks once when the
+    # connection is constructed instead of per message.
+    @protocol_send_logger = logger&.call(Puppeteer::DebugPrefixes::CDP_SEND)
+    @protocol_receive_logger = logger&.call(Puppeteer::DebugPrefixes::CDP_RECEIVE)
 
     @network_message_queue = Async::Queue.new
     @network_message_task = nil
@@ -55,6 +59,8 @@ class Puppeteer::Connection
     @transport.on_message do |data|
       message = JSON.parse(data)
       sleep_before_handling_message(message)
+      # Upstream logs the raw JSON string after the delay, before dispatch.
+      @protocol_receive_logger&.call(data)
       if network_event_message?(message)
         enqueue_network_message(message)
       elsif should_handle_synchronously?(message)
@@ -231,7 +237,7 @@ class Puppeteer::Connection
       sessionId: message[:sessionId],
     }.compact)
     @transport.send_text(payload)
-    @logger&.call(Puppeteer::DebugPrefixes::CDP_SEND)&.call(payload)
+    @protocol_send_logger&.call(payload)
     request_debug_printer.handle_payload(payload)
   end
 
@@ -305,7 +311,6 @@ class Puppeteer::Connection
       Puppeteer::AsyncUtils.sleep_seconds(@delay / 1000.0)
     end
 
-    @logger&.call(Puppeteer::DebugPrefixes::CDP_RECEIVE)&.call(message)
     response_debug_printer.handle_message(message)
 
     case message['method']

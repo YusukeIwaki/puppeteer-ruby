@@ -46,13 +46,16 @@ class Puppeteer::Locator
     end
   end
 
-  def initialize
+  def initialize(logger: nil)
     @visibility = nil
     @timeout = 30_000
     @ensure_element_is_in_viewport = true
     @wait_for_enabled = true
     @wait_for_stable_bounding_box = true
+    @logger = logger
   end
+
+  attr_reader :logger
 
   # @rbs locators: Array[Puppeteer::Locator] -- Locator candidates
   # @rbs return: Puppeteer::Locator -- Locator that races candidates
@@ -137,6 +140,7 @@ class Puppeteer::Locator
   # @rbs return: self -- Locator with copied options
   def copy_options(locator)
     @timeout = locator.timeout
+    @logger = locator.logger
     @visibility = locator.instance_variable_get(:@visibility)
     @wait_for_enabled = locator.instance_variable_get(:@wait_for_enabled)
     @ensure_element_is_in_viewport = locator.instance_variable_get(:@ensure_element_is_in_viewport)
@@ -294,8 +298,8 @@ class Puppeteer::Locator
       rescue => err
         begin
           handle.dispose
-        rescue StandardError
-          # Ignore disposal errors after a failed action.
+        rescue StandardError => dispose_error
+          log_error(dispose_error)
         end
         raise err
       end
@@ -332,6 +336,10 @@ class Puppeteer::Locator
       timeout: timeout_controller.remaining_timeout,
       timeout_controller: timeout_controller,
     }
+  end
+
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
   end
 
   private def run_conditions(handle, options, conditions)
@@ -560,12 +568,13 @@ class Puppeteer::FunctionLocator < Puppeteer::Locator
   # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
   # @rbs func: String -- JS function to evaluate
   # @rbs return: Puppeteer::Locator -- Function locator
-  def self.create(page_or_frame, func)
-    new(page_or_frame, func).set_timeout(default_timeout_for(page_or_frame))
+  def self.create(page_or_frame, func, logger: nil)
+    logger ||= page_or_frame.logger if page_or_frame.respond_to?(:logger)
+    new(page_or_frame, func, logger: logger).set_timeout(default_timeout_for(page_or_frame))
   end
 
-  def initialize(page_or_frame, func)
-    super()
+  def initialize(page_or_frame, func, logger: nil)
+    super(logger: logger)
     @page_or_frame = page_or_frame
     @func = func
   end
@@ -678,19 +687,21 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
   # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
   # @rbs selector: String -- Selector
   # @rbs return: Puppeteer::Locator -- Node locator
-  def self.create(page_or_frame, selector)
-    new(page_or_frame, selector).set_timeout(default_timeout_for(page_or_frame))
+  def self.create(page_or_frame, selector, logger: nil)
+    logger ||= page_or_frame.logger if page_or_frame.respond_to?(:logger)
+    new(page_or_frame, selector, logger: logger).set_timeout(default_timeout_for(page_or_frame))
   end
 
   # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
   # @rbs handle: Puppeteer::ElementHandle -- Element handle
   # @rbs return: Puppeteer::Locator -- Node locator
-  def self.create_from_handle(page_or_frame, handle)
-    new(page_or_frame, handle).set_timeout(default_timeout_for(page_or_frame))
+  def self.create_from_handle(page_or_frame, handle, logger: nil)
+    logger ||= page_or_frame.logger if page_or_frame.respond_to?(:logger)
+    new(page_or_frame, handle, logger: logger).set_timeout(default_timeout_for(page_or_frame))
   end
 
-  def initialize(page_or_frame, selector_or_handle)
-    super()
+  def initialize(page_or_frame, selector_or_handle, logger: nil)
+    super(logger: logger)
     @page_or_frame = page_or_frame
     @selector_or_handle = selector_or_handle
   end
@@ -743,16 +754,16 @@ end
 class Puppeteer::RaceLocator < Puppeteer::Locator
   def self.create(locators)
     array = check_locator_array(locators)
-    new(array)
+    new(array, logger: array.first.logger)
   end
 
-  def initialize(locators)
-    super()
+  def initialize(locators, logger: nil)
+    super(logger: logger)
     @locators = locators
   end
 
   protected def _clone
-    self.class.new(@locators.map(&:clone)).copy_options(self)
+    self.class.new(@locators.map(&:clone), logger: @logger).copy_options(self)
   end
 
   protected def _wait(options)
