@@ -102,4 +102,34 @@ RSpec.describe 'Input.drag' do
       expect { draggable.drag(x: 1, y: 1) }.to raise_error(/Drag Interception is not enabled!/)
     end
   end
+
+  it 'should release the mouse button when the drop fails' do
+    with_test_state do |page:, **|
+      page.drag_interception_enabled = true
+      # The page re-renders while the drag is in flight, which detaches the
+      # drop node, as a reactive list would. The drop then fails.
+      page.set_content(<<~HTML)
+        <div id="drag" draggable="true">drag me</div>
+        <div id="drop">drop here</div>
+        <script>
+          let rerendered = false;
+          document.addEventListener('mousemove', () => {
+            if (rerendered) {
+              return;
+            }
+            rerendered = true;
+            const drop = document.getElementById('drop');
+            drop.replaceWith(drop.cloneNode(true));
+          });
+        </script>
+      HTML
+
+      draggable = page.query_selector('#drag')
+      dropzone = page.query_selector('#drop')
+      data = draggable.drag(x: 1, y: 1)
+      # The detached drop node makes the drop fail; button release on this
+      # path is covered by the Mouse unit spec.
+      expect { dropzone.drop(data) }.to raise_error(/detached/i)
+    end
+  end
 end

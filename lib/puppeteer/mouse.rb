@@ -1,6 +1,7 @@
 # rbs_inline: enabled
 
 class Puppeteer::Mouse
+  include Puppeteer::DebugPrint
   using Puppeteer::DefineAsyncMethod
 
   module Button
@@ -215,8 +216,16 @@ class Puppeteer::Mouse
     end
     move(start.x, start.y)
     down
-    move(target.x, target.y)
-    promise.wait
+    begin
+      move(target.x, target.y)
+      promise.wait
+    rescue => error
+      # This call pressed the button and the drop it was heading for will
+      # never run. Release the button so it does not stay pressed for the
+      # rest of the session. Releasing must not mask the original error.
+      release_button_quietly
+      raise error
+    end
   end
 
   # @rbs target: Puppeteer::ElementHandle::Point -- Drag target point
@@ -264,13 +273,28 @@ class Puppeteer::Mouse
   # @rbs return: void -- No return value
   def drag_and_drop(start, target, delay: nil)
     data = drag(start, target)
-    drag_enter(target, data)
-    drag_over(target, data)
-    if delay
-      Puppeteer::AsyncUtils.sleep_seconds(delay / 1000.0)
+    begin
+      drag_enter(target, data)
+      drag_over(target, data)
+      if delay
+        Puppeteer::AsyncUtils.sleep_seconds(delay / 1000.0)
+      end
+      drop(target, data)
+    rescue => error
+      # The preceding drag pressed the button and this is the only place
+      # that releases it. Releasing must not mask the original error.
+      release_button_quietly
+      raise error
     end
-    drop(target, data)
     up
+  end
+
+  # Releases the left button, logging instead of raising when the release
+  # itself fails (mirrors upstream's debugError on the same path).
+  private def release_button_quietly
+    up
+  rescue StandardError => error
+    debug_puts(error)
   end
 
   private def state
