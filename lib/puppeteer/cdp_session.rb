@@ -88,7 +88,16 @@ class Puppeteer::CDPSession
       @callbacks_mutex.synchronize do
         @callbacks[id] = Puppeteer::Connection::MessageCallback.new(method: method, promise: promise)
       end
-      @connection.raw_send(id: id, message: { sessionId: @session_id, method: method, params: params })
+      begin
+        @connection.raw_send(id: id, message: { sessionId: @session_id, method: method, params: params })
+      rescue => error
+        # Like upstream CallbackRegistry: still throw sync send errors
+        # synchronously, but log the failed callback and clean it up.
+        @callbacks_mutex.synchronize { @callbacks.delete(id) }
+        promise.reject(error) unless promise.resolved?
+        log_error(error)
+        raise
+      end
     end
 
     promise
@@ -172,5 +181,15 @@ class Puppeteer::CDPSession
   # @rbs return: String -- Listener id
   def once(event_name, &block)
     observe_first(event_name, &block)
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  #
+  # @rbs error: untyped -- Error to report
+  # @rbs return: void -- No return value
+  private def log_error(error)
+    logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

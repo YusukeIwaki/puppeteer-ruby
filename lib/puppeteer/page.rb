@@ -973,7 +973,13 @@ class Puppeteer::Page
       end
 
     Async do
-      client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+      response = client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+      if response['exceptionDetails']
+        # Like upstream, a delivery expression that throws in the page
+        # (e.g. the page cleared the binding callbacks) is a logged
+        # error, not a silent success.
+        log_error(Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{response['exceptionDetails']}"))
+      end
     rescue => error
       log_error(error)
     end

@@ -202,7 +202,16 @@ class Puppeteer::Connection
       @callbacks_mutex.synchronize do
         @callbacks[id] = MessageCallback.new(method: method, promise: promise)
       end
-      raw_send(id: id, message: { method: method, params: params })
+      begin
+        raw_send(id: id, message: { method: method, params: params })
+      rescue => error
+        # Like upstream CallbackRegistry: still throw sync send errors
+        # synchronously, but log the failed callback and clean it up.
+        @callbacks_mutex.synchronize { @callbacks.delete(id) }
+        promise.reject(error) unless promise.resolved?
+        log_error(error)
+        raise
+      end
     end
 
     promise
@@ -424,6 +433,13 @@ class Puppeteer::Connection
     session_id = result['sessionId']
     @manually_attached.delete(target_info.target_id)
     @sessions_mutex.synchronize { @sessions[session_id] }.tap { |session| session&.mark_ready }
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end
 

@@ -56,4 +56,29 @@ RSpec.describe 'Launcher custom logger', sinatra: true do
       expect(errors.map(&:message).join).to include('Runtime.releaseObject')
     end
   end
+
+  it 'logs exposed-function delivery failures to the error logger' do
+    errors = []
+    mutex = Mutex.new
+    logger = lambda do |prefix|
+      if prefix == Puppeteer::DebugPrefixes::ERROR
+        lambda { |error| mutex.synchronize { errors << error } }
+      end
+    end
+
+    options = default_launch_options.merge(logger: logger)
+    Puppeteer.launch(**options) do |browser|
+      page = browser.new_page
+      page.expose_function('callback_for_delivery_failure', ->(*_args) { 'ok' })
+      # The page clears the pending callbacks, so the delivery expression
+      # throws a TypeError inside Runtime.evaluate (exceptionDetails, not a
+      # protocol rejection). Like upstream, that delivery failure is logged.
+      page.evaluate('callback_for_delivery_failure(); callback_for_delivery_failure.callbacks.clear(); 42')
+      Timeout.timeout(15) do
+        sleep 0.05 while mutex.synchronize { errors.empty? }
+      end
+      expect(errors.length).to eq(1)
+      expect(errors.first.message).to include('Evaluation failed')
+    end
+  end
 end

@@ -54,5 +54,20 @@ RSpec.describe Puppeteer::CDPSession do
         'Protocol error (Runtime.evaluate): Target closed',
       )
     end
+
+    it 'logs sync send failures and cleans up the callback' do
+      logs = []
+      logger = lambda do |prefix|
+        if prefix == Puppeteer::DebugPrefixes::ERROR
+          lambda { |error| logs << error }
+        end
+      end
+      allow(connection).to receive(:logger).and_return(logger)
+      allow(connection).to receive(:raw_send).and_raise(StandardError.new('boom'))
+
+      expect { cdp_session.async_send_message('Runtime.evaluate') }.to raise_error(StandardError, 'boom')
+      expect(logs.map(&:message)).to eq(['boom'])
+      expect(cdp_session.instance_variable_get(:@callbacks)).to be_empty
+    end
   end
 end
