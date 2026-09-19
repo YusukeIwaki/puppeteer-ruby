@@ -221,7 +221,8 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
     end
     begin
       @remote_object.scroll_into_view_if_needed(@client)
-    rescue
+    rescue => error
+      log_error(error)
       # Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
       js = <<~JAVASCRIPT
         async (element, pageJavascriptEnabled) => {
@@ -916,5 +917,12 @@ class Puppeteer::ElementHandle < Puppeteer::JSHandle
   def query_ax_tree(accessible_name: nil, role: nil)
     @remote_object.query_ax_tree(@client,
       accessible_name: accessible_name, role: role)
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

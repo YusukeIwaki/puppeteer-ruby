@@ -114,6 +114,7 @@ class Puppeteer::Browser
       target_filter_callback: @target_filter_callback,
       block_list: block_list,
       allow_list: allow_list,
+      logger: @logger,
     )
     @has_network_restrictions =
       [block_list, allow_list].any? { |list| list && !list.empty? }

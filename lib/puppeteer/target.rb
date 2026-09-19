@@ -204,6 +204,7 @@ class Puppeteer::Target
       @target_info.type,
       nil,
       nil,
+      logger: @logger,
     )
   end
 

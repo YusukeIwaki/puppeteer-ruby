@@ -8,6 +8,7 @@ end
 
 class Puppeteer::Locator
   include Puppeteer::EventCallbackable
+  include Puppeteer::DebugPrint
 
   RETRY_DELAY_SECONDS = 0.1
 
@@ -338,8 +339,11 @@ class Puppeteer::Locator
     }
   end
 
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
   private def log_error(error)
     @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 
   private def run_conditions(handle, options, conditions)

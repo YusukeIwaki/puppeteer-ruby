@@ -2,6 +2,7 @@ require_relative './coverage'
 
 class Puppeteer::JSCoverage
   include Puppeteer::Coverage::UtilFunctions
+  include Puppeteer::DebugPrint
 
   class Item
     def initialize(url:, ranges:, text:)
@@ -21,8 +22,9 @@ class Puppeteer::JSCoverage
   end
 
   # @param client [Puppeteer::CDPSession]
-  def initialize(client)
+  def initialize(client, logger: nil)
     @client = client
+    @logger = logger
     @enabled = false
     @script_urls = {}
     @script_sources = {}
@@ -101,9 +103,10 @@ class Puppeteer::JSCoverage
     response = @client.send_message('Debugger.getScriptSource', scriptId: event['scriptId'])
     @script_urls[event['scriptId']] = url
     @script_sources[event['scriptId']] = response['scriptSource']
-  rescue Puppeteer::Connection::ProtocolError
+  rescue Puppeteer::Connection::ProtocolError => error
     # The page can navigate while we are fetching sources for coverage.
     # This matches upstream behavior that ignores these transient failures.
+    log_error(error)
     nil
   end
 
@@ -162,5 +165,12 @@ class Puppeteer::JSCoverage
     end
 
     coverage
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

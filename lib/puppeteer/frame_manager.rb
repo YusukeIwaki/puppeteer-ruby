@@ -730,6 +730,9 @@ class Puppeteer::FrameManager
           end
           world.origin = origin
           world.world_id = extension_id
+        else
+          log_error('Error while parsing extension id')
+          return
         end
       end
     end

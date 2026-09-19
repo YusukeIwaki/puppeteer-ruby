@@ -174,12 +174,14 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
   # @rbs console_api_called: Proc? -- Console callback
   # @rbs exception_thrown: Proc? -- Exception callback
   # @rbs network_manager: untyped? -- Network manager for worker requests
-  def initialize(client, url, target_id, target_type, console_api_called, exception_thrown, network_manager: nil)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(client, url, target_id, target_type, console_api_called, exception_thrown, network_manager: nil, logger: nil)
     super(url)
     @client = client
     @target_id = target_id
     @target_type = target_type
-    @world = Puppeteer::WorkerWorld.new(@client)
+    @logger = logger
+    @world = Puppeteer::WorkerWorld.new(@client, logger: logger)
     @worker_loaded_promise = Async::Promise.new
 
     @client.once('Runtime.executionContextCreated') do |event|
@@ -203,6 +205,8 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
           console_message_locations(event['stackTrace']),
         ),
       )
+    rescue => err
+      log_error(err)
     end
     if exception_thrown
       @client.on_event('Runtime.exceptionThrown') do |event|
@@ -217,11 +221,17 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
       Async do
         network_manager.add_client(@client)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
 
-    @client.async_send_message('Runtime.enable')
+    # This might fail if the target is closed before the worker initializes.
+    runtime_enable_task = @client.async_send_message('Runtime.enable')
+    Async do
+      runtime_enable_task.wait
+    rescue => err
+      log_error(err)
+    end
   end
 
   # @rbs return: Puppeteer::WorkerWorld -- Main realm
@@ -299,5 +309,12 @@ class Puppeteer::CdpWebWorker < Puppeteer::WebWorker
     else
       evaluate('() => self.close()')
     end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

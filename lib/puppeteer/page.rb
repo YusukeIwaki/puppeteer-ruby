@@ -27,7 +27,12 @@ class Puppeteer::Page
     page = Puppeteer::Page.new(client, target, ignore_https_errors, network_enabled: network_enabled, logger: logger)
     page.init
     if default_viewport
-      page.viewport = default_viewport
+      begin
+        page.viewport = default_viewport
+      rescue Puppeteer::TargetCloseError => error
+        # The target may already be gone; log and continue like upstream.
+        page.send(:log_error, error)
+      end
     end
     page
   end
@@ -52,11 +57,11 @@ class Puppeteer::Page
     @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled, logger: logger)
     @emulation_manager = Puppeteer::EmulationManager.new(client, logger: logger)
     @tracing = Puppeteer::Tracing.new(client)
-    @webmcp = Puppeteer::WebMCP.new(client, @frame_manager)
+    @webmcp = Puppeteer::WebMCP.new(client, @frame_manager, logger: logger)
     @page_bindings = {}
     @page_binding_ids = {}
     @exposed_function_bindings = {}
-    @coverage = Puppeteer::Coverage.new(client)
+    @coverage = Puppeteer::Coverage.new(client, logger: logger)
     @javascript_enabled = true
     @screenshot_task_queue = ScreenshotTaskQueue.new
     @screencast_session_count = 0
@@ -252,6 +257,7 @@ class Puppeteer::Page
         console_api_called,
         exception_thrown,
         network_manager: @frame_manager.network_manager,
+        logger: @logger,
       )
       @workers[session.id] = worker
       emit_event(PageEmittedEvents::WorkerCreated, worker)
@@ -266,6 +272,10 @@ class Puppeteer::Page
       @client.async_send_message('Log.enable'),
       @webmcp.async_initialize_domain,
     )
+  rescue Puppeteer::TargetCloseError => error
+    # The target may already be gone; log and continue like upstream.
+    log_error(error)
+    []
   end
 
   # @rbs return: bool -- Whether drag interception is enabled
@@ -1889,8 +1899,18 @@ class Puppeteer::Page
       captureBeyondViewport: screenshot_options.capture_beyond_viewport?,
       fromSurface: screenshot_options.from_surface,
     }.compact
-    result = @client.send_message('Page.captureScreenshot', screenshot_params)
-    reset_default_background_color if should_set_default_background
+    begin
+      result = @client.send_message('Page.captureScreenshot', screenshot_params)
+    ensure
+      if should_set_default_background
+        begin
+          reset_default_background_color
+        rescue => error
+          # Reset failures must not mask the screenshot result.
+          log_error(error)
+        end
+      end
+    end
 
     if screenshot_options.full_page? && @viewport
       self.viewport = @viewport

@@ -15,6 +15,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           'ws://localhost:9222/devtools/browser/abc123',
           headers: nil,
           ws_options: {},
+          logger: nil,
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).with(
           'ws://localhost:9222/devtools/browser/abc123',
@@ -42,6 +43,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           'ws://localhost:9223/devtools/browser/def456',
           headers: nil,
           ws_options: {},
+          logger: nil,
         ).and_return(transport)
         allow(Puppeteer::Connection).to receive(:new).and_return(connection)
 
@@ -94,6 +96,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           websocket_url,
           headers: ws_headers,
           ws_options: ws_options,
+          logger: nil,
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).and_return(connection)
 
@@ -114,6 +117,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           websocket_url,
           headers: nil,
           ws_options: {},
+          logger: logger,
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).with(
           websocket_url,
@@ -139,6 +143,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           websocket_url,
           headers: nil,
           ws_options: ws_options,
+          logger: nil,
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).and_return(connection)
 
@@ -165,6 +170,7 @@ RSpec.describe Puppeteer::BrowserConnector do
           websocket_url,
           headers: headers,
           ws_options: {},
+          logger: nil,
         ).and_return(transport)
         expect(Puppeteer::Connection).to receive(:new).and_return(connection)
 

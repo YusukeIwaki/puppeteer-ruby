@@ -1,8 +1,8 @@
 class Puppeteer::Coverage
   # @param client [Puppeteer::CDPSession]
-  def initialize(client)
-    @js = Puppeteer::JSCoverage.new(client)
-    @css = Puppeteer::CSSCoverage.new(client)
+  def initialize(client, logger: nil)
+    @js = Puppeteer::JSCoverage.new(client, logger: logger)
+    @css = Puppeteer::CSSCoverage.new(client, logger: logger)
   end
 
   def update_client(client)

@@ -37,7 +37,7 @@ class Puppeteer::EmulationManager
     Async do
       Puppeteer::AsyncUtils.await_promise_all(*promises)
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -77,12 +77,23 @@ class Puppeteer::EmulationManager
     log_error(err)
   end
 
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
   private def log_error(error)
     @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 
   private def apply_viewport(client, viewport)
     Puppeteer::AsyncUtils.await_promise_all(*viewport_promises(client, viewport))
+  rescue => err
+    # Some targets (e.g. DevTools windows) do not support metrics override;
+    # log and continue like upstream, but re-raise anything else.
+    if err.message.to_s.include?('Target does not support metrics override')
+      log_error(err)
+    else
+      raise
+    end
   end
 
   private def viewport_promises(client, viewport)

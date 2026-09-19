@@ -4,6 +4,8 @@ require_relative './launcher/browser_options'
 require 'net/http'
 
 class Puppeteer::BrowserConnector
+  include Puppeteer::DebugPrint
+
   def initialize(options)
     @browser_options = Puppeteer::Launcher::BrowserOptions.new(options)
     @browser_ws_endpoint = options[:browser_ws_endpoint]
@@ -39,7 +41,13 @@ class Puppeteer::BrowserConnector
       allow_list: @browser_options.allow_list,
       logger: @logger,
       process: nil,
-      close_callback: -> { connection.send_message('Browser.close') },
+      close_callback: -> {
+        begin
+          connection.send_message('Browser.close')
+        rescue => error
+          log_error(error)
+        end
+      },
       target_filter_callback: @browser_options.target_filter,
       is_page_target_callback: @browser_options.is_page_target,
     )
@@ -73,7 +81,7 @@ class Puppeteer::BrowserConnector
 
   # @return [Puppeteer::Connection]
   private def connect_with_browser_ws_endpoint(browser_ws_endpoint)
-    transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, headers: ws_headers, ws_options: @ws_options)
+    transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, headers: ws_headers, ws_options: @ws_options, logger: @logger)
     Puppeteer::Connection.new(
       browser_ws_endpoint,
       transport,
@@ -127,5 +135,12 @@ class Puppeteer::BrowserConnector
       protocol_timeout: @browser_options.protocol_timeout,
       logger: @logger,
     )
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

@@ -5,6 +5,8 @@ require "async/http/endpoint"
 require "async/websocket/client"
 
 class Puppeteer::WebSocketTransport
+  include Puppeteer::DebugPrint
+
   class ClosedError < Puppeteer::Error; end
 
   # How often to ping the browser when keep-alive is enabled, and how long to
@@ -13,16 +15,17 @@ class Puppeteer::WebSocketTransport
 
   # @param {string} url
   # @return [Puppeteer::WebSocketTransport]
-  def self.create(url, headers: nil, ws_options: nil)
-    transport = new(url, headers: headers, ws_options: ws_options)
+  def self.create(url, headers: nil, ws_options: nil, logger: nil)
+    transport = new(url, headers: headers, ws_options: ws_options, logger: logger)
     transport.connect.wait
     transport
   end
 
-  def initialize(url, headers: nil, ws_options: nil)
+  def initialize(url, headers: nil, ws_options: nil, logger: nil)
     @url = url
     @headers = headers
     @ws_options = ws_options || {}
+    @logger = logger
     # Force HTTP/1.1 for WebSocket connections.
     # Some servers (e.g., Google Cloud Run) advertise HTTP/2 via ALPN but don't
     # properly support WebSocket over HTTP/2 (RFC 8441), causing stream errors.
@@ -53,7 +56,13 @@ class Puppeteer::WebSocketTransport
     rescue Async::Stop
       # Task was stopped; ignore.
     rescue => err
-      @connect_promise.reject(err) unless @connect_promise.resolved?
+      if @connect_promise.resolved?
+        # Silently log post-connect errors; there is nothing else to do
+        # with them (mirrors upstream's socket error handler).
+        log_error(err)
+      else
+        @connect_promise.reject(err)
+      end
       close
     ensure
       @connected = false
@@ -167,9 +176,17 @@ class Puppeteer::WebSocketTransport
     end
   rescue Async::Stop
     # Task stopped; no-op.
-  rescue IOError, Errno::ECONNRESET, Errno::EPIPE
-    # Connection closed; no-op.
+  rescue IOError, Errno::ECONNRESET, Errno::EPIPE => err
+    # Connection dropped; report it like upstream's socket error handler.
+    log_error(err)
   ensure
     close unless @closed
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

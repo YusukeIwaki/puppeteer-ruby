@@ -2,6 +2,7 @@ require_relative './coverage'
 
 class Puppeteer::CSSCoverage
   include Puppeteer::Coverage::UtilFunctions
+  include Puppeteer::DebugPrint
 
   class Item
     def initialize(url:, ranges:, text:)
@@ -13,8 +14,9 @@ class Puppeteer::CSSCoverage
   end
 
   # @param client [Puppeteer::CDPSession]
-  def initialize(client)
+  def initialize(client, logger: nil)
     @client = client
+    @logger = logger
     @enabled = false
     @stylesheet_urls = {}
     @stylesheet_sources = {}
@@ -71,7 +73,13 @@ class Puppeteer::CSSCoverage
     # Ignore anonymous scripts
     return if !source_url
 
-    response = @client.send_message('CSS.getStyleSheetText', styleSheetId: header['styleSheetId'])
+    begin
+      response = @client.send_message('CSS.getStyleSheetText', styleSheetId: header['styleSheetId'])
+    rescue Puppeteer::Connection::ProtocolError => error
+      # This might happen if the page has already navigated away.
+      log_error(error)
+      return
+    end
     @stylesheet_urls[header['styleSheetId']] = source_url
     @stylesheet_sources[header['styleSheetId']] = response['text']
   end
@@ -112,5 +120,12 @@ class Puppeteer::CSSCoverage
     end
 
     coverage
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

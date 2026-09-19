@@ -9,11 +9,12 @@ class Puppeteer::BrowserRunner
   # @param {string} executablePath
   # @param {!Array<string>} processArguments
   # @param {string=} tempDirectory
-  def initialize(executable_path, process_arguments, user_data_dir, using_temp_user_data_dir)
+  def initialize(executable_path, process_arguments, user_data_dir, using_temp_user_data_dir, logger: nil)
     @executable_path = executable_path
     @process_arguments = process_arguments
     @user_data_dir = user_data_dir
     @using_temp_user_data_dir = using_temp_user_data_dir
+    @logger = logger
     @proc = nil
     @connection = nil
     @closed = true
@@ -217,7 +218,7 @@ class Puppeteer::BrowserRunner
       end
     }
     if @using_temp_user_data_dir
-      @exit_cleanup_unregister = Puppeteer::BrowserRunner.process_exit_cleanup.register(@user_data_dir)
+      @exit_cleanup_unregister = Puppeteer::BrowserRunner.process_exit_cleanup.register(@user_data_dir, @logger)
     end
     at_exit do
       kill
@@ -252,7 +253,8 @@ class Puppeteer::BrowserRunner
     elsif @connection
       begin
         @connection.send_message('Browser.close')
-      rescue
+      rescue => error
+        log_error(error)
         kill
       end
     end
@@ -273,7 +275,7 @@ class Puppeteer::BrowserRunner
         FileUtils.rm_rf(@user_data_dir)
       end
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
     if @using_temp_user_data_dir
       @exit_cleanup_unregister&.call
@@ -287,7 +289,7 @@ class Puppeteer::BrowserRunner
   def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:, protocol_timeout: nil, ws_options: nil, logger: nil)
     if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
-      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, ws_options: ws_options)
+      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, ws_options: ws_options, logger: logger)
       @connection = Puppeteer::Connection.new(
         browser_ws_endpoint,
         transport,
@@ -296,7 +298,7 @@ class Puppeteer::BrowserRunner
         logger: logger,
       )
     else
-      transport = Puppeteer::PipeTransport.new(@proc.pipe_write, @proc.pipe_read)
+      transport = Puppeteer::PipeTransport.new(@proc.pipe_write, @proc.pipe_read, logger: logger)
       @connection = Puppeteer::Connection.new(
         '',
         transport,
@@ -356,5 +358,12 @@ class Puppeteer::BrowserRunner
     raise LaunchError.new("\n#{logs}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
   rescue Async::TimeoutError
     raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

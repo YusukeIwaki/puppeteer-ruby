@@ -9,7 +9,7 @@ RSpec.describe Puppeteer::Extension do
       url: "chrome-extension://#{extension_id}/background.js",
     )
   end
-  let(:browser) { double(Puppeteer::Browser, targets: [target]) }
+  let(:browser) { double(Puppeteer::Browser, targets: [target], logger: nil) }
   let(:extension) do
     described_class.new(
       id: extension_id,

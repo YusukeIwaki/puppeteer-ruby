@@ -5,14 +5,18 @@ require 'async'
 require 'thread'
 
 class Puppeteer::PipeTransport
+  include Puppeteer::DebugPrint
+
   class ClosedError < Puppeteer::Error; end
 
   # @rbs pipe_write: IO -- Pipe used to write messages to Chrome
   # @rbs pipe_read: IO -- Pipe used to read messages from Chrome
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
   # @rbs return: void -- No return value
-  def initialize(pipe_write, pipe_read)
+  def initialize(pipe_write, pipe_read, logger: nil)
     @pipe_write = pipe_write
     @pipe_read = pipe_read
+    @logger = logger
     @pipe_write.binmode
     @pipe_read.binmode
     @write_mutex = Mutex.new
@@ -92,8 +96,11 @@ class Puppeteer::PipeTransport
       wait_for_io(@pipe_read, IO::READABLE)
       retry
     end
-  rescue EOFError, IOError, Errno::ECONNRESET, Errno::EPIPE
+  rescue EOFError, IOError
     # Pipe closed; no-op.
+  rescue Errno::ECONNRESET, Errno::EPIPE => err
+    # The peer died mid-read; report it like upstream's pipe error handler.
+    log_error(err)
   end
 
   # @rbs buffer: String -- Bytes received from Chrome
@@ -120,5 +127,12 @@ class Puppeteer::PipeTransport
         events == IO::WRITABLE ? [io] : nil,
       )
     end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

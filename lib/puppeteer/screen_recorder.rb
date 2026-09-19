@@ -82,8 +82,9 @@ class Puppeteer::ScreenRecorder
 
     begin
       @page._stop_screencast
-    rescue StandardError
+    rescue StandardError => error
       # The page or its CDP session may already be gone.
+      @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
     end
     enqueue_last_frame
     finish_process

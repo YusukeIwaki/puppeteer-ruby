@@ -1,6 +1,8 @@
 # rbs_inline: enabled
 
 class Puppeteer::Extension
+  include Puppeteer::DebugPrint
+
   # @rbs id: String -- Extension id
   # @rbs version: String -- Extension version
   # @rbs name: String -- Extension name
@@ -44,6 +46,7 @@ class Puppeteer::Extension
       rescue => error
         raise unless can_ignore_error?(error)
 
+        log_error(error)
         nil
       end
     end
@@ -62,6 +65,7 @@ class Puppeteer::Extension
     rescue => error
       raise unless can_ignore_error?(error)
 
+      log_error(error)
       nil
     end
   end
@@ -80,5 +84,12 @@ class Puppeteer::Extension
       id: @id,
       targetId: page._tab_id,
     })
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @browser.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

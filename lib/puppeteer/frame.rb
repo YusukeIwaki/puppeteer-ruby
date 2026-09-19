@@ -1,6 +1,7 @@
 # rbs_inline: enabled
 
 class Puppeteer::Frame
+  include Puppeteer::DebugPrint
   using Puppeteer::DefineAsyncMethod
 
   # @rbs frame_manager: Puppeteer::FrameManager -- Owning frame manager
@@ -55,7 +56,7 @@ class Puppeteer::Frame
 
   # @rbs return: Puppeteer::Accessibility -- Accessibility tree for this frame
   def accessibility
-    @accessibility ||= Puppeteer::Accessibility.new(self)
+    @accessibility ||= Puppeteer::Accessibility.new(self, logger: @logger)
   end
 
   # @rbs return: Numeric -- Default timeout in milliseconds
@@ -177,8 +178,8 @@ class Puppeteer::Frame
     )
     begin
       evaluate("() => #{binding.source}")
-    rescue StandardError
-      nil
+    rescue StandardError => error
+      log_error(error)
     end
     nil
   end
@@ -194,8 +195,8 @@ class Puppeteer::Frame
     )
     begin
       evaluate('(name) => { delete window[name]; }', binding.name)
-    rescue StandardError
-      nil
+    rescue StandardError => error
+      log_error(error)
     end
     nil
   end
@@ -489,5 +490,12 @@ class Puppeteer::Frame
       @parent_frame._child_frames.delete(self)
     end
     @parent_frame = nil
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

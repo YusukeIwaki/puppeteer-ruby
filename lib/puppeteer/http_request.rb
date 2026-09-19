@@ -145,7 +145,7 @@ class Puppeteer::HTTPRequest
     response = @client.send_message('Network.getRequestPostData', requestId: @request_id)
     response['postData']
   rescue => err
-    debug_puts(err)
+    log_error(err)
     nil
   end
 
@@ -525,6 +525,12 @@ class Puppeteer::HTTPRequest
     if message.match?(/Invalid header|Unsafe header|Expected "header"|invalid argument/i)
       raise error
     end
+    log_error(error)
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
     @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
     debug_puts(error)
   end

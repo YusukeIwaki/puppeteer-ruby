@@ -80,6 +80,7 @@ module Puppeteer::Launcher
         chrome_arguments,
         user_data_dir,
         using_temp_user_data_dir,
+        logger: @logger,
       )
       runner.start(
         handle_SIGHUP: @launch_options.handle_SIGHUP?,
