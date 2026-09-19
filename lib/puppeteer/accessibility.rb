@@ -290,7 +290,14 @@ class Puppeteer::Accessibility
 
       handle = @frame.main_world.adopt_backend_node(backend_node_id)
       element = handle.evaluate_handle(<<~JAVASCRIPT)
-        node => node.nodeType === Node.TEXT_NODE ? node.parentElement : node
+        node => {
+          if (node.nodeType !== Node.TEXT_NODE) {
+            return node;
+          }
+          // A text node placed directly in a shadow root has no parent
+          // element, so fall back to the shadow host.
+          return node.parentElement ?? node.parentNode?.host ?? null;
+        }
       JAVASCRIPT
       element.as_element
     ensure
