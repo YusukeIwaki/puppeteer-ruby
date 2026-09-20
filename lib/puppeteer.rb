@@ -38,6 +38,7 @@ require "puppeteer/async_utils"
 require 'puppeteer/define_async_method'
 require 'puppeteer/debug_print'
 require 'puppeteer/event_callbackable'
+require 'puppeteer/file_system'
 require 'puppeteer/if_present'
 require "puppeteer/reactor_runner"
 
@@ -86,6 +87,7 @@ require 'puppeteer/p_query_handler'
 require 'puppeteer/query_handler_manager'
 require 'puppeteer/remote_object'
 require 'puppeteer/screen_recorder'
+require 'puppeteer/screen_recording'
 require 'puppeteer/target'
 require 'puppeteer/task_manager'
 require 'puppeteer/tracing'

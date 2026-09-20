@@ -11,14 +11,15 @@ class Puppeteer::ExecutionContext
   # @param client [Puppeteer::CDPSession]
   # @param context_payload [Hash]
   # @param world [Puppeteer::IsolaatedWorld?]
-  def initialize(client, context_payload, world)
+  def initialize(client, context_payload, world, logger: nil)
     @client = client
     @world = world
     @context_id = context_payload['id']
     @context_name = context_payload['name']
+    @logger = logger
   end
 
-  attr_reader :client, :world
+  attr_reader :client, :world, :logger
 
   # @rbs return: void -- Notify consumers that this context was destroyed
   def dispose

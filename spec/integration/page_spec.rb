@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'thread'
+require 'tmpdir'
 
 RSpec.describe Puppeteer::Page do
   include_context 'with test state'
@@ -1241,6 +1242,22 @@ RSpec.describe Puppeteer::Page do
       page.content = "#{comment}<div>hello</div>"
       expect(page.content).to eq("#{comment}<html><head></head><body><div>hello</div></body></html>")
     end
+
+    it 'should not run a cross-origin script through document.write', sinatra: true do
+      page.goto(server_empty_page)
+      warnings = []
+      page.on('console') do |message|
+        warnings << message.text if message.log_type == 'warning'
+      end
+
+      page.set_content(
+        "<script src=\"#{server.cross_process_prefix}/injectedfile.js\"></script>",
+        wait_until: 'load',
+      )
+
+      expect(page.evaluate('() => globalThis.__injected')).to eq(42)
+      expect(warnings.select { |warning| warning.include?('document.write') }).to be_empty
+    end
   end
 
   describe '#bypass_csp=' do
@@ -1818,7 +1835,82 @@ RSpec.describe Puppeteer::Page do
 
   describe 'Page.resize' do
     it 'should resize the browser window to fit page content' do
-      skip('Not implemented')
+      options = default_launch_options.merge(
+        args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
+      )
+      Puppeteer.launch(**options) do |browser|
+        context = browser.create_browser_context
+        page = context.new_page
+        # Default viewport restricts window to 800x600, so remove it.
+        page.viewport = nil
+
+        resized = async_promise do
+          page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
+        end
+        page.resize(content_width: 500, content_height: 400)
+        resized.wait
+
+        inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
+        expect(inner_size['width']).to eq(500)
+        expect(inner_size['height']).to eq(400)
+      end
+    end
+
+    it 'should resize the browser window to fit page content when fullscreen' do
+      # Upstream allows FAIL or PASS on darwin headless (b/549573183), so a
+      # failure here is recorded as expected rather than skipped outright.
+      pending('broken in headless Chrome after fullscreen (b/549573183)') if headless? && Puppeteer.env.darwin?
+
+      options = default_launch_options.merge(
+        args: (default_launch_options[:args] || []) + ['--screen-info={3840x2160}'],
+      )
+      Puppeteer.launch(**options) do |browser|
+        context = browser.create_browser_context
+        page = context.new_page
+        # Default viewport restricts window to 800x600, so remove it.
+        page.viewport = nil
+
+        window_id = page.window_id
+        browser.set_window_bounds(window_id, { windowState: 'fullscreen' })
+
+        window_state = browser.get_window_bounds(window_id)
+        expect(window_state['windowState']).to eq('fullscreen')
+
+        browser.set_window_bounds(window_id, { windowState: 'normal' })
+        browser.set_window_bounds(window_id, { windowState: 'normal' })
+
+        resized = async_promise do
+          page.evaluate('() => new Promise((resolve) => { window.onresize = resolve; })')
+        end
+        page.resize(content_width: 500, content_height: 400)
+        resized.wait
+
+        inner_size = page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')
+        expect(inner_size['width']).to eq(500)
+        expect(inner_size['height']).to eq(400)
+      end
+    end
+  end
+
+  describe 'Page.record' do
+    # Page.startScreenRecording is available starting from Chrome 153.
+    it 'should record page' do
+      Dir.mktmpdir('puppeteer-record-') do |directory|
+        with_test_state do |page:, **|
+          skip('Page.record requires Chrome 153+') if page.browser.version[/\d+/].to_i < 153
+
+          path = File.join(directory, 'recording.mp4')
+          recording = page.record(path: path)
+
+          page.goto('data:text/html,<input>')
+          input = page.locator('input').wait_handle
+          input.type_text('ab', delay: 100)
+          input.dispose
+          recording.stop
+
+          expect(File.size(path)).to be > 0
+        end
+      end
     end
   end
 end

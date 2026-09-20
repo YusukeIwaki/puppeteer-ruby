@@ -48,6 +48,23 @@ RSpec.describe 'Tracing' do
     expect(trace.length).to be > 1000
   end
 
+  it 'should support bufferSize option', sinatra: true do
+    tracing_start_params = nil
+    allow_any_instance_of(Puppeteer::CDPSession).to receive(:send_message).and_wrap_original do |original, method, params = {}|
+      if method == 'Tracing.start'
+        tracing_start_params = params
+      end
+      original.call(method, params)
+    end
+
+    page.tracing.start(path: output_file, buffer_size: 10)
+    page.goto("#{server_prefix}/grid.html")
+    page.tracing.stop
+
+    expect(tracing_start_params).not_to be_nil
+    expect(tracing_start_params[:traceConfig]).to include(traceBufferSizeInKb: 10)
+  end
+
   it 'should support a buffer without a path', sinatra: true do
     page.tracing.start(screenshots: true)
     page.goto("#{server_prefix}/grid.html")

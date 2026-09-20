@@ -28,7 +28,9 @@ class Puppeteer::Target
                  ignore_https_errors:,
                  default_viewport:,
                  network_enabled:,
-                 is_page_target_callback:)
+                 is_page_target_callback:,
+                 logger: nil)
+    @logger = logger
     @session = session
     @target_manager = target_manager
     @target_info = target_info
@@ -63,7 +65,7 @@ class Puppeteer::Target
     end
   end
 
-  attr_reader :target_id, :target_info, :initialized_promise, :is_closed_promise
+  attr_reader :target_id, :target_info, :initialized_promise, :is_closed_promise, :logger
 
   def _add_child_target(target)
     @child_targets.add(target)
@@ -155,6 +157,7 @@ class Puppeteer::Target
         @ignore_https_errors,
         @default_viewport,
         network_enabled: @network_enabled,
+        logger: @logger,
       )
     end
     @page
@@ -173,13 +176,19 @@ class Puppeteer::Target
       @ignore_https_errors,
       nil,
       network_enabled: @network_enabled,
+      logger: @logger,
     )
   end
 
   # @return [Puppeteer::CdpWebWorker|nil]
   def worker
     return nil unless ['service_worker', 'shared_worker'].include?(@target_info.type)
-    return @worker if @worker
+    cached_worker = @worker
+    if cached_worker
+      cached_client = cached_worker.client
+      cached_client.wait_for_ready if cached_client.respond_to?(:wait_for_ready)
+      return cached_worker
+    end
 
     if @target_info.type == 'service_worker'
       @target_manager&.wait_for_service_worker_detach(@target_id)
@@ -192,15 +201,26 @@ class Puppeteer::Target
         @session || @session_factory.call(false)
       end
     client.target = self if client.respond_to?(:target=)
-    client.wait_for_ready if client.respond_to?(:wait_for_ready)
-    @worker = Puppeteer::CdpWebWorker.new(
+    # Construct before the Ruby-specific readiness await so the
+    # Inspector.workerScriptLoaded listener registers before the unsolicited
+    # event fires during target startup. Upstream WorkerTarget.worker() never
+    # waits and caches one worker promise; readiness is still awaited after
+    # construction to preserve network restriction setup guarantees.
+    # The constructed worker is intentionally kept even if a caller is
+    # canceled while awaiting readiness, so concurrent callers sharing the
+    # cached worker are not affected by one caller's cancellation.
+    worker = Puppeteer::CdpWebWorker.new(
       client,
       @target_info.url,
       @target_id,
       @target_info.type,
       nil,
       nil,
+      logger: @logger,
     )
+    @worker = worker
+    client.wait_for_ready if client.respond_to?(:wait_for_ready)
+    worker
   end
 
   # @return {string}

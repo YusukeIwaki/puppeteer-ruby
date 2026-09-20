@@ -9,6 +9,8 @@ end
 class Puppeteer::Locator
   include Puppeteer::EventCallbackable
 
+  include Puppeteer::DebugPrint
+
   RETRY_DELAY_SECONDS: ::Float
 
   class TimeoutController
@@ -23,7 +25,9 @@ class Puppeteer::Locator
     def check!: (?untyped cause) -> untyped
   end
 
-  def initialize: () -> untyped
+  def initialize: (?logger: untyped) -> untyped
+
+  attr_reader logger: untyped
 
   # @rbs locators: Array[Puppeteer::Locator] -- Locator candidates
   # @rbs return: Puppeteer::Locator -- Locator that races candidates
@@ -125,6 +129,10 @@ class Puppeteer::Locator
 
   private def build_action_options: (untyped timeout_controller) -> untyped
 
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error: (untyped error) -> untyped
+
   private def run_conditions: (untyped handle, untyped options, untyped conditions) -> untyped
 
   private def wait_for_enabled_if_needed: (untyped handle, untyped options) -> untyped
@@ -142,9 +150,9 @@ class Puppeteer::FunctionLocator < Puppeteer::Locator
   # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
   # @rbs func: String -- JS function to evaluate
   # @rbs return: Puppeteer::Locator -- Function locator
-  def self.create: (Puppeteer::Page | Puppeteer::Frame page_or_frame, String func) -> Puppeteer::Locator
+  def self.create: (Puppeteer::Page | Puppeteer::Frame page_or_frame, String func, ?logger: untyped) -> Puppeteer::Locator
 
-  def initialize: (untyped page_or_frame, untyped func) -> untyped
+  def initialize: (untyped page_or_frame, untyped func, ?logger: untyped) -> untyped
 
   def _clone: () -> untyped
 
@@ -193,14 +201,14 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
   # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
   # @rbs selector: String -- Selector
   # @rbs return: Puppeteer::Locator -- Node locator
-  def self.create: (Puppeteer::Page | Puppeteer::Frame page_or_frame, String selector) -> Puppeteer::Locator
+  def self.create: (Puppeteer::Page | Puppeteer::Frame page_or_frame, String selector, ?logger: untyped) -> Puppeteer::Locator
 
   # @rbs page_or_frame: Puppeteer::Page | Puppeteer::Frame -- Page or frame
   # @rbs handle: Puppeteer::ElementHandle -- Element handle
   # @rbs return: Puppeteer::Locator -- Node locator
-  def self.create_from_handle: (Puppeteer::Page | Puppeteer::Frame page_or_frame, Puppeteer::ElementHandle handle) -> Puppeteer::Locator
+  def self.create_from_handle: (Puppeteer::Page | Puppeteer::Frame page_or_frame, Puppeteer::ElementHandle handle, ?logger: untyped) -> Puppeteer::Locator
 
-  def initialize: (untyped page_or_frame, untyped selector_or_handle) -> untyped
+  def initialize: (untyped page_or_frame, untyped selector_or_handle, ?logger: untyped) -> untyped
 
   def _clone: () -> untyped
 
@@ -212,9 +220,12 @@ class Puppeteer::NodeLocator < Puppeteer::Locator
 end
 
 class Puppeteer::RaceLocator < Puppeteer::Locator
+  # Disabled logger factory for empty races (mirrors upstream's fallback).
+  DISABLED_LOGGER: untyped
+
   def self.create: (untyped locators) -> untyped
 
-  def initialize: (untyped locators) -> untyped
+  def initialize: (untyped locators, ?logger: untyped) -> untyped
 
   def _clone: () -> untyped
 

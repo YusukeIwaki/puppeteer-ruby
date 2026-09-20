@@ -2,7 +2,8 @@ class Puppeteer::ChromeTargetManager
   include Puppeteer::DebugPrint
   include Puppeteer::EventCallbackable
 
-  def initialize(connection:, target_factory:, target_filter_callback:, block_list: nil, allow_list: nil)
+  def initialize(connection:, target_factory:, target_filter_callback:, block_list: nil, allow_list: nil, logger: nil)
+    @logger = logger
     @discovered_targets_by_target_id = {}
     @attached_targets_by_target_id = {}
     @attached_targets_by_session_id = {}
@@ -55,7 +56,7 @@ class Puppeteer::ChromeTargetManager
       }).wait
       store_existing_targets_for_init
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -214,7 +215,7 @@ class Puppeteer::ChromeTargetManager
         begin
           Puppeteer::AsyncUtils.await(session.async_send_message('Runtime.runIfWaitingForDebugger'))
         rescue => err
-          debug_puts(err)
+          log_error(err)
         end
 
         # We don't use `session.detach()` because that dispatches all commands on
@@ -224,7 +225,7 @@ class Puppeteer::ChromeTargetManager
             sessionId: session.id,
           }))
         rescue => err
-          debug_puts(err)
+          log_error(err)
         ensure
           if detached_promise && !detached_promise.resolved?
             detached_promise.resolve(true)
@@ -237,7 +238,7 @@ class Puppeteer::ChromeTargetManager
       Async do
         maybe_setup_network_conditions(session, target_info)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       ensure
         session.mark_ready
       end
@@ -264,13 +265,13 @@ class Puppeteer::ChromeTargetManager
           setup_task = Async do
             maybe_setup_network_conditions(session, target_info)
           rescue => err
-            debug_puts(err)
+            log_error(err)
           end
           run_promise = session.async_send_message('Runtime.runIfWaitingForDebugger')
           Puppeteer::AsyncUtils.await(run_promise)
           Puppeteer::AsyncUtils.await(setup_task)
         rescue => err
-          debug_puts(err)
+          log_error(err)
         ensure
           session.mark_ready
         end
@@ -334,7 +335,7 @@ class Puppeteer::ChromeTargetManager
       setup_task = Async do
         maybe_setup_network_conditions(session, target_info)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
       promises = [
         session.async_send_message('Target.setAutoAttach', {
@@ -349,10 +350,10 @@ class Puppeteer::ChromeTargetManager
       promises.each do |promise|
         Puppeteer::AsyncUtils.await(promise)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     rescue => err
-      debug_puts(err)
+      log_error(err)
     ensure
       session.mark_ready
     end
@@ -446,12 +447,19 @@ class Puppeteer::ChromeTargetManager
     promises.each do |promise|
       Puppeteer::AsyncUtils.await(promise)
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   rescue => err
     message = err.message.to_s.downcase
     return if message.include?('target closed') || message.include?('session closed') || message.include?('not found')
 
     raise
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

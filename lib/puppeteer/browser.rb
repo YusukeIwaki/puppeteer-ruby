@@ -34,7 +34,8 @@ class Puppeteer::Browser
                   process:,
                   close_callback:,
                   target_filter_callback:,
-                  is_page_target_callback:)
+                  is_page_target_callback:,
+                  logger: nil)
     browser = Puppeteer::Browser.new(
       product: product,
       connection: connection,
@@ -49,6 +50,7 @@ class Puppeteer::Browser
       close_callback: close_callback,
       target_filter_callback: target_filter_callback,
       is_page_target_callback: is_page_target_callback,
+      logger: logger,
     )
     browser.send(:validate_allow_list_version)
     browser.send(:attach)
@@ -81,8 +83,10 @@ class Puppeteer::Browser
                  process:,
                  close_callback:,
                  target_filter_callback:,
-                 is_page_target_callback:)
+                 is_page_target_callback:,
+                 logger: nil)
     @product = product ? product.to_s : 'chrome'
+    @logger = logger
     if @product != 'chrome'
       raise ArgumentError.new("Unsupported product: #{@product}. Only 'chrome' is supported.")
     end
@@ -110,6 +114,7 @@ class Puppeteer::Browser
       target_filter_callback: @target_filter_callback,
       block_list: block_list,
       allow_list: allow_list,
+      logger: @logger,
     )
     @has_network_restrictions =
       [block_list, allow_list].any? { |list| list && !list.empty? }
@@ -136,7 +141,7 @@ class Puppeteer::Browser
     ['page', 'background_page', 'webview'].include?(target_info.type)
   end
 
-  attr_reader :is_page_target_callback
+  attr_reader :is_page_target_callback, :logger
 
   # @rbs event_name: (String | Symbol) -- Browser event name
   # @rbs &block: ^(untyped) -> void -- Event handler
@@ -279,6 +284,7 @@ class Puppeteer::Browser
       default_viewport: @default_viewport,
       network_enabled: @network_enabled,
       is_page_target_callback: @is_page_target_callback,
+      logger: @logger,
     )
   end
 
@@ -434,6 +440,20 @@ class Puppeteer::Browser
   # @rbs return: String -- Browser user agent string
   def user_agent
     version_info.user_agent
+  end
+
+  # @rbs window_id: String | Integer -- Target window id
+  # @rbs return: Hash[String, untyped] -- Window bounds (windowState, left, top, width, height)
+  def get_window_bounds(window_id)
+    @connection.send_message('Browser.getWindowBounds', windowId: window_id.to_i)['bounds']
+  end
+
+  # @rbs window_id: String | Integer -- Target window id
+  # @rbs bounds: Hash[Symbol, untyped] -- Window bounds (e.g. windowState:, width:, height:, left:, top:)
+  # @rbs return: void -- No return value
+  def set_window_bounds(window_id, bounds)
+    @connection.send_message('Browser.setWindowBounds', windowId: window_id.to_i, bounds: bounds)
+    nil
   end
 
   private def version_info

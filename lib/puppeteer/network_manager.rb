@@ -87,8 +87,9 @@ class Puppeteer::NetworkManager
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.FrameManager} frameManager
   # @param {boolean} network_enabled
-  def initialize(client, ignore_https_errors, frame_manager, network_enabled: true)
+  def initialize(client, ignore_https_errors, frame_manager, network_enabled: true, logger: nil)
     @client = client
+    @logger = logger
     @ignore_https_errors = ignore_https_errors
     @frame_manager = frame_manager
     @network_enabled = network_enabled
@@ -376,7 +377,7 @@ class Puppeteer::NetworkManager
       Async do
         handle_request(event, fetch_request_id, client: client)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     else
       handle_request(event, fetch_request_id, client: client)
@@ -441,7 +442,7 @@ class Puppeteer::NetworkManager
         },
       )
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -450,7 +451,7 @@ class Puppeteer::NetworkManager
       begin
         client.send_message('Fetch.continueRequest', requestId: event['requestId'])
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
 
@@ -512,12 +513,12 @@ class Puppeteer::NetworkManager
 
   private def handle_request_without_network_instrumentation(event, client)
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::HTTPRequest.new(client, frame, event['requestId'], @user_request_interception_enabled, event, [])
+    request = Puppeteer::HTTPRequest.new(client, frame, event['requestId'], @user_request_interception_enabled, event, [], logger: @logger)
     emit_event(NetworkManagerEmittedEvents::Request, request)
     begin
       with_interception_lock { request.finalize_interceptions }
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -561,7 +562,7 @@ class Puppeteer::NetworkManager
   private def handle_request_from_paused(event, fetch_request_id, redirect_chain, client:)
     network_request_id = event['requestId']
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain)
+    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain, logger: @logger)
     if_present(@network_event_manager.request_extra_info(network_request_id).shift) do |extra_info|
       request.update_headers(extra_info['headers'])
     end
@@ -570,7 +571,7 @@ class Puppeteer::NetworkManager
     begin
       with_interception_lock { request.finalize_interceptions }
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -609,7 +610,7 @@ class Puppeteer::NetworkManager
       end
     end
     frame = if_present(event['frameId']) { |frame_id| @frame_manager.frame(frame_id) }
-    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain)
+    request = Puppeteer::HTTPRequest.new(client, frame, fetch_request_id, @user_request_interception_enabled, event, redirect_chain, logger: @logger)
     if_present(@network_event_manager.request_extra_info(network_request_id).shift) do |extra_info|
       request.update_headers(extra_info['headers'])
     end
@@ -619,7 +620,7 @@ class Puppeteer::NetworkManager
     begin
       with_interception_lock { request.finalize_interceptions }
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -634,7 +635,7 @@ class Puppeteer::NetworkManager
       request = @network_event_manager.get_request(network_request_id)
     end
     unless request
-      debug_puts("Request #{event['requestId']} was served from cache but we could not find the corresponding request object")
+      log_error(Puppeteer::Error.new("Request #{event['requestId']} was served from cache but we could not find the corresponding request object"))
       return
     end
     emit_event(NetworkManagerEmittedEvents::RequestServedFromCache, request)
@@ -658,7 +659,7 @@ class Puppeteer::NetworkManager
     return unless request
 
     unless @network_event_manager.response_extra_info(network_request_id).empty?
-      debug_puts("Unexpected extraInfo events for request #{response_received_event['requestId']}")
+      log_error(Puppeteer::Error.new("Unexpected extraInfo events for request #{response_received_event['requestId']}"))
     end
 
     # Chromium sends wrong extraInfo events for responses served from cache.
@@ -795,5 +796,12 @@ class Puppeteer::NetworkManager
     end
     forget_request(request, true)
     emit_event(NetworkManagerEmittedEvents::RequestFailed, request)
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

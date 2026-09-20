@@ -3,8 +3,9 @@ class Puppeteer::EmulationManager
   using Puppeteer::DefineAsyncMethod
 
   # @param {!Puppeteer.CDPSession} client
-  def initialize(client)
+  def initialize(client, logger: nil)
     @client = client
+    @logger = logger
     @emulating_mobile = false
     @has_touch = false
     @viewport = nil
@@ -36,13 +37,25 @@ class Puppeteer::EmulationManager
     Async do
       Puppeteer::AsyncUtils.await_promise_all(*promises)
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
-  # @param viewport [Puppeteer::Viewport]
+  # @param viewport [Puppeteer::Viewport, nil] -- Viewport settings, or nil to clear emulation
   # @return [true|false]
   def emulate_viewport(viewport)
+    unless viewport
+      return false if @viewport.nil?
+
+      clear_viewport(@client)
+      @viewport = nil
+
+      reload_needed = @emulating_mobile != false || @has_touch != false
+      @emulating_mobile = false
+      @has_touch = false
+      return reload_needed
+    end
+
     mobile = viewport.mobile?
     has_touch = viewport.has_touch?
 
@@ -55,8 +68,32 @@ class Puppeteer::EmulationManager
     reload_needed
   end
 
+  private def clear_viewport(client)
+    Puppeteer::AsyncUtils.await_promise_all(
+      client.async_send_message('Emulation.clearDeviceMetricsOverride'),
+      client.async_send_message('Emulation.setTouchEmulationEnabled', enabled: false),
+    )
+  rescue => err
+    log_error(err)
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
+  end
+
   private def apply_viewport(client, viewport)
     Puppeteer::AsyncUtils.await_promise_all(*viewport_promises(client, viewport))
+  rescue => err
+    # Some targets (e.g. DevTools windows) do not support metrics override;
+    # log and continue like upstream, but re-raise anything else.
+    if err.message.to_s.include?('Target does not support metrics override')
+      log_error(err)
+    else
+      raise
+    end
   end
 
   private def viewport_promises(client, viewport)

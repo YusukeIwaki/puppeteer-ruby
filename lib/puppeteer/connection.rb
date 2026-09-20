@@ -37,14 +37,20 @@ class Puppeteer::Connection
     attr_reader :method
   end
 
-  def initialize(url, transport, delay = 0, protocol_timeout: nil)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(url, transport, delay = 0, protocol_timeout: nil, logger: nil)
     @url = url
     @last_id = 0
     @callbacks = {}
     @callbacks_mutex = Mutex.new
     @delay = delay
     @protocol_timeout = protocol_timeout
+    @logger = logger
     @reject_emulate_network_conditions_calls = false
+    # Like upstream, resolve the protocol logger sinks once when the
+    # connection is constructed instead of per message.
+    @protocol_send_logger = logger&.call(Puppeteer::DebugPrefixes::CDP_SEND)
+    @protocol_receive_logger = logger&.call(Puppeteer::DebugPrefixes::CDP_RECEIVE)
 
     @network_message_queue = Async::Queue.new
     @network_message_task = nil
@@ -53,6 +59,8 @@ class Puppeteer::Connection
     @transport.on_message do |data|
       message = JSON.parse(data)
       sleep_before_handling_message(message)
+      # Upstream logs the raw JSON string after the delay, before dispatch.
+      @protocol_receive_logger&.call(data)
       if network_event_message?(message)
         enqueue_network_message(message)
       elsif should_handle_synchronously?(message)
@@ -71,7 +79,7 @@ class Puppeteer::Connection
     @manually_attached = Set.new
   end
 
-  attr_reader :protocol_timeout
+  attr_reader :protocol_timeout, :logger
   attr_writer :reject_emulate_network_conditions_calls
 
   def ensure_command_allowed!(method)
@@ -194,7 +202,16 @@ class Puppeteer::Connection
       @callbacks_mutex.synchronize do
         @callbacks[id] = MessageCallback.new(method: method, promise: promise)
       end
-      raw_send(id: id, message: { method: method, params: params })
+      begin
+        raw_send(id: id, message: { method: method, params: params })
+      rescue => error
+        # Like upstream CallbackRegistry: still throw sync send errors
+        # synchronously, but log the failed callback and clean it up.
+        @callbacks_mutex.synchronize { @callbacks.delete(id) }
+        promise.reject(error) unless promise.resolved?
+        log_error(error)
+        raise
+      end
     end
 
     promise
@@ -229,6 +246,7 @@ class Puppeteer::Connection
       sessionId: message[:sessionId],
     }.compact)
     @transport.send_text(payload)
+    @protocol_send_logger&.call(payload)
     request_debug_printer.handle_payload(payload)
   end
 
@@ -415,6 +433,13 @@ class Puppeteer::Connection
     session_id = result['sessionId']
     @manually_attached.delete(target_info.target_id)
     @sessions_mutex.synchronize { @sessions[session_id] }.tap { |session| session&.mark_ready }
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end
 

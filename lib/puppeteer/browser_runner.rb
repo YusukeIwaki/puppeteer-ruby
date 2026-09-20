@@ -9,17 +9,80 @@ class Puppeteer::BrowserRunner
   # @param {string} executablePath
   # @param {!Array<string>} processArguments
   # @param {string=} tempDirectory
-  def initialize(executable_path, process_arguments, user_data_dir, using_temp_user_data_dir)
+  def initialize(executable_path, process_arguments, user_data_dir, using_temp_user_data_dir, logger: nil)
     @executable_path = executable_path
     @process_arguments = process_arguments
     @user_data_dir = user_data_dir
     @using_temp_user_data_dir = using_temp_user_data_dir
+    @logger = logger
     @proc = nil
     @connection = nil
     @closed = true
   end
 
   attr_reader :proc, :connection
+
+  # Shared synchronous removal of temporary profiles when the host process
+  # exits. Mirrors upstream registerProcessExitCleanup: one exit listener is
+  # shared per emitter, and unregistering the last entry drops the listener.
+  class ProcessExitCleanup
+    # @param emitter [Object, nil] -- Exit emitter responding to once/off, or nil for Kernel.at_exit
+    def initialize(emitter = nil)
+      @emitter = emitter
+      @mutex = Mutex.new
+      @entries = {}
+      @on_exit = nil
+    end
+
+    # @param user_data_dir [String] -- Temporary profile directory
+    # @param logger [Proc, nil] -- Experimental logger factory
+    # @return [Proc] -- Unregister callable
+    def register(user_data_dir, logger = nil)
+      @mutex.synchronize do
+        @entries[user_data_dir] = logger
+        install_listener_unlocked unless @on_exit
+      end
+      -> { unregister(user_data_dir) }
+    end
+
+    private def install_listener_unlocked
+      @on_exit = -> { run }
+      if @emitter
+        @emitter.once('exit', @on_exit)
+      else
+        at_exit(&@on_exit)
+      end
+    end
+
+    private def run
+      snapshot = @mutex.synchronize { @entries.dup }
+      snapshot.each do |user_data_dir, logger|
+        remove_entry(user_data_dir, logger)
+      end
+    end
+
+    private def remove_entry(user_data_dir, logger)
+      FileUtils.rm_rf(user_data_dir)
+    rescue => error
+      logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    end
+
+    private def unregister(user_data_dir)
+      @mutex.synchronize do
+        return false unless @entries.delete(user_data_dir)
+        if @entries.empty? && @on_exit
+          @emitter&.off('exit', @on_exit)
+          @on_exit = nil
+        end
+        true
+      end
+    end
+  end
+
+  # @return [ProcessExitCleanup] -- Shared registry for temporary profiles
+  def self.process_exit_cleanup
+    @process_exit_cleanup ||= ProcessExitCleanup.new
+  end
 
   class BrowserProcess
     def initialize(env, executable_path, args, pipe: false)
@@ -73,6 +136,28 @@ class Puppeteer::BrowserRunner
       Process.kill(:KILL, @pid)
     rescue Errno::ESRCH
       # already killed
+    end
+
+    # Non-blocking read of buffered stderr output, for launch diagnostics.
+    def recent_logs
+      output = +''
+      begin
+        if @stderr && !@stderr.closed?
+          loop do
+            result = @stderr.read_nonblock(65_536, exception: false)
+            if result.is_a?(String)
+              output << result
+            elsif result != :wait_readable
+              break
+            elsif IO.select([@stderr], nil, nil, 1).nil?
+              break
+            end
+          end
+        end
+      rescue IOError
+        # Return whatever was collected before the stream went away.
+      end
+      output
     end
 
     def dispose
@@ -132,6 +217,9 @@ class Puppeteer::BrowserRunner
         FileUtils.rm_rf(@user_data_dir)
       end
     }
+    if @using_temp_user_data_dir
+      @exit_cleanup_unregister = Puppeteer::BrowserRunner.process_exit_cleanup.register(@user_data_dir, @logger)
+    end
     at_exit do
       kill
     end
@@ -165,7 +253,8 @@ class Puppeteer::BrowserRunner
     elsif @connection
       begin
         @connection.send_message('Browser.close')
-      rescue
+      rescue => error
+        log_error(error)
         kill
       end
     end
@@ -186,34 +275,48 @@ class Puppeteer::BrowserRunner
         FileUtils.rm_rf(@user_data_dir)
       end
     rescue => err
-      debug_puts(err)
+      log_error(err)
+    end
+    if @using_temp_user_data_dir
+      @exit_cleanup_unregister&.call
+      @exit_cleanup_unregister = nil
     end
   end
 
 
   # @param {!({usePipe?: boolean, timeout: number, slowMo: number, preferredRevision: string, protocolTimeout: number?})} options
   # @return {!Promise<!Connection>}
-  def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:, protocol_timeout: nil)
+  def setup_connection(use_pipe:, timeout:, slow_mo:, preferred_revision:, protocol_timeout: nil, ws_options: nil, logger: nil)
     if !use_pipe
       browser_ws_endpoint = wait_for_ws_endpoint(@proc, timeout, preferred_revision)
-      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint)
+      transport = Puppeteer::WebSocketTransport.create(browser_ws_endpoint, ws_options: ws_options, logger: logger)
       @connection = Puppeteer::Connection.new(
         browser_ws_endpoint,
         transport,
         slow_mo,
         protocol_timeout: protocol_timeout,
+        logger: logger,
       )
     else
-      transport = Puppeteer::PipeTransport.new(@proc.pipe_write, @proc.pipe_read)
+      transport = Puppeteer::PipeTransport.new(@proc.pipe_write, @proc.pipe_read, logger: logger)
       @connection = Puppeteer::Connection.new(
         '',
         transport,
         slow_mo,
         protocol_timeout: protocol_timeout,
+        logger: logger,
       )
     end
 
     @connection
+  end
+
+  # Whether the profile directory exists and the current process can write to
+  # it. A missing directory counts as writable: the browser creates it on
+  # launch.
+  private def writable_directory?(directory)
+    return true if File.writable?(directory)
+    !File.exist?(directory)
   end
 
   private def wait_for_ws_endpoint(browser_process, timeout, preferred_revision)
@@ -238,8 +341,29 @@ class Puppeteer::BrowserRunner
       wait_for_endpoint.call
     end
   rescue EOFError
-    raise LaunchError.new("\n#{lines.join("\n")}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
+    logs = lines.join("\n")
+    if logs.include?('Failed to create a ProcessSingleton for your profile directory') ||
+        (Puppeteer.env.windows? && File.exist?(File.join(@user_data_dir, 'lockfile')))
+
+      # The browser reports the same ProcessSingleton failure whether another
+      # instance holds the lock or it simply cannot write to the profile
+      # directory, so check for the latter before blaming a running browser.
+      unless writable_directory?(@user_data_dir)
+        raise Puppeteer::Error.new("The browser cannot write to #{@user_data_dir}. Make the `user_data_dir` writable or use a different one.")
+      end
+      raise Puppeteer::Error.new("The browser is already running for #{@user_data_dir}. Use a different `user_data_dir` or stop the running browser first.")
+    end
+
+
+    raise LaunchError.new("\n#{logs}\nTROUBLESHOOTING: https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md")
   rescue Async::TimeoutError
     raise Puppeteer::TimeoutError.new("Timed out after #{timeout} ms while trying to connect to the browser! Only Chrome at revision r#{preferred_revision} is guaranteed to work.")
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

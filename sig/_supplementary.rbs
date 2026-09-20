@@ -100,6 +100,19 @@ end
 class Puppeteer::Devices
 end
 
+module Puppeteer::FileSystem
+  WRITE_NOFOLLOW_MODE: Integer
+
+  def self.follow_symlinks: () -> bool
+  def self.follow_symlinks=: (bool value) -> bool
+  def self.nofollow_supported?: () -> bool
+  def self.protected?: () -> bool
+  def self.read_file: (String path, ?encoding: Encoding) -> String
+  def self.write_file: (String path, String data) -> Integer
+  def self.open_for_writing: (String path, ?mode: String) -> File
+  def self.open_exclusive: (String path) -> File
+end
+
 class Puppeteer::Device
   def initialize: (name: String, user_agent: String, viewport: Puppeteer::Viewport) -> void
 end
@@ -164,7 +177,7 @@ class Puppeteer::FrameManager
     def set_id_for_frame: (Puppeteer::Frame frame, String identifier) -> void
   end
 
-  def initialize: (Puppeteer::CDPSession client, Puppeteer::Page page, bool ignore_https_errors, untyped timeout_settings, ?network_enabled: bool) -> void
+  def initialize: (Puppeteer::CDPSession client, Puppeteer::Page page, bool ignore_https_errors, untyped timeout_settings, ?network_enabled: bool, ?logger: untyped) -> void
   attr_reader client: Puppeteer::CDPSession
   attr_reader timeout_settings: untyped
   attr_reader network_manager: untyped
@@ -215,6 +228,7 @@ class Puppeteer::FrameManager
   def extension_origin?: (untyped origin) -> bool
   def extract_extension_id: (untyped origin) -> String?
   def blocked_url?: (String? url) -> bool
+  def log_error: (StandardError error) -> void
 end
 
 class Puppeteer::NetworkCondition
@@ -235,8 +249,8 @@ class Puppeteer::Target
     def initialize: (Hash[String, untyped] options) -> void
   end
 
-  def initialize: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, network_enabled: bool, is_page_target_callback: Proc) -> void
-  def self.new: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, network_enabled: bool, is_page_target_callback: Proc) -> Puppeteer::Target
+  def initialize: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, network_enabled: bool, is_page_target_callback: Proc, ?logger: untyped) -> void
+  def self.new: (target_info: Puppeteer::Target::TargetInfo, session: Puppeteer::CDPSession?, browser_context: Puppeteer::BrowserContext, target_manager: untyped, session_factory: Proc, ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, network_enabled: bool, is_page_target_callback: Proc, ?logger: untyped) -> Puppeteer::Target
 
   def closed_callback: () -> void
   def ignore_initialize_callback_promise: () -> void
@@ -284,8 +298,8 @@ class Puppeteer::WebSocketTransport
   class ClosedError < Puppeteer::Error
   end
 
-  def self.create: (String url, ?headers: Hash[String, String]?) -> Puppeteer::WebSocketTransport
-  def initialize: (String url, ?headers: Hash[String, String]?) -> void
+  def self.create: (String url, ?headers: Hash[String, String]?, ?ws_options: Hash[Symbol, untyped]?, ?logger: untyped) -> Puppeteer::WebSocketTransport
+  def initialize: (String url, ?headers: Hash[String, String]?, ?ws_options: Hash[Symbol, untyped]?, ?logger: untyped) -> void
   def connect: () -> untyped
   def send_text: (String message) -> void
   def close: () -> void
@@ -297,6 +311,9 @@ class Puppeteer::WebSocketTransport
   private
 
   def receive_loop: (untyped connection) -> void
+  def start_keep_alive: (untyped connection) -> void
+  def stop_keep_alive: () -> void
+  def log_error: (untyped error) -> void
 end
 
 class Puppeteer::Connection
@@ -307,7 +324,7 @@ class Puppeteer::Connection
     def initialize: (method: String, error_message: String, ?error_data: untyped) -> void
   end
 
-  def initialize: (String url, (Puppeteer::WebSocketTransport | Puppeteer::PipeTransport) transport, ?Numeric delay, ?protocol_timeout: Numeric?) -> void
+  def initialize: (String url, (Puppeteer::WebSocketTransport | Puppeteer::PipeTransport) transport, ?Numeric delay, ?protocol_timeout: Numeric?, ?logger: untyped) -> void
   def closed?: () -> bool
   def self.from_session: (Puppeteer::CDPSession session) -> Puppeteer::Connection?
   def session: (String session_id) -> Puppeteer::CDPSession?
@@ -334,6 +351,7 @@ class Puppeteer::Connection
   def response_debug_printer: () -> untyped
   def handle_message: (Hash[String, untyped] message) -> void
   def handle_close: () -> void
+  def log_error: (untyped error) -> void
 end
 
 class Puppeteer::TargetCloseError < Puppeteer::Connection::ProtocolError
@@ -357,27 +375,45 @@ class Puppeteer::Launcher::Chrome
 
   def fallback_executable_path: () -> String
   def executable_path_for_channel: (String channel) -> String
+  def with_profile_access_diagnostic: (Puppeteer::BrowserRunner runner, String user_data_dir, StandardError error) -> StandardError
+  def writable_directory?: (String directory) -> bool
 end
 
 class Puppeteer::BrowserRunner
-  def initialize: (String executable_path, Array[String] process_arguments, String user_data_dir, bool using_temp_user_data_dir) -> void
+  def self.process_exit_cleanup: () -> Puppeteer::BrowserRunner::ProcessExitCleanup
+  def initialize: (String executable_path, Array[String] process_arguments, String user_data_dir, bool using_temp_user_data_dir, ?logger: untyped) -> void
   def start: (?executable_path: String?, ?ignore_default_args: Array[String]?, ?handle_SIGINT: bool?, ?handle_SIGTERM: bool?, ?handle_SIGHUP: bool?, ?timeout: Integer?, ?dumpio: bool?, ?env: Hash[String, String]?, ?pipe: bool?) -> void
   def close: () -> void
   def kill: () -> void
-  def setup_connection: (use_pipe: bool, timeout: Integer?, slow_mo: Integer?, preferred_revision: String?, ?protocol_timeout: Numeric?) -> Puppeteer::Connection
+  def setup_connection: (use_pipe: bool, timeout: Integer?, slow_mo: Integer?, preferred_revision: String?, ?protocol_timeout: Numeric?, ?ws_options: Hash[Symbol, untyped]?, ?logger: untyped) -> Puppeteer::Connection
 
   private
 
   def wait_for_ws_endpoint: (Puppeteer::BrowserRunner::BrowserProcess browser_process, Numeric? timeout, String? preferred_revision) -> String
+  def writable_directory?: (String directory) -> bool
+  def log_error: (untyped error) -> void
 
   class BrowserProcess
     def initialize: (Hash[String, String] env, String executable_path, Array[String]? args, ?pipe: bool) -> void
     def kill: () -> void
     def dispose: () -> void
+    def recent_logs: () -> String
     attr_reader stdout: untyped
     attr_reader stderr: untyped
     attr_reader spawnargs: Array[String]
     attr_reader pipe_write: IO?
     attr_reader pipe_read: IO?
+  end
+
+  class ProcessExitCleanup
+    def initialize: (?untyped emitter) -> void
+    def register: (String user_data_dir, ?untyped logger) -> Proc
+
+    private
+
+    def install_listener_unlocked: () -> void
+    def run: () -> void
+    def remove_entry: (String user_data_dir, untyped logger) -> void
+    def unregister: (String user_data_dir) -> bool
   end
 end

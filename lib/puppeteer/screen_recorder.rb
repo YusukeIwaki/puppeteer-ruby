@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
-require 'fileutils'
 require 'open3'
 require 'etc'
 
@@ -29,7 +28,10 @@ class Puppeteer::ScreenRecorder
     @page = page
     @fps = options.fetch(:fps, DEFAULT_FPS)
     @format = (options[:format] || 'webm').to_s
-    @path = options[:path]
+    @output_io = options[:output]
+    # Flush every chunk so the file grows while recording (upstream pipes
+    # FFmpeg stdout to the file continuously).
+    @output_io&.sync = true
     @stopped = false
     @stop_mutex = Mutex.new
     @finished = false
@@ -42,7 +44,6 @@ class Puppeteer::ScreenRecorder
     @previous_timestamp = nil
     @previous_buffer = nil
 
-    ensure_output_directory
     command = build_command(width, height, options)
     @stdin, @stdout, @stderr, @wait_thread = Open3.popen3(*command)
     @stdin.binmode
@@ -59,6 +60,7 @@ class Puppeteer::ScreenRecorder
     @disconnect_listener_id = @client.once(CDPSessionEmittedEvents::Disconnected) do
       stop
     rescue StandardError => error
+      @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
       warn(error.message) if ENV['DEBUG']
     end
   end
@@ -70,30 +72,25 @@ class Puppeteer::ScreenRecorder
 
   # @rbs return: void -- Stop recording and flush FFmpeg
   def stop
-    should_stop = @stop_mutex.synchronize do
-      next false if @stopped
+    # Serialize the whole stop so a concurrent second call waits for the
+    # first to finish instead of finalizing the process early.
+    @stop_mutex.synchronize do
+      if @stopped
+        finish_process
+        return
+      end
 
       @stopped = true
-      true
-    end
-    unless should_stop
+      begin
+        @page._stop_screencast
+      rescue StandardError => error
+        # The page or its CDP session may already be gone.
+        @page.logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+      end
+      enqueue_last_frame
       finish_process
-      return
     end
-
-    begin
-      @page._stop_screencast
-    rescue StandardError
-      # The page or its CDP session may already be gone.
-    end
-    enqueue_last_frame
-    finish_process
-  end
-
-  private def ensure_output_directory
-    return unless @path
-
-    FileUtils.mkdir_p(File.dirname(File.expand_path(@path)))
+    nil
   end
 
   private def build_command(width, height, options)
@@ -140,7 +137,6 @@ class Puppeteer::ScreenRecorder
       '-b:v', '0',
       *format_args,
       '-vf', filters.join(','),
-      options.fetch(:overwrite, true) ? '-y' : '-n',
       'pipe:1'
     ]
   end
@@ -224,7 +220,9 @@ class Puppeteer::ScreenRecorder
         @wait_thread&.join
         @stdout_thread&.join
         @stderr_thread&.join
-        File.binwrite(@path, @output) if @path
+        if @output_io && !@output_io.closed?
+          @output_io.close
+        end
         unless @wait_thread&.value&.success?
           raise Puppeteer::Error.new("ffmpeg exited unsuccessfully: #{@ffmpeg_error}")
         end
@@ -249,16 +247,25 @@ class Puppeteer::ScreenRecorder
   end
 
   private def read_output
-    while (chunk = @stdout.read(16 * 1024)) && !chunk.empty?
+    loop do
+      chunk = @stdout.readpartial(16 * 1024)
+      next if chunk.empty?
+
       @output << chunk
+      # Stream encoded output to the destination as it arrives, like
+      # upstream piping FFmpeg stdout through the recorder.
+      @output_io&.write(chunk)
     end
-  rescue IOError
+  rescue EOFError, IOError
     nil
   end
 
   private def read_stderr
     @ffmpeg_error = @stderr.read.to_s
-    warn(@ffmpeg_error) if ENV['DEBUG'] && !@ffmpeg_error.empty?
+    unless @ffmpeg_error.empty?
+      @page.logger&.call(Puppeteer::DebugPrefixes::FFMPEG)&.call(@ffmpeg_error)
+      warn(@ffmpeg_error) if ENV['DEBUG']
+    end
   rescue IOError
     nil
   end

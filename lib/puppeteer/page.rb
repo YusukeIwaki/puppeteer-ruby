@@ -1,6 +1,7 @@
 # rbs_inline: enabled
 
 require 'base64'
+require 'fileutils'
 require 'json'
 require 'objspace'
 require "stringio"
@@ -22,11 +23,16 @@ class Puppeteer::Page
   # @rbs default_viewport: Puppeteer::Viewport? -- Default viewport for new pages
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: Puppeteer::Page -- Created page instance
-  def self.create(client, target, ignore_https_errors, default_viewport, network_enabled: true)
-    page = Puppeteer::Page.new(client, target, ignore_https_errors, network_enabled: network_enabled)
+  def self.create(client, target, ignore_https_errors, default_viewport, network_enabled: true, logger: nil)
+    page = Puppeteer::Page.new(client, target, ignore_https_errors, network_enabled: network_enabled, logger: logger)
     page.init
     if default_viewport
-      page.viewport = default_viewport
+      begin
+        page.viewport = default_viewport
+      rescue Puppeteer::TargetCloseError => error
+        # The target may already be gone; log and continue like upstream.
+        page.send(:log_error, error)
+      end
     end
     page
   end
@@ -36,8 +42,9 @@ class Puppeteer::Page
   # @rbs ignore_https_errors: bool -- Ignore HTTPS errors
   # @rbs network_enabled: bool -- Whether network events are enabled
   # @rbs return: void -- No return value
-  def initialize(client, target, ignore_https_errors, network_enabled: true)
+  def initialize(client, target, ignore_https_errors, network_enabled: true, logger: nil)
     @closed = false
+    @logger = logger
     @client = client
     @target = target
     @tab_session = client.parent_session || client
@@ -47,14 +54,14 @@ class Puppeteer::Page
     @mouse = Puppeteer::Mouse.new(client, @keyboard)
     @timeout_settings = Puppeteer::TimeoutSettings.new
     @touchscreen = Puppeteer::TouchScreen.new(client, @keyboard)
-    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled)
-    @emulation_manager = Puppeteer::EmulationManager.new(client)
+    @frame_manager = Puppeteer::FrameManager.new(client, self, ignore_https_errors, @timeout_settings, network_enabled: network_enabled, logger: logger)
+    @emulation_manager = Puppeteer::EmulationManager.new(client, logger: logger)
     @tracing = Puppeteer::Tracing.new(client)
-    @webmcp = Puppeteer::WebMCP.new(client, @frame_manager)
+    @webmcp = Puppeteer::WebMCP.new(client, @frame_manager, logger: logger)
     @page_bindings = {}
     @page_binding_ids = {}
     @exposed_function_bindings = {}
-    @coverage = Puppeteer::Coverage.new(client)
+    @coverage = Puppeteer::Coverage.new(client, logger: logger)
     @javascript_enabled = true
     @screenshot_task_queue = ScreenshotTaskQueue.new
     @screencast_session_count = 0
@@ -67,13 +74,14 @@ class Puppeteer::Page
 
     @workers = {}
     @user_drag_interception_enabled = false
+    @dragging = false
     @service_worker_bypassed = false
 
     @swapped_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Swapped) do |session|
       Async do
         handle_activation(session)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
     @secondary_session_listener_id = @tab_session.add_event_listener(CDPSessionEmittedEvents::Ready) do |session|
@@ -249,6 +257,7 @@ class Puppeteer::Page
         console_api_called,
         exception_thrown,
         network_manager: @frame_manager.network_manager,
+        logger: @logger,
       )
       @workers[session.id] = worker
       emit_event(PageEmittedEvents::WorkerCreated, worker)
@@ -263,6 +272,10 @@ class Puppeteer::Page
       @client.async_send_message('Log.enable'),
       @webmcp.async_initialize_domain,
     )
+  rescue Puppeteer::TargetCloseError => error
+    # The target may already be gone; log and continue like upstream.
+    log_error(error)
+    []
   end
 
   # @rbs return: bool -- Whether drag interception is enabled
@@ -270,6 +283,22 @@ class Puppeteer::Page
     @user_drag_interception_enabled
   end
   alias_method :drag_interception_enabled, :drag_interception_enabled?
+
+  # @internal Whether a non-intercepted drag is in progress (mirrors
+  # upstream Page._isDragging; managed by ElementHandle#drag/#drop).
+  #
+  # @rbs return: bool -- Whether a drag is in progress
+  def dragging?
+    @dragging
+  end
+
+  # @internal
+  #
+  # @rbs value: bool -- New dragging state
+  # @rbs return: void -- No return value
+  def dragging=(value)
+    @dragging = value
+  end
 
   # @rbs event_name: (String | Symbol) -- Page event name
   # @rbs &block: ^(untyped) -> void -- Event handler
@@ -387,7 +416,7 @@ class Puppeteer::Page
     @client.send_message('Emulation.setGeolocationOverride', geolocation.to_h)
   end
 
-  attr_reader :javascript_enabled, :service_worker_bypassed, :target, :client
+  attr_reader :javascript_enabled, :service_worker_bypassed, :target, :client, :logger
 
   # @rbs return: String -- Tab target id
   def _tab_id
@@ -465,7 +494,7 @@ class Puppeteer::Page
 
     if_present(entry['args']) do |args|
       args.map do |arg|
-        Puppeteer::RemoteObject.new(arg).async_release(@client)
+        Puppeteer::RemoteObject.new(arg).async_release(@client, @logger)
       end
     end
     if source != 'worker'
@@ -836,7 +865,8 @@ class Puppeteer::Page
     @client.send_message('HeapProfiler.collectGarbage')
 
     begin
-      File.open(path, 'w') do |file|
+      file = Puppeteer::FileSystem.open_for_writing(path, mode: 'w')
+      begin
         listener_id = @client.add_event_listener('HeapProfiler.addHeapSnapshotChunk') do |event|
           file.write(event['chunk'])
         end
@@ -846,6 +876,8 @@ class Puppeteer::Page
         ensure
           @client.remove_event_listener(listener_id)
         end
+      ensure
+        file.close
       end
     ensure
       @client.send_message('HeapProfiler.disable')
@@ -853,6 +885,20 @@ class Puppeteer::Page
   end
 
   class PageError < Puppeteer::Error ; end
+
+  # Carries a failed resolve delivery's CDP exceptionDetails into the shared
+  # reject path. Upstream Binding.run rethrows the evaluation error value
+  # itself (Error or primitive via createEvaluationError); Ruby cannot throw
+  # JS primitives, so the raw details are carried instead and the primitive
+  # vs Error distinction is re-applied in deliver_binding_reject.
+  class BindingDeliveryError < Puppeteer::ExecutionContext::EvaluationError
+    def initialize(exception_details)
+      @exception_details = exception_details
+      super("Evaluation failed: #{exception_details}")
+    end
+
+    attr_reader :exception_details
+  end
 
   private def handle_exception(exception_details)
     exception = exception_details['exception']
@@ -917,34 +963,170 @@ class Puppeteer::Page
       return
     end
 
-    expression =
-      begin
-        result = @page_bindings[name].call(*args)
+    binding_fn = @page_bindings[name]
 
-        deliver_result = <<~JAVASCRIPT
-        function (name, seq, result) {
-          window[name].callbacks.get(seq).resolve(result);
-          window[name].callbacks.delete(seq);
-        }
-        JAVASCRIPT
-
-        JavaScriptFunction.new(deliver_result, [name, seq, result]).source
-      rescue => err
-        deliver_error = <<~JAVASCRIPT
-        function (name, seq, message) {
-          const error = new Error(message);
-          window[name].callbacks.get(seq).reject(error);
-          window[name].callbacks.delete(seq);
-        }
-        JAVASCRIPT
-        JavaScriptFunction.new(deliver_error, [name, seq, err.message]).source
-      end
-
+    # Mirrors upstream Binding.run: callback execution and resolve-delivery
+    # failures (serialization, protocol, or page-side exceptionDetails) both
+    # flow into a single reject-delivery attempt. Only a failure of that
+    # reject delivery is logged.
     Async do
-      client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+      result = binding_fn.call(*args)
+      deliver_binding_resolve(client, execution_context_id, name, seq, result)
     rescue => error
-      debug_puts(error)
+      begin
+        deliver_binding_reject(client, execution_context_id, name, seq, error)
+      rescue => reject_error
+        log_error(reject_error)
+      end
     end
+  end
+
+  private def deliver_binding_resolve(client, execution_context_id, name, seq, result)
+    deliver_result = <<~JAVASCRIPT
+    function (name, seq, result) {
+      window[name].callbacks.get(seq).resolve(result);
+      window[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+
+    expression = JavaScriptFunction.new(deliver_result, [name, seq, result]).source
+    response = client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+    if (exception_details = response['exceptionDetails'])
+      raise BindingDeliveryError.new(exception_details)
+    end
+  end
+
+  private def deliver_binding_reject(client, execution_context_id, name, seq, error)
+    if error.is_a?(BindingDeliveryError)
+      exception_details = error.exception_details
+      exception = exception_details['exception']
+      if exception.nil?
+        deliver_binding_reject_with_error(client, execution_context_id, name, seq, exception_details['text'].to_s, nil)
+      elsif binding_primitive_exception?(exception)
+        deliver_binding_reject_with_primitive(client, execution_context_id, name, seq, exception)
+      else
+        message, stack = binding_error_message_and_stack(exception_details)
+        deliver_binding_reject_with_error(client, execution_context_id, name, seq, message, stack)
+      end
+    else
+      deliver_binding_reject_with_error(client, execution_context_id, name, seq, error.message, binding_ruby_stack_for(error))
+    end
+  end
+
+  private def deliver_binding_reject_with_error(client, execution_context_id, name, seq, message, stack)
+    deliver_error = <<~JAVASCRIPT
+    function (name, seq, message, stack) {
+      const error = new Error(message);
+      error.stack = stack;
+      window[name].callbacks.get(seq).reject(error);
+      window[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+    expression = JavaScriptFunction.new(deliver_error, [name, seq, message, stack]).source
+    response = client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+    if (exception_details = response['exceptionDetails'])
+      raise Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{exception_details}")
+    end
+  end
+
+  # Delivers a primitive rejection (undefined, null, NaN, Infinity, -0,
+  # BigInt, string, ...) thrown by the resolve delivery. The CDP RemoteObject
+  # is forwarded as a Runtime.callFunctionOn argument descriptor without
+  # rounding through Ruby/JSON, which cannot distinguish null from undefined
+  # or BigInt from Number. Mirrors upstream Binding.run passing the raw error
+  # to context.evaluate, whose convertArgument (ExecutionContext.ts) maps
+  # values to the same descriptor shapes.
+  private def deliver_binding_reject_with_primitive(client, execution_context_id, name, seq, exception)
+    deliver_primitive = <<~JAVASCRIPT
+    function (name, seq, error) {
+      window[name].callbacks.get(seq).reject(error);
+      window[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+    response = client.async_send_message('Runtime.callFunctionOn',
+      functionDeclaration: deliver_primitive,
+      executionContextId: execution_context_id,
+      arguments: [{ value: name }, { value: seq }, binding_primitive_call_argument(exception)],
+      returnByValue: true,
+      awaitPromise: true,
+      userGesture: true).wait
+    if (exception_details = response['exceptionDetails'])
+      raise Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{exception_details}")
+    end
+  end
+
+  private def binding_primitive_call_argument(exception)
+    if exception['unserializableValue']
+      { unserializableValue: exception['unserializableValue'] }
+    elsif exception.key?('value')
+      { value: exception['value'] }
+    else
+      # e.g. {"type":"undefined"} carries neither value nor
+      # unserializableValue; an empty descriptor means undefined, matching
+      # upstream convertArgument's {value: undefined} over the wire.
+      {}
+    end
+  end
+
+  # Same primitive condition as upstream createEvaluationError (cdp/utils.ts):
+  # a thrown value that is not an Error object and has no objectId is
+  # re-delivered as-is instead of being wrapped in an Error.
+  private def binding_primitive_exception?(exception)
+    is_error_object = exception['type'] == 'object' && exception['subtype'] == 'error'
+    !is_error_object && exception['objectId'].nil?
+  end
+
+  # Extracts the (message, stack) pair for rebuilding a thrown Error in the
+  # page. Message parsing mirrors upstream getErrorDetails (cdp/utils.ts):
+  # strip call-frame lines from the description and drop the "Name: " prefix.
+  # The stack reuses the description when present (it already holds the
+  # page-side frames) and otherwise synthesizes V8-style frames from
+  # stackTrace.callFrames, adapting createEvaluationError's stack handling.
+  # Puppeteer::ExceptionDetails cannot be reused here: it returns a single
+  # combined string, while this path needs message and stack separately to
+  # match upstream Binding.run's new Error(message) + error.stack = stack.
+  private def binding_error_message_and_stack(exception_details)
+    exception = exception_details['exception'] || {}
+    description = exception['description'] || ''
+    lines = description.empty? ? [] : description.split("\n    at ")
+    call_frames = exception_details.dig('stackTrace', 'callFrames') || []
+    if lines.empty?
+      message = ''
+    else
+      size = [call_frames.length, lines.length - 1].min
+      size = 0 if size < 0
+      lines = lines[0...-size] if size > 0
+      name = exception['className'] || ''
+      message = lines.join("\n")
+      if !name.empty? && message.start_with?("#{name}: ")
+        message = message[(name.length + 2)..] || ''
+      end
+    end
+    stack =
+      if !description.empty?
+        description
+      elsif !call_frames.empty?
+        (["Error: #{message}"] + call_frames.map { |f| "    at #{f['functionName'] || '<anonymous>'} (#{f['url']}:#{f['lineNumber']}:#{f['columnNumber']})" }).join("\n")
+      else
+        "Error: #{message}"
+      end
+    [message, stack]
+  end
+
+  private def binding_ruby_stack_for(error)
+    backtrace = error.backtrace
+    if backtrace.nil? || backtrace.empty?
+      "Error: #{error.message}"
+    else
+      (["Error: #{error.message}"] + backtrace.map { |frame| "    at #{frame}" }).join("\n")
+    end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 
   private def add_console_message(type, args, stack_trace)
@@ -1454,6 +1636,31 @@ class Puppeteer::Page
 
   attr_reader :viewport
 
+  # Resizes the browser window of this page so that the content area
+  # (excluding browser UI) has the specified width and height.
+  #
+  # @rbs content_width: Numeric -- Content area width
+  # @rbs content_height: Numeric -- Content area height
+  # @rbs return: void -- No return value
+  def resize(content_width:, content_height:)
+    window_id = self.window_id
+    @client.send_message('Browser.setContentsSize',
+      windowId: window_id.to_i,
+      width: content_width,
+      height: content_height,
+    )
+    nil
+  end
+
+  # @rbs return: String -- Page window id
+  def window_id
+    @client.send_message('Browser.getWindowForTarget')['windowId'].to_s
+  end
+
+  # Captures a screencast of this page using FFmpeg.
+  #
+  # Deprecated: Use #record instead.
+  #
   # @rbs path: String? -- Output file path
   # @rbs overwrite: bool -- Overwrite an existing output file
   # @rbs format: String? -- webm, gif, or mp4
@@ -1485,9 +1692,9 @@ class Puppeteer::Page
     raise ArgumentError.new('`scale` must be greater than 0.') if scale && scale <= 0
     width, height, device_pixel_ratio = native_pixel_dimensions
     normalized_crop = normalize_screencast_crop(crop, width, height, device_pixel_ratio)
+    output = open_recording_output(path, overwrite: overwrite) if path
     options = {
-      path: path,
-      overwrite: overwrite,
+      output: output,
       format: format,
       crop: normalized_crop,
       scale: scale,
@@ -1499,7 +1706,12 @@ class Puppeteer::Page
       colors: colors,
       ffmpeg_path: ffmpeg_path,
     }.compact
-    recorder = Puppeteer::ScreenRecorder.new(self, width, height, options)
+    begin
+      recorder = Puppeteer::ScreenRecorder.new(self, width, height, options)
+    rescue
+      output&.close unless output&.closed?
+      raise
+    end
     begin
       _start_screencast
     rescue
@@ -1507,6 +1719,81 @@ class Puppeteer::Page
       raise
     end
     recorder
+  end
+
+  # Opens a recording destination, creating parent directories. With
+  # overwrite: false the file is created exclusively so an existing
+  # destination raises Errno::EEXIST instead of being truncated.
+  private def open_recording_output(path, overwrite:)
+    # Upstream creates the output directory recursively unless overwrite is
+    # disabled.
+    directory = File.dirname(File.expand_path(path))
+    if overwrite
+      FileUtils.mkdir_p(directory)
+    elsif !Dir.exist?(directory)
+      Dir.mkdir(directory)
+    end
+    if overwrite
+      Puppeteer::FileSystem.open_for_writing(path, mode: 'wb')
+    else
+      Puppeteer::FileSystem.open_exclusive(path)
+    end
+  end
+
+  # Records this page using the CDP Page.startScreenRecording API (Chrome
+  # 153+). Outputs MP4 video stream.
+  #
+  # @rbs path: String? -- File path to save the recording to
+  # @rbs overwrite: bool -- Overwrite an existing output file
+  # @rbs audio: bool? -- Whether to record audio
+  # @rbs max_width: Numeric? -- Maximum frame width in pixels
+  # @rbs max_height: Numeric? -- Maximum frame height in pixels
+  # @rbs frame_rate: Numeric? -- Maximum frame rate in frames per second
+  # @rbs fps: Numeric? -- Frame rate alias for frame_rate
+  # @rbs return: Puppeteer::ScreenRecording -- Active recording
+  def record(
+    path: nil,
+    overwrite: true,
+    audio: nil,
+    max_width: nil,
+    max_height: nil,
+    frame_rate: nil,
+    fps: nil
+  )
+    # Upstream validates options before any directory or file operations so
+    # that invalid options never truncate an existing output file.
+    raise ArgumentError.new('`max_width` must be greater than 0.') if !max_width.nil? && max_width <= 0
+    raise ArgumentError.new('`max_height` must be greater than 0.') if !max_height.nil? && max_height <= 0
+    raise ArgumentError.new('`frame_rate` must be greater than 0.') if !frame_rate.nil? && frame_rate <= 0
+    raise ArgumentError.new('`fps` must be greater than 0.') if !fps.nil? && fps <= 0
+
+    output = open_recording_output(path, overwrite: overwrite) if path
+    options = {
+      audio: audio,
+      max_width: max_width,
+      max_height: max_height,
+      frame_rate: frame_rate,
+      fps: fps,
+    }.compact
+    begin
+      recording = Puppeteer::ScreenRecording.new(self, options)
+    rescue
+      output&.close unless output&.closed?
+      raise
+    end
+    begin
+      recording.start
+    rescue
+      output&.close unless output&.closed?
+      begin
+        recording.stop
+      rescue StandardError
+        # Ignore stop errors while handling the start failure.
+      end
+      raise
+    end
+    recording.pipe(output) if output
+    recording
   end
 
   # @rbs return: void -- Start a shared CDP screencast session
@@ -1755,8 +2042,18 @@ class Puppeteer::Page
       captureBeyondViewport: screenshot_options.capture_beyond_viewport?,
       fromSurface: screenshot_options.from_surface,
     }.compact
-    result = @client.send_message('Page.captureScreenshot', screenshot_params)
-    reset_default_background_color if should_set_default_background
+    begin
+      result = @client.send_message('Page.captureScreenshot', screenshot_params)
+    ensure
+      if should_set_default_background
+        begin
+          reset_default_background_color
+        rescue => error
+          # Reset failures must not mask the screenshot result.
+          log_error(error)
+        end
+      end
+    end
 
     if screenshot_options.full_page? && @viewport
       self.viewport = @viewport
@@ -1770,7 +2067,7 @@ class Puppeteer::Page
       end
 
     if screenshot_options.path
-      File.binwrite(screenshot_options.path, buffer)
+      Puppeteer::FileSystem.write_file(screenshot_options.path, buffer)
     end
 
     buffer
@@ -1814,11 +2111,14 @@ class Puppeteer::Page
 
     StringIO.open do |stringio|
       if options[:path]
-        File.open(options[:path], 'wb') do |f|
+        file = Puppeteer::FileSystem.open_for_writing(options[:path], mode: 'wb')
+        begin
           chunks.each do |chunk|
-            f.write(chunk)
+            file.write(chunk)
             stringio.write(chunk)
           end
+        ensure
+          file.close
         end
       else
         chunks.each do |chunk|

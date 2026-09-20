@@ -59,11 +59,13 @@ class Puppeteer::WebMCPToolCall
   # @rbs id: String -- Invocation id
   # @rbs tool: Puppeteer::WebMCPTool -- Invoked tool
   # @rbs input: String -- JSON-encoded input
-  def initialize(id, tool, input)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(id, tool, input, logger: nil)
     @id = id
     @tool = tool
     @input = JSON.parse(input)
   rescue JSON::ParserError => error
+    logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
     warn(error.message) if ENV['DEBUG']
     @input = {}
   end
@@ -99,9 +101,11 @@ class Puppeteer::WebMCP
 
   # @rbs client: Puppeteer::CDPSession -- Primary page session
   # @rbs frame_manager: Puppeteer::FrameManager -- Page frame manager
-  def initialize(client, frame_manager)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(client, frame_manager, logger: nil)
     @client = client
     @frame_manager = frame_manager
+    @logger = logger
     @tools = {}
     @pending_calls = {}
     @context_listener_ids = {}
@@ -112,7 +116,7 @@ class Puppeteer::WebMCP
   def initialize_domain
     @client.send_message('WebMCP.enable')
   rescue => error
-    debug_puts(error)
+    log_error(error)
     nil
   end
 
@@ -185,7 +189,7 @@ class Puppeteer::WebMCP
     tool = @tools.dig(event['frameId'], event['toolName'])
     return unless tool
 
-    call = Puppeteer::WebMCPToolCall.new(event['invocationId'], tool, event['input'])
+    call = Puppeteer::WebMCPToolCall.new(event['invocationId'], tool, event['input'], logger: @logger)
     @pending_calls[call.id] = call
     tool.emit_event('toolinvoked', call)
     emit_event('toolinvoked', call)
@@ -223,5 +227,12 @@ class Puppeteer::WebMCP
 
     removed = frame_tools.values
     emit_event('toolsremoved', ToolsEvent.new(tools: removed)) unless removed.empty?
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

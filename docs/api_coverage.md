@@ -1,5 +1,5 @@
 # API coverages
-- Puppeteer version: v25.5.0
+- Puppeteer version: v25.11.0
 - puppeteer-ruby version: 0.53.0
 
 ## Puppeteer
@@ -18,7 +18,7 @@
 
 ## Browser
 
-* ~~[asyncDisposeSymbol]~~
+* [asyncDisposeSymbol] => `#close`
 * ~~[disposeSymbol]~~
 * ~~addScreen~~
 * browserContexts => `#browser_contexts`
@@ -33,7 +33,7 @@
 * disconnect
 * extensions
 * getPWAState => `#get_pwa_state`
-* ~~getWindowBounds~~
+* getWindowBounds => `#get_window_bounds`
 * installExtension => `#install_extension`
 * installPWA => `#install_pwa`
 * launchPWA => `#launch_pwa`
@@ -44,7 +44,7 @@
 * ~~screens~~
 * ~~setCookie~~
 * setPermission => `#set_permission`
-* ~~setWindowBounds~~
+* setWindowBounds => `#set_window_bounds`
 * target
 * targets
 * uninstallExtension => `#uninstall_extension`
@@ -56,7 +56,7 @@
 
 ## BrowserContext
 
-* ~~[asyncDisposeSymbol]~~
+* [asyncDisposeSymbol] => `#close`
 * ~~[disposeSymbol]~~
 * browser
 * clearPermissionOverrides => `#clear_permission_overrides`
@@ -355,7 +355,7 @@
 
 ## Page
 
-* ~~[asyncDisposeSymbol]~~
+* [asyncDisposeSymbol] => `#close`
 * ~~[disposeSymbol]~~
 * $ => `#query_selector`
 * $$ => `#query_selector_all`
@@ -414,10 +414,11 @@
 * openDevTools => `#open_dev_tools`
 * pdf
 * queryObjects => `#query_objects`
+* record
 * reload
 * removeExposedFunction => `#remove_exposed_function`
 * removeScriptToEvaluateOnNewDocument => `#remove_script_to_evaluate_on_new_document`
-* ~~resize~~
+* resize
 * screencast
 * screenshot
 * select
@@ -455,7 +456,7 @@
 * waitForResponse => `#wait_for_response`
 * waitForSelector => `#wait_for_selector`
 * webmcp
-* ~~windowId~~
+* windowId => `#window_id`
 * workers
 
 ## ~~ProtocolError~~
@@ -477,6 +478,12 @@
 * ~~[asyncDisposeSymbol]~~
 * stop
 
+## ScreenRecording
+
+* [asyncDisposeSymbol] => `#close`
+* pipe
+* stop
+
 ## ~~SecurityDetails~~
 
 * ~~issuer~~
@@ -492,6 +499,7 @@
 * browser
 * browserContext => `#browser_context`
 * createCDPSession => `#create_cdp_session`
+* logger
 * opener
 * page
 * type

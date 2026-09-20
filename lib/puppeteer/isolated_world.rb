@@ -49,13 +49,14 @@ class Puppeteer::IsolaatedWorld
   # @param frame_manager [Puppeteer::FrameManager]
   # @param frame [Puppeteer::Frame]
   # @param timeout_settings [Puppeteer::TimeoutSettings]
-  def initialize(client, frame_manager, frame, timeout_settings)
+  def initialize(client, frame_manager, frame, timeout_settings, logger: nil)
     # Keep own reference to client because it might differ from the FrameManager's
     # client for OOP iframes.
     @client = client
     @frame_manager = frame_manager
     @frame = frame
     @timeout_settings = timeout_settings
+    @logger = logger
     @context_promise = Async::Promise.new
     @task_manager = Puppeteer::TaskManager.new
     @bound_functions = {}
@@ -68,7 +69,7 @@ class Puppeteer::IsolaatedWorld
     @client.on_event('Runtime.bindingCalled', &method(:handle_binding_called))
   end
 
-  attr_reader :frame, :task_manager, :origin, :world_id, :context
+  attr_reader :frame, :task_manager, :origin, :world_id, :context, :logger
 
   # only used in Puppeteer::WaitTask#initialize
   private def _bound_functions
@@ -241,6 +242,13 @@ class Puppeteer::IsolaatedWorld
     JAVASCRIPT
   end
 
+  # Writing the content from the page would go through document.write, which
+  # makes Chrome treat parser-blocking cross-site scripts in it as an
+  # intervention candidate and may block them outright.
+  private def set_frame_content(html)
+    @client.send_message('Page.setDocumentContent', frameId: @frame.id, html: html)
+  end
+
   # @param html [String]
   # @param timeout [Integer]
   # @param wait_until [String|Array<String>]
@@ -255,16 +263,9 @@ class Puppeteer::IsolaatedWorld
     end
     option_timeout = timeout || @timeout_settings.navigation_timeout
 
-    # We rely upon the fact that document.open() will reset frame lifecycle with "init"
-    # lifecycle event. @see https://crrev.com/608658
-    js = <<-JAVASCRIPT
-    (html) => {
-      document.open();
-      document.write(html);
-      document.close();
-    }
-    JAVASCRIPT
-    evaluate(js, html)
+    # We rely upon the fact that the document is reopened, which resets the
+    # frame lifecycle with an "init" lifecycle event. @see https://crrev.com/608658
+    set_frame_content(html)
 
     watcher = Puppeteer::LifecycleWatcher.new(@frame_manager, @frame, option_wait_until, option_timeout)
     begin
@@ -294,7 +295,7 @@ class Puppeteer::IsolaatedWorld
     end
 
     if path
-      contents = File.read(path)
+      contents = Puppeteer::FileSystem.read_file(path)
       contents += "//# sourceURL=#{path.gsub(/\n/, '')}"
       return execution_context.
         evaluate_handle(ADD_SCRIPT_CONTENT, contents, id, type || 'text/javascript').
@@ -354,7 +355,7 @@ class Puppeteer::IsolaatedWorld
     end
 
     if path
-      contents = File.read(path)
+      contents = Puppeteer::FileSystem.read_file(path)
       contents += "/*# sourceURL=#{path.gsub(/\n/, '')}*/"
       return execution_context.evaluate_handle(ADD_STYLE_CONTENT, contents).as_element
     end

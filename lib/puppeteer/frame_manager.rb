@@ -55,10 +55,11 @@ class Puppeteer::FrameManager
   # @param {boolean} ignoreHTTPSErrors
   # @param {!Puppeteer.TimeoutSettings} timeoutSettings
   # @param {boolean} network_enabled
-  def initialize(client, page, ignore_https_errors, timeout_settings, network_enabled: true)
+  def initialize(client, page, ignore_https_errors, timeout_settings, network_enabled: true, logger: nil)
     @client = client
     @page = page
-    @network_manager = Puppeteer::NetworkManager.new(client, ignore_https_errors, self, network_enabled: network_enabled)
+    @logger = logger
+    @network_manager = Puppeteer::NetworkManager.new(client, ignore_https_errors, self, network_enabled: network_enabled, logger: logger)
     @timeout_settings = timeout_settings
 
     # @type {!Map<string, !Frame>}
@@ -176,7 +177,7 @@ class Puppeteer::FrameManager
       Async do
         handle_client_disconnect(client)
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
   end
@@ -357,7 +358,7 @@ class Puppeteer::FrameManager
     Async do
       async_init(target.target_info.target_id, session).wait
     rescue => err
-      debug_puts(err)
+      log_error(err)
     end
   end
 
@@ -525,7 +526,7 @@ class Puppeteer::FrameManager
           identifier: frame_identifier,
         )
       rescue => err
-        debug_puts(err)
+        log_error(err)
       end
     end
     Puppeteer::AsyncUtils.await_promise_all(*tasks)
@@ -587,7 +588,7 @@ class Puppeteer::FrameManager
       raise FrameNotFoundError.new("Parent frame #{parent_frame_id} not found.")
     end
 
-    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session)
+    frame = Puppeteer::Frame.new(self, parent_frame, frame_id, session, logger: @logger)
     @frames[frame.id] = frame
     emit_event(FrameManagerEmittedEvents::FrameAttached, frame)
     frame
@@ -634,7 +635,7 @@ class Puppeteer::FrameManager
         end
       else
         # Initial main frame navigation.
-        frame = Puppeteer::Frame.new(self, nil, frame_id, @client)
+        frame = Puppeteer::Frame.new(self, nil, frame_id, @client, logger: @logger)
       end
       @frames[frame_id] = frame
       @main_frame = frame
@@ -666,7 +667,7 @@ class Puppeteer::FrameManager
             worldName: name,
           )
         rescue => err
-          debug_puts(err)
+          log_error(err)
         end
       end
     Puppeteer::AsyncUtils.await_promise_all(*create_isolated_worlds_promises)
@@ -724,11 +725,14 @@ class Puppeteer::FrameManager
         if extension_id
           world = frame.extension_worlds[extension_id]
           unless world
-            world = Puppeteer::IsolaatedWorld.new(frame._client || @client, self, frame, @timeout_settings)
+            world = Puppeteer::IsolaatedWorld.new(frame._client || @client, self, frame, @timeout_settings, logger: @logger)
             frame.extension_worlds[extension_id] = world
           end
           world.origin = origin
           world.world_id = extension_id
+        else
+          log_error('Error while parsing extension id')
+          return
         end
       end
     end
@@ -737,7 +741,7 @@ class Puppeteer::FrameManager
       @isolated_worlds << context_payload['name']
     end
 
-    context = Puppeteer::ExecutionContext.new(frame&._client || @client, context_payload, world)
+    context = Puppeteer::ExecutionContext.new(frame&._client || @client, context_payload, world, logger: world&.logger)
     if world
       world.context = context
     end
@@ -811,5 +815,12 @@ class Puppeteer::FrameManager
     if wait_until == 'networkidle'
       raise ArgumentError.new('ERROR: "networkidle" option is no longer supported. Use "networkidle2" instead')
     end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

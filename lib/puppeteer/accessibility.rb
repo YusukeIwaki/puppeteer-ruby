@@ -2,6 +2,8 @@
 # rbs_inline: enabled
 
 class Puppeteer::Accessibility
+  include Puppeteer::DebugPrint
+
   class SerializedAXNode < Hash #[String, untyped]
     # @rbs values: Hash[String, untyped] -- Serialized node values
     # @rbs element_handle_resolver: Proc -- Resolver for the backing element
@@ -18,8 +20,10 @@ class Puppeteer::Accessibility
   end
 
   # @rbs frame: Puppeteer::Frame -- Frame whose accessibility tree is inspected
-  def initialize(frame)
+  # @rbs logger: Proc? -- Experimental logger factory (see Puppeteer::DebugPrint)
+  def initialize(frame, logger: nil)
     @frame = frame
+    @logger = logger
   end
 
   # @rbs interesting_only: bool -- Prune uninteresting nodes
@@ -69,8 +73,9 @@ class Puppeteer::Accessibility
           interesting_only: interesting_only,
           include_iframes: true,
         )
-      rescue StandardError
+      rescue StandardError => error
         # Frames may detach while their accessibility trees are populated.
+        log_error(error)
       ensure
         handle&.dispose
       end
@@ -290,11 +295,25 @@ class Puppeteer::Accessibility
 
       handle = @frame.main_world.adopt_backend_node(backend_node_id)
       element = handle.evaluate_handle(<<~JAVASCRIPT)
-        node => node.nodeType === Node.TEXT_NODE ? node.parentElement : node
+        node => {
+          if (node.nodeType !== Node.TEXT_NODE) {
+            return node;
+          }
+          // A text node placed directly in a shadow root has no parent
+          // element, so fall back to the shadow host.
+          return node.parentElement ?? node.parentNode?.host ?? null;
+        }
       JAVASCRIPT
       element.as_element
     ensure
       handle&.dispose
     end
+  end
+
+  # Forwards errors to the custom error logger (when configured) while
+  # preserving the traditional DEBUG output.
+  private def log_error(error)
+    @logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(error)
+    debug_puts(error)
   end
 end

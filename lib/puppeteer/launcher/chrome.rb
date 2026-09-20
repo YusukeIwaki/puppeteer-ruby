@@ -33,6 +33,8 @@ module Puppeteer::Launcher
       @chrome_arg_options = ChromeArgOptions.new(options)
       @launch_options = LaunchOptions.new(options)
       @browser_options = BrowserOptions.new(options)
+      @ws_options = options[:ws_options]
+      @logger = options[:logger]
 
       chrome_arguments =
         if !@launch_options.ignore_default_args
@@ -78,6 +80,7 @@ module Puppeteer::Launcher
         chrome_arguments,
         user_data_dir,
         using_temp_user_data_dir,
+        logger: @logger,
       )
       runner.start(
         handle_SIGHUP: @launch_options.handle_SIGHUP?,
@@ -96,6 +99,8 @@ module Puppeteer::Launcher
             slow_mo: @browser_options.slow_mo,
             preferred_revision: @preferred_revision,
             protocol_timeout: @browser_options.protocol_timeout,
+            ws_options: @ws_options,
+            logger: @logger,
           )
 
           Puppeteer::Browser.create(
@@ -108,14 +113,15 @@ module Puppeteer::Launcher
             issues_enabled: @browser_options.issues_enabled,
             block_list: @browser_options.block_list,
             allow_list: @browser_options.allow_list,
+            logger: @logger,
             process: runner.proc,
             close_callback: -> { runner.close },
             target_filter_callback: nil,
             is_page_target_callback: nil,
           )
-        rescue
+        rescue => error
           runner.kill
-          raise
+          raise with_profile_access_diagnostic(runner, user_data_dir, error)
         end
 
       begin
@@ -131,6 +137,33 @@ module Puppeteer::Launcher
       end
 
       browser
+    end
+
+    # The browser reports the same ProcessSingleton failure whether another
+    # instance holds the lock or it simply cannot write to the profile
+    # directory, so check the process logs for that failure (covering both
+    # WebSocket and pipe transports) and blame a running browser only when
+    # the directory is writable.
+    private def with_profile_access_diagnostic(runner, user_data_dir, error)
+      logs = "#{runner.proc&.recent_logs}\n#{error.message}"
+      singleton_failure = logs.include?('Failed to create a ProcessSingleton for your profile directory') ||
+        (Puppeteer.env.windows? && File.exist?(File.join(user_data_dir, 'lockfile')))
+
+      if singleton_failure
+        unless writable_directory?(user_data_dir)
+          return Puppeteer::Error.new("The browser cannot write to #{user_data_dir}. Make the `user_data_dir` writable or use a different one.")
+        end
+        return Puppeteer::Error.new("The browser is already running for #{user_data_dir}. Use a different `user_data_dir` or stop the running browser first.")
+      end
+      error
+    end
+
+    # Whether the profile directory exists and the current process can write
+    # to it. A missing directory counts as writable: the browser creates it
+    # on launch.
+    private def writable_directory?(directory)
+      return true if File.writable?(directory)
+      !File.exist?(directory)
     end
 
     class DefaultArgs

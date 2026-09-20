@@ -15,12 +15,14 @@ class Puppeteer::JSHandle
         client: context.client,
         remote_object: remote_object,
         frame: context.world.frame,
+        logger: context.logger,
       )
     else
       Puppeteer::JSHandle.new(
         context: context,
         client: context.client,
         remote_object: remote_object,
+        logger: context.logger,
       )
     end
   end
@@ -28,15 +30,19 @@ class Puppeteer::JSHandle
   # @param context [Puppeteer::ExecutionContext]
   # @param client [Puppeteer::CDPSession]
   # @param remote_object [Puppeteer::RemoteObject]
-  def initialize(context:, client:, remote_object:)
+  def initialize(context:, client:, remote_object:, logger: nil)
     @context = context
     @client = client
     @remote_object = remote_object
+    @logger = logger
     @disposed = false
     @moved = false
   end
 
   attr_reader :context, :remote_object
+
+  # @internal Logger factory inherited from the creating realm.
+  attr_reader :logger
 
   def inspect
     values = %i[context remote_object disposed].map do |sym|
@@ -158,7 +164,7 @@ class Puppeteer::JSHandle
     return if @disposed
 
     @disposed = true
-    @remote_object.release(@client)
+    @remote_object.release(@client, @logger)
   end
 
   def disposed?

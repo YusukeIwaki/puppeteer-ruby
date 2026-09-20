@@ -303,6 +303,24 @@ RSpec.describe 'Accessibility' do
           div.dispose
         end
       end
+
+      it 'should get the shadow host ElementHandle from a text node in a shadow root' do
+        with_test_state do |page:, **|
+          page.set_content('<div id="host"></div>')
+          page.evaluate("() => { document.querySelector('#host').attachShadow({mode: 'open'}).textContent = 'Shadow text'; }")
+          host = page.query_selector('#host')
+          snapshot = page.accessibility.snapshot(root: host, interesting_only: false)
+          text_node = snapshot['children'].find { |child| child['name'] == 'Shadow text' }
+          expect(text_node['role']).to eq('StaticText')
+
+          text_node_handle = text_node.element_handle
+          expect(text_node_handle.as_element).not_to be_nil
+          expect(text_node_handle.evaluate('element => element.id')).to eq('host')
+
+          text_node_handle.dispose
+          host.dispose
+        end
+      end
     end
   end
 

@@ -93,6 +93,7 @@ class RubyMethodName
   end
 
   NAME_MAP = {
+    '[asyncDisposeSymbol]' => :close,
     '$' => :query_selector,
     '$$' => :query_selector_all,
     '$eval' => :eval_on_selector,

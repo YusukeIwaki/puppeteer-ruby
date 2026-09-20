@@ -215,7 +215,8 @@ class Puppeteer::RemoteObject
   end
 
   # @param client [Puppeteer::CDPSession]
-  def release(client)
+  # @param logger [Proc, nil] Experimental logger factory (see Puppeteer::DebugPrint)
+  def release(client, logger = nil)
     return unless @object_id
 
     begin
@@ -225,6 +226,7 @@ class Puppeteer::RemoteObject
     rescue => err
       # Exceptions might happen in case of a page been navigated or closed.
       # Swallow these since they are harmless and we don't leak anything in this case.
+      logger&.call(Puppeteer::DebugPrefixes::ERROR)&.call(err)
       debug_puts(err)
     end
 

@@ -21,7 +21,7 @@ class Puppeteer::Browser
   # @rbs target_filter_callback: Proc? -- Target filter callback
   # @rbs is_page_target_callback: Proc? -- Page target predicate
   # @rbs return: Puppeteer::Browser -- Browser instance
-  def self.create: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?, ?allow_list: Array[String]?) -> Puppeteer::Browser
+  def self.create: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?, ?allow_list: Array[String]?, ?logger: untyped) -> Puppeteer::Browser
 
   # @rbs product: String? -- Browser product (chrome only)
   # @rbs connection: Puppeteer::Connection -- CDP connection
@@ -37,7 +37,7 @@ class Puppeteer::Browser
   # @rbs target_filter_callback: Proc? -- Target filter callback
   # @rbs is_page_target_callback: Proc? -- Page target predicate
   # @rbs return: void -- No return value
-  def initialize: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?, ?allow_list: Array[String]?) -> void
+  def initialize: (product: String?, connection: Puppeteer::Connection, context_ids: Array[String], ignore_https_errors: bool, default_viewport: Puppeteer::Viewport?, process: Puppeteer::BrowserRunner::BrowserProcess?, close_callback: Proc, target_filter_callback: Proc?, is_page_target_callback: Proc?, ?network_enabled: bool, ?issues_enabled: bool, ?block_list: Array[String]?, ?allow_list: Array[String]?, ?logger: untyped) -> void
 
   private def default_target_filter_callback: (untyped target_info) -> untyped
 
@@ -46,6 +46,8 @@ class Puppeteer::Browser
   private def default_is_page_target_callback: (untyped target_info) -> untyped
 
   attr_reader is_page_target_callback: untyped
+
+  attr_reader logger: untyped
 
   # @rbs event_name: (String | Symbol) -- Browser event name
   # @rbs &block: ^(untyped) -> void -- Event handler
@@ -151,6 +153,15 @@ class Puppeteer::Browser
 
   # @rbs return: String -- Browser user agent string
   def user_agent: () -> String
+
+  # @rbs window_id: String | Integer -- Target window id
+  # @rbs return: Hash[String, untyped] -- Window bounds (windowState, left, top, width, height)
+  def get_window_bounds: (String | Integer window_id) -> Hash[String, untyped]
+
+  # @rbs window_id: String | Integer -- Target window id
+  # @rbs bounds: Hash[Symbol, untyped] -- Window bounds (e.g. windowState:, width:, height:, left:, top:)
+  # @rbs return: void -- No return value
+  def set_window_bounds: (String | Integer window_id, Hash[Symbol, untyped] bounds) -> void
 
   private def version_info: () -> untyped
 

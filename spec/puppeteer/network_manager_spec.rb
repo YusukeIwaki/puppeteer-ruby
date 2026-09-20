@@ -201,4 +201,23 @@ RSpec.describe Puppeteer::NetworkManager do
       expect { manager.init }.not_to raise_error
     end
   end
+
+  describe 'custom error logger' do
+    it 'forwards auth protocol failures to the error logger' do
+      errors = []
+      logger = lambda do |prefix|
+        if prefix == Puppeteer::DebugPrefixes::ERROR
+          lambda { |error| errors << error }
+        end
+      end
+      manager = described_class.new(client, false, frame_manager, logger: logger)
+      manager.authenticate(username: 'user', password: 'pass')
+      error = Puppeteer::Error.new('test auth protocol failure')
+      allow(client).to receive(:send_message).and_raise(error)
+
+      manager.send(:handle_auth_required, { 'requestId' => 'request-id' }, client)
+
+      expect(errors).to include(error)
+    end
+  end
 end
