@@ -886,6 +886,20 @@ class Puppeteer::Page
 
   class PageError < Puppeteer::Error ; end
 
+  # Carries a failed resolve delivery's CDP exceptionDetails into the shared
+  # reject path. Upstream Binding.run rethrows the evaluation error value
+  # itself (Error or primitive via createEvaluationError); Ruby cannot throw
+  # JS primitives, so the raw details are carried instead and the primitive
+  # vs Error distinction is re-applied in deliver_binding_reject.
+  class BindingDeliveryError < Puppeteer::ExecutionContext::EvaluationError
+    def initialize(exception_details)
+      @exception_details = exception_details
+      super("Evaluation failed: #{exception_details}")
+    end
+
+    attr_reader :exception_details
+  end
+
   private def handle_exception(exception_details)
     exception = exception_details['exception']
     if exception
@@ -949,39 +963,162 @@ class Puppeteer::Page
       return
     end
 
-    expression =
-      begin
-        result = @page_bindings[name].call(*args)
+    binding_fn = @page_bindings[name]
 
-        deliver_result = <<~JAVASCRIPT
-        function (name, seq, result) {
-          window[name].callbacks.get(seq).resolve(result);
-          window[name].callbacks.delete(seq);
-        }
-        JAVASCRIPT
-
-        JavaScriptFunction.new(deliver_result, [name, seq, result]).source
-      rescue => err
-        deliver_error = <<~JAVASCRIPT
-        function (name, seq, message) {
-          const error = new Error(message);
-          window[name].callbacks.get(seq).reject(error);
-          window[name].callbacks.delete(seq);
-        }
-        JAVASCRIPT
-        JavaScriptFunction.new(deliver_error, [name, seq, err.message]).source
-      end
-
+    # Mirrors upstream Binding.run: callback execution and resolve-delivery
+    # failures (serialization, protocol, or page-side exceptionDetails) both
+    # flow into a single reject-delivery attempt. Only a failure of that
+    # reject delivery is logged.
     Async do
-      response = client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
-      if response['exceptionDetails']
-        # Like upstream, a delivery expression that throws in the page
-        # (e.g. the page cleared the binding callbacks) is a logged
-        # error, not a silent success.
-        log_error(Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{response['exceptionDetails']}"))
-      end
+      result = binding_fn.call(*args)
+      deliver_binding_resolve(client, execution_context_id, name, seq, result)
     rescue => error
-      log_error(error)
+      begin
+        deliver_binding_reject(client, execution_context_id, name, seq, error)
+      rescue => reject_error
+        log_error(reject_error)
+      end
+    end
+  end
+
+  private def deliver_binding_resolve(client, execution_context_id, name, seq, result)
+    deliver_result = <<~JAVASCRIPT
+    function (name, seq, result) {
+      window[name].callbacks.get(seq).resolve(result);
+      window[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+
+    expression = JavaScriptFunction.new(deliver_result, [name, seq, result]).source
+    response = client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+    if (exception_details = response['exceptionDetails'])
+      raise BindingDeliveryError.new(exception_details)
+    end
+  end
+
+  private def deliver_binding_reject(client, execution_context_id, name, seq, error)
+    if error.is_a?(BindingDeliveryError)
+      exception_details = error.exception_details
+      exception = exception_details['exception']
+      if exception.nil?
+        deliver_binding_reject_with_error(client, execution_context_id, name, seq, exception_details['text'].to_s, nil)
+      elsif binding_primitive_exception?(exception)
+        deliver_binding_reject_with_primitive(client, execution_context_id, name, seq, exception)
+      else
+        message, stack = binding_error_message_and_stack(exception_details)
+        deliver_binding_reject_with_error(client, execution_context_id, name, seq, message, stack)
+      end
+    else
+      deliver_binding_reject_with_error(client, execution_context_id, name, seq, error.message, binding_ruby_stack_for(error))
+    end
+  end
+
+  private def deliver_binding_reject_with_error(client, execution_context_id, name, seq, message, stack)
+    deliver_error = <<~JAVASCRIPT
+    function (name, seq, message, stack) {
+      const error = new Error(message);
+      error.stack = stack;
+      window[name].callbacks.get(seq).reject(error);
+      window[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+    expression = JavaScriptFunction.new(deliver_error, [name, seq, message, stack]).source
+    response = client.async_send_message('Runtime.evaluate', expression: expression, contextId: execution_context_id).wait
+    if (exception_details = response['exceptionDetails'])
+      raise Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{exception_details}")
+    end
+  end
+
+  # Delivers a primitive rejection (undefined, null, NaN, Infinity, -0,
+  # BigInt, string, ...) thrown by the resolve delivery. The CDP RemoteObject
+  # is forwarded as a Runtime.callFunctionOn argument descriptor without
+  # rounding through Ruby/JSON, which cannot distinguish null from undefined
+  # or BigInt from Number. Mirrors upstream Binding.run passing the raw error
+  # to context.evaluate, whose convertArgument (ExecutionContext.ts) maps
+  # values to the same descriptor shapes.
+  private def deliver_binding_reject_with_primitive(client, execution_context_id, name, seq, exception)
+    deliver_primitive = <<~JAVASCRIPT
+    function (name, seq, error) {
+      window[name].callbacks.get(seq).reject(error);
+      window[name].callbacks.delete(seq);
+    }
+    JAVASCRIPT
+    response = client.async_send_message('Runtime.callFunctionOn',
+      functionDeclaration: deliver_primitive,
+      executionContextId: execution_context_id,
+      arguments: [{ value: name }, { value: seq }, binding_primitive_call_argument(exception)],
+      returnByValue: true,
+      awaitPromise: true,
+      userGesture: true).wait
+    if (exception_details = response['exceptionDetails'])
+      raise Puppeteer::ExecutionContext::EvaluationError.new("Evaluation failed: #{exception_details}")
+    end
+  end
+
+  private def binding_primitive_call_argument(exception)
+    if exception['unserializableValue']
+      { unserializableValue: exception['unserializableValue'] }
+    elsif exception.key?('value')
+      { value: exception['value'] }
+    else
+      # e.g. {"type":"undefined"} carries neither value nor
+      # unserializableValue; an empty descriptor means undefined, matching
+      # upstream convertArgument's {value: undefined} over the wire.
+      {}
+    end
+  end
+
+  # Same primitive condition as upstream createEvaluationError (cdp/utils.ts):
+  # a thrown value that is not an Error object and has no objectId is
+  # re-delivered as-is instead of being wrapped in an Error.
+  private def binding_primitive_exception?(exception)
+    is_error_object = exception['type'] == 'object' && exception['subtype'] == 'error'
+    !is_error_object && exception['objectId'].nil?
+  end
+
+  # Extracts the (message, stack) pair for rebuilding a thrown Error in the
+  # page. Message parsing mirrors upstream getErrorDetails (cdp/utils.ts):
+  # strip call-frame lines from the description and drop the "Name: " prefix.
+  # The stack reuses the description when present (it already holds the
+  # page-side frames) and otherwise synthesizes V8-style frames from
+  # stackTrace.callFrames, adapting createEvaluationError's stack handling.
+  # Puppeteer::ExceptionDetails cannot be reused here: it returns a single
+  # combined string, while this path needs message and stack separately to
+  # match upstream Binding.run's new Error(message) + error.stack = stack.
+  private def binding_error_message_and_stack(exception_details)
+    exception = exception_details['exception'] || {}
+    description = exception['description'] || ''
+    lines = description.empty? ? [] : description.split("\n    at ")
+    call_frames = exception_details.dig('stackTrace', 'callFrames') || []
+    if lines.empty?
+      message = ''
+    else
+      size = [call_frames.length, lines.length - 1].min
+      size = 0 if size < 0
+      lines = lines[0...-size] if size > 0
+      name = exception['className'] || ''
+      message = lines.join("\n")
+      if !name.empty? && message.start_with?("#{name}: ")
+        message = message[(name.length + 2)..] || ''
+      end
+    end
+    stack =
+      if !description.empty?
+        description
+      elsif !call_frames.empty?
+        (["Error: #{message}"] + call_frames.map { |f| "    at #{f['functionName'] || '<anonymous>'} (#{f['url']}:#{f['lineNumber']}:#{f['columnNumber']})" }).join("\n")
+      else
+        "Error: #{message}"
+      end
+    [message, stack]
+  end
+
+  private def binding_ruby_stack_for(error)
+    backtrace = error.backtrace
+    if backtrace.nil? || backtrace.empty?
+      "Error: #{error.message}"
+    else
+      (["Error: #{error.message}"] + backtrace.map { |frame| "    at #{frame}" }).join("\n")
     end
   end
 

@@ -288,6 +288,17 @@ class Puppeteer::Page
   class PageError < Puppeteer::Error
   end
 
+  # Carries a failed resolve delivery's CDP exceptionDetails into the shared
+  # reject path. Upstream Binding.run rethrows the evaluation error value
+  # itself (Error or primitive via createEvaluationError); Ruby cannot throw
+  # JS primitives, so the raw details are carried instead and the primitive
+  # vs Error distinction is re-applied in deliver_binding_reject.
+  class BindingDeliveryError < Puppeteer::ExecutionContext::EvaluationError
+    def initialize: (untyped exception_details) -> untyped
+
+    attr_reader exception_details: untyped
+  end
+
   private def handle_exception: (untyped exception_details) -> untyped
 
   private def handle_console_api: (untyped event) -> untyped
@@ -296,6 +307,41 @@ class Puppeteer::Page
   # @rbs client: Puppeteer::CDPSession -- Session that emitted the binding call
   # @rbs return: void -- No return value
   def handle_binding_called: (Hash[String, untyped] event, ?Puppeteer::CDPSession client) -> void
+
+  private def deliver_binding_resolve: (untyped client, untyped execution_context_id, untyped name, untyped seq, untyped result) -> untyped
+
+  private def deliver_binding_reject: (untyped client, untyped execution_context_id, untyped name, untyped seq, untyped error) -> untyped
+
+  private def deliver_binding_reject_with_error: (untyped client, untyped execution_context_id, untyped name, untyped seq, untyped message, untyped stack) -> untyped
+
+  # Delivers a primitive rejection (undefined, null, NaN, Infinity, -0,
+  # BigInt, string, ...) thrown by the resolve delivery. The CDP RemoteObject
+  # is forwarded as a Runtime.callFunctionOn argument descriptor without
+  # rounding through Ruby/JSON, which cannot distinguish null from undefined
+  # or BigInt from Number. Mirrors upstream Binding.run passing the raw error
+  # to context.evaluate, whose convertArgument (ExecutionContext.ts) maps
+  # values to the same descriptor shapes.
+  private def deliver_binding_reject_with_primitive: (untyped client, untyped execution_context_id, untyped name, untyped seq, untyped exception) -> untyped
+
+  private def binding_primitive_call_argument: (untyped exception) -> untyped
+
+  # Same primitive condition as upstream createEvaluationError (cdp/utils.ts):
+  # a thrown value that is not an Error object and has no objectId is
+  # re-delivered as-is instead of being wrapped in an Error.
+  private def binding_primitive_exception?: (untyped exception) -> untyped
+
+  # Extracts the (message, stack) pair for rebuilding a thrown Error in the
+  # page. Message parsing mirrors upstream getErrorDetails (cdp/utils.ts):
+  # strip call-frame lines from the description and drop the "Name: " prefix.
+  # The stack reuses the description when present (it already holds the
+  # page-side frames) and otherwise synthesizes V8-style frames from
+  # stackTrace.callFrames, adapting createEvaluationError's stack handling.
+  # Puppeteer::ExceptionDetails cannot be reused here: it returns a single
+  # combined string, while this path needs message and stack separately to
+  # match upstream Binding.run's new Error(message) + error.stack = stack.
+  private def binding_error_message_and_stack: (untyped exception_details) -> untyped
+
+  private def binding_ruby_stack_for: (untyped error) -> untyped
 
   # Forwards errors to the custom error logger (when configured) while
   # preserving the traditional DEBUG output.

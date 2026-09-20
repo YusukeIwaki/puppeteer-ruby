@@ -77,8 +77,16 @@ RSpec.describe 'Launcher custom logger', sinatra: true do
       Timeout.timeout(15) do
         sleep 0.05 while mutex.synchronize { errors.empty? }
       end
-      expect(errors.length).to eq(1)
-      expect(errors.first.message).to include('Evaluation failed')
+      sleep 0.3
+      logged = mutex.synchronize { errors.dup }
+      expect(logged.length).to eq(1)
+      expect(logged.first.message).to include('Evaluation failed')
+      # The logged failure must be the *reject* delivery: the resolve
+      # delivery failure is recovered by attempting reject (upstream
+      # Binding.run), and only a failed reject is logged. Pre-fix code logged
+      # the resolve failure ("reading 'resolve'") instead.
+      expect(logged.first.message).to include("'reject'")
+      expect(logged.first.message).not_to include('resolve')
     end
   end
 end
