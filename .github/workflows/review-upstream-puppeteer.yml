@@ -319,7 +319,7 @@ jobs:
               --strict-config \
               --cd "$GITHUB_WORKSPACE" \
               --ephemeral \
-              --model gpt-5.6-sol \
+              --model gpt-6.1-sol \
               --config 'model_reasoning_effort="xhigh"' \
               --config 'default_permissions="upstream-review"' \
               --output-schema \
